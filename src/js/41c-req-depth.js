@@ -68,10 +68,13 @@ function bindPaste(r) {
     $("#paste-add").onclick = () => {
       const ok = PASTE_ROWS.filter(x => !x.errs.length), skipped = PASTE_ROWS.length - ok.length;
       ok.forEach(x => r.items.push({ type: x.type, name: x.name, qty: x.qty, unitName: x.unitName, price: x.price }));
+      // A multi-year request keeps its yearly split adding up: new lines are budgeted in the first year.
+      const added = ok.reduce((s, x) => s + x.qty * x.price, 0), y0 = r.multi && r.years ? Object.keys(r.years).sort()[0] : null;
+      if (y0) r.years[y0] = Number(r.years[y0] || 0) + added;
       r.items = r.items.filter(it => tx(it.name).trim() || itemTotal(it) > 0);
       audit(["วางรายการจาก Excel", "Pasted lines from Excel"], `${r.id} · ${ok.length}`);
       PASTE_ROWS = []; box.hidden = true; renderItems(); renderTimeline(); commit();
-      toast(`${L("เพิ่มรายการแล้ว", "Lines added")} ${ok.length}${skipped ? ` · ${L("ข้ามแถวที่มีข้อผิดพลาด", "skipped rows with errors:")} ${skipped}` : ""}`);
+      toast(`${L("เพิ่มรายการแล้ว", "Lines added")} ${ok.length}${skipped ? ` · ${L("ข้ามแถวที่มีข้อผิดพลาด", "skipped rows with errors:")} ${skipped}` : ""}${y0 ? ` · ${L("เพิ่มวงเงินในปี", "added to FY")} ${y0}` : ""}`);
     };
   };
   open.onclick = () => { box.hidden = !box.hidden; if (!box.hidden) { PASTE_ROWS = []; renderPaste(); wire(""); $("#paste-in").focus(); } };
