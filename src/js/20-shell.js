@@ -14,7 +14,7 @@ NAV.push(
   { id: "dashboard", code: "M07", group: "exec", roles: ["exec", "plan", "fin", "audit", "div"], label: ["ติดตามการใช้จ่าย", "Execution Monitoring"] },
   { id: "performance", code: "M08", group: "exec", roles: ["plan", "exec", "div", "audit"], label: ["ผลสัมฤทธิ์", "Performance"],
     plan: [["บันทึกผลตัวชี้วัด", "Enter KPI results"], ["ห่วงโซ่ผลลัพธ์รายโครงการ", "Results chain per project"], ["Scorecard งบประมาณกับผลลัพธ์", "Budget vs outcome scorecard"], ["รายงานประเมินผล", "Evaluation report"]] },
-  { id: "assistant", code: "M09", group: "intel", roles: ["exec", "plan", "fin", "div"], label: ["ผู้ช่วย AI งบประมาณ", "AI Budget Assistant"] },
+  { id: "assistant", code: "M09", group: "intel", roles: ["exec", "plan", "fin", "div", "audit"], label: ["ผู้ช่วย AI งบประมาณ", "AI Budget Assistant"] },
   { id: "admin", code: "M10", group: "sys", roles: ["admin", "audit", "fin"], label: ["ผู้ดูแลระบบ", "System Administration"] },
 );
 

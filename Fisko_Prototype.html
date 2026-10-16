@@ -473,6 +473,19 @@ td .btn { white-space: nowrap; }
 .hsteps.parl { grid-template-columns: repeat(7, minmax(0, 1fr)); }
 .hsteps.parl small { font-weight: 400; }
 @media (max-width: 860px) { .hsteps.parl { grid-template-columns: minmax(0, 1fr); } .hsteps.parl small { margin-left: auto; } }
+
+/* ---------- round 10 ---------- */
+.lvl.input { background: var(--surface-2); color: var(--ink-2); } .lvl.outcome { background: var(--accent-soft); color: var(--accent); }
+tr.sel td { background: var(--surface-2); }
+.ev-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.an-body { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.tpl-prev { border: 1px dashed var(--line); border-radius: 10px; padding: 14px; background: var(--surface-2); overflow-wrap: anywhere; }
+.tpl-prev p { margin: 8px 0 0; }
+.tpl-prev mark { background: var(--accent-soft); color: var(--ink); border-radius: 3px; padding: 0 2px; }
+table.proc td.ms { white-space: nowrap; font-size: 13px; }
+table.proc td.ms.done { background: color-mix(in srgb, var(--accent-soft) 55%, transparent); }
+table.proc td.ms.late { background: color-mix(in srgb, var(--bad-soft) 60%, transparent); }
+@media (max-width: 860px) { .ev-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .an-body { grid-template-columns: minmax(0, 1fr); } }
 </style>
 </head>
 <body>
@@ -536,7 +549,7 @@ const fyLabel = fy => L(`ปีงบประมาณ พ.ศ. ${fy}`, `FY${fy
 
 // ---------- organizations and state ----------
 const SEEDS = {}; // id -> { name: [th, en], seed: () => state }, registered by data files
-const DATA_V = 8; // bump when the seed shape changes so saved demo state is reseeded
+const DATA_V = 9; // bump when the seed shape changes so saved demo state is reseeded
 let ORG = "sample";
 let S = null;
 const key = () => "fisko-v1-" + ORG;
@@ -905,6 +918,51 @@ function buildOrg(cfg) {
     reqs: [],
   };
   s.carry.prev.forEach((c, i) => (c.paid = Math.round(c.amount * paid[i] / 1e5) * 1e5));
+
+  // round 10: procurement milestones (FY2569 snapshot), evaluations and lessons, spending anomalies,
+  // notification templates, SLA escalation, data retention and backups
+  const day = (iso, n) => { const d = new Date(iso + "T00:00:00"); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+  s.proc = {};
+  s.dash.projects.filter(p => p.type === "inv").forEach((p, i) => {
+    const slow = p.actual / p.plan < 0.75, done = slow ? 2 : 4, start = day("2025-10-20", i * 9);
+    s.proc[p.id] = [0, 1, 2, 3, 4].map(n => {
+      const plan = day(start, n * 50 + (n > 2 ? 30 : 0));
+      return { plan, actual: n < done ? day(plan, slow ? 18 + n * 12 : (i + n) % 3 * 3) : null };
+    });
+  });
+  const ev = s.dash.projects.filter(p => s.perf.outputs[p.id] && s.perf.outputs[p.id].kpi);
+  s.evals = [];
+  if (ev[0]) s.evals.push({ id: "EV-2569-01", proj: ev[0].id, status: "done", t: "2026-04-22T10:00", by: U("plan"), ratings: [5, 4, 3, 4, 3],
+    findings: ["ผลผลิตเกิดขึ้นจริงแต่ล่าช้ากว่าแผน เนื่องจากขั้นตอนจัดซื้อจัดจ้างใช้เวลามากกว่าที่ประมาณไว้", "Outputs were delivered but late, because procurement took longer than estimated"],
+    lessons: [["เริ่มจัดทำร่างขอบเขตงาน (TOR) ก่อนได้รับงบประมาณอย่างน้อย 3 เดือน", "Draft the terms of reference at least 3 months before funds arrive"], ["แบ่งสัญญาเป็นระยะเพื่อให้เบิกจ่ายได้ตามไตรมาส", "Split contracts into phases so payments follow the quarters"]] });
+  if (ev[1]) s.evals.push({ id: "EV-2569-02", proj: ev[1].id, status: "draft", t: "2026-04-28T15:00", by: U("plan"), ratings: [4, 3, 0, 0, 0], findings: ["", ""], lessons: [] });
+  s.lessons = s.evals.filter(e => e.status === "done").flatMap(e => e.lessons.map((l, i) => ({ id: `${e.id}-L${i + 1}`, eval: e.id, unit: s.dash.projects.find(p => p.id === e.proj).unit, text: l, t: e.t })));
+  const du = s.dash.units.map(u => u.unit), V = ["บริษัท ตัวอย่างเทคโนโลยี จำกัด", "Sample Technology Co., Ltd."], V2 = ["ห้างหุ้นส่วนจำกัด ก่อสร้างตัวอย่าง", "Sample Construction Ltd. Partnership"];
+  s.anoms = [
+    { id: "AN-01", kind: "split", unit: du[1], risk: 82, status: "new", t: "2026-04-29T06:10", vendor: V,
+      recs: [["2026-03-02", 495000], ["2026-03-06", 488000], ["2026-03-13", 492500]], detail: ["จัดซื้อจากผู้ขายรายเดียว 3 ครั้งใน 12 วัน แต่ละครั้งต่ำกว่าเกณฑ์ 500,000 บาท รวม 1,475,500 บาท", "3 purchases from one supplier in 12 days, each just under the 500,000 baht threshold; 1,475,500 baht in total"] },
+    { id: "AN-02", kind: "spike", unit: du[2], risk: 64, status: "new", t: "2026-04-29T06:10",
+      recs: [["2025-07", 6.1], ["2025-08", 7.4], ["2025-09", 41.2]], detail: ["เบิกจ่ายเดือน ก.ย. 2568 ร้อยละ 41 ของทั้งปี สูงกว่าค่าเฉลี่ยกรม 3.2 เท่า", "September 2025 disbursement was 41% of the year, 3.2× the department average"] },
+    { id: "AN-03", kind: "early", unit: du[1], risk: 71, status: "explained", t: "2026-04-20T06:10", vendor: V2, note: ["ตรวจรับงวดที่ 2 แล้ว แต่บันทึกวันที่ตรวจรับในระบบผิด แก้ไขแล้ว", "Phase 2 was inspected; the inspection date was keyed wrongly and has been fixed"],
+      recs: [["2026-02-10", 3200000]], detail: ["วันที่จ่ายเงินใน GFMIS (10 ก.พ.) ก่อนวันที่ตรวจรับพัสดุ (14 ก.พ.)", "GFMIS payment date (10 Feb) is before the goods inspection date (14 Feb)"] },
+    { id: "AN-04", kind: "vendor", unit: du[3] || du[0], risk: 48, status: "new", t: "2026-04-29T06:10", vendor: V,
+      recs: [["68%", 0]], detail: ["ผู้ขายรายเดียวได้รับร้อยละ 68 ของมูลค่าจัดซื้อของหน่วยงานในปี 2569", "One supplier won 68% of the unit's FY2569 purchases by value"] },
+  ];
+  s.tpl = [
+    { id: "T-01", ev: ["คำขอถูกส่งกลับแก้ไข", "Request returned"], ch: { app: true, mail: true, line: false }, subj: ["คำขอ {เลขที่} ถูกส่งกลับแก้ไข", "Request {no} was returned"], body: ["เรียน {ชื่อ}\nคำขอ {เลขที่} {โครงการ} ถูกส่งกลับแก้ไข มีความเห็น {จำนวน} ข้อ กรุณาแก้ไขภายใน {กำหนด}", "Dear {name},\nRequest {no} {project} was returned with {count} comments. Please fix it by {due}."] },
+    { id: "T-02", ev: ["ใกล้ครบกำหนด SLA", "SLA due soon"], ch: { app: true, mail: true, line: true }, subj: ["เหลือ {วัน} วัน: {งาน}", "{days} days left: {task}"], body: ["งาน {งาน} ของคำขอ {เลขที่} จะครบกำหนดในวันที่ {กำหนด}", "{task} for request {no} is due on {due}."] },
+    { id: "T-03", ev: ["เกินกำหนด SLA (ยกระดับ)", "SLA overdue (escalation)"], ch: { app: true, mail: true, line: true }, subj: ["เกินกำหนด: {งาน}", "Overdue: {task}"], body: ["งาน {งาน} ของคำขอ {เลขที่} เกินกำหนด {วัน} วัน ระบบแจ้ง {ผู้รับยกระดับ} ตามที่กำหนดใน M10", "{task} for request {no} is {days} days overdue. Escalated to {escalate_to} as set in M10."] },
+    { id: "T-04", ev: ["หน่วยงานเบิกจ่ายต่ำกว่าแผน", "Unit behind spending plan"], ch: { app: true, mail: false, line: false }, subj: ["{หน่วยงาน} เบิกจ่ายต่ำกว่าแผน {ร้อยละ}%", "{unit} is {pct}% behind plan"], body: ["{หน่วยงาน} เบิกจ่ายได้ {ร้อยละ}% ของแผน ณ {วันที่}", "{unit} has spent {pct}% of plan as of {date}."] },
+  ];
+  s.escal = { w2: { remind: 3, to: "exec", after: 2 }, w3: { remind: 2, to: "exec", after: 1 }, w4: { remind: 1, to: "exec", after: 1 } };
+  s.retention = [
+    { id: "R1", cls: ["บันทึกการใช้งาน (audit log)", "Audit log"], years: 10, basis: ["ระเบียบงานสารบรรณ / ตรวจสอบย้อนหลัง", "Records rules / audit trail"], size: 2.4 },
+    { id: "R2", cls: ["คำของบประมาณและเวอร์ชัน", "Requests and versions"], years: 10, basis: ["หลักฐานทางการเงิน", "Financial records"], size: 18.6 },
+    { id: "R3", cls: ["เอกสารแนบ", "Attachments"], years: 5, basis: ["หลักฐานประกอบ", "Supporting evidence"], size: 412 },
+    { id: "R4", cls: ["บันทึกการทำงานของ AI", "AI activity log"], years: 2, basis: ["การกำกับดูแล AI", "AI governance"], size: 1.1 },
+    { id: "R5", cls: ["ประวัติการสนทนากับผู้ช่วย AI", "AI assistant chats"], years: 1, basis: ["PDPA · เก็บเท่าที่จำเป็น", "PDPA · keep only what is needed"], size: 0.6 },
+  ];
+  s.backup = { full: "2026-10-12T01:00", incr: "2026-10-16T01:00", restore: "2026-07-20T10:00", rpo: 24, rto: 4, log: [] };
   return s;
 }
 
@@ -1435,7 +1493,7 @@ NAV.push(
   { id: "dashboard", code: "M07", group: "exec", roles: ["exec", "plan", "fin", "audit", "div"], label: ["ติดตามการใช้จ่าย", "Execution Monitoring"] },
   { id: "performance", code: "M08", group: "exec", roles: ["plan", "exec", "div", "audit"], label: ["ผลสัมฤทธิ์", "Performance"],
     plan: [["บันทึกผลตัวชี้วัด", "Enter KPI results"], ["ห่วงโซ่ผลลัพธ์รายโครงการ", "Results chain per project"], ["Scorecard งบประมาณกับผลลัพธ์", "Budget vs outcome scorecard"], ["รายงานประเมินผล", "Evaluation report"]] },
-  { id: "assistant", code: "M09", group: "intel", roles: ["exec", "plan", "fin", "div"], label: ["ผู้ช่วย AI งบประมาณ", "AI Budget Assistant"] },
+  { id: "assistant", code: "M09", group: "intel", roles: ["exec", "plan", "fin", "div", "audit"], label: ["ผู้ช่วย AI งบประมาณ", "AI Budget Assistant"] },
   { id: "admin", code: "M10", group: "sys", roles: ["admin", "audit", "fin"], label: ["ผู้ดูแลระบบ", "System Administration"] },
 );
 
@@ -1628,6 +1686,10 @@ function myTasks() {
     if (A70 && A70.releases && !A70.releases.some(r => r.q === 2 && r.type === "inv")) R(L("ขออนุมัติงวดเงินไตรมาส 2 งบลงทุน", "Request the Q2 investment release"), "", "2026-12-15", "alloc-releases", "p-info");
   }
   if (ROLE === "exec") [...C.prev.filter(c => c.status === "extension"), ...C.reqs.filter(c => c.status === "pending")].forEach(c => R(`${L("อนุมัติเรื่องเงินกันเหลื่อมปี", "Decide a carry-over")} ${c.id}`, mb(c.amount) + " " + L("ลบ.", "M"), TODAY, "alloc-carry", "p-warn"));
+  // Round 10: anomalies, evaluations, procurement slippage.
+  if (ROLE === "audit") (S.anoms || []).filter(a => a.status === "new").forEach(a => R(`${L("ตรวจรายการผิดปกติ", "Review an anomaly")} ${a.id}: ${tx(AN_KIND[a.kind])}`, `${unitName(a.unit)} · ${L("ความเสี่ยง", "risk")} ${a.risk}`, TODAY, "intel-anoms", a.risk >= 70 ? "p-bad" : "p-warn"));
+  if (ROLE === "plan") (S.evals || []).filter(e => e.status === "draft").forEach(e => R(`${L("ประเมินโครงการให้เสร็จ", "Finish a project evaluation")} ${e.id}`, tx((evProj(e) || { name: "" }).name), "2026-11-30", "perf-evaluate", "p-info"));
+  if (ROLE === "fin" && S.proc) { const late = Object.values(S.proc).filter(ms => procState(ms).lv !== "ok").length; if (late) R(L("ติดตามโครงการลงทุนที่จัดซื้อจัดจ้างล่าช้า", "Chase investment projects behind on procurement"), `${late} ${L("โครงการ", "projects")}`, TODAY, "mon-procure", "p-warn"); }
   // Delegated work (round 7): cross-unit transfers this user may approve on an executive's behalf.
   const dg = ROLE !== "exec" && delegFor("exec", "transfer");
   if (dg) Object.values(S.allocs).forEach(A => A.transfers.filter(x => x.status === "pending").forEach(x => { const a = A.lines.find(l => l.id === x.from), b = A.lines.find(l => l.id === x.to);
@@ -1784,7 +1846,7 @@ let MON_TAB = "overview", DRILL_U = null, DRILL_P = null, SHOW_ACK = false, STAG
 const MON_PANELS = {}, MON_BIND = {};
 function monTabsBar() {
   const n = monAlerts().filter(a => !S.acks.includes(a.id)).length;
-  const t = [["overview", L("ภาพรวม", "Overview")], ["drill", L("เจาะลึก", "Drill-down")], ["progress", L("รายงานความก้าวหน้า", "Progress reports")], ["import", L("นำเข้าผลเบิกจ่าย", "Disbursement import")], ["alerts", `${L("การแจ้งเตือน", "Alerts")} (${n})`]];
+  const t = [["overview", L("ภาพรวม", "Overview")], ["drill", L("เจาะลึก", "Drill-down")], ["progress", L("รายงานความก้าวหน้า", "Progress reports")], ["import", L("นำเข้าผลเบิกจ่าย", "Disbursement import")], ["alerts", `${L("การแจ้งเตือน", "Alerts")} (${n})`], ["forecast", L("คาดการณ์สิ้นปี", "Year-end forecast")], ["procure", L("ขั้นตอนจัดซื้อจัดจ้าง", "Procurement")]];
   return `<div class="tabs" role="tablist">${t.map(([id, l]) => `<button class="tab ${id === MON_TAB ? "on" : ""}" type="button" role="tab" aria-selected="${id === MON_TAB}" data-mtab="${id}">${l}</button>`).join("")}</div>`;
 }
 const pct = (a, b) => (b ? a / b * 100 : 0);
@@ -1945,6 +2007,88 @@ MON_BIND.alerts = () => {
   $$("[data-ack]").forEach(b => (b.onclick = () => { S.acks.push(b.dataset.ack); audit(["รับทราบการแจ้งเตือน", "Acknowledged an alert"], b.dataset.ack); commit(); route(); }));
   $$("[data-ago]").forEach(b => (b.onclick = () => { const a = all.find(x => x.id === b.dataset.ago); a.go(); route(); }));
 };
+
+/* ---- 40c-monitor-depth.js ---- */
+// M07 deeper features (round 10): year-end disbursement forecast against the cabinet's quarterly
+// targets, and e-GP procurement milestones for investment projects. Both use the M07 snapshot.
+const CAB = { all: [32, 54, 77, 100], inv: [25, 45, 65, 75] }; // sample cumulative % targets by quarter end
+const SNAP_M = 7; // the snapshot is month 7 of 12
+// Remaining plan is assumed to be delivered at the same pace as so far (actual ÷ plan), capped at 105%.
+function fcast(x, m) {
+  const r = Math.min(1.05, x.plan ? x.actual / x.plan : 1), planAt = Math.min(x.alloc, x.plan * PLAN_F[m - 1] / PLAN_F[SNAP_M - 1]);
+  return Math.min(x.alloc, Math.max(x.actual, x.actual + (planAt - x.plan) * r));
+}
+const fRisk = (v, t) => (v >= t ? tag(L("ถึงเป้า", "On target"), "p-ok") : v >= t - 5 ? tag(L("ต่ำกว่าเป้าเล็กน้อย", "Slightly below"), "p-warn") : tag(L("เสี่ยงไม่ถึงเป้า", "At risk"), "p-bad"));
+
+MON_PANELS.forecast = () => {
+  const U = S.dash.units, T = dashTotals(), tot = m => U.reduce((s, x) => s + fcast(x, m), 0);
+  const q = [3, 6, 9, 12].map((m, i) => ({ m, t: CAB.all[i], past: m <= SNAP_M, f: (m <= SNAP_M ? T.actual * ACT_F[m - 1] / ACT_F[SNAP_M - 1] : tot(m)) / T.alloc * 100 }));
+  const ye = tot(12) / T.alloc * 100, inv = S.dash.projects.filter(p => p.type === "inv");
+  const invA = inv.reduce((s, p) => s + p.alloc, 0), invYe = invA ? inv.reduce((s, p) => s + fcast(p, 12), 0) / invA * 100 : 0;
+  return `
+  <section class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+    <div class="kpi"><span class="l">${L("เบิกจ่ายแล้ว ณ", "Spent as of")} ${fdate(S.dash.asOf)}</span><span class="v">${fmt(T.rate, 1)}%</span></div>
+    <div class="kpi"><span class="l">${L("คาดการณ์สิ้นไตรมาส 3 · เป้า", "Forecast end of Q3 · target")} ${CAB.all[2]}%</span><span class="v" style="color:var(--${q[2].f >= CAB.all[2] ? "accent" : "bad"})">${fmt(q[2].f, 1)}%</span></div>
+    <div class="kpi hl"><span class="l">${L("คาดการณ์สิ้นปี · เป้า", "Forecast year end · target")} ${CAB.all[3]}%</span><span class="v">${fmt(ye, 1)}%</span><span class="d" style="color:var(--rail-ink)">${L("ไม่ทันเบิก", "Unspent")} ${fmt(T.alloc - tot(12), 0)} ${L("ลบ.", "M")}</span></div>
+    <div class="kpi"><span class="l">${L("งบลงทุน คาดการณ์สิ้นปี · เป้า", "Investment year end · target")} ${CAB.inv[3]}%</span><span class="v" style="color:var(--${invYe >= CAB.inv[3] ? "accent" : "bad"})">${fmt(invYe, 1)}%</span></div>
+  </section>
+  <div class="grid2">
+    <section class="panel"><header><h2>${L("เป้าหมายเบิกจ่ายสะสมตามมติ ครม. กับคาดการณ์", "Cabinet cumulative targets vs forecast")}</h2><span class="sp"></span>${tag(L("เป้าหมายตัวอย่าง", "Sample targets"), "p-warn")}</header>
+      <div class="body"><div class="hbars">${q.map((x, i) => `<div class="hb"><span>${L("สิ้นไตรมาส", "End of Q")}${i + 1} · ${L("เป้า", "target")} ${x.t}%</span>
+        <div style="display:flex;flex-direction:column;gap:3px"><div class="track"><i class="c5" style="width:${x.t}%"></i></div><div class="track"><i class="${x.f >= x.t ? "c2" : "c4"}" style="width:${Math.min(100, x.f)}%"></i></div></div>
+        <span class="num" style="text-align:right">${fmt(x.f, 1)}%<div class="sub">${x.past ? L("ผลจริง", "actual") : L("คาดการณ์", "forecast")}</div></span></div>`).join("")}</div>
+        <div class="row sub" style="margin-top:10px"><span><i class="c5 lg"></i>${L("เป้าหมาย", "Target")}</span><span><i class="c2 lg"></i>${L("ผลจริง / คาดการณ์ ถึงเป้า", "Actual / forecast on target")}</span><span><i class="c4 lg"></i>${L("ต่ำกว่าเป้า", "Below target")}</span></div></div></section>
+    <section class="panel"><header><h2>${L("วิธีคาดการณ์", "How the forecast works")}</h2></header>
+      <div class="body sub" style="display:flex;flex-direction:column;gap:8px">
+        <p style="margin:0">${L("แผนที่เหลือจะเบิกจ่ายได้ในอัตราเดียวกับที่ผ่านมา (ผลเทียบแผน) ไม่เกินร้อยละ 105 และไม่เกินวงเงินที่ได้รับ", "The rest of the plan is spent at the pace so far (actual vs plan), capped at 105% and at the allocation")}</p>
+        <p style="margin:0">${L("ใช้ประกอบการเร่งรัดเบิกจ่าย และพิจารณาโอนเปลี่ยนแปลงจากหน่วยที่คาดว่าจะใช้ไม่หมด (M06)", "Use it to chase spending and to move money from units unlikely to spend it all (M06)")}</p></div></section>
+  </div>
+  <section class="panel"><header><h2>${L("คาดการณ์รายหน่วยงาน", "Forecast by unit")}</h2><span class="sp"></span><span class="sub">${L("ล้านบาท", "M baht")}</span></header>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("หน่วยงาน", "Unit")}</th><th class="n">${L("ได้รับ", "Allocated")}</th><th class="n">${L("เบิกแล้ว", "Spent")}</th><th class="n">${L("คาด Q3", "Q3 forecast")}</th><th>${L("เทียบเป้า", "vs target")} ${CAB.all[2]}%</th><th class="n">${L("คาดสิ้นปี", "Year end")}</th><th class="n">${L("คาดว่าไม่ทันเบิก", "Likely unspent")}</th><th>${L("สิ้นปี", "Year end")}</th></tr></thead>
+      <tbody>${U.slice().sort((a, b) => fcast(a, 12) / a.alloc - fcast(b, 12) / b.alloc).map(x => { const f3 = fcast(x, 9) / x.alloc * 100, fy = fcast(x, 12) / x.alloc * 100;
+        return `<tr><td>${unitName(x.unit)}</td><td class="n">${fmt(x.alloc)}</td><td class="n">${fmt(x.actual)} <span class="sub">${fmt(x.actual / x.alloc * 100, 0)}%</span></td>
+          <td class="n">${fmt(f3, 1)}%</td><td>${fRisk(f3, CAB.all[2])}</td><td class="n">${fmt(fy, 1)}%</td><td class="n">${fmt(x.alloc - fcast(x, 12), 1)}</td><td>${fRisk(fy, CAB.all[3] - 5)}</td></tr>`; }).join("")}</tbody></table></div></section>`;
+};
+
+// ---- procurement milestones ----
+const STG = [["ประกาศแผนจัดซื้อ", "Plan published"], ["ประกาศเชิญชวน", "Invitation"], ["ประกาศผู้ชนะ", "Award"], ["ลงนามสัญญา", "Contract signed"], ["ตรวจรับงาน", "Delivery accepted"]];
+const diffD = (a, b) => Math.round((new Date(a + "T00:00:00") - new Date(b + "T00:00:00")) / 864e5);
+function procState(ms) {
+  const asOf = S.dash.asOf, next = ms.findIndex(m => !m.actual);
+  const late = next >= 0 && ms[next].plan < asOf ? diffD(asOf, ms[next].plan) : 0;
+  const slip = Math.max(0, ...ms.filter(m => m.actual).map(m => diffD(m.actual, m.plan)));
+  return { next, late, slip, lv: late > 30 ? "bad" : late > 0 || slip > 14 ? "warn" : "ok" };
+}
+MON_PANELS.procure = () => {
+  const P = S.dash.projects.filter(p => S.proc && S.proc[p.id]), eg = S.integrations.find(i => i.id === "IF-04"), ed = ROLE === "fin" || ROLE === "div";
+  const st = P.map(p => ({ p, ms: S.proc[p.id], s: procState(S.proc[p.id]) }));
+  return `
+  ${eg && eg.status !== "ok" ? `<div class="alert"><div class="ic" style="background:var(--warn-soft);color:var(--warn)">!</div><div><b>${L("การเชื่อมต่อ e-GP (IF-04) ขัดข้อง", "The e-GP link (IF-04) is down")}</b>
+    <p>${L("ข้อมูลด้านล่างบันทึกโดยเจ้าหน้าที่ จะซิงก์อัตโนมัติเมื่อเชื่อมต่อได้ (ดู M10 · การเชื่อมต่อระบบ)", "Dates below were keyed in by staff and will sync once the link is back (see M10 · Integrations)")}</p></div></div>` : ""}
+  <section class="kpis" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+    <div class="kpi"><span class="l">${L("โครงการลงทุนที่ติดตาม", "Investment projects tracked")}</span><span class="v">${P.length}</span></div>
+    <div class="kpi"><span class="l">${L("ลงนามสัญญาแล้ว", "Contracts signed")}</span><span class="v">${st.filter(x => x.ms[3].actual).length}<small>/ ${P.length}</small></span></div>
+    <div class="kpi"><span class="l">${L("ล่าช้ากว่าแผน", "Behind schedule")}</span><span class="v" style="color:var(--${st.some(x => x.s.lv !== "ok") ? "bad" : "accent"})">${st.filter(x => x.s.lv !== "ok").length}</span></div>
+  </section>
+  <section class="panel"><header><h2>${L("ขั้นตอนจัดซื้อจัดจ้างโครงการลงทุน", "Investment procurement milestones")}</h2><span class="sp"></span><span class="sub">${L("ณ", "As of")} ${fdate(S.dash.asOf)} · ${L("วันที่แผน / วันที่จริง", "planned / actual")}</span></header>
+    <div class="tbl-wrap"><table class="proc"><thead><tr><th>${L("โครงการ", "Project")}</th>${STG.map(s => `<th>${tx(s)}</th>`).join("")}<th>${L("สถานะ", "Status")}</th></tr></thead>
+      <tbody>${st.map(({ p, ms, s }) => `<tr><td style="min-width:170px"><b style="font-weight:600">${esc(tx(p.name))}</b><div class="sub">${unitName(p.unit)} · ${fmt(p.alloc, 1)} ${L("ลบ.", "M")}</div></td>
+        ${ms.map((m, i) => { const sl = m.actual ? diffD(m.actual, m.plan) : 0, due = !m.actual && m.plan < S.dash.asOf;
+          return `<td class="ms ${m.actual ? "done" : due ? "late" : ""}"><span class="sub">${fdate(m.plan)}</span>${m.actual ? `<div>${fdate(m.actual)}${sl > 0 ? ` <span style="color:var(--${sl > 14 ? "bad" : "warn"})">+${sl}</span>` : " ✓"}</div>`
+            : i === s.next && ed ? `${due ? `<div style="color:var(--bad)">${L("ล่าช้า", "late")} ${diffD(S.dash.asOf, m.plan)} ${L("วัน", "d")}</div>` : ""}<div class="row" style="flex-wrap:nowrap;gap:4px"><input type="date" id="pd-${p.id}" value="${S.dash.asOf}" aria-label="${L("วันที่เสร็จ", "Done on")}" style="width:128px"><button class="btn" type="button" data-pdone="${p.id}">✓</button></div>`
+            : due ? `<div style="color:var(--bad)">${L("ล่าช้า", "late")} ${diffD(S.dash.asOf, m.plan)} ${L("วัน", "d")}</div>` : ""}</td>`; }).join("")}
+        <td>${tag(s.lv === "ok" ? L("ตามแผน", "On track") : s.lv === "warn" ? L("ล่าช้าเล็กน้อย", "Slipping") : L("ล่าช้ามาก", "Late"), s.lv === "ok" ? "p-ok" : s.lv === "warn" ? "p-warn" : "p-bad")}</td></tr>`).join("")
+        || `<tr><td colspan="7" class="sub">${L("ไม่มีโครงการลงทุนในข้อมูลตัวอย่าง", "No investment projects in the sample")}</td></tr>`}</tbody></table></div>
+    <div class="body sub">${L("+ ตัวเลข = จำนวนวันที่ช้ากว่าแผน · โครงการที่ยังไม่ลงนามสัญญาเสี่ยงต่อการกันเงินไม่ทันสิ้นปี (M06)", "+n = days later than planned · projects without a contract risk missing the year-end carry-over (M06)")}</div></section>`;
+};
+MON_BIND.procure = () => $$("[data-pdone]").forEach(b => (b.onclick = () => {
+  const id = b.dataset.pdone, ms = S.proc[id], s = procState(ms), d = $("#pd-" + id).value;
+  if (!d) return;
+  ms[s.next].actual = d;
+  const p = S.dash.projects.find(x => x.id === id);
+  audit(["บันทึกขั้นตอนจัดซื้อจัดจ้าง", "Recorded a procurement milestone"], `${tx(p.name)} · ${tx(STG[s.next])} ${d}`);
+  commit(); route(); toast(`${tx(STG[s.next])} · ${L("บันทึกแล้ว", "recorded")}`);
+}));
 
 /* ---- 41-requests.js ---- */
 // M02 Budget Preparation: request list and request form. Checks read the M10 business rules;
@@ -3139,7 +3283,8 @@ const INTEL = {}, INTEL_BIND = {};
 const WI = { cut: 15, locks: null };
 const agentOn = id => { const a = (S.agents || []).find(x => x.id === id); return !a || a.on; };
 function intelTabsBar() {
-  const t = [["ask", L("ถาม AI", "Ask AI")], ["trends", L("แนวโน้มหลายปี", "Multi-year trends")], ["whatif", L("จำลองสถานการณ์", "What-if")], ["agents", L("AI Agents และการกำกับ", "AI agents and governance")]];
+  const t = [["ask", L("ถาม AI", "Ask AI")], ["trends", L("แนวโน้มหลายปี", "Multi-year trends")], ["whatif", L("จำลองสถานการณ์", "What-if")], ["agents", L("AI Agents และการกำกับ", "AI agents and governance")],
+    ["anoms", `${L("ความผิดปกติการใช้จ่าย", "Spending anomalies")}${(() => { const n = (S.anoms || []).filter(a => a.status === "new").length; return n ? ` (${n})` : ""; })()}`], ["quality", L("คุณภาพเหตุผลคำขอ", "Justification quality")]];
   return `<div class="tabs" role="tablist">${t.map(([id, l]) => `<button class="tab ${id === INTEL_TAB ? "on" : ""}" type="button" role="tab" aria-selected="${id === INTEL_TAB}" data-itab="${id}">${l}</button>`).join("")}</div>`;
 }
 
@@ -3264,6 +3409,81 @@ INTEL_BIND.agents = () => {
     toast(a.on ? L(`เปิด ${a.id} แล้ว`, `${a.id} is on`) : L(`ปิด ${a.id} แล้ว · ฟังก์ชันที่ใช้ Agent นี้จะไม่ทำงาน`, `${a.id} is off · features using it are disabled`));
   }; });
 };
+
+/* ---- 44c-intel-depth.js ---- */
+// M09 deeper features (round 10): spending anomalies flagged by the monitoring agent for Audit to
+// review, and a quality score for each request's justification with suggestions.
+const AN_KIND = { split: ["แบ่งซื้อแบ่งจ้าง", "Split purchases"], spike: ["เบิกจ่ายกระจุกปลายปี", "Year-end spending spike"], early: ["จ่ายเงินก่อนตรวจรับ", "Paid before inspection"], vendor: ["ผู้ขายรายเดียวครองสัดส่วนสูง", "Supplier concentration"] };
+const AN_ST = { new: [["รอตรวจ", "To review"], "p-warn"], explained: [["มีคำชี้แจงแล้ว", "Explained"], "p-ok"], escalated: [["ส่งตรวจสอบเพิ่มเติม", "Escalated"], "p-bad"] };
+
+INTEL.anoms = () => {
+  const A = S.anoms || [], au = ROLE === "audit", on = agentOn("AG-05");
+  const recs = a => a.kind === "spike" ? a.recs.map(r => `<tr><td>${r[0]}</td><td class="n">${fmt(r[1], 1)}%</td></tr>`).join("")
+    : a.kind === "vendor" ? `<tr><td>${esc(tx(a.vendor))}</td><td class="n">${a.recs[0][0]}</td></tr>`
+    : a.recs.map(r => `<tr><td>${fdate(r[0])}</td><td class="n">${fmt(r[1])}</td></tr>`).join("");
+  return `
+  ${on ? "" : `<div class="alert"><div class="ic" style="background:var(--warn-soft);color:var(--warn)">!</div><div><b>${L("Budget Monitoring Agent ปิดอยู่", "The Budget Monitoring Agent is off")}</b><p>${L("จะไม่มีการตรวจหาความผิดปกติใหม่จนกว่าจะเปิดในแท็บ AI Agents", "No new anomalies are flagged until it is switched on in the AI agents tab")}</p></div></div>`}
+  <section class="kpis" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+    <div class="kpi"><span class="l">${L("รายการผิดปกติรอตรวจ", "Anomalies to review")}</span><span class="v" style="color:var(--${A.some(a => a.status === "new") ? "warn" : "accent"})">${A.filter(a => a.status === "new").length}</span></div>
+    <div class="kpi"><span class="l">${L("ความเสี่ยงสูง (≥ 70)", "High risk (≥ 70)")}</span><span class="v">${A.filter(a => a.risk >= 70 && a.status !== "explained").length}</span></div>
+    <div class="kpi"><span class="l">${L("ตรวจล่าสุดโดย AG-05", "Last scan by AG-05")}</span><span class="v" style="font-size:20px">${fdate(A.reduce((m, a) => (a.t > m ? a.t : m), ""), true)}</span></div>
+  </section>
+  ${A.slice().sort((a, b) => (a.status === "new" ? 0 : 1) - (b.status === "new" ? 0 : 1) || b.risk - a.risk).map(a => `
+  <section class="panel"><header><h2>${tx(AN_KIND[a.kind])} · ${unitName(a.unit)}</h2><span class="sp"></span><span class="mono sub">${a.id}</span>${historyBtn(a.id, a.id)}${tag(tx(AN_ST[a.status][0]), AN_ST[a.status][1])}</header>
+    <div class="body an-body">
+      <div style="display:flex;flex-direction:column;gap:8px;min-width:0"><span>${esc(tx(a.detail))}</span>
+        <div class="row"><span class="sub">${L("คะแนนความเสี่ยง", "Risk score")}</span><div class="bar" style="width:140px"><i style="width:${a.risk}%;background:var(--${a.risk >= 70 ? "bad" : a.risk >= 50 ? "warn" : "info"})"></i></div><b class="num">${a.risk}</b></div>
+        ${a.vendor && a.kind !== "vendor" ? `<span class="sub">${L("ผู้ขาย", "Supplier")}: ${esc(tx(a.vendor))}</span>` : ""}
+        ${a.note ? `<div class="sub">${L("ผลการตรวจ", "Review")}: ${esc(tx(a.note))}</div>` : ""}
+        ${au && a.status === "new" ? `<div class="row" style="flex-wrap:nowrap"><input type="text" id="an-${a.id}" style="flex:1" placeholder="${L("บันทึกผลการตรวจหรือคำชี้แจงของหน่วยงาน", "Record what you found or the unit's explanation")}">
+          <button class="btn" type="button" data-anok="${a.id}">${L("มีคำชี้แจง · ปิด", "Explained · close")}</button><button class="btn danger" type="button" data-anesc="${a.id}">${L("ส่งตรวจสอบเพิ่มเติม", "Escalate")}</button></div>` : ""}</div>
+      <div class="tbl-wrap"><table><thead><tr><th>${a.kind === "spike" ? L("เดือน", "Month") : a.kind === "vendor" ? L("ผู้ขาย", "Supplier") : L("วันที่", "Date")}</th><th class="n">${a.kind === "spike" ? L("% ของทั้งปี", "% of year") : a.kind === "vendor" ? L("สัดส่วน", "Share") : L("บาท", "Baht")}</th></tr></thead><tbody>${recs(a)}</tbody></table></div>
+    </div></section>`).join("")}
+  <p class="sub">${L("AI ชี้รายการที่ควรตรวจเท่านั้น ผู้ตรวจสอบเป็นผู้ตัดสิน ทุกการตัดสินบันทึกในบันทึกการใช้งาน", "AI only points to what to check; the auditor decides, and every decision is in the audit log")}</p>`;
+};
+INTEL_BIND.anoms = () => {
+  const act = (id, ok) => {
+    const a = S.anoms.find(x => x.id === id), v = $("#an-" + id).value.trim();
+    if (!v) { toast(L("บันทึกผลการตรวจก่อน", "Record what you found first")); $("#an-" + id).focus(); return; }
+    a.status = ok ? "explained" : "escalated"; a.note = [v, v];
+    audit(ok ? ["ปิดรายการผิดปกติ (มีคำชี้แจง)", "Closed an anomaly (explained)"] : ["ส่งรายการผิดปกติตรวจสอบเพิ่มเติม", "Escalated an anomaly"], `${a.id} · ${unitName(a.unit)}`);
+    if (!ok) notify(["exec", "fin"], [`ผู้ตรวจสอบส่ง ${a.id} (${AN_KIND[a.kind][0]}) ตรวจสอบเพิ่มเติม`, `Audit escalated ${a.id} (${AN_KIND[a.kind][1]})`], "intel-anoms");
+    commit(); route(); toast(ok ? L("ปิดรายการแล้ว", "Closed") : L("ส่งตรวจสอบเพิ่มเติมแล้ว · แจ้งผู้บริหารและกองคลัง", "Escalated · executive and Finance notified"));
+  };
+  $$("[data-anok]").forEach(b => (b.onclick = () => act(b.dataset.anok, true)));
+  $$("[data-anesc]").forEach(b => (b.onclick = () => act(b.dataset.anesc, false)));
+};
+
+// ---- justification quality ----
+function jqScore(r) {
+  const t = tx(r.reason).trim(), min = (rule("BR-02") || {}).param || 0;
+  const c = [
+    [t.length >= min, 25, L(`ยาวไม่น้อยกว่า ${min} ตัวอักษร`, `At least ${min} characters`), L("ขยายความให้ครบ ปัญหา ความจำเป็น และผลที่ได้", "Say more: the problem, the need and the result")],
+    [/ปัญหา|เนื่องจาก|ปัจจุบัน|problem|because|currently/i.test(t), 20, L("ระบุปัญหาหรือสภาพปัจจุบัน", "States the problem"), L("เริ่มด้วยปัญหาหรือสภาพปัจจุบันที่ต้องแก้", "Open with the problem or current situation")],
+    [/ประชาชน|ผู้รับบริการ|ผู้ใช้|ชุมชน|citizen|user|communit|people/i.test(t), 20, L("ระบุกลุ่มเป้าหมายผู้ได้รับประโยชน์", "Names who benefits"), L("ระบุว่าใครได้ประโยชน์และกี่คน", "Say who benefits and how many")],
+    [/\d/.test(t), 20, L("มีตัวเลขเชิงปริมาณ", "Uses numbers"), L("ใส่ตัวเลข เช่น จำนวนผู้รับบริการ เวลาที่ลดลง", "Add numbers, e.g. people served or time saved")],
+    [!!tx(r.kpi).trim() || kpisForAct(r.act).length > 0, 15, L("เชื่อมกับตัวชี้วัด", "Linked to a KPI"), L("ผูกกับตัวชี้วัดใน M01", "Link it to an M01 KPI")],
+  ];
+  return { score: c.reduce((s, x) => s + (x[0] ? x[1] : 0), 0), c };
+}
+INTEL.quality = () => {
+  const list = (ROLE === "div" ? S.requests.filter(r => r.unit === me().unit) : S.requests).filter(r => !isPersonnel(r));
+  const rows = list.map(r => ({ r, q: jqScore(r) })).sort((a, b) => a.q.score - b.q.score), avg = rows.length ? rows.reduce((s, x) => s + x.q.score, 0) / rows.length : 0;
+  return `
+  <section class="kpis" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+    <div class="kpi hl"><span class="l">${L("คะแนนเฉลี่ย", "Average score")}</span><span class="v">${fmt(avg, 0)}<small>/ 100</small></span></div>
+    <div class="kpi"><span class="l">${L("ต่ำกว่า 60 ควรปรับปรุง", "Below 60, needs work")}</span><span class="v" style="color:var(--${rows.some(x => x.q.score < 60) ? "bad" : "accent"})">${rows.filter(x => x.q.score < 60).length}</span></div>
+    <div class="kpi"><span class="l">${L("คำขอที่ประเมิน", "Requests scored")}</span><span class="v">${rows.length}</span></div>
+  </section>
+  <section class="panel"><header><h2>${L("คุณภาพเหตุผลความจำเป็นของคำขอ", "Justification quality by request")}</h2><span class="sp"></span><span class="sub">${L("Budget Validation Agent (AG-02) · เกณฑ์จาก M10", "Budget Validation Agent (AG-02) · rules from M10")}</span></header>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("คำขอ", "Request")}</th><th>${L("สถานะ", "Status")}</th><th style="width:150px">${L("คะแนน", "Score")}</th><th>${L("ข้อเสนอแนะ", "Suggestions")}</th><th></th></tr></thead>
+      <tbody>${rows.map(({ r, q }) => `<tr><td><span class="mono sub">${r.id}</span> ${esc(tx(r.name))}<div class="sub">${unitName(r.unit)}</div></td><td>${pill(r.status)}</td>
+        <td><div class="bar"><i style="width:${q.score}%;background:var(--${q.score >= 80 ? "accent" : q.score >= 60 ? "warn" : "bad"})"></i></div><span class="sub">${q.score} / 100</span></td>
+        <td>${q.c.filter(x => !x[0]).map(x => `<div class="sub">• ${x[3]}</div>`).join("") || `<span class="sub">${L("ครบทุกเกณฑ์", "Meets every criterion")}</span>`}</td>
+        <td><button class="btn" type="button" data-qopen="${r.id}">${L("เปิดคำขอ", "Open")}</button></td></tr>`).join("")}</tbody></table></div>
+    <div class="body sub">${L("เกณฑ์", "Criteria")}: ${jqScore({ reason: "", kpi: "", act: "" }).c.map(x => `${x[2]} ${x[1]}`).join(" · ")}</div></section>`;
+};
+INTEL_BIND.quality = () => $$("[data-qopen]").forEach(b => (b.onclick = () => openReq(b.dataset.qopen)));
 
 /* ---- 45-strategy.js ---- */
 // M01 Strategic Planning: strategy map, 5-year KPI targets, KPI-to-activity links and the
@@ -4329,6 +4549,88 @@ BIND.performance = () => {
   const pdf = $("#rep-pdf"); if (pdf) pdf.onclick = () => { audit(["ส่งออกรายงานประเมินผล", "Exported the evaluation report"], "PDF"); commit(); toast(L("สร้างไฟล์ PDF แล้ว (จำลอง)", "PDF created (simulated)")); };
 };
 
+/* ---- 48b-perf-depth.js ---- */
+// M08 deeper feature (round 10): project evaluation on a logframe with five criteria. Lessons from a
+// finished evaluation are shown to Planning in the M01 project bank when it scores new ideas.
+PERF_TABS.push({ id: "evaluate", label: ["ประเมินโครงการ", "Project evaluation"] });
+const EV_CRIT = [["ความสอดคล้อง", "Relevance"], ["ประสิทธิผล", "Effectiveness"], ["ประสิทธิภาพ", "Efficiency"], ["ผลกระทบ", "Impact"], ["ความยั่งยืน", "Sustainability"]];
+let EV_OPEN = null;
+const evScore = e => { const r = e.ratings.filter(Boolean); return r.length ? r.reduce((a, b) => a + b, 0) / r.length : null; };
+const evProj = e => S.dash.projects.find(p => p.id === e.proj);
+
+PERF.evaluate = () => {
+  const E = S.evals || [], pl = ROLE === "plan";
+  if (!E.find(e => e.id === EV_OPEN)) EV_OPEN = (E.find(e => e.status === "draft") || E[0] || {}).id || null;
+  const e = E.find(x => x.id === EV_OPEN), free = S.dash.projects.filter(p => p.type !== "per" && !E.some(x => x.proj === p.id));
+  return `
+  <section class="panel"><header><h2>${L("การประเมินโครงการ", "Project evaluations")}</h2><span class="sp"></span><span class="sub">${L("เกณฑ์ 5 ด้าน คะแนน 1–5", "Five criteria, scored 1–5")}</span></header>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("โครงการ", "Project")}</th><th class="n">${L("คะแนนเฉลี่ย", "Average")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
+      <tbody>${E.map(x => { const p = evProj(x), sc = evScore(x); return `<tr class="${x.id === EV_OPEN ? "sel" : ""}"><td class="mono">${x.id}</td><td>${p ? esc(tx(p.name)) : x.proj}<div class="sub">${p ? unitName(p.unit) : ""}</div></td>
+        <td class="n">${sc ? fmt(sc, 1) + " / 5" : "—"}</td><td>${x.status === "done" ? tag(L("เสร็จสิ้น", "Done"), "p-ok") : tag(L("ร่าง", "Draft"), "p-warn")}</td>
+        <td><div class="row" style="flex-wrap:nowrap"><button class="btn" type="button" data-evopen="${x.id}">${L("เปิด", "Open")}</button>${historyBtn(x.id, x.id)}</div></td></tr>`; }).join("") || `<tr><td colspan="5" class="sub">${L("ยังไม่มีการประเมิน", "No evaluations yet")}</td></tr>`}</tbody></table></div>
+    ${pl && free.length ? `<div class="body"><form class="inline-form" id="ev-new"><div class="f" style="flex:2 1 260px"><label for="ev-proj">${L("เริ่มประเมินโครงการ", "Start an evaluation")}</label>
+      <select id="ev-proj">${free.map(p => `<option value="${p.id}">${unitName(p.unit)} · ${esc(tx(p.name))}</option>`).join("")}</select></div><button class="btn primary" type="submit">${L("สร้างแบบประเมิน", "Create")}</button></form></div>` : ""}</section>
+  ${e ? evDetail(e, pl && e.status === "draft") : ""}`;
+};
+function evDetail(e, ed) {
+  const p = evProj(e), o = p && S.perf.outputs[p.id], k = o && o.kpi ? S.perf.kpis[o.kpi] : null, kk = o && o.kpi ? findKpi(o.kpi) : null, ms = S.proc && S.proc[p.id];
+  const done = ms ? ms.filter(m => m.actual).length : null, ds = ed ? "" : "disabled";
+  const row = (lvl, cls, what, plan, act, note) => `<tr><td><span class="lvl ${cls}">${lvl}</span></td><td>${what}</td><td class="n">${plan}</td><td class="n">${act}</td><td class="sub">${note || ""}</td></tr>`;
+  return `
+  <section class="panel"><header><h2>${e.id} · ${p ? esc(tx(p.name)) : ""}</h2><span class="sp"></span><span class="sub">${p ? unitName(p.unit) : ""} · ${fyLabel(S.dash.fy)}</span></header>
+    <div class="tbl-wrap"><table><thead><tr><th style="width:110px">${L("ระดับ", "Level")}</th><th>${L("ตัวชี้วัด / สิ่งที่วัด", "Measure")}</th><th class="n">${L("แผน / เป้า", "Plan / target")}</th><th class="n">${L("ผล", "Result")}</th><th>${L("หมายเหตุ", "Note")}</th></tr></thead>
+      <tbody>${row(L("ปัจจัยนำเข้า", "Input"), "input", L("งบประมาณ (ลบ.)", "Budget (M baht)"), fmt(p.alloc, 1), fmt(p.actual, 1), `${fmt(pct(p.actual, p.plan), 0)}% ${L("ของแผน ณ วันที่ข้อมูล", "of plan to date")}`)}
+        ${row(L("กิจกรรม", "Activity"), "activity", ms ? L("ขั้นตอนจัดซื้อจัดจ้าง", "Procurement milestones") : L("ดำเนินงานตามแผน", "Work to plan"), ms ? "5" : "—", ms ? String(done) : "—", ms ? `${L("จาก M07", "from M07")}` : "")}
+        ${o ? row(L("ผลผลิต", "Output"), "output", esc(tx(o.name)), `${fmtv(o.target)} ${tx(o.unit)}`, o.result == null ? "—" : fmtv(o.result), achTag(achv(o.result, o.target))) : ""}
+        ${k && kk ? row(L("ผลลัพธ์", "Outcome"), "outcome", `${kk.id} ${esc(tx(kk.name))}`, `${fmtv(k.target)} ${tx(kk.unit)}`, k.result == null ? "—" : fmtv(k.result), achTag(achv(k.result, k.target))) : ""}</tbody></table></div>
+    <div class="body" style="display:flex;flex-direction:column;gap:14px">
+      <div class="ev-grid">${EV_CRIT.map((c, i) => `<div class="f"><label for="evr-${i}">${tx(c)}</label><select id="evr-${i}" data-evr="${i}" ${ds}><option value="0">—</option>${[1, 2, 3, 4, 5].map(v => `<option ${e.ratings[i] === v ? "selected" : ""}>${v}</option>`).join("")}</select></div>`).join("")}</div>
+      <div class="f"><label for="ev-find">${L("ข้อค้นพบ", "Findings")}</label><textarea id="ev-find" rows="3" ${ds}>${esc(tx(e.findings))}</textarea></div>
+      <div class="f"><label>${L("บทเรียน (ส่งต่อคลังโครงการ M01)", "Lessons (passed to the M01 project bank)")}</label>
+        <ul class="check">${e.lessons.map(l => `<li><span class="m ok">✓</span><div>${esc(tx(l))}</div></li>`).join("") || `<li class="sub">${L("ยังไม่มีบทเรียน", "No lessons yet")}</li>`}</ul>
+        ${ed ? `<div class="row" style="flex-wrap:nowrap"><input type="text" id="ev-lesson" style="flex:1" placeholder="${L("เช่น เริ่มทำ TOR ก่อนได้รับงบประมาณ", "e.g. start the TOR before funds arrive")}"><button class="btn" type="button" id="ev-addl">+ ${L("เพิ่มบทเรียน", "Add lesson")}</button></div>` : ""}</div>
+      ${ed ? `<div class="row"><button class="btn" type="button" id="ev-save">${L("บันทึกร่าง", "Save draft")}</button><button class="btn primary" type="button" id="ev-done">${L("ประเมินเสร็จ · ส่งบทเรียนเข้าคลังโครงการ", "Finish · send lessons to the project bank")}</button></div>` : ""}</div></section>`;
+}
+function bindEvaluate() {
+  $$("[data-evopen]").forEach(b => (b.onclick = () => { EV_OPEN = b.dataset.evopen; route(); }));
+  const nf = $("#ev-new");
+  if (nf) nf.onsubmit = ev => {
+    ev.preventDefault();
+    const id = `EV-2569-${String(S.evals.length + 1).padStart(2, "0")}`;
+    S.evals.push({ id, proj: $("#ev-proj").value, status: "draft", t: nowIso(), by: me().id, ratings: [0, 0, 0, 0, 0], findings: ["", ""], lessons: [] });
+    EV_OPEN = id; audit(["สร้างแบบประเมินโครงการ", "Started a project evaluation"], id); commit(); route();
+  };
+  const e = (S.evals || []).find(x => x.id === EV_OPEN);
+  if (!e || e.status !== "draft") return;
+  const grab = () => { e.ratings = EV_CRIT.map((c, i) => Number($("#evr-" + i).value)); const f = $("#ev-find").value; e.findings = [f, f]; };
+  const al = $("#ev-addl");
+  if (al) al.onclick = () => { const v = $("#ev-lesson").value.trim(); if (!v) return; grab(); e.lessons.push([v, v]); save(); route(); };
+  const sv = $("#ev-save"); if (sv) sv.onclick = () => { grab(); audit(["บันทึกร่างการประเมินโครงการ", "Saved an evaluation draft"], e.id); commit(); toast(L("บันทึกร่างแล้ว", "Draft saved")); };
+  const dn = $("#ev-done");
+  if (dn) dn.onclick = () => {
+    grab();
+    if (e.ratings.some(r => !r)) { toast(L("ให้คะแนนให้ครบทั้ง 5 ด้านก่อน", "Score all five criteria first")); return; }
+    if (!tx(e.findings).trim() || !e.lessons.length) { toast(L("ใส่ข้อค้นพบและบทเรียนอย่างน้อย 1 ข้อ", "Add findings and at least one lesson")); return; }
+    e.status = "done"; e.t = nowIso();
+    const unit = evProj(e).unit;
+    e.lessons.forEach((l, i) => S.lessons.push({ id: `${e.id}-L${i + 1}`, eval: e.id, unit, text: l, t: e.t }));
+    audit(["ประเมินโครงการเสร็จสิ้น", "Finished a project evaluation"], `${e.id} · ${fmt(evScore(e), 1)}/5`);
+    notify(["plan", "exec"], [`ประเมินโครงการ ${e.id} เสร็จแล้ว มีบทเรียน ${e.lessons.length} ข้อในคลังโครงการ`, `Evaluation ${e.id} is done; ${e.lessons.length} lessons are in the project bank`], "strat-bank");
+    commit(); route(); toast(L("ประเมินเสร็จ · บทเรียนแสดงในคลังโครงการ M01", "Done · lessons now show in the M01 project bank"));
+  };
+}
+{
+  const base = BIND.performance;
+  BIND.performance = () => { base(); if (PERF_TAB === "evaluate") bindEvaluate(); };
+  // M01 project bank: lessons from finished evaluations, shown while Planning scores ideas.
+  const bank = STRAT.bank;
+  STRAT.bank = () => {
+    const ls = S.lessons || [];
+    return bank() + (ls.length ? `<section class="panel"><header><h2>${L("บทเรียนจากการประเมินโครงการ (M08)", "Lessons from project evaluations (M08)")}</h2><span class="sp"></span><span class="sub">${L("ใช้ประกอบการให้คะแนนความพร้อมและความเสี่ยง", "Use them when scoring readiness and risk")}</span></header>
+      <div class="body"><ul class="check">${ls.map(l => `<li><span class="m wa">!</span><div>${esc(tx(l.text))}<div class="sub">${unitName(l.unit)} · <span class="mono">${l.eval}</span> · ${fdate(l.t)}</div></div></li>`).join("")}</ul></div></section>` : "");
+  };
+}
+
 /* ---- 50-admin.js ---- */
 // M10 System Administration. Admin edits everything; auditors read the audit log; finance watches integrations.
 let ADMIN_TAB = "master";
@@ -4347,7 +4649,7 @@ const MAP_TYPE = { same: [["คงเดิม", "Unchanged"], "p-mute"], rename
 const MATRIX = { // role -> M01..M10 rights
   exec: ["R", "R", "R", "A", "R", "A", "R", "R", "U", "–"], plan: ["CU", "R", "CU", "U", "CU", "R", "R", "CU", "U", "–"],
   div: ["R", "CU", "–", "R", "–", "R", "U", "U", "U", "–"], fin: ["–", "R", "–", "–", "–", "CU", "CU", "–", "U", "R"],
-  audit: ["R", "R", "R", "R", "R", "R", "R", "R", "–", "R"], admin: ["–", "–", "–", "–", "–", "–", "–", "–", "–", "CU"],
+  audit: ["R", "R", "R", "R", "R", "R", "R", "R", "U", "R"], admin: ["–", "–", "–", "–", "–", "–", "–", "–", "–", "CU"],
 };
 const isAdmin = () => ROLE === "admin";
 const sw = (id, on, dis) => `<label class="switch"><input type="checkbox" id="${id}" ${on ? "checked" : ""} ${dis ? "disabled" : ""}><span></span></label>`;
@@ -4557,6 +4859,99 @@ VIEWS.admin = () => {
 BIND.admin = () => {
   $$("[data-tab]").forEach(b => (b.onclick = () => { ADMIN_TAB = b.dataset.tab; history.replaceState(null, "", "#admin-" + ADMIN_TAB); route(); }));
   (BIND_ADMIN[ADMIN_TAB] || (() => {}))();
+};
+
+/* ---- 50b-admin-depth.js ---- */
+// M10 deeper features (round 10): notification templates with a live preview, SLA reminders and
+// escalation per workflow step, and data retention with backup and restore-test status.
+ADMIN_TABS.push({ id: "notify", roles: ["admin"], label: ["การแจ้งเตือนและ SLA", "Notifications & SLAs"] }, { id: "data", roles: ["admin", "audit"], label: ["เก็บรักษาและสำรองข้อมูล", "Retention & backup"] });
+let TPL_OPEN = "T-01";
+const TPL_SAMPLE = () => LANG === "en"
+  ? { no: "REQ-2571-014", project: "Online service platform", name: "Somjai Jaidee", count: "3", due: fdate(addDays(TODAY, 5)), days: "2", task: "Planning review", escalate_to: "Executive", unit: "Infrastructure Bureau", pct: "59", date: fdate(TODAY) }
+  : { "เลขที่": "REQ-2571-014", "โครงการ": "แพลตฟอร์มบริการออนไลน์", "ชื่อ": "สมใจ ใจดี", "จำนวน": "3", "กำหนด": fdate(addDays(TODAY, 5)), "วัน": "2", "งาน": "กองแผนงานกลั่นกรอง", "ผู้รับยกระดับ": "ผู้บริหาร", "หน่วยงาน": "สำนักโครงสร้างพื้นฐาน", "ร้อยละ": "59", "วันที่": fdate(TODAY) };
+const fillTpl = (s, v) => String(s).replace(/\{([^}]+)\}/g, (m, k) => (v[k] != null ? `<mark>${esc(v[k])}</mark>` : esc(m)));
+// Requests waiting at a workflow step, with their due date from the step's SLA.
+function slaItems() {
+  const step = st => S.workflow.find(w => (st === "plan" ? w.id === "w2" : w.id === "w3"));
+  return S.requests.filter(r => r.status === "plan" || r.status === "committee").map(r => { const w = step(r.status), due = addDays(r.updated, w.sla || 0); return { r, w, due, left: daysUntil(due) }; });
+}
+
+ADMIN.notify = () => {
+  const t = S.tpl.find(x => x.id === TPL_OPEN) || S.tpl[0], v = TPL_SAMPLE(), items = slaItems();
+  return `
+  <div class="grid2">
+    <section class="panel"><header><h2>${L("แม่แบบข้อความแจ้งเตือน", "Notification templates")}</h2></header>
+      <div class="body" style="display:flex;flex-direction:column;gap:12px">
+        <div class="f"><label for="tpl-sel">${L("เหตุการณ์", "Event")}</label><select id="tpl-sel">${S.tpl.map(x => `<option value="${x.id}" ${x.id === t.id ? "selected" : ""}>${x.id} · ${esc(tx(x.ev))}</option>`).join("")}</select></div>
+        <div class="row">${[["app", L("ในระบบ", "In-app")], ["mail", L("อีเมล", "Email")], ["line", "LINE"]].map(([k, l]) => `<label class="field-inline"><input type="checkbox" data-tch="${k}" ${t.ch[k] ? "checked" : ""}> ${l}</label>`).join("")}</div>
+        <div class="f"><label for="tpl-subj">${L("หัวเรื่อง", "Subject")} (${LANG.toUpperCase()})</label><input type="text" id="tpl-subj" value="${esc(tx(t.subj))}"></div>
+        <div class="f"><label for="tpl-body">${L("ข้อความ", "Message")} (${LANG.toUpperCase()})</label><textarea id="tpl-body" rows="5">${esc(tx(t.body))}</textarea>
+          <span class="hint">${L("ตัวแปรที่ใช้ได้", "Placeholders")}: ${Object.keys(v).map(k => `<span class="mono">{${k}}</span>`).join(" ")}</span></div>
+        <div class="row"><button class="btn primary" type="button" id="tpl-save">${L("บันทึกแม่แบบ", "Save template")}</button></div></div></section>
+    <section class="panel"><header><h2>${L("ตัวอย่างข้อความ", "Preview")}</h2><span class="sp"></span><span class="sub">${L("แทนค่าด้วยข้อมูลตัวอย่าง", "Filled with sample values")}</span></header>
+      <div class="body"><div class="tpl-prev" id="tpl-prev"><b>${fillTpl(tx(t.subj), v)}</b><p>${fillTpl(tx(t.body), v).replace(/\n/g, "<br>")}</p></div></div></section>
+  </div>
+  <section class="panel"><header><h2>${L("SLA การแจ้งเตือนล่วงหน้า และการยกระดับ", "SLA reminders and escalation")}</h2><span class="sp"></span>
+      <button class="btn" type="button" id="sla-run">${L("ตรวจและส่งแจ้งเตือนตอนนี้", "Check and notify now")}</button></header>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("ขั้นตอน (M10 · Workflow)", "Step (M10 · Workflow)")}</th><th class="n">${L("SLA (วัน)", "SLA (days)")}</th><th class="n">${L("เตือนก่อน (วัน)", "Remind before (days)")}</th><th>${L("ยกระดับถึง", "Escalate to")}</th><th class="n">${L("หลังเกินกำหนด (วัน)", "After overdue (days)")}</th><th class="n">${L("ใกล้ครบ / เกินกำหนด", "Due soon / overdue")}</th></tr></thead>
+      <tbody>${S.workflow.filter(w => w.sla).map(w => { const e = S.escal[w.id] || { remind: 1, to: "exec", after: 1 }, its = items.filter(x => x.w.id === w.id);
+        return `<tr><td>${tx(w.name)}<div class="sub">${tx(ROLES[w.role])}</div></td><td class="n"><input type="number" min="1" max="60" data-wsla="${w.id}" value="${w.sla}" style="width:70px" aria-label="SLA"></td>
+          <td class="n"><input type="number" min="0" max="30" data-esc="${w.id}|remind" value="${e.remind}" style="width:70px" aria-label="${L("เตือนก่อน", "Remind before")}"></td>
+          <td><select data-esc="${w.id}|to" aria-label="${L("ยกระดับถึง", "Escalate to")}">${Object.keys(ROLES).filter(r => r !== "admin").map(r => `<option value="${r}" ${r === e.to ? "selected" : ""}>${tx(ROLES[r])}</option>`).join("")}</select></td>
+          <td class="n"><input type="number" min="0" max="30" data-esc="${w.id}|after" value="${e.after}" style="width:70px" aria-label="${L("หลังเกินกำหนด", "After overdue")}"></td>
+          <td class="n">${its.filter(x => x.left >= 0 && x.left <= e.remind).length} / <span style="color:var(--${its.some(x => x.left < 0) ? "bad" : "ink-2"})">${its.filter(x => x.left < 0).length}</span></td></tr>`; }).join("")}</tbody></table></div>
+    <div class="body sub">${L("ส่งข้อความตามแม่แบบ T-02 (ใกล้ครบกำหนด) และ T-03 (เกินกำหนด) · ระบบจริงตรวจทุกเช้า 07:00 น.", "Uses templates T-02 (due soon) and T-03 (overdue) · the live system checks every morning at 07:00")}</div></section>`;
+};
+BIND_ADMIN.notify = () => {
+  const t = () => S.tpl.find(x => x.id === TPL_OPEN) || S.tpl[0];
+  $("#tpl-sel").onchange = e => { TPL_OPEN = e.target.value; route(); };
+  const prev = () => { const v = TPL_SAMPLE(); $("#tpl-prev").innerHTML = `<b>${fillTpl($("#tpl-subj").value, v)}</b><p>${fillTpl($("#tpl-body").value, v).replace(/\n/g, "<br>")}</p>`; };
+  $("#tpl-subj").oninput = prev; $("#tpl-body").oninput = prev;
+  $("#tpl-save").onclick = () => {
+    const x = t(), i = LANG === "en" ? 1 : 0;
+    x.subj[i] = $("#tpl-subj").value; x.body[i] = $("#tpl-body").value;
+    $$("[data-tch]").forEach(c => (x.ch[c.dataset.tch] = c.checked));
+    audit(["แก้ไขแม่แบบการแจ้งเตือน", "Changed a notification template"], `${x.id} ${tx(x.ev)}`); commit(); toast(L("บันทึกแม่แบบแล้ว", "Template saved"));
+  };
+  $$("[data-wsla]").forEach(inp => (inp.onchange = () => { const w = S.workflow.find(x => x.id === inp.dataset.wsla), old = w.sla; w.sla = Number(inp.value); audit(["แก้ไข SLA ขั้นตอน", "Changed a step SLA"], `${tx(w.name)}: ${old} → ${w.sla}`); commit(); route(); }));
+  $$("[data-esc]").forEach(inp => (inp.onchange = () => {
+    const [id, k] = inp.dataset.esc.split("|"); S.escal[id] = S.escal[id] || { remind: 1, to: "exec", after: 1 };
+    S.escal[id][k] = k === "to" ? inp.value : Number(inp.value);
+    audit(["แก้ไขกติกาการยกระดับ", "Changed an escalation rule"], `${id} ${k}: ${inp.value}`); commit(); route();
+  }));
+  $("#sla-run").onclick = () => {
+    let soon = 0, over = 0;
+    slaItems().forEach(x => {
+      const e = S.escal[x.w.id] || { remind: 1, to: "exec", after: 1 };
+      if (x.left < 0 && -x.left >= e.after) { over++; notify([e.to, x.w.role], [`เกินกำหนด ${-x.left} วัน: ${x.w.name[0]} คำขอ ${x.r.id}`, `${-x.left} days overdue: ${x.w.name[1]} for ${x.r.id}`], `req:${x.r.id}`); }
+      else if (x.left >= 0 && x.left <= e.remind) { soon++; notify([x.w.role], [`เหลือ ${x.left} วัน: ${x.w.name[0]} คำขอ ${x.r.id}`, `${x.left} days left: ${x.w.name[1]} for ${x.r.id}`], `req:${x.r.id}`); }
+    });
+    audit(["สั่งตรวจ SLA และส่งแจ้งเตือน", "Ran the SLA check"], `${soon} / ${over}`); commit(); renderShell(); route();
+    toast(`${L("ส่งเตือนใกล้ครบกำหนด", "Due-soon reminders")} ${soon} · ${L("ยกระดับเกินกำหนด", "overdue escalations")} ${over}`);
+  };
+};
+
+ADMIN.data = () => {
+  const B = S.backup, ad = isAdmin(), ago = d => -daysUntil(d.slice(0, 10)), rt = ago(B.restore);
+  return `
+  <section class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+    <div class="kpi"><span class="l">${L("สำรองเต็มล่าสุด", "Last full backup")}</span><span class="v" style="font-size:18px">${fdate(B.full, true)}</span></div>
+    <div class="kpi"><span class="l">${L("สำรองส่วนเพิ่มล่าสุด", "Last incremental")}</span><span class="v" style="font-size:18px">${fdate(B.incr, true)}</span></div>
+    <div class="kpi"><span class="l">${L("ทดสอบกู้คืนล่าสุด", "Last restore test")}</span><span class="v" style="font-size:18px;color:var(--${rt > 90 ? "bad" : "ink"})">${fdate(B.restore)}</span><span class="d sub">${rt} ${L("วันที่แล้ว · ควรทดสอบทุก 90 วัน", "days ago · test every 90 days")}</span></div>
+    <div class="kpi"><span class="l">RPO / RTO</span><span class="v" style="font-size:18px">${B.rpo} ${L("ชม.", "h")} / ${B.rto} ${L("ชม.", "h")}</span></div>
+  </section>
+  ${ad ? `<div class="row"><button class="btn" type="button" id="bk-now">${L("สำรองข้อมูลตอนนี้", "Back up now")}</button><button class="btn" type="button" id="bk-test">${L("จำลอง: ทดสอบกู้คืนบนเครื่องทดสอบ", "Demo: test a restore on the test server")}</button></div>` : ""}
+  ${B.log.length ? `<section class="panel"><header><h2>${L("ประวัติการสำรองและกู้คืน", "Backup and restore log")}</h2></header><div class="body"><ul class="log">${B.log.map(l => `<li><b style="font-weight:600">${esc(tx(l.what))}</b><small>${fdate(l.t, true)} · ${esc(userName(l.by))}</small></li>`).join("")}</ul></div></section>` : ""}
+  <section class="panel"><header><h2>${L("ระยะเวลาเก็บรักษาข้อมูล", "Data retention")}</h2><span class="sp"></span>${tag(ad ? L("แก้ไขได้", "Editable") : L("ดูอย่างเดียว", "View only"), ad ? "p-ok" : "p-mute")}</header>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("ประเภทข้อมูล", "Data class")}</th><th class="n">${L("เก็บ (ปี)", "Keep (years)")}</th><th>${L("เหตุผล / อ้างอิง", "Basis")}</th><th class="n">${L("ขนาด (GB)", "Size (GB)")}</th></tr></thead>
+      <tbody>${S.retention.map(r => `<tr><td>${tx(r.cls)}</td><td class="n"><input type="number" min="1" max="30" data-ret="${r.id}" value="${r.years}" ${ad ? "" : "disabled"} style="width:70px" aria-label="${esc(tx(r.cls))}"></td><td class="sub">${tx(r.basis)}</td><td class="n">${fmt(r.size, 1)}</td></tr>`).join("")}</tbody></table></div>
+    <div class="body sub">${L("ข้อมูลที่ครบกำหนดจะแจ้งเจ้าของข้อมูลก่อนลบ 30 วัน · บันทึกการใช้งานแก้ไขไม่ได้ตลอดอายุการเก็บ", "Owners are told 30 days before data is deleted · the audit log can't be changed while it is kept")}</div></section>`;
+};
+BIND_ADMIN.data = () => {
+  const B = S.backup, log = what => { B.log.unshift({ t: nowIso(), by: me().id, what }); };
+  $$("[data-ret]").forEach(inp => (inp.onchange = () => { const r = S.retention.find(x => x.id === inp.dataset.ret), old = r.years; r.years = Number(inp.value); audit(["แก้ไขระยะเวลาเก็บรักษาข้อมูล", "Changed a retention period"], `${tx(r.cls)}: ${old} → ${r.years}`); commit(); toast(L("บันทึกแล้ว", "Saved")); }));
+  const bn = $("#bk-now"); if (bn) bn.onclick = () => { B.incr = nowIso(); log(["สำรองข้อมูลส่วนเพิ่มสำเร็จ 1.8 GB", "Incremental backup succeeded, 1.8 GB"]); audit(["สั่งสำรองข้อมูล", "Ran a backup"], "M10"); commit(); route(); toast(L("สำรองข้อมูลแล้ว (จำลอง)", "Backed up (simulated)")); };
+  const bt = $("#bk-test"); if (bt) bt.onclick = () => { B.restore = nowIso(); log(["ทดสอบกู้คืนสำเร็จ ใช้เวลา 2 ชม. 10 นาที ภายใน RTO", "Restore test succeeded in 2 h 10 min, within the RTO"]); audit(["ทดสอบกู้คืนข้อมูล", "Tested a restore"], "M10"); commit(); route(); toast(L("ทดสอบกู้คืนสำเร็จ (จำลอง)", "Restore test passed (simulated)")); };
 };
 
 /* ---- 52-demo.js ---- */

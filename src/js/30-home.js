@@ -75,6 +75,10 @@ function myTasks() {
     if (A70 && A70.releases && !A70.releases.some(r => r.q === 2 && r.type === "inv")) R(L("ขออนุมัติงวดเงินไตรมาส 2 งบลงทุน", "Request the Q2 investment release"), "", "2026-12-15", "alloc-releases", "p-info");
   }
   if (ROLE === "exec") [...C.prev.filter(c => c.status === "extension"), ...C.reqs.filter(c => c.status === "pending")].forEach(c => R(`${L("อนุมัติเรื่องเงินกันเหลื่อมปี", "Decide a carry-over")} ${c.id}`, mb(c.amount) + " " + L("ลบ.", "M"), TODAY, "alloc-carry", "p-warn"));
+  // Round 10: anomalies, evaluations, procurement slippage.
+  if (ROLE === "audit") (S.anoms || []).filter(a => a.status === "new").forEach(a => R(`${L("ตรวจรายการผิดปกติ", "Review an anomaly")} ${a.id}: ${tx(AN_KIND[a.kind])}`, `${unitName(a.unit)} · ${L("ความเสี่ยง", "risk")} ${a.risk}`, TODAY, "intel-anoms", a.risk >= 70 ? "p-bad" : "p-warn"));
+  if (ROLE === "plan") (S.evals || []).filter(e => e.status === "draft").forEach(e => R(`${L("ประเมินโครงการให้เสร็จ", "Finish a project evaluation")} ${e.id}`, tx((evProj(e) || { name: "" }).name), "2026-11-30", "perf-evaluate", "p-info"));
+  if (ROLE === "fin" && S.proc) { const late = Object.values(S.proc).filter(ms => procState(ms).lv !== "ok").length; if (late) R(L("ติดตามโครงการลงทุนที่จัดซื้อจัดจ้างล่าช้า", "Chase investment projects behind on procurement"), `${late} ${L("โครงการ", "projects")}`, TODAY, "mon-procure", "p-warn"); }
   // Delegated work (round 7): cross-unit transfers this user may approve on an executive's behalf.
   const dg = ROLE !== "exec" && delegFor("exec", "transfer");
   if (dg) Object.values(S.allocs).forEach(A => A.transfers.filter(x => x.status === "pending").forEach(x => { const a = A.lines.find(l => l.id === x.from), b = A.lines.find(l => l.id === x.to);

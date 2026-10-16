@@ -172,5 +172,50 @@ function buildOrg(cfg) {
     reqs: [],
   };
   s.carry.prev.forEach((c, i) => (c.paid = Math.round(c.amount * paid[i] / 1e5) * 1e5));
+
+  // round 10: procurement milestones (FY2569 snapshot), evaluations and lessons, spending anomalies,
+  // notification templates, SLA escalation, data retention and backups
+  const day = (iso, n) => { const d = new Date(iso + "T00:00:00"); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+  s.proc = {};
+  s.dash.projects.filter(p => p.type === "inv").forEach((p, i) => {
+    const slow = p.actual / p.plan < 0.75, done = slow ? 2 : 4, start = day("2025-10-20", i * 9);
+    s.proc[p.id] = [0, 1, 2, 3, 4].map(n => {
+      const plan = day(start, n * 50 + (n > 2 ? 30 : 0));
+      return { plan, actual: n < done ? day(plan, slow ? 18 + n * 12 : (i + n) % 3 * 3) : null };
+    });
+  });
+  const ev = s.dash.projects.filter(p => s.perf.outputs[p.id] && s.perf.outputs[p.id].kpi);
+  s.evals = [];
+  if (ev[0]) s.evals.push({ id: "EV-2569-01", proj: ev[0].id, status: "done", t: "2026-04-22T10:00", by: U("plan"), ratings: [5, 4, 3, 4, 3],
+    findings: ["ผลผลิตเกิดขึ้นจริงแต่ล่าช้ากว่าแผน เนื่องจากขั้นตอนจัดซื้อจัดจ้างใช้เวลามากกว่าที่ประมาณไว้", "Outputs were delivered but late, because procurement took longer than estimated"],
+    lessons: [["เริ่มจัดทำร่างขอบเขตงาน (TOR) ก่อนได้รับงบประมาณอย่างน้อย 3 เดือน", "Draft the terms of reference at least 3 months before funds arrive"], ["แบ่งสัญญาเป็นระยะเพื่อให้เบิกจ่ายได้ตามไตรมาส", "Split contracts into phases so payments follow the quarters"]] });
+  if (ev[1]) s.evals.push({ id: "EV-2569-02", proj: ev[1].id, status: "draft", t: "2026-04-28T15:00", by: U("plan"), ratings: [4, 3, 0, 0, 0], findings: ["", ""], lessons: [] });
+  s.lessons = s.evals.filter(e => e.status === "done").flatMap(e => e.lessons.map((l, i) => ({ id: `${e.id}-L${i + 1}`, eval: e.id, unit: s.dash.projects.find(p => p.id === e.proj).unit, text: l, t: e.t })));
+  const du = s.dash.units.map(u => u.unit), V = ["บริษัท ตัวอย่างเทคโนโลยี จำกัด", "Sample Technology Co., Ltd."], V2 = ["ห้างหุ้นส่วนจำกัด ก่อสร้างตัวอย่าง", "Sample Construction Ltd. Partnership"];
+  s.anoms = [
+    { id: "AN-01", kind: "split", unit: du[1], risk: 82, status: "new", t: "2026-04-29T06:10", vendor: V,
+      recs: [["2026-03-02", 495000], ["2026-03-06", 488000], ["2026-03-13", 492500]], detail: ["จัดซื้อจากผู้ขายรายเดียว 3 ครั้งใน 12 วัน แต่ละครั้งต่ำกว่าเกณฑ์ 500,000 บาท รวม 1,475,500 บาท", "3 purchases from one supplier in 12 days, each just under the 500,000 baht threshold; 1,475,500 baht in total"] },
+    { id: "AN-02", kind: "spike", unit: du[2], risk: 64, status: "new", t: "2026-04-29T06:10",
+      recs: [["2025-07", 6.1], ["2025-08", 7.4], ["2025-09", 41.2]], detail: ["เบิกจ่ายเดือน ก.ย. 2568 ร้อยละ 41 ของทั้งปี สูงกว่าค่าเฉลี่ยกรม 3.2 เท่า", "September 2025 disbursement was 41% of the year, 3.2× the department average"] },
+    { id: "AN-03", kind: "early", unit: du[1], risk: 71, status: "explained", t: "2026-04-20T06:10", vendor: V2, note: ["ตรวจรับงวดที่ 2 แล้ว แต่บันทึกวันที่ตรวจรับในระบบผิด แก้ไขแล้ว", "Phase 2 was inspected; the inspection date was keyed wrongly and has been fixed"],
+      recs: [["2026-02-10", 3200000]], detail: ["วันที่จ่ายเงินใน GFMIS (10 ก.พ.) ก่อนวันที่ตรวจรับพัสดุ (14 ก.พ.)", "GFMIS payment date (10 Feb) is before the goods inspection date (14 Feb)"] },
+    { id: "AN-04", kind: "vendor", unit: du[3] || du[0], risk: 48, status: "new", t: "2026-04-29T06:10", vendor: V,
+      recs: [["68%", 0]], detail: ["ผู้ขายรายเดียวได้รับร้อยละ 68 ของมูลค่าจัดซื้อของหน่วยงานในปี 2569", "One supplier won 68% of the unit's FY2569 purchases by value"] },
+  ];
+  s.tpl = [
+    { id: "T-01", ev: ["คำขอถูกส่งกลับแก้ไข", "Request returned"], ch: { app: true, mail: true, line: false }, subj: ["คำขอ {เลขที่} ถูกส่งกลับแก้ไข", "Request {no} was returned"], body: ["เรียน {ชื่อ}\nคำขอ {เลขที่} {โครงการ} ถูกส่งกลับแก้ไข มีความเห็น {จำนวน} ข้อ กรุณาแก้ไขภายใน {กำหนด}", "Dear {name},\nRequest {no} {project} was returned with {count} comments. Please fix it by {due}."] },
+    { id: "T-02", ev: ["ใกล้ครบกำหนด SLA", "SLA due soon"], ch: { app: true, mail: true, line: true }, subj: ["เหลือ {วัน} วัน: {งาน}", "{days} days left: {task}"], body: ["งาน {งาน} ของคำขอ {เลขที่} จะครบกำหนดในวันที่ {กำหนด}", "{task} for request {no} is due on {due}."] },
+    { id: "T-03", ev: ["เกินกำหนด SLA (ยกระดับ)", "SLA overdue (escalation)"], ch: { app: true, mail: true, line: true }, subj: ["เกินกำหนด: {งาน}", "Overdue: {task}"], body: ["งาน {งาน} ของคำขอ {เลขที่} เกินกำหนด {วัน} วัน ระบบแจ้ง {ผู้รับยกระดับ} ตามที่กำหนดใน M10", "{task} for request {no} is {days} days overdue. Escalated to {escalate_to} as set in M10."] },
+    { id: "T-04", ev: ["หน่วยงานเบิกจ่ายต่ำกว่าแผน", "Unit behind spending plan"], ch: { app: true, mail: false, line: false }, subj: ["{หน่วยงาน} เบิกจ่ายต่ำกว่าแผน {ร้อยละ}%", "{unit} is {pct}% behind plan"], body: ["{หน่วยงาน} เบิกจ่ายได้ {ร้อยละ}% ของแผน ณ {วันที่}", "{unit} has spent {pct}% of plan as of {date}."] },
+  ];
+  s.escal = { w2: { remind: 3, to: "exec", after: 2 }, w3: { remind: 2, to: "exec", after: 1 }, w4: { remind: 1, to: "exec", after: 1 } };
+  s.retention = [
+    { id: "R1", cls: ["บันทึกการใช้งาน (audit log)", "Audit log"], years: 10, basis: ["ระเบียบงานสารบรรณ / ตรวจสอบย้อนหลัง", "Records rules / audit trail"], size: 2.4 },
+    { id: "R2", cls: ["คำของบประมาณและเวอร์ชัน", "Requests and versions"], years: 10, basis: ["หลักฐานทางการเงิน", "Financial records"], size: 18.6 },
+    { id: "R3", cls: ["เอกสารแนบ", "Attachments"], years: 5, basis: ["หลักฐานประกอบ", "Supporting evidence"], size: 412 },
+    { id: "R4", cls: ["บันทึกการทำงานของ AI", "AI activity log"], years: 2, basis: ["การกำกับดูแล AI", "AI governance"], size: 1.1 },
+    { id: "R5", cls: ["ประวัติการสนทนากับผู้ช่วย AI", "AI assistant chats"], years: 1, basis: ["PDPA · เก็บเท่าที่จำเป็น", "PDPA · keep only what is needed"], size: 0.6 },
+  ];
+  s.backup = { full: "2026-10-12T01:00", incr: "2026-10-16T01:00", restore: "2026-07-20T10:00", rpo: 24, rto: 4, log: [] };
   return s;
 }

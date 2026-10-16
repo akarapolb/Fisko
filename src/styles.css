@@ -463,3 +463,16 @@ td .btn { white-space: nowrap; }
 .hsteps.parl { grid-template-columns: repeat(7, minmax(0, 1fr)); }
 .hsteps.parl small { font-weight: 400; }
 @media (max-width: 860px) { .hsteps.parl { grid-template-columns: minmax(0, 1fr); } .hsteps.parl small { margin-left: auto; } }
+
+/* ---------- round 10 ---------- */
+.lvl.input { background: var(--surface-2); color: var(--ink-2); } .lvl.outcome { background: var(--accent-soft); color: var(--accent); }
+tr.sel td { background: var(--surface-2); }
+.ev-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.an-body { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.tpl-prev { border: 1px dashed var(--line); border-radius: 10px; padding: 14px; background: var(--surface-2); overflow-wrap: anywhere; }
+.tpl-prev p { margin: 8px 0 0; }
+.tpl-prev mark { background: var(--accent-soft); color: var(--ink); border-radius: 3px; padding: 0 2px; }
+table.proc td.ms { white-space: nowrap; font-size: 13px; }
+table.proc td.ms.done { background: color-mix(in srgb, var(--accent-soft) 55%, transparent); }
+table.proc td.ms.late { background: color-mix(in srgb, var(--bad-soft) 60%, transparent); }
+@media (max-width: 860px) { .ev-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .an-body { grid-template-columns: minmax(0, 1fr); } }

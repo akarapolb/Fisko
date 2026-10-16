@@ -3,7 +3,7 @@ let MON_TAB = "overview", DRILL_U = null, DRILL_P = null, SHOW_ACK = false, STAG
 const MON_PANELS = {}, MON_BIND = {};
 function monTabsBar() {
   const n = monAlerts().filter(a => !S.acks.includes(a.id)).length;
-  const t = [["overview", L("ภาพรวม", "Overview")], ["drill", L("เจาะลึก", "Drill-down")], ["progress", L("รายงานความก้าวหน้า", "Progress reports")], ["import", L("นำเข้าผลเบิกจ่าย", "Disbursement import")], ["alerts", `${L("การแจ้งเตือน", "Alerts")} (${n})`]];
+  const t = [["overview", L("ภาพรวม", "Overview")], ["drill", L("เจาะลึก", "Drill-down")], ["progress", L("รายงานความก้าวหน้า", "Progress reports")], ["import", L("นำเข้าผลเบิกจ่าย", "Disbursement import")], ["alerts", `${L("การแจ้งเตือน", "Alerts")} (${n})`], ["forecast", L("คาดการณ์สิ้นปี", "Year-end forecast")], ["procure", L("ขั้นตอนจัดซื้อจัดจ้าง", "Procurement")]];
   return `<div class="tabs" role="tablist">${t.map(([id, l]) => `<button class="tab ${id === MON_TAB ? "on" : ""}" type="button" role="tab" aria-selected="${id === MON_TAB}" data-mtab="${id}">${l}</button>`).join("")}</div>`;
 }
 const pct = (a, b) => (b ? a / b * 100 : 0);

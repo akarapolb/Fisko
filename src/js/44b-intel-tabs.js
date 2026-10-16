@@ -4,7 +4,8 @@ const INTEL = {}, INTEL_BIND = {};
 const WI = { cut: 15, locks: null };
 const agentOn = id => { const a = (S.agents || []).find(x => x.id === id); return !a || a.on; };
 function intelTabsBar() {
-  const t = [["ask", L("ถาม AI", "Ask AI")], ["trends", L("แนวโน้มหลายปี", "Multi-year trends")], ["whatif", L("จำลองสถานการณ์", "What-if")], ["agents", L("AI Agents และการกำกับ", "AI agents and governance")]];
+  const t = [["ask", L("ถาม AI", "Ask AI")], ["trends", L("แนวโน้มหลายปี", "Multi-year trends")], ["whatif", L("จำลองสถานการณ์", "What-if")], ["agents", L("AI Agents และการกำกับ", "AI agents and governance")],
+    ["anoms", `${L("ความผิดปกติการใช้จ่าย", "Spending anomalies")}${(() => { const n = (S.anoms || []).filter(a => a.status === "new").length; return n ? ` (${n})` : ""; })()}`], ["quality", L("คุณภาพเหตุผลคำขอ", "Justification quality")]];
   return `<div class="tabs" role="tablist">${t.map(([id, l]) => `<button class="tab ${id === INTEL_TAB ? "on" : ""}" type="button" role="tab" aria-selected="${id === INTEL_TAB}" data-itab="${id}">${l}</button>`).join("")}</div>`;
 }
 
