@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fisko Demo Script</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap">
+<style>
+/* Presenter script: one column, a timing rail on the left of each step, built to print on A4 */
+:root {
+  --bg: #FFFFFF; --tint: #F4F5FA; --line: #DDDEE9; --ink: #1C1D3F; --ink-2: #45465C; --muted: #7A7B92;
+  --navy: #1A1B50; --accent: #1B9E29; --accent-soft: #E4FBE7; --warn: #A86A0C; --warn-soft: #FCF1DB;
+  --font: "IBM Plex Sans Thai", "Leelawadee UI", Tahoma, sans-serif; --mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0F1029; --tint: #1A1C44; --line: #2D2F5E; --ink: #ECEDF7; --ink-2: #C3C4D8; --muted: #8E90AE;
+  --navy: #24276A; --accent: #3DD552; --accent-soft: #163A24; --warn: #E7AA45; --warn-soft: #3A2C12; color-scheme: dark; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15.5px/1.7 var(--font); }
+.wrap { max-width: 920px; margin: 0 auto; padding: 40px 24px 80px; }
+.eyebrow { font-size: 12.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+h1 { font-size: 32px; line-height: 1.25; margin: 6px 0 4px; }
+h2 { font-size: 21px; margin: 40px 0 12px; }
+p { margin: 0 0 10px; }
+.sub { color: var(--muted); font-size: 13.5px; }
+.mono { font-family: var(--mono); font-size: .9em; }
+.box { background: var(--tint); border-radius: 10px; padding: 14px 18px; margin: 12px 0; }
+.box ol, .box ul { margin: 6px 0 0; padding-left: 20px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { text-align: left; font-size: 12.5px; color: var(--ink-2); background: var(--tint); padding: 8px 10px; border-bottom: 1px solid var(--line); }
+td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+.step { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 18px; padding: 18px 0; border-bottom: 1px solid var(--line); break-inside: avoid; }
+.step .time { font-family: var(--mono); font-weight: 600; color: var(--accent); font-size: 17px; }
+.step .time small { display: block; color: var(--muted); font-weight: 500; font-size: 12px; font-family: var(--font); }
+.step h3 { margin: 0 0 4px; font-size: 18px; }
+.role { display: inline-block; font-size: 12.5px; font-weight: 600; border-radius: 99px; padding: 1px 10px; background: var(--accent-soft); color: var(--accent); margin-right: 6px; }
+.say { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; margin: 10px 0; font-size: 15.5px; }
+.say .en { display: block; color: var(--muted); font-size: 13.5px; margin-top: 4px; }
+.click { background: var(--tint); border-radius: 8px; padding: 8px 12px; font-size: 14px; }
+.click b { color: var(--ink); }
+.backup { font-size: 13.5px; color: var(--warn); margin-top: 6px; }
+.msg { font-size: 14px; margin-top: 8px; }
+.msg b { color: var(--accent); }
+@media (max-width: 640px) { .step { grid-template-columns: minmax(0, 1fr); gap: 4px; } }
+@media print { body { font-size: 13px; } .wrap { padding: 0; } h2 { break-after: avoid; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Fisko · Demo script</div>
+  <h1>สคริปต์สาธิต Fisko 15 นาที</h1>
+  <p class="sub">ใช้คู่กับต้นแบบ Fisko_Prototype.html หรือลิงก์ที่เผยแพร่ · ทุกขั้นเดินตามโครงการตัวอย่างเดียวกันตั้งแต่แผนถึงผลสัมฤทธิ์ · ในต้นแบบมีหน้า “คู่มือการสาธิต” ที่มีปุ่มพาไปแต่ละขั้น</p>
+
+  <h2>ก่อนเริ่ม (2 นาที ก่อนลูกค้าเข้าห้อง)</h2>
+  <div class="box"><ol>
+    <li>เปิดไฟล์ <span class="mono">Fisko_Prototype.html</span> ในเบราว์เซอร์ (Chrome หรือ Edge) ขยายหน้าต่างเต็มจอ</li>
+    <li>เลือกหน่วยงานตัวอย่างที่มุมบน: <b>กรมโยธาธิการและผังเมือง</b> หากเป็นลูกค้ากรมโยธา หรือ <b>กรมตัวอย่าง</b> สำหรับลูกค้าอื่น (ลิงก์ที่เผยแพร่มีเฉพาะกรมตัวอย่าง)</li>
+    <li>ภาษา TH · บทบาท กองแผนงาน</li>
+    <li>เปิด <b>คู่มือการสาธิต</b> ที่แถบซ้ายล่าง แล้วกด <b>เริ่มใหม่ด้วยข้อมูลตั้งต้น</b> ทุกครั้งก่อนสาธิต</li>
+    <li>เปิดเอกสาร Conceptual Architecture ไว้อีกแท็บ เผื่อมีคำถามด้านสถาปัตยกรรม</li>
+  </ol></div>
+  <p class="sub">โครงการตัวอย่าง: กรมตัวอย่าง = “พัฒนาระบบบริการประชาชนออนไลน์” (REQ-2571-014) · กรมโยธา = “ระบบขออนุญาตก่อสร้างอาคารออนไลน์” (REQ-2571-021) · ข้อมูลทั้งหมดเป็นข้อมูลสมมติ</p>
+
+  <h2>ภาพรวมเวลา</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>เวลา</th><th>ช่วง</th><th>บทบาท</th><th>ข้อความหลัก</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">0:00</td><td>แพลตฟอร์มเดียว</td><td>กองแผนงาน</td><td>ทุกบทบาททำงานบนข้อมูลชุดเดียว</td></tr>
+      <tr><td class="mono">1:00</td><td>M01 ยุทธศาสตร์</td><td>กองแผนงาน</td><td>ทุกบาทผูกกับยุทธศาสตร์และตัวชี้วัด</td></tr>
+      <tr><td class="mono">2:30</td><td>M02 จัดทำคำขอ</td><td>สำนัก / กอง</td><td>AI ช่วยร่าง ระบบตรวจตามกฎทันที</td></tr>
+      <tr><td class="mono">4:30</td><td>M04 กลั่นกรอง</td><td>กองแผนงาน</td><td>ความเห็นรายบรรทัด ไม่หลงทางในอีเมล</td></tr>
+      <tr><td class="mono">6:00</td><td>M03 จัดลำดับ</td><td>กองแผนงาน</td><td>ตัดสินใจด้วยเกณฑ์ที่โปร่งใส</td></tr>
+      <tr><td class="mono">7:00</td><td>M04 คณะกรรมการ</td><td>ผู้บริหาร</td><td>มติไหลต่อเข้าระบบอัตโนมัติ</td></tr>
+      <tr><td class="mono">8:00</td><td>M05 ส่งสำนักงบประมาณ</td><td>กองแผนงาน</td><td>ตรวจก่อนส่ง สร้างแบบฟอร์ม ติดตามผล</td></tr>
+      <tr><td class="mono">9:30</td><td>M06 จัดสรร</td><td>การเงิน → ผู้บริหาร</td><td>โอนเปลี่ยนแปลงถึงผู้มีอำนาจที่ถูกต้อง</td></tr>
+      <tr><td class="mono">11:00</td><td>M07 ติดตาม</td><td>ผู้บริหาร</td><td>เจาะลึกและแจ้งเตือนเชิงรุก</td></tr>
+      <tr><td class="mono">12:30</td><td>M08 ผลสัมฤทธิ์</td><td>กองแผนงาน</td><td>งบประมาณกับผลงาน วัดได้จริง</td></tr>
+      <tr><td class="mono">13:30</td><td>M09 AI</td><td>ผู้บริหาร</td><td>AI เสนอ มนุษย์ตัดสินใจ</td></tr>
+      <tr><td class="mono">14:30</td><td>M10 และปิด</td><td>ผู้ดูแลระบบ</td><td>ปรับได้ทุกปีโดยไม่แก้โค้ด</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>สคริปต์รายขั้น</h2>
+
+  <div class="step"><div class="time">0:00<small>1 นาที</small></div><div>
+    <h3>แพลตฟอร์มเดียว 6 บทบาท</h3><span class="role">กองแผนงาน</span><span class="sub">หน้า พื้นที่ทำงานของฉัน</span>
+    <div class="say">“วันนี้จะเดินตามโครงการเดียวตั้งแต่แผนยุทธศาสตร์จนถึงผลสัมฤทธิ์ ทุกคนในกรมใช้ระบบเดียวกัน แต่ละบทบาทเห็นเฉพาะงานของตนเอง และกำหนดส่งมาจากปฏิทินงบประมาณ”<span class="en">We follow one project from strategy to results. One system for the whole department; each role sees its own work, with deadlines from the budget calendar.</span></div>
+    <div class="click"><b>คลิก:</b> ชี้ “งานของฉัน” และ “ปฏิทินงบประมาณ” → สลับ EN แล้วกลับ TH → เปิดกระดิ่งแจ้งเตือน</div>
+    <div class="msg"><b>ข้อความหลัก:</b> ไม่มีไฟล์ Excel วนส่งกันอีกต่อไป</div>
+  </div></div>
+
+  <div class="step"><div class="time">1:00<small>1.5 นาที</small></div><div>
+    <h3>M01 จากยุทธศาสตร์สู่คำขอ</h3><span class="role">กองแผนงาน</span><span class="sub">แผนยุทธศาสตร์ → แท็บความสอดคล้องแผนกับคำขอ</span>
+    <div class="say">“ทุกคำขอผูกกับกิจกรรมและตัวชี้วัดตั้งแต่ต้น ระบบจึงบอกได้ทันทีว่าวงเงินกี่เปอร์เซ็นต์สอดคล้องกับแผน และตัวชี้วัดใดยังไม่มีงบรองรับ ด้านล่างคือเส้นทางของโครงการตัวอย่าง จากยุทธศาสตร์ชาติถึงคำขอ”<span class="en">Every request links to an activity and KPI from the start, so you see how much budget follows the plan and which KPIs have no funding. Below is our project's trace from the National Strategy to the request.</span></div>
+    <div class="click"><b>คลิก:</b> ชี้เส้นทางโครงการตัวอย่าง → แท็บแผนผังยุทธศาสตร์ เปิด/ปิดยุทธศาสตร์หนึ่งข้อ</div>
+  </div></div>
+
+  <div class="step"><div class="time">2:30<small>2 นาที</small></div><div>
+    <h3>M02 จัดทำคำขอพร้อมผู้ช่วย AI</h3><span class="role">สำนัก / กอง</span><span class="sub">เปิดคำขอโครงการตัวอย่าง</span>
+    <div class="say">“ผู้จัดทำกรอกรายการ ระบบคำนวณและตรวจตามกฎทันที ด้านขวาบอกว่ายังขาดอะไร AI ช่วยร่างเหตุผลความจำเป็นจากข้อมูลจริงพร้อมแหล่งอ้างอิง แต่ผู้จัดทำเป็นคนตรวจและกดส่งเสมอ”<span class="en">The requester enters lines; the system calculates and checks rules instantly. AI drafts the justification from real data with sources, but the requester always reviews and sends.</span></div>
+    <div class="click"><b>คลิก:</b> “ร่างเหตุผลความจำเป็น” → “แนบคุณลักษณะเฉพาะ” → แท็บผูกพันหลายปี → แท็บเวอร์ชัน → กลับแท็บแรก → “ส่งให้กองแผนงาน”</div>
+    <div class="backup">ถ้าส่งไม่ได้: ดูรายการที่มีเครื่องหมาย × ในกล่องตรวจความครบถ้วน แล้วแก้ตามนั้น (มักเป็นเอกสารแนบ)</div>
+  </div></div>
+
+  <div class="step"><div class="time">4:30<small>1.5 นาที</small></div><div>
+    <h3>M04 กลั่นกรองรายบรรทัด</h3><span class="role">กองแผนงาน</span><span class="sub">กลั่นกรองและอนุมัติ → แท็บคำขอรอพิจารณา</span>
+    <div class="say">“กองแผนงานเห็นคิวพร้อมกำหนดเวลาตาม SLA ใส่ความเห็นรายบรรทัดได้ตรงจุด ไม่หลงทางในอีเมล ส่งกลับหรือเสนอต่อได้ และทุกการกระทำถูกบันทึก”<span class="en">Planning sees the queue with SLA dates and comments exactly on the line in question, then returns or sends on. Every action is recorded.</span></div>
+    <div class="click"><b>คลิก:</b> “พิจารณา” ที่โครงการตัวอย่าง → ปุ่ม ✎ ที่บรรทัดหนึ่ง พิมพ์ความเห็น → “ผ่านการกลั่นกรอง · เสนอต่อ”</div>
+  </div></div>
+
+  <div class="step"><div class="time">6:00<small>1 นาที</small></div><div>
+    <h3>M03 จัดลำดับความสำคัญ</h3><span class="role">กองแผนงาน</span><span class="sub">รวบรวมคำขอระดับกรม → แท็บจัดลำดับความสำคัญ</span>
+    <div class="say">“เมื่อวงเงินไม่พอ ระบบจัดลำดับตามเกณฑ์และน้ำหนักที่กรมกำหนด เส้นประแดงคือกรอบวงเงิน ทุกคนเห็นเหตุผลเดียวกัน”<span class="en">When money is short, projects rank by criteria and weights the department sets. The red dashed line is the ceiling; everyone sees the same reasoning.</span></div>
+    <div class="click"><b>คลิก:</b> เปลี่ยนคะแนนหนึ่งช่อง ให้เห็นอันดับและเส้นตัดขยับ</div>
+  </div></div>
+
+  <div class="step"><div class="time">7:00<small>1 นาที</small></div><div>
+    <h3>M04 มติคณะกรรมการ</h3><span class="role">ผู้บริหาร</span><span class="sub">แท็บการประชุมคณะกรรมการ</span>
+    <div class="say">“บันทึกมติรายวาระได้ในที่ประชุม ระบบปรับสถานะคำขอตามมติทันที และใช้วงเงินตามมติต่อในการส่งสำนักงบประมาณ ไม่ต้องพิมพ์ซ้ำ”<span class="en">Resolutions are recorded item by item in the meeting; request statuses update immediately and the resolved amount flows into submission.</span></div>
+    <div class="click"><b>คลิก:</b> เลือก “เห็นชอบโดยปรับลดวงเงิน” ใส่วงเงินประมาณ 90% → “บันทึกมติและปิดการประชุม”</div>
+  </div></div>
+
+  <div class="step"><div class="time">8:00<small>1.5 นาที</small></div><div>
+    <h3>M05 ส่งสำนักงบประมาณ</h3><span class="role">กองแผนงาน</span><span class="sub">ส่งสำนักงบประมาณ → แท็บตรวจก่อนส่ง</span>
+    <div class="say">“ก่อนส่ง ระบบตรวจรหัสงบประมาณ โครงสร้าง และเอกสาร สร้างแบบฟอร์มให้อัตโนมัติ แล้วติดตามสถานะจนได้ผลพิจารณาและคำขอปรับปรุง”<span class="en">Before sending, codes, structure and documents are checked and the form is generated; status is tracked through to the result and revision requests.</span></div>
+    <div class="click"><b>คลิก:</b> แท็บตัวอย่างแบบฟอร์ม → แท็บสถานะ “ส่งชุดข้อมูล” → กดปุ่มจำลอง 2 ขั้น ชี้ผลพิจารณาและคำขอปรับปรุง</div>
+    <div class="backup">ต้องอธิบาย: ปุ่ม “จำลอง” แทนการตอบกลับจากสำนักงบประมาณ ระบบจริงรับผ่านช่องทางที่ได้รับอนุญาต</div>
+  </div></div>
+
+  <div class="step"><div class="time">9:30<small>1.5 นาที</small></div><div>
+    <h3>M06 จัดสรรและโอนเปลี่ยนแปลง</h3><span class="role">การเงิน → ผู้บริหาร</span><span class="sub">จัดสรรงบประมาณ → แท็บโอนเปลี่ยนแปลง</span>
+    <div class="say">“กองคลังจัดสรรวงเงิน วางแผนรายเดือน และขอโอนเปลี่ยนแปลง ระบบตรวจวงเงินคงเหลือและส่งให้ผู้มีอำนาจที่ถูกต้องตามประเภทการโอน”<span class="en">Finance allocates, plans monthly and requests transfers; remaining amounts are checked and each transfer goes to the right authority.</span></div>
+    <div class="click"><b>คลิก:</b> แท็บแผนการใช้จ่ายรายเดือน (ชี้กราฟสะสม) → สลับบทบาทเป็นผู้บริหาร → แท็บโอนเปลี่ยนแปลง “อนุมัติ”</div>
+  </div></div>
+
+  <div class="step"><div class="time">11:00<small>1.5 นาที</small></div><div>
+    <h3>M07 ติดตามการใช้จ่าย</h3><span class="role">ผู้บริหาร</span><span class="sub">ติดตามการใช้จ่าย</span>
+    <div class="say">“ผู้บริหารเห็นภาพรวมในหน้าเดียว เจาะลึกจากหน่วยงานถึงหมวดรายจ่าย และได้รับแจ้งเตือนเชิงรุกจาก AI ก่อนปัญหาจะสาย ข้อมูลเบิกจ่ายกระทบยอดกับ GFMIS”<span class="en">Executives get the overview on one page, drill from unit to expense category, and receive proactive AI alerts. Disbursement is reconciled with GFMIS.</span></div>
+    <div class="click"><b>คลิก:</b> แท็บเจาะลึก → หน่วยงาน → โครงการ → แท็บการแจ้งเตือน “ดูรายละเอียด”</div>
+  </div></div>
+
+  <div class="step"><div class="time">12:30<small>1 นาที</small></div><div>
+    <h3>M08 งบประมาณกับผลสัมฤทธิ์</h3><span class="role">กองแผนงาน</span><span class="sub">ผลสัมฤทธิ์ → แท็บ Scorecard</span>
+    <div class="say">“ทุกโครงการถูกวัดทั้งการใช้เงินและผลผลิต จุดขวาบนคือใช้เงินตามแผนและได้ผลงานตามเป้า ห่วงโซ่ผลลัพธ์เชื่อมถึงตัวชี้วัดและผลกระทบ และ AI ร่างข้อเสนอแนะในรายงานได้”<span class="en">Every project is measured on spending and output; top right is on plan and on target. The results chain links to KPIs and impact, and AI drafts the report's recommendations.</span></div>
+    <div class="click"><b>คลิก:</b> ชี้กราฟ → แท็บห่วงโซ่ผลลัพธ์ → แท็บรายงาน “ให้ AI ร่างข้อเสนอแนะ”</div>
+  </div></div>
+
+  <div class="step"><div class="time">13:30<small>1 นาที</small></div><div>
+    <h3>M09 ถาม AI และจำลองสถานการณ์</h3><span class="role">ผู้บริหาร</span><span class="sub">ผู้ช่วย AI งบประมาณ</span>
+    <div class="say">“ถามด้วยภาษาธรรมชาติ ได้คำตอบพร้อมแหล่งอ้างอิงจากข้อมูลที่มีสิทธิ์เท่านั้น จำลองการลดวงเงินโดยล็อกโครงการสำคัญได้ AI เสนอเท่านั้น การตัดสินใจเป็นของผู้มีอำนาจ ทุกการใช้งานถูกบันทึกและเปิดปิดแต่ละ Agent ได้”<span class="en">Ask in plain language; answers cite sources from permitted data only. Simulate a cut while locking key projects. AI only suggests; every use is logged and each agent can be switched off.</span></div>
+    <div class="click"><b>คลิก:</b> คำถามตัวอย่างข้อแรก → แท็บจำลองสถานการณ์ เลื่อนเป็น 10% → แท็บ AI Agents</div>
+  </div></div>
+
+  <div class="step"><div class="time">14:30<small>0.5 นาที</small></div><div>
+    <h3>M10 ปรับได้โดยไม่แก้โค้ด และปิดท้าย</h3><span class="role">ผู้ดูแลระบบ</span><span class="sub">ผู้ดูแลระบบ → แท็บกฎทางธุรกิจ</span>
+    <div class="say">“หลักเกณฑ์งบประมาณเปลี่ยนทุกปี ผู้ดูแลระบบปรับกฎ Workflow และโครงสร้างได้เอง มีผลทุกโมดูลทันที และทุกการกระทำมีบันทึกตรวจสอบ นี่คือแพลตฟอร์มเดียวตั้งแต่แผนจนถึงผลสัมฤทธิ์”<span class="en">Budget rules change every year; administrators change rules, workflow and structure themselves, effective everywhere at once, with a full audit trail. One platform from plan to performance.</span></div>
+    <div class="click"><b>คลิก:</b> ปรับเกณฑ์ BR-04 → แท็บบันทึกการใช้งาน ชี้รายการบนสุด</div>
+    <div class="msg"><b>ปิดด้วย:</b> เสนอขั้นตอนถัดไป Detailed Design 6 ชุดเอกสาร และนัดเวิร์กช็อปกำหนดสายอนุมัติและแบบฟอร์มจริง</div>
+  </div></div>
+
+  <h2>คำถามที่น่าจะพบ</h2>
+  <div class="tbl"><table>
+    <thead><tr><th>คำถาม</th><th>คำตอบสั้น</th></tr></thead>
+    <tbody>
+      <tr><td>เชื่อมต่อ GFMIS และระบบสำนักงบประมาณได้จริงไหม</td><td>เชื่อมผ่าน Integration Layer ตามช่องทางที่หน่วยงานเจ้าของระบบอนุญาต ระหว่างรอใช้การนำเข้าและส่งออกไฟล์ (เห็นในแท็บนำเข้าผลเบิกจ่าย)</td></tr>
+      <tr><td>AI ส่งข้อมูลออกนอกหน่วยงานหรือไม่</td><td>เลือกโมเดลได้ทั้ง Government Cloud, Private Cloud หรือติดตั้งภายใน AI เข้าถึงข้อมูลตามสิทธิ์ผู้ใช้ ปกปิดข้อมูลส่วนบุคคล และบันทึกทุกคำถาม</td></tr>
+      <tr><td>แบบฟอร์มและหลักเกณฑ์เปลี่ยนทุกปี</td><td>โครงสร้างงบประมาณ กฎ แบบฟอร์ม และ Workflow เป็นการตั้งค่าใน M10 ไม่ต้องแก้โค้ด ข้อมูลย้อนหลังเทียบได้ด้วยการจับคู่รหัสข้ามปี</td></tr>
+      <tr><td>ใช้กับหลายหน่วยงานในกระทรวงได้ไหม</td><td>ออกแบบเป็น Multi-Organization ตั้งแต่ต้น สลับหน่วยงานตัวอย่างให้ดูได้ทันที</td></tr>
+      <tr><td>ใช้เวลาพัฒนานานเท่าไร</td><td>สมมติฐานเบื้องต้น 9 เดือน 4 ระยะ ยืนยันหลังจัดทำ Detailed Design ตามจำนวนหน่วยงาน แบบฟอร์ม และการเชื่อมต่อจริง</td></tr>
+      <tr><td>ต้นแบบนี้คือระบบจริงหรือไม่</td><td>เป็นต้นแบบเพื่อการหารือ ทำงานได้จริงในเบราว์เซอร์ด้วยข้อมูลสมมติ ระบบจริงพัฒนาบนแพลตฟอร์มของ Avalant พร้อมฐานข้อมูลและความปลอดภัยตามเอกสาร Solution Design</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>ถ้ามีเวลาน้อยกว่า 15 นาที</h2>
+  <div class="box"><ul>
+    <li><b>8 นาที:</b> ขั้น 1, 3, 4, 7, 9, 11</li>
+    <li><b>5 นาที:</b> ขั้น 1, 3, 9, 11 แล้วปิดด้วยข้อความ M10</li>
+  </ul></div>
+  <p class="sub" style="margin-top:40px">© 2026 Avalant · เอกสารภายในสำหรับผู้นำเสนอ · ข้อมูลในต้นแบบเป็นข้อมูลสมมติทั้งหมด</p>
+</div>
+</body>
+</html>

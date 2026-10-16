@@ -1,0 +1,1058 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fisko Solution Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: sticky chapter index on the left, one reading column (~72ch prose, full-width tables and diagrams) on the right */
+:root {
+  --bg: #FFFFFF; --paper: #FFFFFF; --tint: #F4F5FA; --tint-2: #EEF0F7; --line: #DDDEE9;
+  --ink: #1C1D3F; --ink-2: #45465C; --muted: #7A7B92;
+  --navy: #1A1B50; --navy-2: #232366; --navy-ink: #C9CADF;
+  --accent: #1B9E29; --accent-2: #2AD03D; --accent-soft: #E4FBE7;
+  --warn: #A86A0C; --warn-soft: #FCF1DB; --bad: #B9381D; --bad-soft: #FBE3DA; --info: #3A3B9A; --info-soft: #E6E7F7;
+  --font: "IBM Plex Sans Thai", "Leelawadee UI", Tahoma, system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0F1029; --paper: #13153A; --tint: #1A1C44; --tint-2: #20224D; --line: #2D2F5E;
+  --ink: #ECEDF7; --ink-2: #C3C4D8; --muted: #8E90AE;
+  --navy: #0A0B22; --navy-2: #232366; --navy-ink: #B6B8D3;
+  --accent: #3DD552; --accent-2: #2AD03D; --accent-soft: #163A24;
+  --warn: #E7AA45; --warn-soft: #3A2C12; --bad: #F2805F; --bad-soft: #42201A; --info: #A9ABF5; --info-soft: #262862; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0F1029; --paper: #13153A; --tint: #1A1C44; --tint-2: #20224D; --line: #2D2F5E;
+  --ink: #ECEDF7; --ink-2: #C3C4D8; --muted: #8E90AE;
+  --navy: #0A0B22; --navy-2: #232366; --navy-ink: #B6B8D3;
+  --accent: #3DD552; --accent-2: #2AD03D; --accent-soft: #163A24;
+  --warn: #E7AA45; --warn-soft: #3A2C12; --bad: #F2805F; --bad-soft: #42201A; --info: #A9ABF5; --info-soft: #262862; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 20px; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.75 var(--font); }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.mono, code { font-family: var(--mono); font-size: .85em; }
+code { background: var(--tint-2); padding: 1px 5px; border-radius: 4px; }
+
+.layout { display: grid; grid-template-columns: 290px minmax(0, 1fr); }
+.toc { position: sticky; top: 0; height: 100vh; overflow: auto; background: var(--navy); color: var(--navy-ink); padding: 28px 18px 40px; font-size: 14px; }
+.toc .brand { color: #fff; font-weight: 700; font-size: 17px; line-height: 1.3; }
+.toc .brand small { display: block; color: var(--navy-ink); font-weight: 400; font-size: 12.5px; margin-top: 2px; }
+.toc ol { list-style: none; margin: 22px 0 0; padding: 0; counter-reset: c; }
+.toc li { margin: 1px 0; }
+.toc a { display: grid; grid-template-columns: 28px 1fr; gap: 6px; color: var(--navy-ink); text-decoration: none; padding: 6px 8px; border-radius: 7px; line-height: 1.4; }
+.toc a:hover { background: var(--navy-2); color: #fff; }
+.toc a.on { background: var(--navy-2); color: #fff; }
+.toc a .n { font-family: var(--mono); font-size: 11.5px; color: #8A8CB5; padding-top: 2px; }
+.toc a.on .n { color: var(--accent-2); }
+.toc .tools { margin-top: 22px; display: flex; gap: 8px; }
+.toc button { background: var(--navy-2); color: #fff; border: 1px solid #3A3B77; border-radius: 7px; padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+
+main { min-width: 0; padding-block: 0 80px; padding-left: max(28px, env(safe-area-inset-left, 0px)); padding-right: max(28px, env(safe-area-inset-right, 0px)); }
+.doc { max-width: 1080px; margin: 0 auto; }
+.prose { max-width: 74ch; }
+
+.cover { padding: 64px 0 40px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.eyebrow { font-size: 12.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+.cover h1 { font-size: clamp(30px, 4.2vw, 46px); line-height: 1.2; margin: 10px 0 8px; text-wrap: balance; }
+.cover .th { font-size: 20px; color: var(--ink-2); margin: 0; }
+.meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: 30px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.meta div { padding: 12px 16px; border-right: 1px solid var(--line); }
+.meta div:last-child { border-right: 0; }
+.meta span { display: block; font-size: 12px; color: var(--muted); letter-spacing: .04em; }
+.meta b { font-weight: 600; font-size: 15px; }
+.notice { margin-top: 18px; background: var(--warn-soft); color: var(--ink); border-radius: 10px; padding: 12px 16px; font-size: 14.5px; }
+.notice b { color: var(--warn); }
+
+section.ch { padding-top: 56px; }
+h2 { font-size: 28px; line-height: 1.3; margin: 0 0 6px; display: flex; gap: 14px; align-items: baseline; text-wrap: balance; }
+h2 .num { font-family: var(--mono); font-size: 15px; color: var(--accent); font-weight: 600; }
+.lede { color: var(--ink-2); margin: 0 0 22px; max-width: 74ch; }
+h3 { font-size: 19px; margin: 34px 0 10px; line-height: 1.4; }
+h3 .num { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-right: 8px; font-weight: 500; }
+h4 { font-size: 16px; margin: 22px 0 6px; }
+p { margin: 0 0 14px; }
+ul, ol { margin: 0 0 14px; padding-left: 22px; }
+li { margin: 3px 0; }
+.small { font-size: 13.5px; color: var(--muted); }
+
+.tbl { overflow-x: auto; margin: 10px 0 18px; border: 1px solid var(--line); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.55; }
+th { background: var(--tint); text-align: left; font-size: 12.5px; letter-spacing: .03em; color: var(--ink-2); font-weight: 600; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: bottom; }
+td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.id, th.id { white-space: nowrap; font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); }
+td.c, th.c { text-align: center; }
+td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.tag { display: inline-block; border-radius: 99px; padding: 1px 9px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.t-must { background: var(--accent-soft); color: var(--accent); }
+.t-should { background: var(--info-soft); color: var(--info); }
+.t-could { background: var(--tint-2); color: var(--muted); }
+.t-warn { background: var(--warn-soft); color: var(--warn); }
+.t-bad { background: var(--bad-soft); color: var(--bad); }
+
+.callout { border-radius: 10px; padding: 14px 18px; margin: 14px 0 18px; background: var(--tint); }
+.callout.dark { background: var(--navy); color: #fff; }
+.callout.dark b { color: var(--accent-2); }
+.callout b:first-child { display: block; margin-bottom: 2px; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 12px 0 20px; }
+.card { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; background: var(--paper); }
+.card b { display: block; font-size: 15px; margin-bottom: 2px; }
+.card span { font-size: 13.5px; color: var(--ink-2); line-height: 1.6; display: block; }
+.card .k { font-family: var(--mono); font-size: 12px; color: var(--accent); margin-bottom: 4px; }
+
+/* layered architecture diagram */
+.arch { display: grid; grid-template-columns: minmax(0, 1fr) 210px; gap: 10px; margin: 14px 0 20px; }
+.layers { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.layer { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 10px; align-items: stretch; }
+.layer .lb { background: var(--navy-2); color: #fff; border-radius: 8px; padding: 10px 12px; font-weight: 600; font-size: 14px; line-height: 1.35; }
+.layer .lb small { display: block; color: var(--navy-ink); font-weight: 400; font-size: 12px; }
+.layer.top .lb { background: var(--accent); }
+.layer .chips { display: flex; flex-wrap: wrap; gap: 6px; align-content: center; background: var(--tint); border-radius: 8px; padding: 8px; }
+.chip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; font-size: 13px; }
+.chip.g { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.gov { background: var(--navy); color: #fff; border-radius: 8px; padding: 12px 14px; font-size: 13px; }
+.gov b { color: var(--accent-2); display: block; margin-bottom: 6px; font-size: 14px; }
+.gov ul { padding-left: 16px; margin: 0; }
+.gov li { color: var(--navy-ink); }
+
+/* flow */
+.flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0 20px; }
+.flow .st { background: var(--tint); border-radius: 8px; padding: 8px 12px; font-size: 13.5px; line-height: 1.4; }
+.flow .st b { display: block; font-family: var(--mono); font-size: 11.5px; color: var(--accent); }
+.flow .ar { color: var(--muted); }
+
+/* integration hub */
+.hub { display: grid; grid-template-columns: 1fr minmax(180px, 240px) 1fr; gap: 14px; align-items: center; margin: 14px 0 20px; }
+.hub .side { display: flex; flex-direction: column; gap: 8px; }
+.hub .ext { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 13.5px; background: var(--paper); }
+.hub .ext b { display: block; font-size: 14px; }
+.hub .core { background: var(--navy); color: #fff; border-radius: 12px; padding: 18px; text-align: center; }
+.hub .core b { color: var(--accent-2); font-size: 18px; display: block; }
+.hub .core span { font-size: 12.5px; color: var(--navy-ink); display: block; margin-top: 6px; }
+
+.matrix td.c { font-family: var(--mono); font-size: 12.5px; font-weight: 600; }
+.mx-a { color: var(--accent); } .mx-r { color: var(--muted); } .mx-u { color: var(--info); }
+
+footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+
+@media (max-width: 980px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .toc { position: static; height: auto; padding: 16px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px)); }
+  .toc ol { display: none; }
+  .toc.open ol { display: block; }
+  main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .meta div:nth-child(2) { border-right: 0; }
+  .meta div:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+  .arch { grid-template-columns: minmax(0, 1fr); }
+  .layer { grid-template-columns: minmax(0, 1fr); }
+  .hub { grid-template-columns: minmax(0, 1fr); }
+}
+@media (min-width: 981px) { #toc-toggle { display: none; } }
+@media print {
+  .toc { display: none; }
+  .layout { display: block; }
+  main { padding: 0; }
+  section.ch { break-before: page; padding-top: 0; }
+  .tbl { overflow: visible; }
+  tr, .card, .callout { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="toc" id="toc" aria-label="สารบัญ">
+  <div class="brand">Fisko<small>Solution Design Document · v0.2</small></div>
+  <div class="tools"><button type="button" id="toc-toggle" aria-expanded="false">สารบัญ</button><button type="button" id="theme">ธีม</button></div>
+  <ol>
+    <li><a href="#s1"><span class="n">01</span>บทนำ</a></li>
+    <li><a href="#s2"><span class="n">02</span>ภาพรวมโซลูชัน</a></li>
+    <li><a href="#s3"><span class="n">03</span>สถาปัตยกรรมธุรกิจและกระบวนการ</a></li>
+    <li><a href="#s4"><span class="n">04</span>การออกแบบเชิงฟังก์ชัน</a></li>
+    <li><a href="#s5"><span class="n">05</span>สถาปัตยกรรมแอปพลิเคชัน</a></li>
+    <li><a href="#s6"><span class="n">06</span>สถาปัตยกรรมเทคนิคและการติดตั้ง</a></li>
+    <li><a href="#s7"><span class="n">07</span>สถาปัตยกรรมข้อมูล</a></li>
+    <li><a href="#s8"><span class="n">08</span>การออกแบบการเชื่อมต่อระบบ</a></li>
+    <li><a href="#s9"><span class="n">09</span>การออกแบบ AI</a></li>
+    <li><a href="#s10"><span class="n">10</span>การออกแบบความมั่นคงปลอดภัย</a></li>
+    <li><a href="#s11"><span class="n">11</span>ข้อกำหนดที่ไม่ใช่ฟังก์ชัน</a></li>
+    <li><a href="#s12"><span class="n">12</span>การปฏิบัติการและบำรุงรักษา</a></li>
+    <li><a href="#s13"><span class="n">13</span>แนวทางดำเนินโครงการ</a></li>
+    <li><a href="#s14"><span class="n">14</span>ความเสี่ยงและประเด็นที่ต้องตัดสินใจ</a></li>
+    <li><a href="#sA"><span class="n">A</span>ภาคผนวก</a></li>
+  </ol>
+</nav>
+
+<main>
+<div class="doc">
+
+<header class="cover">
+  <div class="eyebrow">Solution Design Document</div>
+  <h1>Fisko<br><span style="font-size:.55em;color:var(--accent)">Agency e-Budgeting Management System (AEBMS)</span></h1>
+  <p class="th">ระบบบริหารจัดการงบประมาณอิเล็กทรอนิกส์สำหรับหน่วยรับงบประมาณ</p>
+  <div class="meta">
+    <div><span>เวอร์ชัน</span><b>0.2 ร่างเพื่อการหารือ</b></div>
+    <div><span>วันที่</span><b>16 ตุลาคม 2569</b></div>
+    <div><span>จัดทำโดย</span><b>Avalant</b></div>
+    <div><span>ต่อยอดจาก</span><b>Conceptual Design v0.1</b></div>
+  </div>
+  <div class="notice"><b>สถานะเอกสาร:</b> เป็นการออกแบบระดับโซลูชันเพื่อยืนยันขอบเขตและทิศทางร่วมกับหน่วยงาน ยังไม่ได้ตรวจเทียบกับ TOR ของหน่วยงานใดโดยเฉพาะ ตัวเลขเป้าหมาย ปริมาณข้อมูล และรายละเอียดการเชื่อมต่อทั้งหมดเป็นสมมติฐานที่ต้องยืนยันในขั้น Detailed Design</div>
+</header>
+
+<!-- ============================== 01 ============================== -->
+<section class="ch" id="s1">
+<h2><span class="num">01</span>บทนำ</h2>
+<p class="lede">อธิบายวัตถุประสงค์ ขอบเขต และวิธีอ่านเอกสาร</p>
+
+<h3><span class="num">1.1</span>วัตถุประสงค์ของเอกสาร</h3>
+<div class="prose">
+<p><b>Fisko</b> คือชื่อแพลตฟอร์ม ส่วน AEBMS (Agency e-Budgeting Management System) คือชื่อระบบที่ใช้ในเอกสารข้อกำหนด เอกสารนี้ใช้ทั้งสองชื่อในความหมายเดียวกัน</p>
+<p>เอกสารนี้กำหนดการออกแบบโซลูชันของ Fisko ครอบคลุมฟังก์ชันการทำงาน สถาปัตยกรรมแอปพลิเคชัน สถาปัตยกรรมเทคนิค ข้อมูล การเชื่อมต่อ AI และความมั่นคงปลอดภัย เพื่อใช้เป็นฐานร่วมกันระหว่างหน่วยงานและทีมพัฒนาก่อนจัดทำ Functional Requirement Specification และ Detailed Design รายโมดูล</p>
+</div>
+
+<h3><span class="num">1.2</span>ขอบเขต</h3>
+<div class="tbl"><table>
+  <thead><tr><th>อยู่ในขอบเขต</th><th>นอกขอบเขต</th></tr></thead>
+  <tbody><tr>
+    <td><ul style="margin:0">
+      <li>วงจรงบประมาณระดับหน่วยรับงบประมาณ ตั้งแต่แผนยุทธศาสตร์ถึงการประเมินผลสัมฤทธิ์ (M01–M08)</li>
+      <li>AI และการวิเคราะห์เพื่อสนับสนุนการตัดสินใจ (M09)</li>
+      <li>การบริหารข้อมูลหลัก โครงสร้างงบประมาณ สิทธิ์ และ Workflow (M10)</li>
+      <li>การเชื่อมต่อกับระบบภายนอกตามช่องทางที่ได้รับอนุญาต</li>
+      <li>การย้ายข้อมูลงบประมาณย้อนหลังเพื่อการเปรียบเทียบ</li></ul></td>
+    <td><ul style="margin:0">
+      <li>การบันทึกบัญชีและการเบิกจ่ายจริง ซึ่งยังทำในระบบบัญชีภาครัฐ</li>
+      <li>กระบวนการจัดซื้อจัดจ้าง</li>
+      <li>การบริหารงานบุคคลและเงินเดือน</li>
+      <li>การแก้ไขระบบของสำนักงบประมาณหรือหน่วยงานภายนอก</li></ul></td>
+  </tr></tbody>
+</table></div>
+
+<h3><span class="num">1.3</span>ผู้อ่านเอกสาร</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ผู้อ่าน</th><th>บทที่ควรอ่าน</th></tr></thead>
+  <tbody>
+    <tr><td>ผู้บริหารและคณะทำงานของหน่วยงาน</td><td>บท 2, 3, 13, 14</td></tr>
+    <tr><td>กองแผนงาน / เจ้าของกระบวนการ</td><td>บท 3, 4, 7</td></tr>
+    <tr><td>ฝ่ายเทคโนโลยีสารสนเทศของหน่วยงาน</td><td>บท 5, 6, 8, 10, 11, 12</td></tr>
+    <tr><td>ผู้ตรวจสอบและผู้ดูแลข้อมูลส่วนบุคคล</td><td>บท 9, 10</td></tr>
+    <tr><td>ทีมพัฒนาและทดสอบ</td><td>ทุกบท</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">1.4</span>เอกสารอ้างอิง</h3>
+<ul>
+  <li>Conceptual Design: Agency e-Budgeting Management System (AEBMS) v0.1</li>
+  <li>เอกสารนำเสนอ Conceptual Architecture &amp; Functional Modules (ตุลาคม 2569)</li>
+  <li>ต้นแบบหน้าจอ Fisko Prototype (ข้อมูลตัวอย่าง)</li>
+  <li>หลักเกณฑ์และแบบฟอร์มการจัดทำคำของบประมาณของสำนักงบประมาณ ฉบับที่ใช้ในปีงบประมาณที่ติดตั้งระบบ</li>
+  <li>พระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 และพระราชบัญญัติการรักษาความมั่นคงปลอดภัยไซเบอร์ พ.ศ. 2562</li>
+  <li>มาตรฐานและแนวปฏิบัติด้านรัฐบาลดิจิทัลที่หน่วยงานถือปฏิบัติ</li>
+</ul>
+
+<h3><span class="num">1.5</span>คำย่อและการอ้างอิงรหัส</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รูปแบบ</th><th>ความหมาย</th></tr></thead>
+  <tbody>
+    <tr><td class="id">M01–M10</td><td>รหัสโมดูลของระบบ</td></tr>
+    <tr><td class="id">FR-Mxx-nn</td><td>ข้อกำหนดเชิงฟังก์ชันของโมดูล</td></tr>
+    <tr><td class="id">BR-nn</td><td>กฎทางธุรกิจ (Business Rule) ที่ตั้งค่าได้</td></tr>
+    <tr><td class="id">IF-nn</td><td>รายการการเชื่อมต่อ (Interface)</td></tr>
+    <tr><td class="id">NFR-xx-nn</td><td>ข้อกำหนดที่ไม่ใช่ฟังก์ชัน</td></tr>
+    <tr><td class="id">AG-nn</td><td>AI Agent</td></tr>
+    <tr><td class="id">Must / Should / Could</td><td>ลำดับความสำคัญ: ต้องมีในรุ่นแรก / ควรมี / มีได้ถ้ามีเวลา</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 02 ============================== -->
+<section class="ch" id="s2">
+<h2><span class="num">02</span>ภาพรวมโซลูชัน</h2>
+<p class="lede">One Budget Platform: From Strategic Planning to Budget Performance</p>
+
+<h3><span class="num">2.1</span>หลักการออกแบบ</h3>
+<div class="cards">
+  <div class="card"><div class="k">P1</div><b>Integrated Budget Management</b><span>ข้อมูลชุดเดียวตั้งแต่แผนถึงผล ไม่บันทึกซ้ำระหว่างหน่วยงาน</span></div>
+  <div class="card"><div class="k">P2</div><b>Strategy-Driven Budgeting</b><span>ทุกคำขอผูกกับแผนงาน ผลผลิต ตัวชี้วัด และยุทธศาสตร์</span></div>
+  <div class="card"><div class="k">P3</div><b>Collaborative Budget Planning</b><span>หลายระดับทำงานบน Workflow เดียว พร้อมประวัติทุกรอบ</span></div>
+  <div class="card"><div class="k">P4</div><b>Data-Driven Decision Making</b><span>Dashboard และการเปรียบเทียบย้อนหลังที่ Drill-down ได้</span></div>
+  <div class="card"><div class="k">P5</div><b>AI-Assisted Budgeting</b><span>AI ช่วยร่าง ตรวจ และวิเคราะห์ ส่วนการอนุมัติเป็นของผู้มีอำนาจ</span></div>
+</div>
+
+<h3><span class="num">2.2</span>ผู้มีส่วนได้ส่วนเสียและบทบาท</h3>
+<div class="tbl"><table>
+  <thead><tr><th>บทบาท</th><th>หน้าที่หลักในระบบ</th><th>โมดูลหลัก</th><th class="n">จำนวนผู้ใช้ (สมมติฐาน)</th></tr></thead>
+  <tbody>
+    <tr><td>ผู้บริหาร</td><td>ติดตามภาพรวม อนุมัติวงเงิน ใช้ข้อมูลวิเคราะห์</td><td>M04, M07, M09</td><td class="n">15</td></tr>
+    <tr><td>กองแผนงาน / กองยุทธศาสตร์</td><td>กำหนดกรอบ รวบรวม กลั่นกรอง จัดทำคำขอระดับหน่วยรับงบประมาณ</td><td>M01, M03–M06</td><td class="n">25</td></tr>
+    <tr><td>สำนัก / กอง (ผู้จัดทำคำขอ)</td><td>จัดทำคำขอ รายงานผลการดำเนินงานและการใช้จ่าย</td><td>M02, M07, M08</td><td class="n">350</td></tr>
+    <tr><td>การเงินและบัญชี</td><td>บันทึกวงเงิน จัดสรร โอนเปลี่ยนแปลง ติดตามเบิกจ่าย</td><td>M06, M07</td><td class="n">40</td></tr>
+    <tr><td>คณะกรรมการพิจารณางบประมาณ</td><td>พิจารณาคำขอในรอบที่กำหนด</td><td>M04</td><td class="n">12</td></tr>
+    <tr><td>ผู้ตรวจสอบ</td><td>ตรวจสอบย้อนหลังแบบอ่านอย่างเดียว</td><td>M04, M10 (Audit)</td><td class="n">10</td></tr>
+    <tr><td>ผู้ดูแลระบบ</td><td>ข้อมูลหลัก โครงสร้างงบประมาณ สิทธิ์ Workflow</td><td>M10</td><td class="n">5</td></tr>
+  </tbody>
+</table></div>
+<p class="small">จำนวนผู้ใช้อ้างอิงหน่วยงานระดับกรมขนาดกลาง ใช้สำหรับประมาณขนาดระบบในบท 11 และต้องยืนยันกับหน่วยงาน</p>
+
+<h3><span class="num">2.3</span>สมมติฐานและข้อจำกัด</h3>
+<ul>
+  <li>ปีงบประมาณเริ่ม 1 ตุลาคม สิ้นสุด 30 กันยายน และโครงสร้างงบประมาณเปลี่ยนได้ทุกปีตามหลักเกณฑ์ของสำนักงบประมาณ</li>
+  <li>การเชื่อมต่อระบบภายนอกทำได้เฉพาะช่องทางที่หน่วยงานเจ้าของระบบอนุญาต ระหว่างรออนุญาตใช้การนำเข้า/ส่งออกไฟล์</li>
+  <li>ระบบไม่แทนที่ระบบบัญชีภาครัฐ ข้อมูลการเบิกจ่ายเป็นการนำเข้าเพื่อติดตามเท่านั้น</li>
+  <li>รูปแบบการติดตั้ง (Government Cloud, Private Cloud หรือ On-Premise) เป็นการตัดสินใจของหน่วยงาน ระบบออกแบบให้รองรับทั้งสามแบบ</li>
+  <li>AI ทำงานบนข้อมูลที่ได้รับอนุญาตและไม่ส่งข้อมูลออกนอกขอบเขตที่หน่วยงานกำหนด</li>
+</ul>
+</section>
+
+<!-- ============================== 03 ============================== -->
+<section class="ch" id="s3">
+<h2><span class="num">03</span>สถาปัตยกรรมธุรกิจและกระบวนการ</h2>
+<p class="lede">วงจรงบประมาณ 8 ขั้นตอน และ Workflow หลายระดับที่ปรับตามโครงสร้างองค์กร</p>
+
+<h3><span class="num">3.1</span>วงจรงบประมาณและการแมปโมดูล</h3>
+<div class="flow">
+  <div class="st"><b>M01</b>วางแผนยุทธศาสตร์</div><span class="ar">→</span>
+  <div class="st"><b>M02</b>จัดทำคำขอ</div><span class="ar">→</span>
+  <div class="st"><b>M03</b>รวบรวมคำขอ</div><span class="ar">→</span>
+  <div class="st"><b>M04</b>กลั่นกรองและอนุมัติ</div><span class="ar">→</span>
+  <div class="st"><b>M05</b>ส่งสำนักงบประมาณ</div><span class="ar">→</span>
+  <div class="st"><b>M06</b>จัดสรรงบประมาณ</div><span class="ar">→</span>
+  <div class="st"><b>M07</b>ติดตามการใช้จ่าย</div><span class="ar">→</span>
+  <div class="st"><b>M08</b>ประเมินผลสัมฤทธิ์</div>
+</div>
+<p class="small">M09 Budget Intelligence และ M10 System Administration รองรับทุกขั้นตอน</p>
+
+<h3><span class="num">3.2</span>กระบวนการระดับสูงแยกตามผู้รับผิดชอบ</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">ขั้น</th><th>กิจกรรม</th><th>ผู้รับผิดชอบ</th><th>โมดูล</th><th>ผลลัพธ์</th></tr></thead>
+  <tbody>
+    <tr><td class="id">1</td><td>กำหนดแผนและกรอบงบประมาณเบื้องต้น</td><td>กองแผนงาน</td><td>M01</td><td>Strategic Budget Framework, ปฏิทินงบประมาณ</td></tr>
+    <tr><td class="id">2</td><td>จัดทำคำของบประมาณรายโครงการ/กิจกรรม</td><td>สำนัก / กอง</td><td>M02</td><td>คำขอที่ผ่านการตรวจความครบถ้วน</td></tr>
+    <tr><td class="id">3</td><td>พิจารณาและกลั่นกรอง (ส่งกลับแก้ไขได้)</td><td>กองแผนงาน</td><td>M04</td><td>วงเงินรอบที่ 2 พร้อมเหตุผล</td></tr>
+    <tr><td class="id">4</td><td>รวบรวมคำขอระดับกรม</td><td>กองแผนงาน</td><td>M03</td><td>ภาพรวมเทียบกรอบวงเงิน รายการซ้ำซ้อน</td></tr>
+    <tr><td class="id">5</td><td>คณะกรรมการพิจารณาและผู้บริหารเห็นชอบ</td><td>คณะกรรมการ / ผู้บริหาร</td><td>M04</td><td>วงเงินรอบที่ 3</td></tr>
+    <tr><td class="id">6</td><td>จัดทำคำขอระดับหน่วยรับงบประมาณและชุดข้อมูลส่ง</td><td>กองแผนงาน</td><td>M05</td><td>เอกสารตามแบบฟอร์ม ไฟล์ส่งออก</td></tr>
+    <tr><td class="id">7</td><td>พิจารณาและแจ้งวงเงิน</td><td>สำนักงบประมาณ (ภายนอก)</td><td>M05</td><td>ผลพิจารณา คำขอปรับปรุง</td></tr>
+    <tr><td class="id">8</td><td>บันทึกวงเงินที่ได้รับและจัดสรร</td><td>การเงินและบัญชี</td><td>M06</td><td>วงเงินจัดสรรรายหน่วยงาน/โครงการ แผนการใช้จ่าย</td></tr>
+    <tr><td class="id">9</td><td>ดำเนินงาน เบิกจ่าย และรายงานความก้าวหน้า</td><td>สำนัก / กอง</td><td>M07</td><td>ผลการใช้จ่ายและความก้าวหน้า</td></tr>
+    <tr><td class="id">10</td><td>ประเมินผลสัมฤทธิ์</td><td>กองแผนงาน</td><td>M08</td><td>Output, Outcome เทียบตัวชี้วัด</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">3.3</span>ความสามารถของ Workflow</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ความสามารถ</th><th>รายละเอียด</th></tr></thead>
+  <tbody>
+    <tr><td>Multi-Level Approval</td><td>กำหนดลำดับขั้นอนุมัติตามโครงสร้างหน่วยงาน และตามเงื่อนไข เช่น วงเงินหรือประเภทงบรายจ่าย</td></tr>
+    <tr><td>Delegation of Authority</td><td>มอบอำนาจชั่วคราวพร้อมช่วงวันที่และขอบเขต ระบบบันทึกผู้มอบและผู้รับมอบทุกครั้ง</td></tr>
+    <tr><td>Return for Revision</td><td>ส่งกลับไปขั้นใดก็ได้ก่อนหน้าพร้อมความเห็น ผู้จัดทำเห็นจุดที่ต้องแก้</td></tr>
+    <tr><td>Version Control</td><td>ทุกการส่งหรือปรับวงเงินสร้างเวอร์ชันใหม่ เปรียบเทียบเวอร์ชันได้</td></tr>
+    <tr><td>Deadline Management</td><td>กำหนดเส้นตายตามปฏิทินงบประมาณ แจ้งเตือนก่อนครบกำหนดและเมื่อเลยกำหนด</td></tr>
+    <tr><td>Notifications</td><td>แจ้งเตือนในระบบและอีเมล ตามบทบาทและเหตุการณ์</td></tr>
+    <tr><td>Audit Trail</td><td>บันทึกผู้ดำเนินการ เวลา การกระทำ ค่าก่อนและหลังเปลี่ยน แก้ไขไม่ได้</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 04 ============================== -->
+<section class="ch" id="s4">
+<h2><span class="num">04</span>การออกแบบเชิงฟังก์ชัน</h2>
+<p class="lede">ข้อกำหนดเชิงฟังก์ชันหลักรายโมดูล ลำดับความสำคัญสะท้อนแนวทางรุ่นแรก ซึ่งเน้น M01–M05 และ M10</p>
+
+<h3><span class="num">4.1</span>M01 · Strategic Planning</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อกำหนด</th><th>ความสำคัญ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-M01-01</td><td>จัดทำแผนยุทธศาสตร์หน่วยงาน และแผนปฏิบัติราชการระยะ 5 ปีและรายปี</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M01-02</td><td>กำหนดเป้าประสงค์ ตัวชี้วัด ค่าเป้าหมายรายปี และหน่วยวัด</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M01-03</td><td>เชื่อมโยงกับยุทธศาสตร์ชาติและแผนระดับต่าง ๆ แบบหลายต่อหลาย</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M01-04</td><td>จัดโครงสร้างแผนงาน ผลผลิต/โครงการ กิจกรรม พร้อมหน่วยงานเจ้าของและผู้รับผิดชอบ</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M01-05</td><td>รายงานความสอดคล้องระหว่างแผนกับคำขอ (คำขอที่ไม่ผูกแผน แผนที่ไม่มีคำขอ)</td><td><span class="tag t-should">Should</span></td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">4.2</span>M02 · Budget Preparation</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อกำหนด</th><th>ความสำคัญ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-M02-01</td><td>สร้างคำขอรายโครงการ/กิจกรรม ภายใต้โครงสร้างงบประมาณของปีที่เปิดรับ</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M02-02</td><td>บันทึกรายการตามงบรายจ่าย (บุคลากร ดำเนินงาน ลงทุน เงินอุดหนุน รายจ่ายอื่น) หมวด และรายการ</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M02-03</td><td>คำนวณวงเงินอัตโนมัติ (จำนวน × ราคาต่อหน่วย) และสรุปตามงบรายจ่าย</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M02-04</td><td>รองรับคำขอผูกพันต่อเนื่องหลายปี พร้อมวงเงินรายปี</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M02-05</td><td>บันทึกเหตุผลความจำเป็น ตัวชี้วัด ผลผลิต ผลลัพธ์ และแนบเอกสารประกอบ</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M02-06</td><td>รายละเอียดครุภัณฑ์และสิ่งก่อสร้าง ตามแบบฟอร์มที่กำหนด</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M02-07</td><td>ตรวจความครบถ้วนก่อนส่งตามกฎที่ตั้งค่าได้ แยกข้อผิดพลาดที่ส่งไม่ได้กับข้อสังเกต</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M02-08</td><td>เปรียบเทียบกับงบประมาณที่ได้รับและคำขอปีก่อน</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-M02-09</td><td>ประมาณการงบบุคลากรจากข้อมูลอัตรากำลังที่นำเข้า</td><td><span class="tag t-should">Should</span></td></tr>
+  </tbody>
+</table></div>
+<h4>กฎทางธุรกิจตัวอย่าง (ตั้งค่าได้รายปี)</h4>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>กฎ</th><th>ผลเมื่อไม่ผ่าน</th></tr></thead>
+  <tbody>
+    <tr><td class="id">BR-01</td><td>คำขอต้องผูกกับกิจกรรมและตัวชี้วัดอย่างน้อย 1 รายการ</td><td><span class="tag t-bad">ส่งไม่ได้</span></td></tr>
+    <tr><td class="id">BR-02</td><td>เหตุผลความจำเป็นต้องมีความยาวขั้นต่ำตามที่กำหนด</td><td><span class="tag t-bad">ส่งไม่ได้</span></td></tr>
+    <tr><td class="id">BR-03</td><td>รายการงบลงทุนต้องแนบคุณลักษณะเฉพาะและราคาอ้างอิง</td><td><span class="tag t-bad">ส่งไม่ได้</span></td></tr>
+    <tr><td class="id">BR-04</td><td>วงเงินเพิ่มจากปีก่อนเกินเกณฑ์ (เช่น 20%) ต้องมีคำอธิบายส่วนเพิ่ม</td><td><span class="tag t-warn">ข้อสังเกต</span></td></tr>
+    <tr><td class="id">BR-05</td><td>ราคาต่อหน่วยเกินเกณฑ์ราคามาตรฐานของรายการนั้น</td><td><span class="tag t-warn">ข้อสังเกต</span></td></tr>
+    <tr><td class="id">BR-06</td><td>ส่งคำขอได้เฉพาะในช่วงเวลาตามปฏิทินงบประมาณ</td><td><span class="tag t-bad">ส่งไม่ได้</span></td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">4.3</span>M03 · Budget Consolidation</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อกำหนด</th><th>ความสำคัญ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-M03-01</td><td>รวบรวมคำขอทุกหน่วยงานอัตโนมัติตามสถานะที่กำหนด</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M03-02</td><td>วิเคราะห์วงเงินรวมรายหน่วยงาน รายแผนงาน รายงบรายจ่าย เทียบกรอบวงเงิน</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M03-03</td><td>ตรวจรายการที่อาจซ้ำซ้อนระหว่างหน่วยงานหรือกับปีก่อน และให้ผู้พิจารณายืนยัน</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-M03-04</td><td>จัดลำดับความสำคัญโครงการตามเกณฑ์คะแนนที่ตั้งค่าได้</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-M03-05</td><td>รายงานสรุปเพื่อเสนอผู้บริหาร</td><td><span class="tag t-must">Must</span></td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">4.4</span>M04 · Budget Review &amp; Approval</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อกำหนด</th><th>ความสำคัญ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-M04-01</td><td>กลั่นกรองได้หลายรอบ จำนวนรอบและผู้พิจารณาแต่ละรอบตั้งค่าได้</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M04-02</td><td>บันทึกวงเงินของแต่ละรอบเป็นเวอร์ชันใหม่ ไม่เขียนทับรอบก่อน</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M04-03</td><td>ทุกการปรับวงเงินต้องมีเหตุผล ผู้ปรับ และเวลา</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M04-04</td><td>ส่งกลับแก้ไขพร้อมความเห็นรายรายการ</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M04-05</td><td>เปรียบเทียบวงเงินทุกรอบในตารางเดียว พร้อมผลต่าง</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M04-06</td><td>บันทึกมติคณะกรรมการและแนบรายงานการประชุม</td><td><span class="tag t-should">Should</span></td></tr>
+  </tbody>
+</table></div>
+<div class="callout"><b>ตัวอย่างการเก็บวงเงินหลายรอบ (ล้านบาท, ข้อมูลสมมติ)</b>
+  โครงการ A: 20 → 18 → 15 · โครงการ B: 10 → 8 → 8 · โครงการ C: 15 → 12 → 10 · รวม 45 → 38 → 33 ทุกค่ายังเรียกดูได้พร้อมเหตุผลของแต่ละรอบ</div>
+
+<h3><span class="num">4.5</span>M05 · Budget Submission</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อกำหนด</th><th>ความสำคัญ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-M05-01</td><td>ตรวจความครบถ้วน รหัสงบประมาณ และโครงสร้างข้อมูลก่อนส่ง</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M05-02</td><td>จัดทำเอกสารตามแบบฟอร์มที่กำหนด ส่งออก Excel และ PDF</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M05-03</td><td>ส่งออกข้อมูลตามรูปแบบที่ได้รับอนุญาตสำหรับการแลกเปลี่ยนกับระบบของสำนักงบประมาณ (IF-01)</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-M05-04</td><td>บันทึกสถานะการส่ง ผลการพิจารณา และคำขอปรับปรุงจากสำนักงบประมาณ</td><td><span class="tag t-must">Must</span></td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">4.6</span>M06 · Budget Allocation</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อกำหนด</th><th>ความสำคัญ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-M06-01</td><td>บันทึกวงเงินงบประมาณที่ได้รับตามพระราชบัญญัติงบประมาณรายจ่าย</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M06-02</td><td>จัดสรรตามหน่วยงาน โครงการ และกิจกรรม พร้อมตรวจไม่ให้เกินวงเงิน</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M06-03</td><td>จัดทำแผนการใช้จ่ายรายเดือน/รายไตรมาส</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M06-04</td><td>ปรับแผนและโอนเปลี่ยนแปลงผ่าน Workflow พร้อมตรวจวงเงินคงเหลือ</td><td><span class="tag t-must">Must</span></td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">4.7</span>M07 · Budget Execution &amp; Monitoring</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อกำหนด</th><th>ความสำคัญ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-M07-01</td><td>นำเข้าผลการเบิกจ่ายจากระบบบัญชีภาครัฐตามรอบ (IF-02) หรือไฟล์</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M07-02</td><td>Dashboard ผู้บริหาร: วงเงินได้รับ แผนสะสม ผลเบิกจ่าย อัตราเบิกจ่าย ความก้าวหน้า คงเหลือ</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M07-03</td><td>Drill-down ตามหน่วยงาน โครงการ หมวดรายจ่าย และช่วงเวลา</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M07-04</td><td>รายงานความก้าวหน้าโครงการโดยหน่วยงานเจ้าของ</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M07-05</td><td>แจ้งเตือนโครงการที่เบิกจ่ายต่ำกว่าแผนตามเกณฑ์</td><td><span class="tag t-should">Should</span></td></tr>
+  </tbody>
+</table></div>
+<div class="callout"><b>สูตรตัวชี้วัดหลัก</b>
+  อัตราการเบิกจ่าย = ผลเบิกจ่ายสะสม ÷ งบประมาณที่ได้รับ · ความก้าวหน้าตามแผน = ผลเบิกจ่ายสะสม ÷ แผนการใช้จ่ายสะสม · คงเหลือ = งบประมาณที่ได้รับ − ผลเบิกจ่ายสะสม (ตัวอย่าง: 520 ÷ 1,000 = 52%, 520 ÷ 600 = 86.7%, คงเหลือ 480 ล้านบาท)</div>
+
+<h3><span class="num">4.8</span>M08 · Budget Performance</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อกำหนด</th><th>ความสำคัญ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-M08-01</td><td>บันทึกผล Output และ Outcome ตามตัวชี้วัดของโครงการ</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M08-02</td><td>เชื่อมห่วงโซ่ Budget Input → Activities → Outputs → Outcomes → Impact</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-M08-03</td><td>รายงานผลสัมฤทธิ์เทียบค่าเป้าหมายและงบประมาณที่ใช้</td><td><span class="tag t-must">Must</span></td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">4.9</span>M09 · Budget Intelligence</h3>
+<p>รายละเอียดการออกแบบ AI อยู่ในบท 9 ข้อกำหนดเชิงฟังก์ชันหลัก:</p>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อกำหนด</th><th>ความสำคัญ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-M09-01</td><td>รายงานวิเคราะห์แนวโน้มและเปรียบเทียบย้อนหลังหลายปี</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M09-02</td><td>ผู้ช่วยร่างเหตุผลความจำเป็นและตรวจคำขอก่อนส่ง</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-M09-03</td><td>ผู้ช่วยตอบคำถามผู้บริหารด้วยภาษาธรรมชาติ พร้อมแหล่งอ้างอิง</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-M09-04</td><td>จำลองทางเลือกการจัดสรรภายใต้วงเงินที่เปลี่ยน (What-if)</td><td><span class="tag t-could">Could</span></td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">4.10</span>M10 · System Administration</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อกำหนด</th><th>ความสำคัญ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-M10-01</td><td>ข้อมูลหลัก: หน่วยงาน แผนงาน รหัสงบประมาณ งบรายจ่าย หมวด รายการ หน่วยนับ ราคามาตรฐาน</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M10-02</td><td>ตั้งค่าโครงสร้างงบประมาณรายปี และจับคู่รหัสข้ามปี</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M10-03</td><td>บริหารผู้ใช้ บทบาท สิทธิ์ตามหน่วยงานและระดับข้อมูล</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M10-04</td><td>ตั้งค่า Workflow สายอนุมัติ การมอบอำนาจ และปฏิทินงบประมาณ</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M10-05</td><td>ตั้งค่ากฎทางธุรกิจและแบบฟอร์ม/รายงาน โดยไม่ต้องแก้โค้ด</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M10-06</td><td>เรียกดูและส่งออก Audit Log</td><td><span class="tag t-must">Must</span></td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 05 ============================== -->
+<section class="ch" id="s5">
+<h2><span class="num">05</span>สถาปัตยกรรมแอปพลิเคชัน</h2>
+<p class="lede">ระบบแบ่งเป็นบริการตามขอบเขตงาน ใช้เครื่องยนต์กลางร่วมกัน และแยกส่วนที่เป็น Core ออกจากส่วนที่ตั้งค่าตามหน่วยงาน</p>
+
+<h3><span class="num">5.1</span>สถาปัตยกรรมเชิงแนวคิด</h3>
+<div class="arch">
+  <div class="layers">
+    <div class="layer top"><div class="lb">User Experience<small>ผู้ใช้และช่องทาง</small></div><div class="chips"><span class="chip">Web Portal</span><span class="chip">Mobile (Responsive)</span><span class="chip">Executive Dashboard</span><span class="chip">Notification</span></div></div>
+    <div class="layer"><div class="lb">Budget Management Suite<small>บริการตามโมดูล</small></div><div class="chips"><span class="chip">M01 Planning</span><span class="chip">M02 Preparation</span><span class="chip">M03 Consolidation</span><span class="chip">M04 Review</span><span class="chip">M05 Submission</span><span class="chip">M06 Allocation</span><span class="chip">M07 Execution</span><span class="chip">M08 Performance</span></div></div>
+    <div class="layer"><div class="lb">Platform Services<small>เครื่องยนต์กลาง</small></div><div class="chips"><span class="chip g">Workflow Engine</span><span class="chip g">Business Rules Engine</span><span class="chip g">Agentic AI Platform</span><span class="chip g">Document AI</span><span class="chip g">BI &amp; Reporting</span></div></div>
+    <div class="layer"><div class="lb">Integration Layer<small>เชื่อมต่อภายนอก</small></div><div class="chips"><span class="chip">API Gateway</span><span class="chip">Data Exchange</span><span class="chip">ETL / File Import-Export</span></div></div>
+    <div class="layer"><div class="lb">Data Platform<small>ข้อมูลที่ใช้ร่วมกัน</small></div><div class="chips"><span class="chip">Budget Database</span><span class="chip">Master Data</span><span class="chip">Historical Budget</span><span class="chip">Document Repository</span><span class="chip">Analytics Data Mart</span><span class="chip">Vector Store</span></div></div>
+  </div>
+  <div class="gov"><b>Security &amp; Governance</b><ul><li>IAM / SSO / MFA</li><li>RBAC และขอบเขตหน่วยงาน</li><li>Audit Trail</li><li>Encryption</li><li>PDPA</li><li>Backup &amp; DR</li></ul></div>
+</div>
+
+<h3><span class="num">5.2</span>รายการ Component</h3>
+<div class="tbl"><table>
+  <thead><tr><th>Component</th><th>หน้าที่</th><th>ใช้โดย</th></tr></thead>
+  <tbody>
+    <tr><td>Planning Service</td><td>แผน ยุทธศาสตร์ ตัวชี้วัด โครงสร้างแผนงาน</td><td>M01, M08</td></tr>
+    <tr><td>Budget Request Service</td><td>คำขอ รายการงบประมาณ การคำนวณ เอกสารแนบ</td><td>M02, M05</td></tr>
+    <tr><td>Review &amp; Version Service</td><td>รอบการพิจารณา เวอร์ชันวงเงิน เหตุผล ประวัติ</td><td>M03, M04</td></tr>
+    <tr><td>Allocation Service</td><td>วงเงินที่ได้รับ การจัดสรร แผนการใช้จ่าย การโอนเปลี่ยนแปลง</td><td>M06</td></tr>
+    <tr><td>Monitoring Service</td><td>ผลการใช้จ่าย ความก้าวหน้า การแจ้งเตือน</td><td>M07</td></tr>
+    <tr><td>Performance Service</td><td>ผล Output/Outcome เทียบตัวชี้วัด</td><td>M08</td></tr>
+    <tr><td>Workflow Engine</td><td>สายอนุมัติ งานรอดำเนินการ เส้นตาย การมอบอำนาจ</td><td>ทุกโมดูล</td></tr>
+    <tr><td>Business Rules Engine</td><td>กฎตรวจความครบถ้วนและเงื่อนไขที่ตั้งค่าได้รายปี</td><td>M02–M06</td></tr>
+    <tr><td>AI Orchestrator &amp; Agents</td><td>ผู้ช่วย AI การตรวจ การวิเคราะห์</td><td>M09</td></tr>
+    <tr><td>Document Service / Document AI</td><td>จัดเก็บเอกสาร อ่านและสกัดข้อมูลจากเอกสารประกอบ</td><td>M02, M05, M09</td></tr>
+    <tr><td>Reporting Service</td><td>Dashboard รายงาน แบบฟอร์ม การส่งออก</td><td>M03, M05, M07, M08</td></tr>
+    <tr><td>Notification Service</td><td>แจ้งเตือนในระบบและอีเมล</td><td>ทุกโมดูล</td></tr>
+    <tr><td>Identity &amp; Access Service</td><td>ยืนยันตัวตน บทบาท สิทธิ์ ขอบเขตหน่วยงาน</td><td>ทุกโมดูล</td></tr>
+    <tr><td>Audit Service</td><td>บันทึกเหตุการณ์แบบแก้ไขไม่ได้</td><td>ทุกโมดูล</td></tr>
+    <tr><td>Integration Service</td><td>Adapter ระบบภายนอก ตารางเวลานำเข้า การกระทบยอด</td><td>M05, M07, M02</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">5.3</span>Core Product กับส่วนที่ตั้งค่าตามหน่วยงาน</h3>
+<div class="tbl"><table>
+  <thead><tr><th>Core (เหมือนกันทุกหน่วยงาน)</th><th>Configuration (ตั้งค่าโดยไม่แก้โค้ด)</th><th>Customization (พัฒนาเพิ่มเมื่อจำเป็น)</th></tr></thead>
+  <tbody><tr>
+    <td>โมเดลข้อมูลงบประมาณ การเก็บเวอร์ชัน Workflow Engine Audit การคำนวณ</td>
+    <td>โครงสร้างองค์กร โครงสร้างงบประมาณรายปี สายอนุมัติ กฎตรวจสอบ แบบฟอร์ม รายงาน ปฏิทิน</td>
+    <td>Adapter เชื่อมต่อระบบเฉพาะของหน่วยงาน รายงานพิเศษ</td>
+  </tr></tbody>
+</table></div>
+
+<h3><span class="num">5.4</span>หน้าจอหลัก</h3>
+<div class="tbl"><table>
+  <thead><tr><th>หน้าจอ</th><th>ผู้ใช้หลัก</th><th>โมดูล</th></tr></thead>
+  <tbody>
+    <tr><td>Budget Workspace (งานของฉัน กำหนดส่ง การแจ้งเตือน)</td><td>ทุกบทบาท</td><td>ทุกโมดูล</td></tr>
+    <tr><td>แผนยุทธศาสตร์และโครงสร้างแผนงาน</td><td>กองแผนงาน</td><td>M01</td></tr>
+    <tr><td>รายการคำขอ และแบบฟอร์มคำขอพร้อมผู้ช่วย AI</td><td>สำนัก / กอง</td><td>M02</td></tr>
+    <tr><td>ภาพรวมคำขอระดับกรม</td><td>กองแผนงาน</td><td>M03</td></tr>
+    <tr><td>กลั่นกรองหลายรอบและประวัติเวอร์ชัน</td><td>กองแผนงาน ผู้บริหาร</td><td>M04</td></tr>
+    <tr><td>ชุดข้อมูลส่งและสถานะการพิจารณา</td><td>กองแผนงาน</td><td>M05</td></tr>
+    <tr><td>จัดสรรและโอนเปลี่ยนแปลง</td><td>การเงิน</td><td>M06</td></tr>
+    <tr><td>Executive Dashboard</td><td>ผู้บริหาร</td><td>M07</td></tr>
+    <tr><td>ผลสัมฤทธิ์โครงการ</td><td>กองแผนงาน</td><td>M08</td></tr>
+    <tr><td>ผู้ช่วย AI งบประมาณ</td><td>ผู้บริหาร กองแผนงาน</td><td>M09</td></tr>
+    <tr><td>ตั้งค่าระบบ ข้อมูลหลัก สิทธิ์ Workflow Audit</td><td>ผู้ดูแลระบบ</td><td>M10</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 06 ============================== -->
+<section class="ch" id="s6">
+<h2><span class="num">06</span>สถาปัตยกรรมเทคนิคและการติดตั้ง</h2>
+<p class="lede">เทคโนโลยีที่เลือกเน้นมาตรฐานเปิด ติดตั้งได้ทั้ง Cloud และ On-Premise และขยายตามจำนวนหน่วยงานได้</p>
+
+<h3><span class="num">6.1</span>Technology Stack</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ชั้น</th><th>เทคโนโลยี</th><th>หมายเหตุ</th></tr></thead>
+  <tbody>
+    <tr><td>User Experience</td><td>Responsive Web Application</td><td>ใช้ผ่านเบราว์เซอร์ ไม่ต้องติดตั้ง รองรับมือถือ</td></tr>
+    <tr><td>Application Platform</td><td>Low-code Application Platform</td><td>หน้าจอ แบบฟอร์ม โมดูลงาน</td></tr>
+    <tr><td>Workflow</td><td>BPM Workflow Engine</td><td>สายอนุมัติที่ตั้งค่าได้</td></tr>
+    <tr><td>Business Rules</td><td>Business Rules Engine</td><td>กฎรายปีโดยไม่แก้โค้ด</td></tr>
+    <tr><td>AI</td><td>Agentic AI Platform, LLM Gateway</td><td>รายละเอียดในบท 9</td></tr>
+    <tr><td>Document</td><td>Document AI (OCR &amp; Extraction), Object Storage</td><td>รองรับภาษาไทย</td></tr>
+    <tr><td>Integration</td><td>REST API, API Gateway, ETL</td><td>API-First</td></tr>
+    <tr><td>Database</td><td>PostgreSQL / RDBMS</td><td>ข้อมูลธุรกรรม</td></tr>
+    <tr><td>Analytics</td><td>Analytics Data Mart, BI &amp; Reporting Engine</td><td>แยกจากฐานข้อมูลธุรกรรม</td></tr>
+    <tr><td>Runtime</td><td>Container Platform</td><td>ขยายตามโหลด</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.2</span>สภาพแวดล้อม</h3>
+<div class="tbl"><table>
+  <thead><tr><th>สภาพแวดล้อม</th><th>วัตถุประสงค์</th><th>ข้อมูล</th></tr></thead>
+  <tbody>
+    <tr><td>DEV</td><td>พัฒนา</td><td>ข้อมูลสมมติ</td></tr>
+    <tr><td>SIT</td><td>ทดสอบการทำงานร่วมกันและการเชื่อมต่อ</td><td>ข้อมูลสมมติ / ข้อมูลปกปิด</td></tr>
+    <tr><td>UAT</td><td>หน่วยงานทดสอบรับระบบ</td><td>ข้อมูลปกปิดหรือข้อมูลจริงที่ได้รับอนุญาต</td></tr>
+    <tr><td>PROD</td><td>ใช้งานจริง</td><td>ข้อมูลจริง</td></tr>
+    <tr><td>DR</td><td>สำรองกรณีภัยพิบัติ</td><td>สำเนาจาก PROD</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.3</span>รูปแบบการติดตั้ง</h3>
+<div class="cards">
+  <div class="card"><div class="k">Option A</div><b>Government Cloud</b><span>เหมาะกับหน่วยงานที่ต้องการลดภาระโครงสร้างพื้นฐาน ต้องยืนยันบริการ AI ที่ใช้ได้บน Cloud นั้น</span></div>
+  <div class="card"><div class="k">Option B</div><b>Private Cloud</b><span>ควบคุมทรัพยากรเอง ขยายระบบได้ยืดหยุ่น</span></div>
+  <div class="card"><div class="k">Option C</div><b>On-Premise</b><span>ข้อมูลอยู่ในศูนย์ข้อมูลของหน่วยงานทั้งหมด ต้องเตรียม GPU หากใช้โมเดล AI ภายใน</span></div>
+</div>
+
+<h3><span class="num">6.4</span>โครงสร้างเครือข่าย</h3>
+<div class="flow">
+  <div class="st"><b>Internet / GIN</b>ผู้ใช้</div><span class="ar">→</span>
+  <div class="st"><b>DMZ</b>WAF · Load Balancer · API Gateway</div><span class="ar">→</span>
+  <div class="st"><b>Application Zone</b>Application · Workflow · Rules · AI</div><span class="ar">→</span>
+  <div class="st"><b>Data Zone</b>Database · Storage · Data Mart</div>
+</div>
+<p class="small">ระบบภายนอกเชื่อมผ่าน API Gateway ใน DMZ เท่านั้น Data Zone ไม่รับการเชื่อมต่อจากภายนอกโดยตรง</p>
+</section>
+
+<!-- ============================== 07 ============================== -->
+<section class="ch" id="s7">
+<h2><span class="num">07</span>สถาปัตยกรรมข้อมูล</h2>
+<p class="lede">โครงสร้างข้อมูลผูกกับปีงบประมาณ เก็บวงเงินเป็นเวอร์ชัน และเปลี่ยนโครงสร้างรายปีได้โดยไม่กระทบข้อมูลย้อนหลัง</p>
+
+<h3><span class="num">7.1</span>Conceptual Data Model</h3>
+<div class="flow">
+  <div class="st"><b>Organization</b>หน่วยงาน</div><span class="ar">→</span>
+  <div class="st"><b>Strategic Plan</b>แผนยุทธศาสตร์</div><span class="ar">→</span>
+  <div class="st"><b>Objective</b>เป้าประสงค์</div><span class="ar">→</span>
+  <div class="st"><b>KPI</b>ตัวชี้วัด</div>
+</div>
+<div class="flow">
+  <div class="st"><b>Budget Request</b>คำขอ</div><span class="ar">→</span>
+  <div class="st"><b>Budget Item</b>รายการ</div><span class="ar">→</span>
+  <div class="st"><b>Amount Version</b>วงเงินรายรอบ</div><span class="ar">→</span>
+  <div class="st"><b>Approved Budget</b>วงเงินที่ได้รับ</div><span class="ar">→</span>
+  <div class="st"><b>Allocation</b>การจัดสรร</div><span class="ar">→</span>
+  <div class="st"><b>Execution</b>การใช้จ่าย</div><span class="ar">→</span>
+  <div class="st"><b>Performance Result</b>ผลสัมฤทธิ์ (ย้อนกลับไปวัดเทียบ KPI)</div>
+</div>
+
+<h3><span class="num">7.2</span>Entity หลัก</h3>
+<div class="tbl"><table>
+  <thead><tr><th>Entity</th><th>คำอธิบาย</th><th>ข้อมูลสำคัญ</th></tr></thead>
+  <tbody>
+    <tr><td>FiscalYear</td><td>ปีงบประมาณและสถานะ (เปิดรับคำขอ/พิจารณา/บังคับใช้/ปิด)</td><td>ปี พ.ศ., ช่วงเวลา, ปฏิทิน</td></tr>
+    <tr><td>Organization</td><td>หน่วยงานแบบลำดับชั้น มีช่วงเวลาที่มีผล</td><td>รหัส, ชื่อ, หน่วยงานแม่, valid_from/to</td></tr>
+    <tr><td>BudgetStructure</td><td>แผนงาน ผลผลิต/โครงการ กิจกรรม ของแต่ละปี</td><td>รหัส, ระดับ, ปี, รหัสปีก่อนที่จับคู่</td></tr>
+    <tr><td>BudgetRequest</td><td>คำขอรายโครงการ/กิจกรรม</td><td>เลขที่, หน่วยงาน, โครงสร้าง, สถานะ, ผูกพันหลายปี</td></tr>
+    <tr><td>BudgetItem</td><td>รายการงบประมาณ</td><td>งบรายจ่าย, หมวด, จำนวน, หน่วยนับ, ราคาต่อหน่วย</td></tr>
+    <tr><td>AmountVersion</td><td>วงเงินของรายการในแต่ละรอบ แบบเพิ่มอย่างเดียว</td><td>รอบ, วงเงิน, เหตุผล, ผู้ปรับ, เวลา</td></tr>
+    <tr><td>ApprovedBudget / Allocation</td><td>วงเงินที่ได้รับและการจัดสรรภายใน</td><td>วงเงิน, ผู้รับจัดสรร, แผนการใช้จ่าย</td></tr>
+    <tr><td>ExecutionRecord</td><td>ผลเบิกจ่ายที่นำเข้า</td><td>งวด, วงเงิน, แหล่งข้อมูล, เวลานำเข้า</td></tr>
+    <tr><td>KPI / PerformanceResult</td><td>ตัวชี้วัด ค่าเป้าหมาย ผลที่ได้</td><td>หน่วยวัด, เป้าหมาย, ผล, งวด</td></tr>
+    <tr><td>Document</td><td>เอกสารประกอบ</td><td>ประเภท, เวอร์ชัน, ที่จัดเก็บ, ผลสกัดข้อมูล</td></tr>
+    <tr><td>WorkflowInstance / Task</td><td>สถานะการอนุมัติและงานรอดำเนินการ</td><td>ขั้น, ผู้รับผิดชอบ, เส้นตาย</td></tr>
+    <tr><td>AuditEvent</td><td>เหตุการณ์ตรวจสอบ</td><td>ผู้ใช้, การกระทำ, ค่าก่อน/หลัง, เวลา, IP</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">7.3</span>การรองรับการเปลี่ยนโครงสร้างรายปี</h3>
+<ul>
+  <li><b>Fiscal-year scoped structure:</b> โครงสร้างงบประมาณเป็นชุดของแต่ละปี การเปลี่ยนปีใหม่ไม่แก้ไขชุดเดิม</li>
+  <li><b>Versioned amounts:</b> วงเงินทุกรอบเก็บแบบเพิ่มอย่างเดียว ไม่มีการ UPDATE ทับ</li>
+  <li><b>Effective-dated master data:</b> หน่วยงานและข้อมูลหลักมีช่วงเวลาที่มีผล รายงานย้อนหลังแสดงตามโครงสร้าง ณ เวลานั้น</li>
+  <li><b>Cross-year mapping:</b> ตารางจับคู่รหัสข้ามปีเพื่อเปรียบเทียบงบประมาณหลายปี</li>
+</ul>
+
+<h3><span class="num">7.4</span>Data Mart และการเก็บรักษาข้อมูล</h3>
+<p>Analytics Data Mart แยกจากฐานข้อมูลธุรกรรม ปรับปรุงด้วย ETL ทุกคืนหรือตามเหตุการณ์ ใช้สำหรับ Dashboard รายงาน และ AI เพื่อไม่ให้การวิเคราะห์กระทบการทำงานของผู้ใช้</p>
+<div class="tbl"><table>
+  <thead><tr><th>ประเภทข้อมูล</th><th>ระยะเก็บรักษา (เสนอ)</th></tr></thead>
+  <tbody>
+    <tr><td>ข้อมูลงบประมาณและเวอร์ชันวงเงิน</td><td>ตลอดอายุระบบ ไม่น้อยกว่า 10 ปีงบประมาณ</td></tr>
+    <tr><td>เอกสารประกอบ</td><td>ตามระเบียบงานสารบรรณและนโยบายหน่วยงาน</td></tr>
+    <tr><td>Audit Log</td><td>ไม่น้อยกว่า 10 ปี จัดเก็บแบบแก้ไขไม่ได้</td></tr>
+    <tr><td>บันทึกคำถาม-คำตอบ AI</td><td>ไม่น้อยกว่า 1 ปี หรือตามนโยบายหน่วยงาน</td></tr>
+    <tr><td>Log ระบบ</td><td>ไม่น้อยกว่า 90 วันในระบบ และตามที่กฎหมายกำหนดสำหรับข้อมูลจราจรคอมพิวเตอร์</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">7.5</span>การย้ายข้อมูลย้อนหลัง</h3>
+<p>นำเข้าข้อมูลคำขอ วงเงินที่ได้รับ และผลเบิกจ่ายย้อนหลังอย่างน้อย 3 ปีงบประมาณ จากไฟล์ที่หน่วยงานมี ผ่านขั้นตอนจับคู่รหัส ตรวจความถูกต้อง และกระทบยอดรวมกับรายงานที่หน่วยงานรับรอง ก่อนเปิดใช้งาน</p>
+</section>
+
+<!-- ============================== 08 ============================== -->
+<section class="ch" id="s8">
+<h2><span class="num">08</span>การออกแบบการเชื่อมต่อระบบ</h2>
+<p class="lede">ทุกการเชื่อมต่อผ่าน Integration Layer และใช้ได้เฉพาะช่องทางที่หน่วยงานเจ้าของระบบอนุญาต</p>
+
+<div class="hub">
+  <div class="side">
+    <div class="ext"><b>New e-Budgeting</b>สำนักงบประมาณ</div>
+    <div class="ext"><b>New GFMIS Thai</b>การเบิกจ่ายและสถานะงบประมาณ</div>
+    <div class="ext"><b>ERP / Financial</b>บัญชีและการเงินของหน่วยงาน</div>
+  </div>
+  <div class="core"><b>Fisko</b><span>API Gateway · Data Exchange · ETL · File Import-Export</span></div>
+  <div class="side">
+    <div class="ext"><b>e-GP</b>สถานะจัดซื้อจัดจ้าง</div>
+    <div class="ext"><b>HR / Payroll</b>อัตรากำลังและเงินเดือน</div>
+    <div class="ext"><b>Identity Provider</b>บัญชีผู้ใช้ของหน่วยงาน (SSO)</div>
+  </div>
+</div>
+
+<h3><span class="num">8.1</span>Interface Catalog</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ระบบ</th><th>ทิศทาง</th><th>ข้อมูล</th><th>วิธี</th><th>ความถี่</th><th>สถานะ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">IF-01</td><td>New e-Budgeting</td><td>ส่งออก / นำเข้า</td><td>คำของบประมาณ ผลพิจารณา</td><td>ไฟล์ตามรูปแบบที่กำหนด หรือ API หากได้รับอนุญาต</td><td>ตามรอบงบประมาณ</td><td><span class="tag t-warn">รอยืนยันช่องทาง</span></td></tr>
+    <tr><td class="id">IF-02</td><td>New GFMIS Thai</td><td>นำเข้า</td><td>ผลเบิกจ่าย สถานะงบประมาณ</td><td>ไฟล์รายงาน หรือช่องทางที่ได้รับสิทธิ์</td><td>รายวัน / รายสัปดาห์</td><td><span class="tag t-warn">รอยืนยันสิทธิ์</span></td></tr>
+    <tr><td class="id">IF-03</td><td>ERP / Financial</td><td>นำเข้า</td><td>ข้อมูลบัญชี การผูกพัน</td><td>API / ETL</td><td>รายวัน</td><td><span class="tag t-should">ขึ้นกับระบบหน่วยงาน</span></td></tr>
+    <tr><td class="id">IF-04</td><td>e-GP</td><td>นำเข้า</td><td>สถานะโครงการจัดซื้อจัดจ้าง</td><td>ข้อมูลที่เปิดให้ใช้งาน</td><td>รายสัปดาห์</td><td><span class="tag t-warn">รอยืนยันช่องทาง</span></td></tr>
+    <tr><td class="id">IF-05</td><td>HR / Payroll</td><td>นำเข้า</td><td>อัตรากำลัง เงินเดือน (ข้อมูลส่วนบุคคล)</td><td>API / ไฟล์ แบบสรุปเท่าที่จำเป็น</td><td>รายเดือน</td><td><span class="tag t-should">ขึ้นกับระบบหน่วยงาน</span></td></tr>
+    <tr><td class="id">IF-06</td><td>Identity Provider</td><td>ยืนยันตัวตน</td><td>บัญชีผู้ใช้ กลุ่ม</td><td>SAML 2.0 / OpenID Connect</td><td>ทุกการเข้าสู่ระบบ</td><td><span class="tag t-must">จำเป็น</span></td></tr>
+    <tr><td class="id">IF-07</td><td>Email / SMTP</td><td>ส่งออก</td><td>การแจ้งเตือน</td><td>SMTP ของหน่วยงาน</td><td>ตามเหตุการณ์</td><td><span class="tag t-must">จำเป็น</span></td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">8.2</span>รูปแบบและหลักการเชื่อมต่อ</h3>
+<ul>
+  <li><b>API-First:</b> บริการภายในทุกตัวเปิด API ที่มีเอกสาร (OpenAPI) และกำหนดเวอร์ชัน</li>
+  <li><b>Adapter ต่อระบบ:</b> แต่ละระบบภายนอกมี Adapter แยก เปลี่ยนจากไฟล์เป็น API ได้โดยไม่กระทบโมดูลงาน</li>
+  <li><b>Staging ก่อนนำเข้า:</b> ข้อมูลนำเข้าลงพื้นที่พักก่อน ตรวจรูปแบบ รหัส และยอดรวม แล้วจึงบันทึกจริง</li>
+  <li><b>Idempotent:</b> นำเข้าซ้ำงวดเดิมได้โดยไม่เกิดข้อมูลซ้ำ</li>
+  <li><b>กระทบยอด:</b> ทุกงวดเทียบยอดรวมกับแหล่งข้อมูล ส่วนต่างแสดงในรายงานให้ผู้รับผิดชอบตรวจ</li>
+  <li><b>จัดการข้อผิดพลาด:</b> ลองใหม่อัตโนมัติตามรอบ บันทึกข้อผิดพลาด และแจ้งผู้ดูแลเมื่อเกินเกณฑ์</li>
+  <li><b>ความปลอดภัย:</b> TLS 1.2 ขึ้นไป, Mutual TLS หรือ OAuth 2.0 Client Credentials, จำกัด IP, ไฟล์เข้ารหัสระหว่างส่ง</li>
+</ul>
+</section>
+
+<!-- ============================== 09 ============================== -->
+<section class="ch" id="s9">
+<h2><span class="num">09</span>การออกแบบ AI</h2>
+<p class="lede">AI ทำงานบนข้อมูลที่ผู้ใช้มีสิทธิ์ ส่งผลกลับเป็นข้อเสนอพร้อมแหล่งอ้างอิง และไม่บันทึกหรืออนุมัติแทนผู้ใช้</p>
+
+<div class="callout dark"><b>หลักการควบคุม</b> AI ทำหน้าที่สนับสนุนการตัดสินใจเท่านั้น การอนุมัติและปรับเปลี่ยนวงเงินดำเนินการโดยผู้มีอำนาจตามระเบียบราชการ</div>
+
+<h3><span class="num">9.1</span>สถาปัตยกรรม AI</h3>
+<div class="arch">
+  <div class="layers">
+    <div class="layer top"><div class="lb">Entry Points<small>จุดเรียกใช้</small></div><div class="chips"><span class="chip">Executive Assistant (Chat)</span><span class="chip">ผู้ช่วยในหน้าคำขอ</span><span class="chip">ตรวจก่อนส่ง</span><span class="chip">แจ้งเตือนเชิงรุก</span></div></div>
+    <div class="layer"><div class="lb">Agent Orchestrator<small>วางแผนและเรียกใช้</small></div><div class="chips"><span class="chip">Intent Router</span><span class="chip">Task Planner</span><span class="chip">Tool Calling</span><span class="chip">Session Context</span><span class="chip">Answer + Citations</span></div></div>
+    <div class="layer"><div class="lb">Budget AI Agents<small>6 Agents</small></div><div class="chips"><span class="chip g">Preparation</span><span class="chip g">Validation</span><span class="chip g">Analysis</span><span class="chip g">Optimization</span><span class="chip g">Monitoring</span><span class="chip g">Executive Assistant</span></div></div>
+    <div class="layer"><div class="lb">Tools<small>อ่านอย่างเดียว</small></div><div class="chips"><span class="chip">Budget Query</span><span class="chip">Document Retrieval</span><span class="chip">Rule Check</span><span class="chip">What-if Simulation</span><span class="chip">Draft Proposal</span></div></div>
+    <div class="layer"><div class="lb">Knowledge &amp; Data<small>แหล่งอ้างอิง</small></div><div class="chips"><span class="chip">Data Mart</span><span class="chip">Historical Budget</span><span class="chip">ระเบียบและหลักเกณฑ์</span><span class="chip">Vector Store</span></div></div>
+    <div class="layer"><div class="lb">LLM Layer<small>ตามนโยบาย</small></div><div class="chips"><span class="chip">LLM Gateway</span><span class="chip">Government / Private Cloud LLM</span><span class="chip">On-Premise Open Model</span><span class="chip">Embedding Model</span></div></div>
+  </div>
+  <div class="gov"><b>AI Governance</b><ul><li>เข้าถึงข้อมูลตามสิทธิ์ผู้ใช้</li><li>มนุษย์ตัดสินใจทุกครั้ง</li><li>ไม่อนุมัติหรือปรับวงเงินอัตโนมัติ</li><li>แสดงสมมติฐานและแหล่งอ้างอิง</li><li>บันทึกคำถามและคำตอบ</li><li>ปกปิดข้อมูลส่วนบุคคล</li><li>ประเมินคุณภาพต่อเนื่อง</li></ul></div>
+</div>
+
+<h3><span class="num">9.2</span>Agent Catalog</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>Agent</th><th>ข้อมูลนำเข้า</th><th>เครื่องมือ</th><th>ผลลัพธ์</th><th>ระดับการทำงาน</th></tr></thead>
+  <tbody>
+    <tr><td class="id">AG-01</td><td>Budget Preparation</td><td>ข้อมูลโครงการ คำขอคล้ายกันปีก่อน แผนยุทธศาสตร์</td><td>Budget Query, Document Retrieval</td><td>ร่างเหตุผลความจำเป็น ข้อเสนอตัวชี้วัด</td><td>ร่างให้ผู้ใช้แก้ไข</td></tr>
+    <tr><td class="id">AG-02</td><td>Budget Validation</td><td>คำขอ เอกสารแนบ กฎรายปี</td><td>Rule Check, Document AI</td><td>รายการข้อผิดพลาดและข้อสังเกต</td><td>แนะนำเท่านั้น</td></tr>
+    <tr><td class="id">AG-03</td><td>Budget Analysis</td><td>Data Mart หลายปี</td><td>Budget Query</td><td>แนวโน้ม การเปรียบเทียบ คำอธิบายส่วนต่าง</td><td>อ่านอย่างเดียว</td></tr>
+    <tr><td class="id">AG-04</td><td>Budget Optimization</td><td>คำขอ คะแนนความสำคัญ กรอบวงเงิน</td><td>What-if Simulation</td><td>ทางเลือกการจัดสรรพร้อมสมมติฐาน</td><td>ข้อเสนอให้ผู้มีอำนาจพิจารณา</td></tr>
+    <tr><td class="id">AG-05</td><td>Budget Monitoring</td><td>แผนและผลการใช้จ่าย สถานะจัดซื้อจัดจ้าง</td><td>Budget Query</td><td>การแจ้งเตือนโครงการเสี่ยงพร้อมสาเหตุ</td><td>แจ้งเตือน</td></tr>
+    <tr><td class="id">AG-06</td><td>Executive Budget Assistant</td><td>คำถามภาษาธรรมชาติ</td><td>ทุกเครื่องมือแบบอ่านอย่างเดียว</td><td>คำตอบพร้อมตาราง แหล่งอ้างอิง สมมติฐาน</td><td>อ่านอย่างเดียว</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">9.3</span>Knowledge และ Retrieval</h3>
+<ul>
+  <li>ข้อมูลตัวเลขตอบจาก Data Mart ผ่าน Budget Query ที่มีชั้นความหมาย (Semantic Layer) ไม่ให้โมเดลคำนวณยอดเอง</li>
+  <li>ระเบียบ หลักเกณฑ์ และเอกสารโครงการตอบจาก Vector Store ด้วยการค้นคืนแล้วอ้างอิงเอกสารต้นทาง</li>
+  <li>ทุกการค้นคืนกรองตามสิทธิ์ของผู้ถาม ก่อนส่งให้โมเดล</li>
+  <li>เอกสารภาษาไทยผ่าน Document AI เพื่อสกัดข้อความก่อนทำดัชนี</li>
+</ul>
+
+<h3><span class="num">9.4</span>Guardrails</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ความเสี่ยง</th><th>มาตรการ</th></tr></thead>
+  <tbody>
+    <tr><td>ตอบตัวเลขผิด</td><td>ตัวเลขมาจาก Tool เท่านั้น แสดงแหล่งที่มาและเวลาของข้อมูล ตรวจผลรวมก่อนแสดง</td></tr>
+    <tr><td>เข้าถึงข้อมูลเกินสิทธิ์</td><td>Permission-aware retrieval, Tool รับ token ของผู้ใช้ ไม่ใช้สิทธิ์ระบบ</td></tr>
+    <tr><td>คำสั่งแฝงในเอกสาร (Prompt Injection)</td><td>แยกเนื้อหาเอกสารเป็นข้อมูล ไม่ถือเป็นคำสั่ง จำกัดเครื่องมือเป็นอ่านอย่างเดียว ทดสอบเชิงรุก</td></tr>
+    <tr><td>ข้อมูลส่วนบุคคลรั่วไหล</td><td>ปกปิดข้อมูลส่วนบุคคลก่อนส่งโมเดล ใช้ข้อมูลอัตรากำลังแบบสรุป</td></tr>
+    <tr><td>AI ตัดสินใจแทนมนุษย์</td><td>ไม่มี Tool ที่บันทึก อนุมัติ หรือปรับวงเงิน ข้อเสนอต้องผ่าน Workflow ปกติ</td></tr>
+    <tr><td>ข้อมูลออกนอกขอบเขต</td><td>LLM Gateway กำหนดปลายทางโมเดลที่อนุญาต บันทึกทุกคำขอ</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">9.5</span>การประเมินและติดตามคุณภาพ</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ตัวชี้วัด</th><th class="n">เป้าหมายเสนอ</th><th>วิธีวัด</th></tr></thead>
+  <tbody>
+    <tr><td>ความถูกต้องของคำตอบเชิงตัวเลข</td><td class="n">≥ 98%</td><td>ชุดคำถามทดสอบที่มีคำตอบรับรอง</td></tr>
+    <tr><td>คำตอบที่มีแหล่งอ้างอิง</td><td class="n">100%</td><td>ตรวจอัตโนมัติ</td></tr>
+    <tr><td>ข้อผิดพลาดคำขอที่ Validation Agent ตรวจพบ</td><td class="n">≥ 90%</td><td>เทียบกับผลตรวจของกองแผนงาน</td></tr>
+    <tr><td>ความพึงพอใจผู้ใช้ต่อร่างเหตุผล</td><td class="n">≥ 4 / 5</td><td>ให้คะแนนในหน้าจอ</td></tr>
+    <tr><td>เวลาตอบสนอง</td><td class="n">≤ 10 วินาที</td><td>วัดที่ LLM Gateway (P90)</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 10 ============================== -->
+<section class="ch" id="s10">
+<h2><span class="num">10</span>การออกแบบความมั่นคงปลอดภัย</h2>
+<p class="lede">ออกแบบตามหลัก Defense in Depth และ Least Privilege สอดคล้องกฎหมายคุ้มครองข้อมูลส่วนบุคคลและกฎหมายการรักษาความมั่นคงปลอดภัยไซเบอร์</p>
+
+<h3><span class="num">10.1</span>การยืนยันตัวตนและการเข้าถึง</h3>
+<ul>
+  <li>Single Sign-On กับ Identity Provider ของหน่วยงาน (SAML 2.0 / OpenID Connect)</li>
+  <li>Multi-Factor Authentication บังคับสำหรับผู้บริหาร กองแผนงาน การเงิน และผู้ดูแลระบบ</li>
+  <li>Role-Based Access Control ผสานกับขอบเขตหน่วยงาน (ผู้ใช้เห็นเฉพาะข้อมูลของหน่วยงานตนและหน่วยงานใต้สังกัด)</li>
+  <li>Session timeout เมื่อไม่ใช้งาน 30 นาที และยุติ Session เมื่อเปลี่ยนสิทธิ์</li>
+  <li>บัญชีสิทธิ์สูงตรวจทานทุกไตรมาส และแยกหน้าที่ผู้ดูแลระบบกับผู้ใช้งานธุรกิจ</li>
+</ul>
+
+<h3><span class="num">10.2</span>Role–Module Matrix</h3>
+<div class="tbl"><table class="matrix">
+  <thead><tr><th>บทบาท</th><th class="c">M01</th><th class="c">M02</th><th class="c">M03</th><th class="c">M04</th><th class="c">M05</th><th class="c">M06</th><th class="c">M07</th><th class="c">M08</th><th class="c">M09</th><th class="c">M10</th></tr></thead>
+  <tbody>
+    <tr><td>ผู้บริหาร</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-a">A</td><td class="c mx-r">R</td><td class="c mx-a">A</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-u">U</td><td class="c">–</td></tr>
+    <tr><td>กองแผนงาน</td><td class="c mx-u">CU</td><td class="c mx-r">R</td><td class="c mx-u">CU</td><td class="c mx-u">U</td><td class="c mx-u">CU</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-u">CU</td><td class="c mx-u">U</td><td class="c">–</td></tr>
+    <tr><td>สำนัก / กอง</td><td class="c mx-r">R</td><td class="c mx-u">CU</td><td class="c">–</td><td class="c mx-r">R</td><td class="c">–</td><td class="c mx-r">R</td><td class="c mx-u">U</td><td class="c mx-u">U</td><td class="c mx-u">U</td><td class="c">–</td></tr>
+    <tr><td>การเงินและบัญชี</td><td class="c">–</td><td class="c mx-r">R</td><td class="c">–</td><td class="c">–</td><td class="c">–</td><td class="c mx-u">CU</td><td class="c mx-u">CU</td><td class="c">–</td><td class="c mx-u">U</td><td class="c">–</td></tr>
+    <tr><td>คณะกรรมการ</td><td class="c">–</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-u">U</td><td class="c">–</td><td class="c">–</td><td class="c">–</td><td class="c">–</td><td class="c">–</td><td class="c">–</td></tr>
+    <tr><td>ผู้ตรวจสอบ</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c">–</td><td class="c mx-r">R</td></tr>
+    <tr><td>ผู้ดูแลระบบ</td><td class="c">–</td><td class="c">–</td><td class="c">–</td><td class="c">–</td><td class="c">–</td><td class="c">–</td><td class="c">–</td><td class="c">–</td><td class="c">–</td><td class="c mx-u">CU</td></tr>
+  </tbody>
+</table></div>
+<p class="small">C = สร้าง · U = แก้ไข/ใช้งาน · R = อ่าน · A = อนุมัติ · – = ไม่มีสิทธิ์ ผู้ดูแลระบบไม่มีสิทธิ์เห็นหรือแก้ไขข้อมูลงบประมาณ</p>
+
+<h3><span class="num">10.3</span>การปกป้องข้อมูล</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ชั้นความลับ (เสนอ)</th><th>ตัวอย่าง</th><th>มาตรการ</th></tr></thead>
+  <tbody>
+    <tr><td><span class="tag t-bad">ลับ</span></td><td>วงเงินระหว่างพิจารณา มติคณะกรรมการ ข้อมูลเงินเดือนรายบุคคล</td><td>จำกัดตามบทบาท ปกปิดใน UAT ไม่ส่งให้ AI แบบรายบุคคล</td></tr>
+    <tr><td><span class="tag t-warn">ใช้ภายใน</span></td><td>คำขอ แผนการใช้จ่าย ผลเบิกจ่าย</td><td>RBAC + ขอบเขตหน่วยงาน</td></tr>
+    <tr><td><span class="tag t-could">เปิดเผยได้</span></td><td>งบประมาณที่ได้รับตามพระราชบัญญัติ ผลสัมฤทธิ์ที่เผยแพร่</td><td>เผยแพร่ได้หลังอนุมัติ</td></tr>
+  </tbody>
+</table></div>
+<ul>
+  <li>เข้ารหัสระหว่างส่งด้วย TLS 1.2 ขึ้นไป และเข้ารหัสขณะจัดเก็บ (ฐานข้อมูล ไฟล์ สำรองข้อมูล) ด้วย AES-256</li>
+  <li>บริหารกุญแจผ่าน Key Management Service หรือ HSM ตามรูปแบบการติดตั้ง</li>
+  <li>Secrets ไม่อยู่ในโค้ดหรือไฟล์ตั้งค่า</li>
+</ul>
+
+<h3><span class="num">10.4</span>Audit และการตรวจจับ</h3>
+<ul>
+  <li>บันทึกการเข้าสู่ระบบ การเปลี่ยนสิทธิ์ การสร้าง แก้ไข ส่ง อนุมัติ ส่งกลับ ปรับวงเงิน ส่งออกข้อมูล และการใช้ AI</li>
+  <li>Audit Log จัดเก็บแบบเพิ่มอย่างเดียวและตรวจความครบถ้วนได้ ส่งต่อไปยัง SIEM ของหน่วยงาน</li>
+  <li>แจ้งเตือนเหตุผิดปกติ เช่น เข้าสู่ระบบล้มเหลวต่อเนื่อง ส่งออกข้อมูลจำนวนมาก เข้าถึงนอกเวลาทำการ</li>
+</ul>
+
+<h3><span class="num">10.5</span>การคุ้มครองข้อมูลส่วนบุคคล</h3>
+<ul>
+  <li>ใช้ข้อมูลส่วนบุคคลเท่าที่จำเป็น เช่น ข้อมูลผู้ใช้และอัตรากำลังเพื่อประมาณการงบบุคลากร</li>
+  <li>จัดทำบันทึกรายการกิจกรรมการประมวลผล (ROPA) และประเมินผลกระทบ (DPIA) สำหรับการใช้ AI และข้อมูล HR</li>
+  <li>ปกปิดข้อมูลในสภาพแวดล้อมทดสอบ</li>
+  <li>รองรับการใช้สิทธิ์ของเจ้าของข้อมูลตามกระบวนการของหน่วยงาน</li>
+</ul>
+
+<h3><span class="num">10.6</span>Secure Development และการทดสอบ</h3>
+<ul>
+  <li>พัฒนาตามแนวทาง OWASP ASVS ระดับ 2 และตรวจ OWASP Top 10</li>
+  <li>Static/Dependency scanning ในทุก build, Dynamic scanning ก่อนขึ้น UAT</li>
+  <li>Penetration Test โดยผู้ทดสอบอิสระก่อน Go-Live และทุกปี</li>
+  <li>ทดสอบ Prompt Injection และการเข้าถึงข้อมูลข้ามสิทธิ์ของ AI ก่อนเปิดใช้</li>
+</ul>
+</section>
+
+<!-- ============================== 11 ============================== -->
+<section class="ch" id="s11">
+<h2><span class="num">11</span>ข้อกำหนดที่ไม่ใช่ฟังก์ชัน</h2>
+<p class="lede">ค่าเป้าหมายเสนอสำหรับหน่วยงานระดับกรม ต้องยืนยันตามจำนวนผู้ใช้และรูปแบบการติดตั้งจริง</p>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ด้าน</th><th>ข้อกำหนด</th><th class="n">เป้าหมายเสนอ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">NFR-PF-01</td><td>Performance</td><td>เวลาเปิดหน้าจอทั่วไป (P90)</td><td class="n">≤ 3 วินาที</td></tr>
+    <tr><td class="id">NFR-PF-02</td><td>Performance</td><td>เวลาแสดง Dashboard ผู้บริหาร (P90)</td><td class="n">≤ 5 วินาที</td></tr>
+    <tr><td class="id">NFR-PF-03</td><td>Performance</td><td>สร้างรายงานรวมระดับกรม</td><td class="n">≤ 60 วินาที</td></tr>
+    <tr><td class="id">NFR-CP-01</td><td>Capacity</td><td>ผู้ใช้ที่ลงทะเบียน</td><td class="n">500</td></tr>
+    <tr><td class="id">NFR-CP-02</td><td>Capacity</td><td>ผู้ใช้พร้อมกันช่วงใกล้กำหนดส่ง</td><td class="n">150</td></tr>
+    <tr><td class="id">NFR-CP-03</td><td>Capacity</td><td>คำขอต่อปีงบประมาณ</td><td class="n">5,000</td></tr>
+    <tr><td class="id">NFR-AV-01</td><td>Availability</td><td>ความพร้อมใช้งานในเวลาราชการ</td><td class="n">99.5%</td></tr>
+    <tr><td class="id">NFR-AV-02</td><td>Availability</td><td>ช่วงปิดปรับปรุงตามแผน</td><td class="n">นอกเวลาราชการ</td></tr>
+    <tr><td class="id">NFR-DR-01</td><td>Recovery</td><td>RPO</td><td class="n">≤ 1 ชั่วโมง</td></tr>
+    <tr><td class="id">NFR-DR-02</td><td>Recovery</td><td>RTO</td><td class="n">≤ 4 ชั่วโมง</td></tr>
+    <tr><td class="id">NFR-SC-01</td><td>Scalability</td><td>ขยายเพิ่มหน่วยงานในระบบเดียว (Multi-Organization)</td><td class="n">ไม่ต้องแก้สถาปัตยกรรม</td></tr>
+    <tr><td class="id">NFR-US-01</td><td>Usability</td><td>รองรับเบราว์เซอร์ Chrome, Edge, Safari, Firefox รุ่นปัจจุบัน และหน้าจอมือถือ</td><td class="n">ทุกหน้าจอหลัก</td></tr>
+    <tr><td class="id">NFR-US-02</td><td>Accessibility</td><td>การเข้าถึงสำหรับผู้ใช้ทุกกลุ่ม</td><td class="n">WCAG 2.1 AA</td></tr>
+    <tr><td class="id">NFR-LC-01</td><td>Localization</td><td>ภาษาไทยเป็นหลัก ปี พ.ศ. และรูปแบบตัวเลขไทย</td><td class="n">ทุกหน้าจอและรายงาน</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 12 ============================== -->
+<section class="ch" id="s12">
+<h2><span class="num">12</span>การปฏิบัติการและบำรุงรักษา</h2>
+<p class="lede">แนวทางดูแลระบบหลังใช้งานจริง</p>
+<div class="tbl"><table>
+  <thead><tr><th>ด้าน</th><th>แนวทาง</th></tr></thead>
+  <tbody>
+    <tr><td>Monitoring</td><td>ติดตามสถานะบริการ เวลาตอบสนอง ข้อผิดพลาด งานนำเข้าข้อมูล และค่าใช้จ่าย AI ต่อ Agent ผ่าน Dashboard ปฏิบัติการ</td></tr>
+    <tr><td>Backup</td><td>สำรองฐานข้อมูลเต็มรายวันและ Log ต่อเนื่อง สำรองไฟล์รายวัน เก็บสำเนานอกสถานที่ ทดสอบกู้คืนทุกไตรมาส</td></tr>
+    <tr><td>Disaster Recovery</td><td>ซ้อมกู้ระบบปีละ 1 ครั้งตามเป้าหมาย RPO/RTO</td></tr>
+    <tr><td>Release</td><td>ปล่อยรุ่นผ่าน DEV → SIT → UAT → PROD มีแผนย้อนกลับทุกครั้ง หลีกเลี่ยงช่วงใกล้กำหนดส่งคำขอ</td></tr>
+    <tr><td>การเปลี่ยนปีงบประมาณ</td><td>เตรียมโครงสร้าง กฎ แบบฟอร์ม และปฏิทินของปีใหม่ล่วงหน้า ทดสอบใน UAT ก่อนเปิดรับคำขอ</td></tr>
+    <tr><td>Support</td><td>Service Desk ระดับ 1 โดยหน่วยงาน ระดับ 2–3 โดยผู้พัฒนา กำหนด SLA ตามความรุนแรง</td></tr>
+  </tbody>
+</table></div>
+<div class="tbl"><table>
+  <thead><tr><th>ความรุนแรง</th><th>ตัวอย่าง</th><th class="n">ตอบรับ</th><th class="n">แก้ไขชั่วคราว</th></tr></thead>
+  <tbody>
+    <tr><td><span class="tag t-bad">วิกฤต</span></td><td>ระบบใช้งานไม่ได้ในช่วงกำหนดส่ง</td><td class="n">30 นาที</td><td class="n">4 ชั่วโมง</td></tr>
+    <tr><td><span class="tag t-warn">สูง</span></td><td>ฟังก์ชันหลักใช้ไม่ได้ มีทางเลี่ยง</td><td class="n">2 ชั่วโมง</td><td class="n">1 วันทำการ</td></tr>
+    <tr><td><span class="tag t-should">ปานกลาง</span></td><td>ฟังก์ชันรองผิดพลาด</td><td class="n">1 วันทำการ</td><td class="n">5 วันทำการ</td></tr>
+    <tr><td><span class="tag t-could">ต่ำ</span></td><td>ข้อความ การแสดงผล</td><td class="n">2 วันทำการ</td><td class="n">รุ่นถัดไป</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 13 ============================== -->
+<section class="ch" id="s13">
+<h2><span class="num">13</span>แนวทางดำเนินโครงการ</h2>
+<p class="lede">พัฒนา 4 ระยะ 9 เดือน (สมมติฐาน) เริ่มจากแกนหลักที่หน่วยรับงบประมาณต้องทำทุกปี</p>
+<div class="tbl"><table>
+  <thead><tr><th>ระยะ</th><th>เดือน</th><th>ขอบเขต</th><th>ผลส่งมอบหลัก</th></tr></thead>
+  <tbody>
+    <tr><td>Phase 1 · Foundation &amp; Preparation</td><td>1–3</td><td>Master Data, M10, M01, M02 · เริ่มขออนุญาตช่องทางเชื่อมต่อ</td><td>BPD, FRS, Logical Data Model, ระบบจัดทำคำขอ</td></tr>
+    <tr><td>Phase 2 · Consolidate &amp; Approve</td><td>4–5</td><td>M03, M04, M05</td><td>Workflow ครบวงจรก่อนส่งสำนักงบประมาณ</td></tr>
+    <tr><td>Phase 3 · Execute &amp; Measure</td><td>6–7</td><td>M06, M07, M08, Dashboard</td><td>การจัดสรรและติดตามผล</td></tr>
+    <tr><td>Phase 4 · Intelligence &amp; Go-Live</td><td>8–9</td><td>M09, Integration, UAT, ย้ายข้อมูล, อบรม</td><td>ระบบพร้อมใช้งานจริง</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">13.1</span>กลยุทธ์การทดสอบ</h3>
+<ul>
+  <li>Unit และ Integration Test อัตโนมัติในทุก build</li>
+  <li>SIT ครอบคลุม Workflow ทุกเส้นทาง รวมการส่งกลับแก้ไขและการมอบอำนาจ</li>
+  <li>UAT ด้วยสถานการณ์จริงของหน่วยงาน อย่างน้อย 1 รอบวงจรงบประมาณจำลอง</li>
+  <li>Performance Test ที่ผู้ใช้พร้อมกัน 150 คนตาม NFR-CP-02</li>
+  <li>Security Test และ Penetration Test ตามบท 10.6</li>
+  <li>AI Evaluation ด้วยชุดคำถามรับรองตามบท 9.5</li>
+</ul>
+
+<h3><span class="num">13.2</span>การเตรียมความพร้อมผู้ใช้</h3>
+<ul>
+  <li>อบรมแยกตามบทบาท ผู้จัดทำคำขอ กองแผนงาน การเงิน ผู้บริหาร ผู้ดูแลระบบ</li>
+  <li>คู่มือออนไลน์ในระบบ และวิดีโอสั้นตามงาน</li>
+  <li>ทีม Key User ของแต่ละสำนักเป็นผู้ช่วยเหลือระดับแรก</li>
+</ul>
+</section>
+
+<!-- ============================== 14 ============================== -->
+<section class="ch" id="s14">
+<h2><span class="num">14</span>ความเสี่ยงและประเด็นที่ต้องตัดสินใจ</h2>
+<p class="lede">ประเด็นที่ต้องปิดก่อนเริ่ม Detailed Design</p>
+
+<h3><span class="num">14.1</span>ความเสี่ยง</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ความเสี่ยง</th><th>ผลกระทบ</th><th>มาตรการ</th></tr></thead>
+  <tbody>
+    <tr><td>ไม่ได้รับอนุญาตเชื่อมต่อระบบภายนอกตามเวลา</td><td><span class="tag t-bad">สูง</span></td><td>เริ่มขออนุญาตใน Phase 1 ออกแบบ Adapter ให้ใช้ไฟล์ได้ก่อน</td></tr>
+    <tr><td>หลักเกณฑ์หรือแบบฟอร์มของสำนักงบประมาณเปลี่ยนระหว่างโครงการ</td><td><span class="tag t-warn">ปานกลาง</span></td><td>โครงสร้างและแบบฟอร์มเป็น Configuration ไม่ใช่โค้ด</td></tr>
+    <tr><td>ข้อมูลย้อนหลังไม่สมบูรณ์หรือรหัสไม่ตรงกัน</td><td><span class="tag t-warn">ปานกลาง</span></td><td>ประเมินข้อมูลตั้งแต่ต้น ใช้ Cross-year mapping กระทบยอดกับรายงานรับรอง</td></tr>
+    <tr><td>Go-Live ตรงกับช่วงจัดทำคำขอ</td><td><span class="tag t-bad">สูง</span></td><td>วางแผน Go-Live ก่อนเปิดรับคำขอของปีถัดไปอย่างน้อย 1 เดือน</td></tr>
+    <tr><td>ผู้ใช้ไม่เชื่อถือผลจาก AI</td><td><span class="tag t-should">ต่ำ</span></td><td>แสดงแหล่งอ้างอิงทุกคำตอบ เริ่มจาก Use case อ่านอย่างเดียว</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">14.2</span>ประเด็นที่ต้องตัดสินใจร่วมกับหน่วยงาน</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ประเด็น</th><th>ตัวเลือก</th><th>ผู้ตัดสินใจ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">D-01</td><td>รูปแบบการติดตั้ง</td><td>Government Cloud / Private Cloud / On-Premise</td><td>ผู้บริหาร ฝ่าย IT</td></tr>
+    <tr><td class="id">D-02</td><td>รูปแบบหลายหน่วยงาน</td><td>ระบบเดียวหลายหน่วยงาน หรือแยกระบบต่อหน่วยงาน</td><td>ผู้บริหาร</td></tr>
+    <tr><td class="id">D-03</td><td>โมเดล AI ที่อนุญาต</td><td>Cloud LLM ที่ได้รับอนุญาต / โมเดลภายในหน่วยงาน</td><td>ฝ่าย IT, DPO</td></tr>
+    <tr><td class="id">D-04</td><td>จำนวนรอบการกลั่นกรองและผู้พิจารณา</td><td>ตามโครงสร้างองค์กรจริง</td><td>กองแผนงาน</td></tr>
+    <tr><td class="id">D-05</td><td>ปีย้อนหลังที่ต้องย้ายข้อมูล</td><td>3 ปี / 5 ปี</td><td>กองแผนงาน</td></tr>
+    <tr><td class="id">D-06</td><td>แบบฟอร์มและรายงานที่ใช้จริง</td><td>รายการแบบฟอร์มและรายงานผู้บริหาร</td><td>กองแผนงาน</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== A ============================== -->
+<section class="ch" id="sA">
+<h2><span class="num">A</span>ภาคผนวก</h2>
+
+<h3><span class="num">A.1</span>อภิธานศัพท์</h3>
+<div class="tbl"><table>
+  <thead><tr><th>คำ</th><th>ความหมาย</th></tr></thead>
+  <tbody>
+    <tr><td>หน่วยรับงบประมาณ</td><td>ส่วนราชการหรือหน่วยงานที่ได้รับงบประมาณรายจ่ายโดยตรง</td></tr>
+    <tr><td>งบรายจ่าย</td><td>การจำแนกรายจ่ายเป็นงบบุคลากร งบดำเนินงาน งบลงทุน งบเงินอุดหนุน และงบรายจ่ายอื่น</td></tr>
+    <tr><td>คำขอผูกพันข้ามปี</td><td>รายการที่ใช้งบประมาณต่อเนื่องมากกว่าหนึ่งปีงบประมาณ</td></tr>
+    <tr><td>โอนเปลี่ยนแปลง</td><td>การปรับวงเงินระหว่างรายการหรือโครงการตามระเบียบ</td></tr>
+    <tr><td>RAG</td><td>การค้นคืนเอกสารที่เกี่ยวข้องแล้วให้โมเดลตอบโดยอ้างอิงเอกสารนั้น</td></tr>
+    <tr><td>RPO / RTO</td><td>ข้อมูลที่ยอมให้สูญหายได้สูงสุด / เวลาที่ใช้กู้ระบบให้กลับมาใช้งาน</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">A.2</span>ตารางสอบกลับข้อกำหนด (สรุป)</h3>
+<div class="tbl"><table>
+  <thead><tr><th>โมดูล</th><th class="n">Must</th><th class="n">Should</th><th class="n">Could</th><th>บทที่เกี่ยวข้อง</th></tr></thead>
+  <tbody>
+    <tr><td>M01 Strategic Planning</td><td class="n">4</td><td class="n">1</td><td class="n">0</td><td>3, 4.1, 7</td></tr>
+    <tr><td>M02 Budget Preparation</td><td class="n">7</td><td class="n">2</td><td class="n">0</td><td>4.2, 5, 9</td></tr>
+    <tr><td>M03 Budget Consolidation</td><td class="n">3</td><td class="n">2</td><td class="n">0</td><td>4.3</td></tr>
+    <tr><td>M04 Review &amp; Approval</td><td class="n">5</td><td class="n">1</td><td class="n">0</td><td>3.3, 4.4, 7.3</td></tr>
+    <tr><td>M05 Budget Submission</td><td class="n">3</td><td class="n">1</td><td class="n">0</td><td>4.5, 8</td></tr>
+    <tr><td>M06 Budget Allocation</td><td class="n">4</td><td class="n">0</td><td class="n">0</td><td>4.6</td></tr>
+    <tr><td>M07 Execution &amp; Monitoring</td><td class="n">4</td><td class="n">1</td><td class="n">0</td><td>4.7, 8</td></tr>
+    <tr><td>M08 Budget Performance</td><td class="n">2</td><td class="n">1</td><td class="n">0</td><td>4.8</td></tr>
+    <tr><td>M09 Budget Intelligence</td><td class="n">1</td><td class="n">2</td><td class="n">1</td><td>9</td></tr>
+    <tr><td>M10 System Administration</td><td class="n">6</td><td class="n">0</td><td class="n">0</td><td>4.10, 10</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">A.3</span>ประวัติเอกสาร</h3>
+<div class="tbl"><table>
+  <thead><tr><th>เวอร์ชัน</th><th>วันที่</th><th>รายละเอียด</th></tr></thead>
+  <tbody>
+    <tr><td>0.1</td><td>ตุลาคม 2569</td><td>Conceptual Design</td></tr>
+    <tr><td>0.2</td><td>16 ตุลาคม 2569</td><td>Solution Design ฉบับร่างเพื่อการหารือ ครอบคลุมฟังก์ชัน แอปพลิเคชัน สถาปัตยกรรม ข้อมูล การเชื่อมต่อ AI และความมั่นคงปลอดภัย</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<footer class="end">© 2026 Avalant. All rights reserved. · เอกสารฉบับร่างเพื่อการหารือ ตัวเลขและข้อกำหนดทั้งหมดต้องยืนยันใน Detailed Design</footer>
+</div>
+</main>
+</div>
+
+<script>
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc ol a'));
+  var secs = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+  function onScroll() {
+    var y = window.scrollY + 120, cur = 0;
+    secs.forEach(function (s, i) { if (s && s.offsetTop <= y) cur = i; });
+    links.forEach(function (a, i) { a.classList.toggle('on', i === cur); });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+  var toc = document.getElementById('toc'), tg = document.getElementById('toc-toggle');
+  tg.addEventListener('click', function () { var o = toc.classList.toggle('open'); tg.setAttribute('aria-expanded', o); });
+  links.forEach(function (a) { a.addEventListener('click', function () { toc.classList.remove('open'); tg.setAttribute('aria-expanded', 'false'); }); });
+  document.getElementById('theme').addEventListener('click', function () {
+    var r = document.documentElement, cur = r.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    r.dataset.theme = cur === 'dark' ? 'light' : 'dark';
+  });
+})();
+</script>
+</body>
+</html>
