@@ -63,7 +63,7 @@ VIEWS.requests = () => {
   <div class="head"><div><div class="eyebrow">M02 · Budget Preparation</div><h1>${L("คำของบประมาณ ปี 2571", "FY2571 budget requests")}</h1>
     <p>${L("กำหนดส่งกองแผนงาน", "Due to Planning")} ${fdate(c2.date)} · ${L("เหลือ", "")} ${daysUntil(c2.date)} ${L("วัน", "days left")}${ROLE === "div" ? ` · ${unitName(me().unit)}` : ""}</p></div>
     <div class="sp"></div>${ROLE === "div" ? `<button class="btn primary" type="button" id="new-req">+ ${L("สร้างคำขอใหม่", "New request")}</button>` : ""}</div>
-  ${ROLE === "div" ? ceilingBanner() : ""}
+  ${ROLE === "div" ? ceilingBanner() + hearingBanner() : ""}
   <section class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
     <div class="kpi"><span class="l">${L("คำขอทั้งหมด", "Requests")}</span><span class="v">${list.length}</span></div>
     <div class="kpi"><span class="l">${L("วงเงินที่ขอรวม", "Total requested")}</span><span class="v">${mb(tot)}<small>${L("ล้านบาท", "M baht")}</small></span></div>
@@ -86,7 +86,7 @@ function reqRows(f) {
 }
 BIND.requests = () => {
   const body = $("#req-body"); body.innerHTML = reqRows("");
-  bindCeilingBanner();
+  bindCeilingBanner(); bindHearingBanner();
   $("#flt").onchange = e => (body.innerHTML = reqRows(e.target.value));
   body.onclick = e => { const tr = e.target.closest("tr[data-id]"); if (tr) openReq(tr.dataset.id); };
   body.onkeydown = e => { if (e.key === "Enter") body.onclick(e); };

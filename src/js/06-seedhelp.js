@@ -140,5 +140,37 @@ function buildOrg(cfg) {
     else s.cons.resp[u.unit] = { st: "pending" };
   });
   s.fwd = { per: 3, ope: 2, ceil: 3 };
+
+  // round 9: budget hearings, parliament stages, allotment releases, carry-over
+  const Q = [
+    ["ชี้แจงเหตุผลที่วงเงินเพิ่มขึ้นจากปีก่อน", "Explain why the amount is higher than last year"],
+    ["แผนการจัดซื้อจัดจ้างและความพร้อมของแบบรูปรายการ", "Procurement plan and readiness of drawings"],
+    ["ผลการดำเนินงานปีที่ผ่านมาเทียบกับตัวชี้วัด", "Last year's results against the KPI"],
+    ["หากได้รับวงเงินลดลงร้อยละ 10 จะปรับแผนอย่างไร", "What would you change with 10% less?"],
+  ];
+  const hu = [...new Set([s.users.find(u => u.role === "div" && u.primary).unit, ...s.requests.filter(r => ["plan", "committee", "returned"].includes(r.status)).map(r => r.unit), ...s.cons.units.map(u => u.unit)])].slice(0, 3);
+  const qa = (h, i, ans) => ({ id: `${h}-Q${i + 1}`, q: Q[i], ans: ans || null, ok: ans ? true : null, t: ans ? "2026-10-08T15:00" : null, by: ans ? divOf(hu[2]) : null });
+  s.hearings = [
+    { id: "H-03", unit: hu[2], date: "2026-10-09", time: "13:30", status: "held", qs: [qa("H-03", 0, ["ค่าบำรุงรักษาระบบเดิมสิ้นสุดสัญญา ต้องจัดหาใหม่", "The old maintenance contract ended and must be re-procured"]), qa("H-03", 2, ["บรรลุเป้า 2 จาก 3 ตัวชี้วัด", "Met 2 of 3 KPIs"])] },
+    { id: "H-04", unit: hu[0], date: "2026-10-20", time: "09:30", status: "scheduled", qs: [qa("H-04", 0), qa("H-04", 3)] },
+    { id: "H-05", unit: hu[1] || hu[0], date: "2026-10-22", time: "13:30", status: "scheduled", qs: [qa("H-05", 1)] },
+  ];
+  s.parl = { stage: 0, items: null, cuts: {}, appeals: {} };
+  const A70 = s.allocs[2570], q = (l, n) => sum(l.plan.slice(n * 3, n * 3 + 3));
+  A70.releases = [];
+  BUDGET_TYPES.forEach(t => {
+    const ls = A70.lines.filter(l => l.type === t.id); if (!ls.length) return;
+    const q1 = sum(ls.map(l => q(l, 0))), q2 = sum(ls.map(l => q(l, 1)));
+    if (q1) A70.releases.push({ id: "", q: 1, type: t.id, amount: q1, status: "approved", t: "2026-10-01T09:00", dt: "2026-10-03T10:00", by: U("fin") });
+    if (q2 && (t.id === "per" || t.id === "ope")) A70.releases.push({ id: "", q: 2, type: t.id, amount: q2, status: "pending", t: "2026-10-15T14:00", by: U("fin") });
+  });
+  A70.releases.forEach((r, i) => (r.id = "RL-2570-" + String(i + 1).padStart(2, "0")));
+  const invL = A70.lines.filter(l => l.type === "inv").slice(0, 3), paid = [0.82, 0.35, 0];
+  s.carry = {
+    prev: invL.map((l, i) => ({ id: "CF-2569-0" + (i + 1), unit: l.unit, name: [`${l.name[0]} (ผูกพันจากปี 2569)`, `${l.name[1]} (committed in FY2569)`], po: `PO-69-0${412 + i * 37}`,
+      amount: Math.round(l.amount * 0.3 / 1e5) * 1e5, paid: 0, due: "2027-03-31", status: "open", t: "2026-09-28T10:00" })),
+    reqs: [],
+  };
+  s.carry.prev.forEach((c, i) => (c.paid = Math.round(c.amount * paid[i] / 1e5) * 1e5));
   return s;
 }

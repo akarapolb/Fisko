@@ -7,7 +7,8 @@ const RES = {
 };
 function revTabsBar() {
   const q = S.requests.filter(r => r.status === "plan" || r.status === "committee").length;
-  const t = [["queue", `${L("คำขอรอพิจารณา", "Review queue")} (${q})`], ["rounds", L("วงเงินแต่ละรอบ", "Amounts by round")], ["meetings", L("การประชุมคณะกรรมการ", "Committee meetings")], ["compare", L("เปรียบเทียบเวอร์ชัน", "Compare versions")]];
+  const t = [["queue", `${L("คำขอรอพิจารณา", "Review queue")} (${q})`], ["rounds", L("วงเงินแต่ละรอบ", "Amounts by round")], ["meetings", L("การประชุมคณะกรรมการ", "Committee meetings")], ["compare", L("เปรียบเทียบเวอร์ชัน", "Compare versions")],
+    ["hearings", `${L("การชี้แจงงบประมาณ", "Budget hearings")}${(() => { const n = (S.hearings || []).flatMap(h => h.qs).filter(q => q.ans && q.ok == null).length; return n ? ` (${n})` : ""; })()}`], ["impact", L("ผลกระทบต่อตัวชี้วัด", "Cut impact")]];
   return `<div class="tabs" role="tablist">${t.map(([id, l]) => `<button class="tab ${id === REV_TAB ? "on" : ""}" type="button" role="tab" aria-selected="${id === REV_TAB}" data-vtab="${id}">${l}</button>`).join("")}</div>`;
 }
 function addDays(iso, n) { const d = new Date(iso + "T00:00:00"); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); }

@@ -61,6 +61,20 @@ function myTasks() {
     if (resp[u] && resp[u].st === "pending") R(L("ตอบรับกรอบวงเงินของหน่วยงาน", "Reply to your unit ceiling"), `${fmt(S.cons.unitCeil[u], 1)} ${L("ล้านบาท", "M baht")}`, cal("c2").date, "requests", "p-warn");
     ideas.filter(i => i.unit === u && i.status === "accepted").forEach(i => R(`${L("จัดทำคำขอจากแนวคิดที่รับเข้าแผน", "Prepare a request from an accepted idea")} ${i.id}`, tx(i.name), cal("c2").date, "strat-bank", "p-info"));
   }
+  // Round 9: hearings, parliament appeals, releases and carry-over.
+  const H = S.hearings || [], C = S.carry || { prev: [], reqs: [] };
+  if (ROLE === "div") H.filter(h => h.unit === me().unit && h.status !== "held" && openQs(h).length).forEach(h => R(`${L("ตอบคำถามการชี้แจงงบประมาณ", "Answer budget hearing questions")} ${h.id}`, `${openQs(h).length} ${L("ข้อ", "questions")} · ${L("ประชุม", "hearing")} ${fdate(h.date)}`, h.date, "requests", "p-warn"));
+  if (ROLE === "plan") {
+    const toCheck = H.flatMap(h => h.qs).filter(q => q.ans && q.ok == null).length;
+    if (toCheck) R(L("ตรวจคำชี้แจงของหน่วยงาน", "Check units' hearing answers"), `${toCheck} ${L("ข้อ", "answers")}`, TODAY, "rev-hearings", "p-info");
+    if (S.parl && S.parl.stage === 3) R(L("ยื่นแปรญัตติขอคืนงบประมาณที่ถูกปรับลด", "File appeals to restore cuts"), Object.keys(S.parl.cuts).join(", "), PARL_STEPS[3][1], "sub-parliament", "p-warn");
+  }
+  if (ROLE === "fin") {
+    C.prev.filter(c => c.status === "open" && c.paid / c.amount < 0.5).forEach(c => R(`${L("เร่งเบิกจ่ายหรือขอขยายเวลาเงินกัน", "Speed up or extend carried funds")} ${c.id}`, `${L("เบิกแล้ว", "Paid")} ${fmt(c.paid / c.amount * 100, 0)}%`, c.due, "alloc-carry", "p-warn"));
+    const A70 = S.allocs[2570];
+    if (A70 && A70.releases && !A70.releases.some(r => r.q === 2 && r.type === "inv")) R(L("ขออนุมัติงวดเงินไตรมาส 2 งบลงทุน", "Request the Q2 investment release"), "", "2026-12-15", "alloc-releases", "p-info");
+  }
+  if (ROLE === "exec") [...C.prev.filter(c => c.status === "extension"), ...C.reqs.filter(c => c.status === "pending")].forEach(c => R(`${L("อนุมัติเรื่องเงินกันเหลื่อมปี", "Decide a carry-over")} ${c.id}`, mb(c.amount) + " " + L("ลบ.", "M"), TODAY, "alloc-carry", "p-warn"));
   // Delegated work (round 7): cross-unit transfers this user may approve on an executive's behalf.
   const dg = ROLE !== "exec" && delegFor("exec", "transfer");
   if (dg) Object.values(S.allocs).forEach(A => A.transfers.filter(x => x.status === "pending").forEach(x => { const a = A.lines.find(l => l.id === x.from), b = A.lines.find(l => l.id === x.to);

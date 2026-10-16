@@ -458,3 +458,8 @@ td.mono { white-space: nowrap; }
 .lg { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
 .ceil-lg { background: none; border-top: 2px dashed var(--bad); border-radius: 0; height: 0; vertical-align: 3px; }
 td .btn { white-space: nowrap; }
+
+/* ---------- round 9 ---------- */
+.hsteps.parl { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.hsteps.parl small { font-weight: 400; }
+@media (max-width: 860px) { .hsteps.parl { grid-template-columns: minmax(0, 1fr); } .hsteps.parl small { margin-left: auto; } }

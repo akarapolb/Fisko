@@ -12,11 +12,11 @@ All figures stay fictional and labelled as sample data.
 | 8 | M02 Budget Preparation | Paste from Excel | Paste rows copied from a spreadsheet, preview them with errors marked, then add them as budget lines. |
 | 8 | M03 Consolidation | Ceiling responses | After Planning issues unit ceilings, each unit accepts or appeals with a reason and amount. Planning grants or declines each appeal. |
 | 8 | M03 Consolidation | Forward estimates | Four-year estimates (2571–2574): the cost of continuing work, multi-year commitments and new projects against the expected ceiling. |
-| 9 | M04 Review & Approval | Budget Bureau clarifications | Questions from the Budget Bureau are assigned to units with a deadline, answered and sent back. |
+| 9 | M04 Review & Approval | Budget hearings | Planning schedules a hearing with each unit and sends questions ahead. The unit answers on its M02 page, and Planning accepts each answer or asks a follow-up. (Budget Bureau questions are already handled in M05.) |
 | 9 | M04 Review & Approval | Cut impact | Shows which KPI targets each proposed reduction puts at risk, before the committee decides. |
 | 9 | M05 Submission | Parliament stages | Tracks readings 1–3: the scrutiny committee's cuts per project, the agency's appeal, and the final appropriation. |
-| 9 | M06 Allocation | Allotment releases | Quarterly release requests from Finance, with what has been released, committed and spent against each. |
-| 9 | M06 Allocation | Year-end carry-over | Requests to carry funds into the next year, with contract (PO) evidence and the deadline check. |
+| 9 | M06 Allocation | Allotment releases | Quarterly release requests from Finance against the monthly spending plan, with the room left per budget type and what has been released so far. |
+| 9 | M06 Allocation | Year-end carry-over | Tracks funds carried in from FY2569 (payments, extensions) and new carry-over requests with contract (PO) evidence and deadline checks. |
 | 10 | M07 Execution Monitoring | Year-end forecast | Projects disbursement to year end against the cabinet's quarterly targets, and lists the units at risk. |
 | 10 | M07 Execution Monitoring | Procurement milestones | e-GP stages for each investment project (plan, invitation, award, contract, delivery), with slippage flags. |
 | 10 | M08 Performance | Project evaluation | Logframe-based evaluation after completion. Lessons learned feed the next year's project bank in M01. |
