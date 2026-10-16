@@ -63,6 +63,7 @@ VIEWS.requests = () => {
   <div class="head"><div><div class="eyebrow">M02 · Budget Preparation</div><h1>${L("คำของบประมาณ ปี 2571", "FY2571 budget requests")}</h1>
     <p>${L("กำหนดส่งกองแผนงาน", "Due to Planning")} ${fdate(c2.date)} · ${L("เหลือ", "")} ${daysUntil(c2.date)} ${L("วัน", "days left")}${ROLE === "div" ? ` · ${unitName(me().unit)}` : ""}</p></div>
     <div class="sp"></div>${ROLE === "div" ? `<button class="btn primary" type="button" id="new-req">+ ${L("สร้างคำขอใหม่", "New request")}</button>` : ""}</div>
+  ${ROLE === "div" ? ceilingBanner() : ""}
   <section class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
     <div class="kpi"><span class="l">${L("คำขอทั้งหมด", "Requests")}</span><span class="v">${list.length}</span></div>
     <div class="kpi"><span class="l">${L("วงเงินที่ขอรวม", "Total requested")}</span><span class="v">${mb(tot)}<small>${L("ล้านบาท", "M baht")}</small></span></div>
@@ -85,6 +86,7 @@ function reqRows(f) {
 }
 BIND.requests = () => {
   const body = $("#req-body"); body.innerHTML = reqRows("");
+  bindCeilingBanner();
   $("#flt").onchange = e => (body.innerHTML = reqRows(e.target.value));
   body.onclick = e => { const tr = e.target.closest("tr[data-id]"); if (tr) openReq(tr.dataset.id); };
   body.onkeydown = e => { if (e.key === "Enter") body.onclick(e); };
@@ -117,8 +119,10 @@ VIEWS.request = () => {
       <section class="panel"><header><h2>${L("รายการงบประมาณ", "Budget lines")}</h2><span class="sp"></span><span class="sub">${L("จำนวน × ราคาต่อหน่วย = วงเงินรวม", "Quantity × unit price = total")}</span></header>
         <div class="tbl-wrap"><table class="items"><thead><tr><th style="width:150px">${L("งบรายจ่าย", "Budget type")}</th><th>${L("รายการ", "Item")}</th><th class="n" style="width:90px">${L("จำนวน", "Qty")}</th><th style="width:90px">${L("หน่วยนับ", "Unit")}</th><th class="n" style="width:140px">${L("ราคาต่อหน่วย", "Unit price")}</th><th class="n" style="width:130px">${L("วงเงินรวม", "Total")}</th><th style="width:40px"></th></tr></thead>
           <tbody id="items"></tbody><tfoot><tr><td colspan="5">${L("รวมวงเงินที่ขอ (บาท)", "Total requested (baht)")}</td><td class="n" id="tot"></td><td></td></tr></tfoot></table></div>
+        <datalist id="price-list">${S.prices.map(p => `<option value="${esc(tx(p.name))}">${L("ราคามาตรฐาน", "Standard price")} ${fmt(p.price)} / ${esc(tx(p.unit))}</option>`).join("")}</datalist>
         <div class="body" style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:space-between">
-          ${ed ? `<button class="btn" type="button" id="add">+ ${L("เพิ่มรายการ", "Add line")}</button>` : "<span></span>"}<div class="row sub" id="bytype"></div></div></section>
+          ${ed ? `<div class="row"><button class="btn" type="button" id="add">+ ${L("เพิ่มรายการ", "Add line")}</button><button class="btn" type="button" id="paste-open">${L("วางจาก Excel", "Paste from Excel")}</button></div>` : "<span></span>"}<div class="row sub" id="bytype"></div></div>
+        ${ed ? `<div class="body paste-box" id="paste-box" hidden></div>` : ""}</section>
       ${generalComments(r)}
       <section class="panel"><header><h2>${L("เหตุผลและตัวชี้วัด", "Justification and KPIs")}</h2></header><div class="body form-grid">
         <div class="f full"><label for="reason">${L("เหตุผลความจำเป็น", "Justification")}</label>
@@ -147,10 +151,10 @@ function renderItems() {
   const r = curReq(), ds = editable(r) ? "" : "disabled";
   $("#items").innerHTML = r.items.map((it, i) => `<tr>
     <td><select data-i="${i}" data-k="type" aria-label="${L("งบรายจ่าย", "Budget type")}" ${ds}>${BUDGET_TYPES.map(t => `<option value="${t.id}" ${t.id === it.type ? "selected" : ""}>${tx(t.name)}</option>`).join("")}</select></td>
-    <td><input type="text" data-i="${i}" data-k="name" value="${esc(tx(it.name))}" aria-label="${L("รายการ", "Item")}" ${ds}></td>
+    <td><input type="text" data-i="${i}" data-k="name" value="${esc(tx(it.name))}" list="price-list" aria-label="${L("รายการ", "Item")}" ${ds}></td>
     <td><input type="number" min="0" data-i="${i}" data-k="qty" value="${it.qty}" aria-label="${L("จำนวน", "Qty")}" ${ds}></td>
     <td><input type="text" data-i="${i}" data-k="unitName" value="${esc(tx(it.unitName))}" aria-label="${L("หน่วยนับ", "Unit")}" ${ds}></td>
-    <td><input type="number" min="0" step="100" data-i="${i}" data-k="price" value="${it.price}" aria-label="${L("ราคาต่อหน่วย", "Unit price")}" ${ds}></td>
+    <td><input type="number" min="0" step="100" data-i="${i}" data-k="price" value="${it.price}" aria-label="${L("ราคาต่อหน่วย", "Unit price")}" ${ds}><div class="sp-note" id="sp${i}"></div></td>
     <td class="n" id="t${i}">${fmt(itemTotal(it))}</td>
     <td>${ds ? (canReview(r) ? `<button class="btn ghost" type="button" data-cmt="${i}" aria-label="${L("ใส่ความเห็นรายการนี้", "Comment on this line")}" title="${L("ใส่ความเห็น", "Comment")}" style="padding:4px 8px">✎</button>` : "") : `<button class="btn ghost danger" type="button" data-del="${i}" aria-label="${L("ลบรายการ", "Delete line")}" style="padding:4px 8px">×</button>`}</td></tr>
     ${lineCommentRows(r, it, i)}`).join("");
@@ -158,7 +162,7 @@ function renderItems() {
 }
 function renderTotals() {
   const r = curReq();
-  r.items.forEach((it, i) => { const c = $("#t" + i); if (c) c.textContent = fmt(itemTotal(it)); });
+  r.items.forEach((it, i) => { const c = $("#t" + i); if (c) c.textContent = fmt(itemTotal(it)); priceNote(it, i); });
   r.amount = reqAmount(r);
   $("#tot").textContent = fmt(r.amount);
   const by = {}; r.items.forEach(it => (by[it.type] = (by[it.type] || 0) + itemTotal(it)));
@@ -191,7 +195,7 @@ BIND.request = () => {
   if (items) {
     renderItems();
     items.oninput = e => { const el = e.target, i = el.dataset.i; if (i === undefined) return; r.items[i][el.dataset.k] = el.type === "number" ? Number(el.value) : el.value; renderTotals(); renderTimeline(); save(); };
-    items.onchange = items.oninput;
+    items.onchange = e => { items.oninput(e); if (e.target.dataset.k === "name" && fromCatalogue(r, Number(e.target.dataset.i))) { renderItems(); save(); } };
     items.onclick = e => {
       const b = e.target.closest("[data-del]"); if (b) { r.items.splice(Number(b.dataset.del), 1); renderItems(); save(); return; }
       lineCommentClick(r, e);
@@ -202,6 +206,7 @@ BIND.request = () => {
   on("#reason", e => { r.reason = e.target.value; renderChecks(); save(); });
   on("#kpi", e => { r.kpi = e.target.value; renderChecks(); save(); });
   const act = $("#act"); if (act) act.onchange = e => { r.act = e.target.value; save(); route(); };
+  bindPaste(r);
   const add = $("#add"); if (add) add.onclick = () => { r.items.push({ type: "ope", name: "", qty: 1, unitName: L("งาน", "job"), price: 0 }); renderItems(); save(); $(`#items tr:last-child input[data-k="name"]`).focus(); };
   const att = $("#attach"); if (att) att.onclick = () => {
     if (!r.docs.some(d => /คุณลักษณะ|spec/i.test(d))) { r.docs.push(L("คุณลักษณะเฉพาะครุภัณฑ์.pdf", "Equipment specification.pdf")); audit(["แนบเอกสาร", "Attached a document"], r.id); commit(); renderChecks(); toast(L("แนบไฟล์แล้ว", "File attached")); }

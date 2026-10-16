@@ -443,3 +443,18 @@ input[type="file"] { max-width: 100%; min-width: 0; }
   .si-card { padding: 20px; }
 }
 td.mono { white-space: nowrap; }
+
+/* ---------- round 8: price notes, paste box, forward-estimate chart ---------- */
+.sp-note { font-size: 11.5px; color: var(--muted); text-align: right; margin-top: 2px; white-space: nowrap; }
+.sp-note.over { color: var(--bad); font-weight: 600; }
+.paste-box { border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+.paste-box textarea { width: 100%; box-sizing: border-box; }
+.fwd-chart { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.fwd-col { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+.fwd-area { position: relative; height: 180px; width: 100%; display: flex; align-items: flex-end; justify-content: center; border-bottom: 1px solid var(--line); }
+.fwd-bar { width: min(56px, 70%); display: flex; flex-direction: column-reverse; border-radius: 6px 6px 0 0; overflow: hidden; }
+.fwd-bar i { display: block; width: 100%; }
+.fwd-ceil { position: absolute; left: 4%; right: 4%; border-top: 2px dashed var(--bad); }
+.lg { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.ceil-lg { background: none; border-top: 2px dashed var(--bad); border-radius: 0; height: 0; vertical-align: 3px; }
+td .btn { white-space: nowrap; }

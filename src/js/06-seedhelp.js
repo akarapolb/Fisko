@@ -110,6 +110,35 @@ function buildOrg(cfg) {
       why: ["ลาพักผ่อน", "Annual leave"] },
   ];
   s.audit.unshift({ t: "2026-10-13T17:00", user: U("exec"), role: "exec", action: ["มอบอำนาจ", "Delegated authority"], target: "D-2570-001" });
-  return s;
+
+  // round 8: project bank, plan revisions, ceiling responses, forward-estimate assumptions
+  const divOf = unit => (s.users.find(u => u.role === "div" && u.unit === unit) || { id: null }).id; // null: no demo user in that unit
+  s.ideas = (s.ideas || []).map(([unit, kpi, name, est, years, status, sc, note], i) => ({
+    id: "PB-2571-" + String(i + 1).padStart(3, "0"), unit, kpi, name, est, years, status, scores: sc, note: note || null,
+    by: divOf(unit), t: `2026-0${9 - (i % 3)}-1${i}T10:00`, req: null,
+  }));
+  const ks = [];
+  s.strategy.items.forEach(st => st.goals.forEach(g => g.kpis.forEach(k => ks.push(k))));
+  const kr = ks.find(k => k.acts.length) || ks[0], kd = ks.find(k => k !== kr && k.targets[2] > k.base) || ks[1];
+  s.planRevs = [
+    { id: "PR-2571-002", kpi: kr.id, y: 1, from: kr.targets[1], to: Math.round(kr.targets[1] * 1.2 * 10) / 10, by: U("plan"), t: "2026-10-15T14:20", status: "pending",
+      why: ["ผลการดำเนินงานปี 2570 สูงกว่าเป้า จึงปรับค่าเป้าหมายให้ท้าทายขึ้น", "FY2570 results beat the target, so the target is raised"] },
+    { id: "PR-2571-001", kpi: kd.id, y: 2, from: kd.targets[2], to: kd.targets[2], by: U("plan"), t: "2026-09-20T10:00", status: "approved", decided: "2026-09-25T09:30", dBy: U("exec"),
+      why: ["ทบทวนกลางแผนตามมติ ครม. ยืนยันค่าเป้าหมายเดิม", "Mid-plan review: target confirmed unchanged"] },
+  ];
+  s.audit.push({ t: "2026-10-15T14:20", user: U("plan"), role: "plan", action: ["เสนอทบทวนค่าเป้าหมายตัวชี้วัด", "Proposed a KPI target revision"], target: `PR-2571-002 ${kr.id}` });
+  // Ceilings were issued on 12 Oct; the unit asked to cut the most has appealed, two have accepted.
+  const cut = u => { const r = sum(u.v); return r ? 1 - s.cons.unitCeil[u.unit] / r : 0; };
+  const byCut = s.cons.units.slice().sort((a, b) => cut(b) - cut(a));
+  s.cons.issued = "2026-10-12";
+  s.cons.resp = {};
+  byCut.forEach((u, i) => {
+    const gap = Math.round((sum(u.v) - s.cons.unitCeil[u.unit]) * 10) / 10;
+    if (i === 0) s.cons.resp[u.unit] = { st: "appeal", amt: Math.round(gap * 0.4 * 10) / 10, t: "2026-10-14T11:00", by: divOf(u.unit),
+      why: ["วงเงินไม่พอสำหรับภาระผูกพันตามสัญญาเดิมและค่าสาธารณูปโภคที่ปรับขึ้น", "Not enough for existing contract obligations and higher utility costs"] };
+    else if (i >= byCut.length - 2) s.cons.resp[u.unit] = { st: "accepted", t: "2026-10-13T09:" + (10 + i), by: divOf(u.unit) };
+    else s.cons.resp[u.unit] = { st: "pending" };
+  });
+  s.fwd = { per: 3, ope: 2, ceil: 3 };
   return s;
 }

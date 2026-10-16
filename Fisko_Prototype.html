@@ -453,6 +453,21 @@ input[type="file"] { max-width: 100%; min-width: 0; }
   .si-card { padding: 20px; }
 }
 td.mono { white-space: nowrap; }
+
+/* ---------- round 8: price notes, paste box, forward-estimate chart ---------- */
+.sp-note { font-size: 11.5px; color: var(--muted); text-align: right; margin-top: 2px; white-space: nowrap; }
+.sp-note.over { color: var(--bad); font-weight: 600; }
+.paste-box { border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+.paste-box textarea { width: 100%; box-sizing: border-box; }
+.fwd-chart { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.fwd-col { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+.fwd-area { position: relative; height: 180px; width: 100%; display: flex; align-items: flex-end; justify-content: center; border-bottom: 1px solid var(--line); }
+.fwd-bar { width: min(56px, 70%); display: flex; flex-direction: column-reverse; border-radius: 6px 6px 0 0; overflow: hidden; }
+.fwd-bar i { display: block; width: 100%; }
+.fwd-ceil { position: absolute; left: 4%; right: 4%; border-top: 2px dashed var(--bad); }
+.lg { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.ceil-lg { background: none; border-top: 2px dashed var(--bad); border-radius: 0; height: 0; vertical-align: 3px; }
+td .btn { white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -516,7 +531,7 @@ const fyLabel = fy => L(`ปีงบประมาณ พ.ศ. ${fy}`, `FY${fy
 
 // ---------- organizations and state ----------
 const SEEDS = {}; // id -> { name: [th, en], seed: () => state }, registered by data files
-const DATA_V = 6; // bump when the seed shape changes so saved demo state is reseeded
+const DATA_V = 7; // bump when the seed shape changes so saved demo state is reseeded
 let ORG = "sample";
 let S = null;
 const key = () => "fisko-v1-" + ORG;
@@ -532,7 +547,7 @@ function resetDemo() { store.del(key()); S = SEEDS[ORG].seed(); save(); resetUi(
 function resetUi() {
   CUR_REQ = null; REQ_TAB = "main"; VER_A = VER_B = null; CMP_REQ = null; CHAIN_P = null; CMT_OPEN = null;
   DRILL_U = DRILL_P = null; PLAN_UNIT = ""; ALLOC_FY = 2570; WI.locks = null; STAGED = null;
-  OPEN_PROG.clear(); OPEN_UNIT.clear();
+  OPEN_PROG.clear(); OPEN_UNIT.clear(); IDEA_OPEN = null; PASTE_ROWS = [];
 }
 
 // ---------- roles ----------
@@ -823,7 +838,36 @@ function buildOrg(cfg) {
       why: ["ลาพักผ่อน", "Annual leave"] },
   ];
   s.audit.unshift({ t: "2026-10-13T17:00", user: U("exec"), role: "exec", action: ["มอบอำนาจ", "Delegated authority"], target: "D-2570-001" });
-  return s;
+
+  // round 8: project bank, plan revisions, ceiling responses, forward-estimate assumptions
+  const divOf = unit => (s.users.find(u => u.role === "div" && u.unit === unit) || { id: null }).id; // null: no demo user in that unit
+  s.ideas = (s.ideas || []).map(([unit, kpi, name, est, years, status, sc, note], i) => ({
+    id: "PB-2571-" + String(i + 1).padStart(3, "0"), unit, kpi, name, est, years, status, scores: sc, note: note || null,
+    by: divOf(unit), t: `2026-0${9 - (i % 3)}-1${i}T10:00`, req: null,
+  }));
+  const ks = [];
+  s.strategy.items.forEach(st => st.goals.forEach(g => g.kpis.forEach(k => ks.push(k))));
+  const kr = ks.find(k => k.acts.length) || ks[0], kd = ks.find(k => k !== kr && k.targets[2] > k.base) || ks[1];
+  s.planRevs = [
+    { id: "PR-2571-002", kpi: kr.id, y: 1, from: kr.targets[1], to: Math.round(kr.targets[1] * 1.2 * 10) / 10, by: U("plan"), t: "2026-10-15T14:20", status: "pending",
+      why: ["ผลการดำเนินงานปี 2570 สูงกว่าเป้า จึงปรับค่าเป้าหมายให้ท้าทายขึ้น", "FY2570 results beat the target, so the target is raised"] },
+    { id: "PR-2571-001", kpi: kd.id, y: 2, from: kd.targets[2], to: kd.targets[2], by: U("plan"), t: "2026-09-20T10:00", status: "approved", decided: "2026-09-25T09:30", dBy: U("exec"),
+      why: ["ทบทวนกลางแผนตามมติ ครม. ยืนยันค่าเป้าหมายเดิม", "Mid-plan review: target confirmed unchanged"] },
+  ];
+  s.audit.push({ t: "2026-10-15T14:20", user: U("plan"), role: "plan", action: ["เสนอทบทวนค่าเป้าหมายตัวชี้วัด", "Proposed a KPI target revision"], target: `PR-2571-002 ${kr.id}` });
+  // Ceilings were issued on 12 Oct; the unit asked to cut the most has appealed, two have accepted.
+  const cut = u => { const r = sum(u.v); return r ? 1 - s.cons.unitCeil[u.unit] / r : 0; };
+  const byCut = s.cons.units.slice().sort((a, b) => cut(b) - cut(a));
+  s.cons.issued = "2026-10-12";
+  s.cons.resp = {};
+  byCut.forEach((u, i) => {
+    const gap = Math.round((sum(u.v) - s.cons.unitCeil[u.unit]) * 10) / 10;
+    if (i === 0) s.cons.resp[u.unit] = { st: "appeal", amt: Math.round(gap * 0.4 * 10) / 10, t: "2026-10-14T11:00", by: divOf(u.unit),
+      why: ["วงเงินไม่พอสำหรับภาระผูกพันตามสัญญาเดิมและค่าสาธารณูปโภคที่ปรับขึ้น", "Not enough for existing contract obligations and higher utility costs"] };
+    else if (i >= byCut.length - 2) s.cons.resp[u.unit] = { st: "accepted", t: "2026-10-13T09:" + (10 + i), by: divOf(u.unit) };
+    else s.cons.resp[u.unit] = { st: "pending" };
+  });
+  s.fwd = { per: 3, ope: 2, ceil: 3 };
   return s;
 }
 
@@ -1063,6 +1107,14 @@ SEEDS.sample = {
       { unit: "U01", v: [412, 38, 6, 0, 2] }, { unit: "U05", v: [0, 142, 64, 0, 1] }, { unit: "U03", v: [0, 129, 28.4, 0, 0.5] },
       { unit: "U04", v: [0, 104.3, 13.6, 4, 0.6] }, { unit: "U06", v: [0, 66.2, 0, 1.5, 0] }, { unit: "U02", v: [0, 49.1, 0, 0, 0.3] },
     ] },
+    // round 8: project bank — [unit, KPI, name, estimate (M baht), years, status, scores or null, note]
+    ideas: [
+      ["U04", "K2", ["ระบบนัดหมายรับบริการล่วงหน้าผ่านแอป", "App-based service appointments"], 12.5, 2, "proposed", null],
+      ["U03", "K4", ["แพลตฟอร์มแลกเปลี่ยนข้อมูลระหว่างหน่วยงาน", "Inter-agency data exchange platform"], 38, 3, "screened", [5, 3, 4, 3]],
+      ["U06", "K3", ["หลักสูตรนักวิเคราะห์ข้อมูลภาครัฐ", "Public-sector data analyst course"], 6.8, 1, "screened", [4, 5, 3, 4]],
+      ["U04", "K1", ["บริการรับรองเอกสารออนไลน์", "Online document certification"], 9.4, 1, "accepted", [5, 4, 5, 4]],
+      ["U05", "K6", ["ปรับปรุงสำนักงานบริการเขต 5 ให้ได้มาตรฐาน", "Bring the region 5 service office up to standard"], 24, 2, "rejected", [2, 3, 2, 3], ["รวมไว้ในแผนปรับปรุงอาคารปี 2572 แล้ว", "Already in the FY2572 building renovation plan"]],
+    ],
     dupes: [
       { id: "d1", save: 3.2, title: ["จัดหาเครื่องคอมพิวเตอร์ 120 เครื่อง", "120 computers requested twice"],
         desc: ["สำนักเทคโนโลยีสารสนเทศ (REQ-2571-011) และสำนักพัฒนาบริการประชาชน (REQ-2571-014) ขอครุภัณฑ์ชนิดเดียวกันสำหรับผู้ใช้กลุ่มเดียวกัน", "The IT Bureau (REQ-2571-011) and the Public Service Development Bureau (REQ-2571-014) request the same equipment for the same users"] },
@@ -1308,6 +1360,14 @@ SEEDS.dpt = {
       { unit: "D01", v: [1180, 95, 12, 0, 4] }, { unit: "D06", v: [0, 40, 420, 0, 6] }, { unit: "D08", v: [0, 60, 85, 15, 3] },
       { unit: "D04", v: [0, 36, 0, 0, 1] }, { unit: "D07", v: [0, 7, 21.9, 0, 1] }, { unit: "D05", v: [0, 14, 9.6, 0, 1] },
     ] },
+    // round 8: project bank — [unit, KPI, name, estimate (M baht), years, status, scores or null, note]
+    ideas: [
+      ["D07", "K4", ["ระบบขออนุญาตก่อสร้างออนไลน์ ระยะที่ 2 (เพิ่ม 20 จังหวัด)", "Online building permits phase 2 (20 more provinces)"], 45, 2, "proposed", null],
+      ["D06", "K1", ["เขื่อนป้องกันตลิ่งริมแม่น้ำ ช่วงที่ 3 (ตัวอย่าง)", "Riverbank protection wall, section 3 (sample)"], 180, 3, "screened", [5, 3, 5, 3]],
+      ["D04", "K3", ["จัดทำผังเมืองรวมจังหวัด 4 จังหวัด", "Comprehensive plans for 4 provinces"], 32, 2, "screened", [4, 4, 4, 4]],
+      ["D05", "K6", ["ตรวจสอบอาคารสาธารณะด้วยอากาศยานไร้คนขับ", "Drone inspection of public buildings"], 8.5, 1, "accepted", [4, 4, 3, 4]],
+      ["D06", "K2", ["สถานีสูบน้ำถาวรชุมชนริมน้ำ", "Permanent pumping stations for riverside communities"], 95, 3, "rejected", [3, 2, 4, 2], ["รอผลศึกษาความเหมาะสมปี 2571", "Waiting for the FY2571 feasibility study"]],
+    ],
     dupes: [
       { id: "d1", save: 30, title: ["เขื่อนป้องกันตลิ่งจุดเดียวกันขอ 2 ช่องทาง", "Same riverbank site requested twice"],
         desc: ["สำนักวิศวกรรมโยธา (REQ-2571-015) และสำนักงานโยธาธิการและผังเมืองจังหวัด ขอก่อสร้างตลิ่งช่วงเดียวกัน 1 แห่ง", "The Civil Engineering Bureau (REQ-2571-015) and a provincial office both request the same riverbank section"] },
@@ -1503,6 +1563,19 @@ function myTasks() {
       .forEach(({ x }) => R(`${L("อนุมัติการโอนเปลี่ยนแปลง", "Approve budget transfer")} ${x.id}`, `${mb(x.amount)} ${L("ลบ.", "M")} · ${tx(x.why)}`, TODAY, "alloc-transfers", "p-warn"));
     R(L("ติดตามหน่วยงานที่เบิกจ่ายต่ำกว่าแผน", "Follow up units behind their spending plan"), "", TODAY, "mon-alerts", "p-bad");
     if (S.perf.report && S.perf.report.sent) R(L("อ่านรายงานประเมินผลกลางปี", "Read the mid-year evaluation report"), "", TODAY, "perf-report", "p-info");
+  }
+  // Round 8: project bank, plan revisions and ceiling responses.
+  const ideas = S.ideas || [], resp = S.cons.resp || {};
+  if (ROLE === "plan") {
+    const nIdea = ideas.filter(i => i.status === "proposed").length;
+    if (nIdea) R(L("กลั่นกรองแนวคิดโครงการในคลังโครงการ", "Screen project ideas in the project bank"), `${nIdea} ${L("แนวคิด", "ideas")}`, cal("c2").date, "strat-bank", "p-info");
+    Object.keys(resp).filter(u => resp[u].st === "appeal").forEach(u => R(`${L("พิจารณาคำขอทบทวนกรอบวงเงิน", "Decide a ceiling appeal")}: ${unitName(u)}`, `${fmt(resp[u].amt, 1)} ${L("ลบ.", "M")} · ${tx(resp[u].why)}`, TODAY, "cons-responses", "p-warn"));
+  }
+  if (ROLE === "exec") (S.planRevs || []).filter(v => v.status === "pending").forEach(v => R(`${L("อนุมัติการทบทวนค่าเป้าหมาย", "Approve a target revision")} ${v.id}`, `${v.kpi} ${PLAN_YEARS[v.y]}: ${v.from} → ${v.to}`, TODAY, "strat-revise", "p-warn"));
+  if (ROLE === "div") {
+    const u = me().unit;
+    if (resp[u] && resp[u].st === "pending") R(L("ตอบรับกรอบวงเงินของหน่วยงาน", "Reply to your unit ceiling"), `${fmt(S.cons.unitCeil[u], 1)} ${L("ล้านบาท", "M baht")}`, cal("c2").date, "requests", "p-warn");
+    ideas.filter(i => i.unit === u && i.status === "accepted").forEach(i => R(`${L("จัดทำคำขอจากแนวคิดที่รับเข้าแผน", "Prepare a request from an accepted idea")} ${i.id}`, tx(i.name), cal("c2").date, "strat-bank", "p-info"));
   }
   // Delegated work (round 7): cross-unit transfers this user may approve on an executive's behalf.
   const dg = ROLE !== "exec" && delegFor("exec", "transfer");
@@ -1888,6 +1961,7 @@ VIEWS.requests = () => {
   <div class="head"><div><div class="eyebrow">M02 · Budget Preparation</div><h1>${L("คำของบประมาณ ปี 2571", "FY2571 budget requests")}</h1>
     <p>${L("กำหนดส่งกองแผนงาน", "Due to Planning")} ${fdate(c2.date)} · ${L("เหลือ", "")} ${daysUntil(c2.date)} ${L("วัน", "days left")}${ROLE === "div" ? ` · ${unitName(me().unit)}` : ""}</p></div>
     <div class="sp"></div>${ROLE === "div" ? `<button class="btn primary" type="button" id="new-req">+ ${L("สร้างคำขอใหม่", "New request")}</button>` : ""}</div>
+  ${ROLE === "div" ? ceilingBanner() : ""}
   <section class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
     <div class="kpi"><span class="l">${L("คำขอทั้งหมด", "Requests")}</span><span class="v">${list.length}</span></div>
     <div class="kpi"><span class="l">${L("วงเงินที่ขอรวม", "Total requested")}</span><span class="v">${mb(tot)}<small>${L("ล้านบาท", "M baht")}</small></span></div>
@@ -1910,6 +1984,7 @@ function reqRows(f) {
 }
 BIND.requests = () => {
   const body = $("#req-body"); body.innerHTML = reqRows("");
+  bindCeilingBanner();
   $("#flt").onchange = e => (body.innerHTML = reqRows(e.target.value));
   body.onclick = e => { const tr = e.target.closest("tr[data-id]"); if (tr) openReq(tr.dataset.id); };
   body.onkeydown = e => { if (e.key === "Enter") body.onclick(e); };
@@ -1942,8 +2017,10 @@ VIEWS.request = () => {
       <section class="panel"><header><h2>${L("รายการงบประมาณ", "Budget lines")}</h2><span class="sp"></span><span class="sub">${L("จำนวน × ราคาต่อหน่วย = วงเงินรวม", "Quantity × unit price = total")}</span></header>
         <div class="tbl-wrap"><table class="items"><thead><tr><th style="width:150px">${L("งบรายจ่าย", "Budget type")}</th><th>${L("รายการ", "Item")}</th><th class="n" style="width:90px">${L("จำนวน", "Qty")}</th><th style="width:90px">${L("หน่วยนับ", "Unit")}</th><th class="n" style="width:140px">${L("ราคาต่อหน่วย", "Unit price")}</th><th class="n" style="width:130px">${L("วงเงินรวม", "Total")}</th><th style="width:40px"></th></tr></thead>
           <tbody id="items"></tbody><tfoot><tr><td colspan="5">${L("รวมวงเงินที่ขอ (บาท)", "Total requested (baht)")}</td><td class="n" id="tot"></td><td></td></tr></tfoot></table></div>
+        <datalist id="price-list">${S.prices.map(p => `<option value="${esc(tx(p.name))}">${L("ราคามาตรฐาน", "Standard price")} ${fmt(p.price)} / ${esc(tx(p.unit))}</option>`).join("")}</datalist>
         <div class="body" style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;justify-content:space-between">
-          ${ed ? `<button class="btn" type="button" id="add">+ ${L("เพิ่มรายการ", "Add line")}</button>` : "<span></span>"}<div class="row sub" id="bytype"></div></div></section>
+          ${ed ? `<div class="row"><button class="btn" type="button" id="add">+ ${L("เพิ่มรายการ", "Add line")}</button><button class="btn" type="button" id="paste-open">${L("วางจาก Excel", "Paste from Excel")}</button></div>` : "<span></span>"}<div class="row sub" id="bytype"></div></div>
+        ${ed ? `<div class="body paste-box" id="paste-box" hidden></div>` : ""}</section>
       ${generalComments(r)}
       <section class="panel"><header><h2>${L("เหตุผลและตัวชี้วัด", "Justification and KPIs")}</h2></header><div class="body form-grid">
         <div class="f full"><label for="reason">${L("เหตุผลความจำเป็น", "Justification")}</label>
@@ -1972,10 +2049,10 @@ function renderItems() {
   const r = curReq(), ds = editable(r) ? "" : "disabled";
   $("#items").innerHTML = r.items.map((it, i) => `<tr>
     <td><select data-i="${i}" data-k="type" aria-label="${L("งบรายจ่าย", "Budget type")}" ${ds}>${BUDGET_TYPES.map(t => `<option value="${t.id}" ${t.id === it.type ? "selected" : ""}>${tx(t.name)}</option>`).join("")}</select></td>
-    <td><input type="text" data-i="${i}" data-k="name" value="${esc(tx(it.name))}" aria-label="${L("รายการ", "Item")}" ${ds}></td>
+    <td><input type="text" data-i="${i}" data-k="name" value="${esc(tx(it.name))}" list="price-list" aria-label="${L("รายการ", "Item")}" ${ds}></td>
     <td><input type="number" min="0" data-i="${i}" data-k="qty" value="${it.qty}" aria-label="${L("จำนวน", "Qty")}" ${ds}></td>
     <td><input type="text" data-i="${i}" data-k="unitName" value="${esc(tx(it.unitName))}" aria-label="${L("หน่วยนับ", "Unit")}" ${ds}></td>
-    <td><input type="number" min="0" step="100" data-i="${i}" data-k="price" value="${it.price}" aria-label="${L("ราคาต่อหน่วย", "Unit price")}" ${ds}></td>
+    <td><input type="number" min="0" step="100" data-i="${i}" data-k="price" value="${it.price}" aria-label="${L("ราคาต่อหน่วย", "Unit price")}" ${ds}><div class="sp-note" id="sp${i}"></div></td>
     <td class="n" id="t${i}">${fmt(itemTotal(it))}</td>
     <td>${ds ? (canReview(r) ? `<button class="btn ghost" type="button" data-cmt="${i}" aria-label="${L("ใส่ความเห็นรายการนี้", "Comment on this line")}" title="${L("ใส่ความเห็น", "Comment")}" style="padding:4px 8px">✎</button>` : "") : `<button class="btn ghost danger" type="button" data-del="${i}" aria-label="${L("ลบรายการ", "Delete line")}" style="padding:4px 8px">×</button>`}</td></tr>
     ${lineCommentRows(r, it, i)}`).join("");
@@ -1983,7 +2060,7 @@ function renderItems() {
 }
 function renderTotals() {
   const r = curReq();
-  r.items.forEach((it, i) => { const c = $("#t" + i); if (c) c.textContent = fmt(itemTotal(it)); });
+  r.items.forEach((it, i) => { const c = $("#t" + i); if (c) c.textContent = fmt(itemTotal(it)); priceNote(it, i); });
   r.amount = reqAmount(r);
   $("#tot").textContent = fmt(r.amount);
   const by = {}; r.items.forEach(it => (by[it.type] = (by[it.type] || 0) + itemTotal(it)));
@@ -2016,7 +2093,7 @@ BIND.request = () => {
   if (items) {
     renderItems();
     items.oninput = e => { const el = e.target, i = el.dataset.i; if (i === undefined) return; r.items[i][el.dataset.k] = el.type === "number" ? Number(el.value) : el.value; renderTotals(); renderTimeline(); save(); };
-    items.onchange = items.oninput;
+    items.onchange = e => { items.oninput(e); if (e.target.dataset.k === "name" && fromCatalogue(r, Number(e.target.dataset.i))) { renderItems(); save(); } };
     items.onclick = e => {
       const b = e.target.closest("[data-del]"); if (b) { r.items.splice(Number(b.dataset.del), 1); renderItems(); save(); return; }
       lineCommentClick(r, e);
@@ -2027,6 +2104,7 @@ BIND.request = () => {
   on("#reason", e => { r.reason = e.target.value; renderChecks(); save(); });
   on("#kpi", e => { r.kpi = e.target.value; renderChecks(); save(); });
   const act = $("#act"); if (act) act.onchange = e => { r.act = e.target.value; save(); route(); };
+  bindPaste(r);
   const add = $("#add"); if (add) add.onclick = () => { r.items.push({ type: "ope", name: "", qty: 1, unitName: L("งาน", "job"), price: 0 }); renderItems(); save(); $(`#items tr:last-child input[data-k="name"]`).focus(); };
   const att = $("#attach"); if (att) att.onclick = () => {
     if (!r.docs.some(d => /คุณลักษณะ|spec/i.test(d))) { r.docs.push(L("คุณลักษณะเฉพาะครุภัณฑ์.pdf", "Equipment specification.pdf")); audit(["แนบเอกสาร", "Attached a document"], r.id); commit(); renderChecks(); toast(L("แนบไฟล์แล้ว", "File attached")); }
@@ -2214,6 +2292,86 @@ REQ_BIND.versions = () => {
   $("#ver-a").onchange = e => { VER_A = Number(e.target.value); route(); };
   $("#ver-b").onchange = e => { VER_B = Number(e.target.value); route(); };
 };
+
+/* ---- 41c-req-depth.js ---- */
+// M02 deeper features (round 8): the standard-price catalogue on budget lines and pasting lines
+// copied from a spreadsheet. Standard prices are kept in M10 · Master data.
+const stdPrice = it => { const nm = Array.isArray(it.name) ? it.name : [it.name, it.name]; return S.prices.find(p => p.name.includes(nm[0]) || p.name.includes(nm[1])); };
+function priceNote(it, i) {
+  const el = $("#sp" + i); if (!el) return;
+  const sp = stdPrice(it);
+  if (!sp) { el.textContent = ""; el.className = "sp-note"; return; }
+  const over = Number(it.price) > sp.price;
+  el.className = "sp-note" + (over ? " over" : "");
+  el.textContent = `${over ? L("เกินราคามาตรฐาน", "Above standard") : L("ราคามาตรฐาน", "Standard")} ${fmt(sp.price)}`;
+}
+// Picking a catalogue item fills in its budget type, unit and standard price.
+function fromCatalogue(r, i) {
+  const it = r.items[i], sp = stdPrice(it);
+  if (!sp) return false;
+  it.name = sp.name.slice(); it.type = sp.type; it.unitName = sp.unit.slice();
+  if (!Number(it.price)) it.price = sp.price;
+  toast(`${L("ใช้ข้อมูลจากบัญชีราคามาตรฐาน", "Filled from the standard price list")} ${sp.id}`);
+  return true;
+}
+
+// ---------- paste from Excel ----------
+let PASTE_ROWS = [];
+const PASTE_SAMPLE = () => L(
+  "งบลงทุน\tเครื่องคอมพิวเตอร์โน้ตบุ๊ก\t10\tเครื่อง\t24000\nงบดำเนินงาน\tค่าอบรมต่อคน\t40\tคน\t2500\nงบดำเนินงาน\tค่าจ้างที่ปรึกษาต่อเดือน\t6\tคน-เดือน\tหกหมื่น",
+  "Investment\tNotebook computer\t10\tunit\t24000\nOperating\tTraining per person\t40\tperson\t2500\nOperating\tConsultant per month\t6\tperson-month\tsixty thousand");
+function typeFrom(v) {
+  const s = String(v || "").trim().toLowerCase();
+  const t = BUDGET_TYPES.find(b => b.code === s || b.id === s || b.name.some(n => n.toLowerCase() === s));
+  return t ? t.id : null;
+}
+function parsePaste(text) {
+  return text.split(/\r?\n/).map(l => l.trim()).filter(Boolean).map((line, n) => {
+    let c = line.split("\t").map(x => x.trim());
+    if (c.length < 4) c = line.split(/\s{2,}|,/).map(x => x.trim()); // fallback for text without tabs
+    let type = typeFrom(c[0]);
+    if (type) c = c.slice(1); else type = null;
+    const [name, qty, unit, price] = c, num = v => Number(String(v || "").replace(/[, ]/g, ""));
+    const sp = stdPrice({ name: name || "" });
+    const row = { n: n + 1, type: type || (sp ? sp.type : "ope"), name: name || "", qty: num(qty), unitName: unit || "", price: num(price), errs: [] };
+    if (!row.name) row.errs.push(L("ไม่มีชื่อรายการ", "no item name"));
+    if (!(row.qty > 0)) row.errs.push(L("จำนวนไม่ใช่ตัวเลข", "quantity is not a number"));
+    if (!(row.price > 0)) row.errs.push(L("ราคาไม่ใช่ตัวเลข", "price is not a number"));
+    if (!type && !sp) row.warn = L("ไม่ระบุงบรายจ่าย ใช้งบดำเนินงาน", "no budget type; using Operating");
+    if (sp && row.price > sp.price) row.warn = `${L("เกินราคามาตรฐาน", "above standard price")} ${fmt(sp.price)}`;
+    return row;
+  });
+}
+function renderPaste() {
+  const box = $("#paste-box"), ok = PASTE_ROWS.filter(r => !r.errs.length);
+  box.innerHTML = `<div class="f"><label for="paste-in">${L("คัดลอกแถวจาก Excel แล้ววางที่นี่: งบรายจ่าย (ไม่บังคับ) · รายการ · จำนวน · หน่วยนับ · ราคาต่อหน่วย", "Copy rows from Excel and paste here: budget type (optional) · item · qty · unit · unit price")}</label>
+      <textarea id="paste-in" rows="4" spellcheck="false" style="font-family:var(--mono);font-size:13px"></textarea></div>
+    <div class="row"><button class="btn" type="button" id="paste-sample">${L("ใส่ข้อมูลตัวอย่าง", "Use sample rows")}</button><span class="sp"></span>
+      <button class="btn ghost" type="button" id="paste-close">${L("ปิด", "Close")}</button>
+      <button class="btn primary" type="button" id="paste-add" ${ok.length ? "" : "disabled"}>${L("เพิ่ม", "Add")} ${ok.length} ${L("รายการ", "lines")}</button></div>
+    ${PASTE_ROWS.length ? `<div class="tbl-wrap"><table><thead><tr><th class="n">#</th><th>${L("งบรายจ่าย", "Type")}</th><th>${L("รายการ", "Item")}</th><th class="n">${L("จำนวน", "Qty")}</th><th>${L("หน่วยนับ", "Unit")}</th><th class="n">${L("ราคา", "Price")}</th><th>${L("ผลตรวจ", "Check")}</th></tr></thead>
+      <tbody>${PASTE_ROWS.map(r => `<tr><td class="n">${r.n}</td><td class="sub">${typeName(r.type)}</td><td>${esc(r.name)}</td><td class="n">${r.qty > 0 ? fmt(r.qty) : "—"}</td><td class="sub">${esc(r.unitName)}</td><td class="n">${r.price > 0 ? fmt(r.price) : "—"}</td>
+        <td>${r.errs.length ? tag(r.errs.join(", "), "p-bad") : r.warn ? tag(r.warn, "p-warn") : tag(L("พร้อมเพิ่ม", "Ready"), "p-ok")}</td></tr>`).join("")}</tbody></table></div>` : ""}`;
+}
+function bindPaste(r) {
+  const open = $("#paste-open"), box = $("#paste-box");
+  if (!open || !box) return;
+  const wire = text => {
+    const inp = $("#paste-in"); inp.value = text || "";
+    inp.oninput = () => { PASTE_ROWS = parsePaste(inp.value); const v = inp.value, pos = inp.selectionStart; renderPaste(); wire(v); $("#paste-in").focus(); $("#paste-in").setSelectionRange(pos, pos); };
+    $("#paste-sample").onclick = () => { const s = PASTE_SAMPLE(); PASTE_ROWS = parsePaste(s); renderPaste(); wire(s); };
+    $("#paste-close").onclick = () => { box.hidden = true; PASTE_ROWS = []; };
+    $("#paste-add").onclick = () => {
+      const ok = PASTE_ROWS.filter(x => !x.errs.length), skipped = PASTE_ROWS.length - ok.length;
+      ok.forEach(x => r.items.push({ type: x.type, name: x.name, qty: x.qty, unitName: x.unitName, price: x.price }));
+      r.items = r.items.filter(it => tx(it.name).trim() || itemTotal(it) > 0);
+      audit(["วางรายการจาก Excel", "Pasted lines from Excel"], `${r.id} · ${ok.length}`);
+      PASTE_ROWS = []; box.hidden = true; renderItems(); renderTimeline(); commit();
+      toast(`${L("เพิ่มรายการแล้ว", "Lines added")} ${ok.length}${skipped ? ` · ${L("ข้ามแถวที่มีข้อผิดพลาด", "skipped rows with errors:")} ${skipped}` : ""}`);
+    };
+  };
+  open.onclick = () => { box.hidden = !box.hidden; if (!box.hidden) { PASTE_ROWS = []; renderPaste(); wire(""); $("#paste-in").focus(); } };
+}
 
 /* ---- 42-review.js ---- */
 // M04 Review & Approval: amounts per round, saved as new versions with a reason; history never overwritten.
@@ -2522,7 +2680,8 @@ let CONS_TAB = "overview";
 const OPEN_PROG = new Set();
 const CONS_PANELS = {}, CONS_BIND = {};
 function consTabsBar() {
-  const t = [["overview", L("ภาพรวม", "Overview")], ["priority", L("จัดลำดับความสำคัญ", "Priority scoring")], ["ceilings", L("กรอบวงเงินรายหน่วยงาน", "Unit ceilings")], ["programme", L("ตามแผนงาน", "By programme")]];
+  const t = [["overview", L("ภาพรวม", "Overview")], ["priority", L("จัดลำดับความสำคัญ", "Priority scoring")], ["ceilings", L("กรอบวงเงินรายหน่วยงาน", "Unit ceilings")],
+    ["responses", `${L("การตอบรับกรอบ", "Ceiling responses")}${(() => { const n = S.cons.units.filter(u => consResp(u.unit).st === "appeal").length; return n ? ` (${n})` : ""; })()}`], ["programme", L("ตามแผนงาน", "By programme")], ["forward", L("ประมาณการล่วงหน้า 4 ปี", "Forward estimates")]];
   return `<div class="tabs" role="tablist">${t.map(([id, l]) => `<button class="tab ${id === CONS_TAB ? "on" : ""}" type="button" role="tab" aria-selected="${id === CONS_TAB}" data-ctab="${id}">${l}</button>`).join("")}</div>`;
 }
 const projReqs = () => S.requests.filter(r => !isPersonnel(r));
@@ -2616,6 +2775,127 @@ CONS_BIND.programme = () => {
     tr.onkeydown = e => { if (e.key === "Enter") t(); };
   });
   $$("[data-req]").forEach(a => (a.onclick = e => { e.preventDefault(); e.stopPropagation(); openReq(a.dataset.req); }));
+};
+
+/* ---- 43c-cons-depth.js ---- */
+// M03 deeper features (round 8): unit responses to the issued ceilings (accept, or appeal with an
+// amount and reason that Planning grants or declines) and 4-year forward estimates.
+const CRESP = { pending: [["รอตอบรับ", "Awaiting reply"], "p-mute"], accepted: [["ยอมรับกรอบ", "Accepted"], "p-ok"], appeal: [["ขอทบทวน", "Appealed"], "p-warn"],
+  granted: [["อนุมัติเพิ่มกรอบ", "Appeal granted"], "p-info"], declined: [["คงกรอบเดิม", "Appeal declined"], "p-bad"] };
+const sumV = a => a.reduce((x, y) => x + y, 0);
+const consResp = unit => (S.cons.resp && S.cons.resp[unit]) || { st: "pending" };
+
+CONS_PANELS.responses = () => {
+  const pl = ROLE === "plan", rows = S.cons.units.map(u => ({ u, req: sumV(u.v), ceil: S.cons.unitCeil[u.unit], r: consResp(u.unit) }));
+  const cnt = st => rows.filter(x => x.r.st === st).length, tCeil = sumV(rows.map(x => x.ceil)), asked = sumV(rows.filter(x => x.r.st === "appeal").map(x => x.r.amt));
+  return `
+  <section class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+    <div class="kpi"><span class="l">${L("แจ้งกรอบวงเงินเมื่อ", "Ceilings issued")}</span><span class="v" style="font-size:20px">${S.cons.issued ? fdate(S.cons.issued) : "—"}</span></div>
+    <div class="kpi"><span class="l">${L("ยอมรับกรอบแล้ว", "Accepted")}</span><span class="v">${cnt("accepted")}<small>/ ${rows.length}</small></span></div>
+    <div class="kpi"><span class="l">${L("ขอทบทวนรอพิจารณา", "Appeals to decide")}</span><span class="v" style="color:var(--${cnt("appeal") ? "warn" : "accent"})">${cnt("appeal")}</span>${asked ? `<span class="d">${fmt(asked, 1)} ${L("ลบ.", "M")}</span>` : ""}</div>
+    <div class="kpi"><span class="l">${L("กรอบรวม / กรอบกรม", "Unit total / department")}</span><span class="v" style="font-size:20px;color:var(--${tCeil > S.cons.ceiling + 0.05 ? "bad" : "ink"})">${fmt(tCeil, 1)}<small>/ ${fmt(S.cons.ceiling)}</small></span></div>
+  </section>
+  <section class="panel"><header><h2>${L("การตอบรับกรอบวงเงินของหน่วยงาน", "Unit responses to ceilings")}</h2><span class="sp"></span><span class="sub">${L("หน่วยงานตอบรับในหน้า M02 คำของบประมาณ", "Units reply on the M02 requests page")}</span></header>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("หน่วยงาน", "Unit")}</th><th class="n">${L("คำขอ", "Requested")}</th><th class="n">${L("กรอบ", "Ceiling")}</th><th>${L("การตอบรับ", "Response")}</th><th class="n">${L("ขอเพิ่ม (ลบ.)", "Asked (M)")}</th><th>${L("เหตุผล", "Reason")}</th><th></th></tr></thead>
+      <tbody>${rows.map(x => `<tr><td>${unitName(x.u.unit)}</td><td class="n">${fmt(x.req, 1)}</td><td class="n">${fmt(x.ceil, 1)}</td>
+        <td>${tag(tx(CRESP[x.r.st][0]), CRESP[x.r.st][1])}${x.r.t ? `<div class="sub">${x.r.by ? esc(userName(x.r.by)) + " · " : ""}${fdate(x.r.t)}</div>` : ""}</td>
+        <td class="n">${x.r.amt ? fmt(x.r.amt, 1) : "—"}</td><td class="sub">${x.r.why ? esc(tx(x.r.why)) : "—"}${x.r.note ? `<div>${L("ผลพิจารณา", "Decision")}: ${esc(tx(x.r.note))}</div>` : ""}</td>
+        <td><div class="row" style="flex-wrap:nowrap">${pl && x.r.st === "appeal" ? `<button class="btn primary" type="button" data-cgrant="${x.u.unit}">${L("เพิ่มกรอบให้", "Grant")}</button><button class="btn danger" type="button" data-cdecl="${x.u.unit}">${L("คงกรอบเดิม", "Decline")}</button>` : ""}
+          ${pl && x.r.st === "pending" ? `<button class="btn ghost" type="button" data-cremind="${x.u.unit}">${L("แจ้งเตือน", "Remind")}</button>` : ""}</div></td></tr>`).join("")}</tbody></table></div>
+    ${pl ? `<div class="body sub">${L("การเพิ่มกรอบให้หน่วยหนึ่งทำให้กรอบรวมเกินกรอบกรม ให้ปรับลดหน่วยอื่นที่แท็บกรอบวงเงินรายหน่วยงาน", "Granting an appeal can push the total over the department ceiling; rebalance other units in the Unit ceilings tab")}</div>` : ""}</section>`;
+};
+CONS_BIND.responses = () => {
+  const decide = (unit, ok) => {
+    const r = consResp(unit), n = unitName(unit);
+    if (ok) S.cons.unitCeil[unit] = Math.round((S.cons.unitCeil[unit] + r.amt) * 10) / 10;
+    r.st = ok ? "granted" : "declined"; r.dt = nowIso(); r.note = ok ? ["เพิ่มกรอบตามที่ขอ", "Raised as asked"] : ["กรอบรวมของกรมไม่พอ ให้ปรับลำดับความสำคัญภายในหน่วย", "No room in the department total; reprioritise within the unit"];
+    audit(ok ? ["อนุมัติคำขอทบทวนกรอบวงเงิน", "Granted a ceiling appeal"] : ["ไม่อนุมัติคำขอทบทวนกรอบวงเงิน", "Declined a ceiling appeal"], `${n} · ${fmt(r.amt, 1)} M`);
+    notify(["div"], ok ? [`กองแผนงานเพิ่มกรอบวงเงิน ${n} อีก ${fmt(r.amt, 1)} ล้านบาท`, `Planning raised the ${n} ceiling by ${fmt(r.amt, 1)} M`] : [`กองแผนงานคงกรอบวงเงินเดิมของ ${n}`, `Planning kept the ${n} ceiling unchanged`], "requests");
+    commit(); route(); toast(ok ? L("เพิ่มกรอบแล้ว · ตรวจกรอบรวมที่แท็บกรอบวงเงิน", "Granted · check the total in Unit ceilings") : L("คงกรอบเดิม · แจ้งหน่วยงานแล้ว", "Declined · the unit has been told"));
+  };
+  $$("[data-cgrant]").forEach(b => (b.onclick = () => decide(b.dataset.cgrant, true)));
+  $$("[data-cdecl]").forEach(b => (b.onclick = () => decide(b.dataset.cdecl, false)));
+  $$("[data-cremind]").forEach(b => (b.onclick = () => {
+    notify(["div"], [`กรุณาตอบรับกรอบวงเงินของ ${unitName(b.dataset.cremind)}`, `Please reply to the ${unitName(b.dataset.cremind)} ceiling`], "requests");
+    audit(["แจ้งเตือนให้ตอบรับกรอบวงเงิน", "Reminded a unit to reply to its ceiling"], unitName(b.dataset.cremind)); commit(); toast(L("ส่งแจ้งเตือนแล้ว", "Reminder sent"));
+  }));
+};
+
+// Shown to a division on its M02 request list once ceilings are issued.
+function ceilingBanner() {
+  const u = S.cons.units.find(x => x.unit === me().unit);
+  if (!u || !S.cons.issued) return "";
+  const r = consResp(u.unit), req = sumV(u.v), ceil = S.cons.unitCeil[u.unit];
+  return `<section class="panel" id="ceil-panel"><header><h2>${L("กรอบวงเงินของหน่วยงาน ปี 2571", "Your FY2571 ceiling")}</h2><span class="sp"></span>${tag(tx(CRESP[r.st][0]), CRESP[r.st][1])}</header>
+    <div class="body" style="display:flex;flex-direction:column;gap:10px">
+      <div class="row"><span>${L("คำขอรวม", "Requested")} <b class="num">${fmt(req, 1)}</b></span><span>·</span><span>${L("กรอบที่ได้รับ", "Ceiling")} <b class="num">${fmt(ceil, 1)}</b> ${L("ล้านบาท", "M baht")}</span>
+        ${req > ceil ? `<span>·</span><span style="color:var(--bad)">${L("ต้องปรับลด", "To cut")} ${fmt(req - ceil, 1)}</span>` : ""}<span class="sub">${L("แจ้งเมื่อ", "Issued")} ${fdate(S.cons.issued)}</span></div>
+      ${r.st === "pending" ? `<div class="row"><button class="btn primary" type="button" id="ceil-ok">${L("ยอมรับกรอบวงเงิน", "Accept the ceiling")}</button><button class="btn" type="button" id="ceil-appeal">${L("ขอทบทวนกรอบ", "Appeal")}</button></div>
+        <form class="inline-form" id="ceil-form" hidden><div class="f" style="flex:0 1 140px"><label for="ceil-amt">${L("ขอเพิ่ม (ล้านบาท)", "Extra (M baht)")}</label><input type="number" id="ceil-amt" min="0.1" step="0.1" required></div>
+          <div class="f" style="flex:2 1 240px"><label for="ceil-why">${L("เหตุผลและผลกระทบหากไม่ได้รับ", "Reason and impact if not granted")}</label><input type="text" id="ceil-why" required></div>
+          <button class="btn primary" type="submit">${L("ส่งคำขอทบทวน", "Send appeal")}</button></form>`
+        : r.st === "appeal" ? `<span class="sub">${L("ขอเพิ่ม", "Asked for")} ${fmt(r.amt, 1)} ${L("ลบ. · รอกองแผนงานพิจารณา", "M · waiting for Planning")}</span>`
+        : r.note ? `<span class="sub">${esc(tx(r.note))}</span>` : ""}</div></section>`;
+}
+function bindCeilingBanner() {
+  const ok = $("#ceil-ok"); if (!ok) return;
+  const u = me().unit, save = r => { S.cons.resp[u] = Object.assign({ t: nowIso(), by: me().id }, r); commit(); route(); };
+  ok.onclick = () => { save({ st: "accepted" }); audit(["ยอมรับกรอบวงเงิน", "Accepted the unit ceiling"], unitName(u)); commit(); toast(L("ยอมรับกรอบแล้ว · ปรับคำขอให้อยู่ในกรอบ", "Accepted · bring your requests within it")); };
+  $("#ceil-appeal").onclick = () => { $("#ceil-form").hidden = false; $("#ceil-amt").focus(); };
+  $("#ceil-form").onsubmit = e => {
+    e.preventDefault();
+    const amt = Number($("#ceil-amt").value), why = $("#ceil-why").value.trim();
+    save({ st: "appeal", amt, why: [why, why] });
+    audit(["ขอทบทวนกรอบวงเงิน", "Appealed the unit ceiling"], `${unitName(u)} · ${fmt(amt, 1)} M`);
+    notify(["plan"], [`${unitName(u)} ขอทบทวนกรอบวงเงิน เพิ่ม ${fmt(amt, 1)} ล้านบาท`, `${unitName(u)} appealed its ceiling for ${fmt(amt, 1)} M more`], "cons-responses");
+    commit(); toast(L("ส่งคำขอทบทวนให้กองแผนงานแล้ว", "Appeal sent to Planning"));
+  };
+}
+
+// ---------- forward estimates ----------
+const FWD_Y = [2571, 2572, 2573, 2574];
+function forwardRows() {
+  const a = S.fwd || { per: 3, ope: 2, ceil: 3 }, tot = i => sumV(S.cons.units.map(u => u.v[i]));
+  const g = (base, pct, n) => base * Math.pow(1 + pct / 100, n);
+  const multi = FWD_Y.map(y => sumV(S.requests.filter(r => r.multi && r.years && r.status !== "rejected").map(r => y > 2571 ? Number(r.years[y] || 0) / 1e6 : 0)));
+  const bank = FWD_Y.map((y, n) => sumV((S.ideas || []).filter(i => ["proposed", "screened", "accepted"].includes(i.status)).map(i => (n >= 1 && n <= i.years ? i.est / i.years : 0))));
+  const rows = [
+    { k: "per", c: "c1", name: ["งบบุคลากร (ต่อเนื่อง)", "Personnel (continuing)"], v: FWD_Y.map((y, n) => g(tot(0), a.per, n)) },
+    { k: "ope", c: "c3", name: ["งบดำเนินงาน อุดหนุน และอื่น ๆ (ต่อเนื่อง)", "Operating, subsidies and other (continuing)"], v: FWD_Y.map((y, n) => g(tot(1) + tot(3) + tot(4), a.ope, n)) },
+    { k: "inv", c: "c2", name: ["งบลงทุนปี 2571 และภาระผูกพันหลายปี", "FY2571 investment and multi-year commitments"], v: FWD_Y.map((y, n) => (n ? 0 : tot(2)) + multi[n]) },
+    { k: "new", c: "c4", name: ["โครงการใหม่ในคลังโครงการ (ยังไม่เป็นคำขอ)", "New project-bank ideas (not yet requests)"], v: bank },
+  ];
+  const total = FWD_Y.map((y, n) => sumV(rows.map(r => r.v[n]))), ceil = FWD_Y.map((y, n) => g(S.cons.ceiling, a.ceil, n));
+  return { rows, total, ceil, a };
+}
+CONS_PANELS.forward = () => {
+  const { rows, total, ceil, a } = forwardRows(), pl = ROLE === "plan", max = Math.max(...total, ...ceil);
+  return `
+  <div class="grid2">
+    <section class="panel"><header><h2>${L("ประมาณการรายจ่ายล่วงหน้า 4 ปี", "4-year forward estimates")}</h2><span class="sp"></span><span class="sub">${L("ล้านบาท", "M baht")}</span></header>
+      <div class="body"><div class="fwd-chart">${FWD_Y.map((y, n) => `<div class="fwd-col"><div class="fwd-area"><div class="fwd-bar" style="height:${total[n] / max * 100}%">${rows.map(r => `<i class="${r.c}" style="height:${total[n] ? r.v[n] / total[n] * 100 : 0}%" title="${esc(tx(r.name))}: ${fmt(r.v[n], 1)}"></i>`).join("")}</div>
+          <span class="fwd-ceil" style="bottom:${ceil[n] / max * 100}%" title="${L("กรอบวงเงินคาดการณ์", "Expected ceiling")}: ${fmt(ceil[n], 1)}"></span></div><b class="num">${fmt(total[n], 0)}</b><span class="sub">${y}</span></div>`).join("")}</div>
+        <div class="row sub" style="margin-top:10px">${rows.map(r => `<span><i class="${r.c} lg"></i>${tx(r.name)}</span>`).join("")}<span><i class="lg ceil-lg"></i>${L("กรอบวงเงินคาดการณ์", "Expected ceiling")}</span></div></div></section>
+    <section class="panel"><header><h2>${L("สมมติฐาน", "Assumptions")}</h2><span class="sp"></span>${tag(pl ? L("แก้ไขได้", "Editable") : L("ดูอย่างเดียว", "View only"), pl ? "p-ok" : "p-mute")}</header>
+      <div class="body" style="display:flex;flex-direction:column;gap:12px">
+        ${[["per", L("งบบุคลากรเพิ่มขึ้นต่อปี (เลื่อนขั้นเงินเดือน)", "Personnel growth a year (salary steps)")], ["ope", L("งบดำเนินงานเพิ่มขึ้นต่อปี (เงินเฟ้อ)", "Operating growth a year (inflation)")], ["ceil", L("กรอบวงเงินของกรมเพิ่มขึ้นต่อปี", "Department ceiling growth a year")]].map(([k, l]) =>
+          `<label class="field-inline" for="fw-${k}" style="justify-content:space-between"><span>${l}</span><span><input type="number" id="fw-${k}" data-fw="${k}" min="-10" max="20" step="0.5" value="${a[k]}" ${pl ? "" : "disabled"} style="width:76px"> %</span></label>`).join("")}
+        <p class="sub" style="margin:0">${L("ภาระผูกพันหลายปีมาจากแท็บผูกพันหลายปีของคำขอ M02 · โครงการใหม่กระจายวงเงินตามจำนวนปีในคลังโครงการ M01", "Multi-year commitments come from the M02 Multi-year tab; new ideas are spread over their years from the M01 project bank")}</p></div></section>
+  </div>
+  <section class="panel"><header><h2>${L("ตารางประมาณการ", "Estimates table")}</h2></header>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("รายการ (ล้านบาท)", "Line (M baht)")}</th>${FWD_Y.map(y => `<th class="n">${y}</th>`).join("")}</tr></thead>
+      <tbody>${rows.map(r => `<tr><td><i class="${r.c} lg"></i>${tx(r.name)}</td>${r.v.map(v => `<td class="n">${fmt(v, 1)}</td>`).join("")}</tr>`).join("")}</tbody>
+      <tfoot><tr><td>${L("รวมรายจ่าย", "Total spending")}</td>${total.map(v => `<td class="n">${fmt(v, 1)}</td>`).join("")}</tr>
+        <tr><td>${L("กรอบวงเงินคาดการณ์", "Expected ceiling")}</td>${ceil.map(v => `<td class="n">${fmt(v, 1)}</td>`).join("")}</tr>
+        <tr><td>${L("พื้นที่การคลังคงเหลือ (+) / ส่วนขาด (−)", "Fiscal space (+) / shortfall (−)")}</td>${ceil.map((c, n) => { const d = c - total[n]; return `<td class="n" style="color:var(--${d < 0 ? "bad" : "accent"})">${d >= 0 ? "+" : "−"}${fmt(Math.abs(d), 1)}</td>`; }).join("")}</tr></tfoot></table></div>
+    <div class="body sub">${L("ใช้ประกอบการจัดทำงบประมาณรายจ่ายล่วงหน้าระยะปานกลางที่ส่งสำนักงบประมาณ", "Supports the medium-term expenditure estimates sent to the Budget Bureau")}</div></section>`;
+};
+CONS_BIND.forward = () => {
+  $$("[data-fw]").forEach(inp => (inp.onchange = () => {
+    S.fwd = S.fwd || { per: 3, ope: 2, ceil: 3 };
+    const old = S.fwd[inp.dataset.fw]; S.fwd[inp.dataset.fw] = Number(inp.value);
+    audit(["ปรับสมมติฐานประมาณการล่วงหน้า", "Changed a forward-estimate assumption"], `${inp.dataset.fw}: ${old}% → ${inp.value}%`); commit(); route();
+  }));
 };
 
 /* ---- 44-assistant.js ---- */
@@ -2959,6 +3239,159 @@ BIND.strategy = () => {
     audit(["ยกเลิกการผูกตัวชี้วัดกับกิจกรรม", "Unlinked a KPI from an activity"], `${k.id} ↔ ${actLabel(aid)}`); commit(); route();
   }));
 };
+
+/* ---- 45b-strategy-depth.js ---- */
+// M01 deeper features (round 8): the project bank (ideas scored by Planning, accepted ideas become
+// draft M02 requests) and mid-term plan revision (KPI target changes approved by the executive).
+STRAT_TABS.push({ id: "bank", label: ["คลังโครงการ", "Project bank"] }, { id: "revise", label: ["ทบทวนแผน", "Plan revision"] });
+const STRAT_BIND = {};
+const IDEA_ST = {
+  proposed: [["รอกลั่นกรอง", "Awaiting screening"], "p-info"], screened: [["ให้คะแนนแล้ว", "Scored"], "p-warn"],
+  accepted: [["รับเข้าแผน", "Accepted"], "p-ok"], rejected: [["ไม่รับ", "Not taken"], "p-bad"], converted: [["เป็นคำขอแล้ว", "Now a request"], "p-mute"],
+};
+const CRIT = [[["สอดคล้องยุทธศาสตร์", "Strategic fit"], 30], [["ความพร้อมดำเนินการ", "Readiness"], 20], [["ประโยชน์ต่อประชาชน", "Public value"], 30], [["ความเสี่ยงต่ำ", "Low risk"], 20]];
+const ideaScore = i => (i.scores ? Math.round(i.scores.reduce((s, v, n) => s + v / 5 * CRIT[n][1], 0)) : null);
+const findKpi = id => (allKpis().find(x => x.k.id === id) || {}).k;
+let IDEA_OPEN = null; // idea being scored
+const nextReqId = () => `REQ-2571-${String(Math.max(0, ...S.requests.map(r => Number(r.id.split("-")[2]) || 0)) + 1).padStart(3, "0")}`;
+
+STRAT.bank = () => {
+  const ideas = S.ideas || [], canAdd = ROLE === "div" || ROLE === "plan", pl = ROLE === "plan";
+  const live = ideas.filter(i => i.status !== "rejected"), est = live.reduce((s, i) => s + i.est, 0);
+  const sorted = ideas.slice().sort((a, b) => (ideaScore(b) ?? -1) - (ideaScore(a) ?? -1));
+  const opts = allKpis().map(x => `<option value="${x.k.id}">${x.k.id} · ${esc(tx(x.k.name))}</option>`).join("");
+  return `
+  <section class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+    <div class="kpi"><span class="l">${L("แนวคิดโครงการ", "Project ideas")}</span><span class="v">${ideas.length}</span></div>
+    <div class="kpi"><span class="l">${L("ประมาณการรวม (ไม่รวมที่ไม่รับ)", "Estimate (excl. not taken)")}</span><span class="v">${fmt(est, 1)}<small>${L("ล้านบาท", "M baht")}</small></span></div>
+    <div class="kpi"><span class="l">${L("รอกลั่นกรอง", "Awaiting screening")}</span><span class="v">${ideas.filter(i => i.status === "proposed").length}</span></div>
+    <div class="kpi"><span class="l">${L("รับเข้าแผน / เป็นคำขอแล้ว", "Accepted / now requests")}</span><span class="v">${ideas.filter(i => i.status === "accepted").length}<small>/ ${ideas.filter(i => i.status === "converted").length}</small></span></div>
+  </section>
+  <section class="panel"><header><h2>${L("คลังโครงการ ปีงบประมาณ 2571", "FY2571 project bank")}</h2><span class="sp"></span>
+      <span class="sub">${L("เกณฑ์", "Criteria")}: ${CRIT.map(c => `${tx(c[0])} ${c[1]}%`).join(" · ")}</span></header>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("แนวคิดโครงการ", "Idea")}</th><th>${L("ตัวชี้วัด", "KPI")}</th><th class="n">${L("ประมาณการ (ลบ.)", "Estimate (M)")}</th><th class="n">${L("ปี", "Years")}</th><th style="width:150px">${L("คะแนน", "Score")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
+      <tbody>${sorted.map(i => { const sc = ideaScore(i), k = findKpi(i.kpi), mine = ROLE === "div" && i.unit === me().unit;
+        return `<tr><td class="mono">${i.id}</td><td><b style="font-weight:600">${esc(tx(i.name))}</b><div class="sub">${unitName(i.unit)}${i.by ? " · " + esc(userName(i.by)) : ""}</div>${i.note ? `<div class="sub">${esc(tx(i.note))}</div>` : ""}</td>
+          <td class="sub">${k ? `${k.id} ${esc(tx(k.name))}` : i.kpi}</td><td class="n">${fmt(i.est, 1)}</td><td class="n">${i.years}</td>
+          <td>${sc == null ? `<span class="sub">—</span>` : `<div class="bar"><i style="width:${sc}%"></i></div><span class="sub">${sc} / 100</span>`}</td>
+          <td>${tag(tx(IDEA_ST[i.status][0]), IDEA_ST[i.status][1])}${i.req ? ` <a href="#" data-req="${i.req}" class="mono">${i.req}</a>` : ""}</td>
+          <td><div class="row" style="flex-wrap:nowrap">
+            ${pl && (i.status === "proposed" || i.status === "screened") ? `<button class="btn" type="button" data-score="${i.id}">${i.scores ? L("ปรับคะแนน", "Rescore") : L("ให้คะแนน", "Score")}</button>` : ""}
+            ${pl && i.status === "screened" ? `<button class="btn primary" type="button" data-iacc="${i.id}">${L("รับเข้าแผน", "Accept")}</button><button class="btn danger" type="button" data-irej="${i.id}">${L("ไม่รับ", "Decline")}</button>` : ""}
+            ${(mine || pl) && i.status === "accepted" ? `<button class="btn primary" type="button" data-iconv="${i.id}">${L("สร้างร่างคำขอ M02", "Create M02 draft")}</button>` : ""}
+            ${historyBtn(i.id, i.id)}</div></td></tr>
+          ${IDEA_OPEN === i.id ? `<tr class="cmt-row"><td colspan="8"><div class="row" style="align-items:flex-end">
+            ${CRIT.map((c, n) => `<div class="f"><label for="sc-${n}">${tx(c[0])} (${c[1]}%)</label><select id="sc-${n}">${[1, 2, 3, 4, 5].map(v => `<option ${(i.scores ? i.scores[n] : 3) === v ? "selected" : ""}>${v}</option>`).join("")}</select></div>`).join("")}
+            <div class="f" style="flex:1 1 200px"><label for="sc-note">${L("หมายเหตุ (ใช้เมื่อไม่รับ)", "Note (used if declined)")}</label><input type="text" id="sc-note" value="${esc(tx(i.note))}"></div>
+            <button class="btn primary" type="button" id="sc-save">${L("บันทึกคะแนน", "Save score")}</button><button class="btn ghost" type="button" id="sc-cancel">${L("ยกเลิก", "Cancel")}</button></div></td></tr>` : ""}`; }).join("")}</tbody></table></div>
+    ${canAdd ? `<div class="body"><form class="inline-form" id="idea-form">
+      <div class="f" style="flex:2 1 240px"><label for="id-name">${L("ชื่อแนวคิดโครงการ", "Idea name")}</label><input type="text" id="id-name" required></div>
+      <div class="f"><label for="id-kpi">${L("ตัวชี้วัดที่รองรับ", "KPI it serves")}</label><select id="id-kpi">${opts}</select></div>
+      <div class="f" style="flex:0 1 120px"><label for="id-est">${L("ประมาณการ (ลบ.)", "Estimate (M)")}</label><input type="number" id="id-est" min="0.1" step="0.1" required></div>
+      <div class="f" style="flex:0 1 90px"><label for="id-yrs">${L("จำนวนปี", "Years")}</label><select id="id-yrs"><option>1</option><option>2</option><option>3</option></select></div>
+      <button class="btn primary" type="submit">+ ${L("เสนอแนวคิด", "Propose idea")}</button></form></div>` : ""}</section>`;
+};
+STRAT_BIND.bank = () => {
+  const idea = id => S.ideas.find(i => i.id === id);
+  $$("[data-score]").forEach(b => (b.onclick = () => { IDEA_OPEN = IDEA_OPEN === b.dataset.score ? null : b.dataset.score; route(); }));
+  const sc = $("#sc-save");
+  if (sc) sc.onclick = () => {
+    const i = idea(IDEA_OPEN), note = $("#sc-note").value.trim();
+    i.scores = CRIT.map((c, n) => Number($("#sc-" + n).value)); i.status = "screened"; i.note = note ? [note, note] : null;
+    audit(["ให้คะแนนแนวคิดโครงการ", "Scored a project idea"], `${i.id} · ${ideaScore(i)}/100`); IDEA_OPEN = null; commit(); route();
+    toast(`${L("บันทึกคะแนนแล้ว", "Score saved")} · ${ideaScore(i)} / 100`);
+  };
+  const cn = $("#sc-cancel"); if (cn) cn.onclick = () => { IDEA_OPEN = null; route(); };
+  $$("[data-iacc]").forEach(b => (b.onclick = () => {
+    const i = idea(b.dataset.iacc); i.status = "accepted";
+    audit(["รับแนวคิดโครงการเข้าแผน", "Accepted a project idea"], i.id);
+    notify(["div"], [`แนวคิดโครงการ ${i.id} ได้รับเข้าแผน จัดทำคำขอได้แล้ว`, `Project idea ${i.id} was accepted; you can now prepare a request`], "strat-bank");
+    commit(); route(); toast(L("รับเข้าแผนแล้ว · แจ้งหน่วยงานให้จัดทำคำขอ", "Accepted · the unit has been asked to prepare a request"));
+  }));
+  $$("[data-irej]").forEach(b => (b.onclick = () => {
+    const i = idea(b.dataset.irej);
+    if (!i.note) { IDEA_OPEN = i.id; route(); toast(L("ใส่หมายเหตุเหตุผลที่ไม่รับก่อน", "Add a note explaining why first")); return; }
+    i.status = "rejected";
+    audit(["ไม่รับแนวคิดโครงการ", "Declined a project idea"], `${i.id} · ${tx(i.note)}`);
+    notify(["div"], [`แนวคิดโครงการ ${i.id} ไม่ได้รับเข้าแผน: ${i.note[0]}`, `Project idea ${i.id} was not taken: ${i.note[1]}`], "strat-bank");
+    commit(); route(); toast(L("บันทึกแล้ว · แจ้งหน่วยงานพร้อมเหตุผล", "Saved · the unit has been told why"));
+  }));
+  $$("[data-iconv]").forEach(b => (b.onclick = () => {
+    const i = idea(b.dataset.iconv), k = findKpi(i.kpi), id = nextReqId(), first = Math.round(i.est * 1e6 / i.years);
+    const r = { id, unit: i.unit, act: k && k.acts[0] || "", prev: 0, status: "draft", updated: TODAY, name: i.name.slice(), kpi: k ? [`${k.id} ${k.name[0]}`, `${k.id} ${k.name[1]}`] : "",
+      reason: "", docs: [], items: [{ type: "ope", name: ["ค่าใช้จ่ายโครงการ (ประมาณการจากคลังโครงการ)", "Project cost (estimate from the project bank)"], qty: 1, unitName: ["งาน", "job"], price: first }],
+      amount: first, versions: [], comments: [], idea: i.id };
+    if (i.years > 1) { r.multi = true; r.years = {}; for (let y = 0; y < i.years; y++) r.years[2571 + y] = y ? 0 : first; }
+    S.requests.unshift(r); snapshot(r, ["สร้างจากคลังโครงการ", "Created from the project bank"], true);
+    i.status = "converted"; i.req = id;
+    audit(["สร้างร่างคำขอจากคลังโครงการ", "Created a draft request from the project bank"], `${i.id} → ${id}`); commit();
+    toast(`${L("สร้างร่างคำขอ", "Created draft")} ${id}`); openReq(id);
+  }));
+  const f = $("#idea-form");
+  if (f) f.onsubmit = e => {
+    e.preventDefault();
+    const nm = $("#id-name").value.trim(), id = `PB-2571-${String(S.ideas.length + 1).padStart(3, "0")}`;
+    S.ideas.push({ id, unit: me().unit, kpi: $("#id-kpi").value, name: [nm, nm], est: Number($("#id-est").value), years: Number($("#id-yrs").value), status: "proposed", scores: null, note: null, by: me().id, t: nowIso(), req: null });
+    audit(["เสนอแนวคิดโครงการ", "Proposed a project idea"], `${id} ${nm}`);
+    notify(["plan"], [`แนวคิดโครงการใหม่ ${id} รอกลั่นกรอง`, `New project idea ${id} is waiting for screening`], "strat-bank");
+    commit(); route(); toast(L("เสนอแนวคิดแล้ว · กองแผนงานจะกลั่นกรองและให้คะแนน", "Idea proposed · Planning will screen and score it"));
+  };
+};
+
+const REV_ST = { pending: [["รอผู้บริหาร", "Awaiting executive"], "p-warn"], approved: [["อนุมัติ", "Approved"], "p-ok"], rejected: [["ไม่อนุมัติ", "Rejected"], "p-bad"] };
+STRAT.revise = () => {
+  const revs = S.planRevs || [], pl = ROLE === "plan", ex = ROLE === "exec";
+  return `
+  <div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("ทบทวนแผนกลางรอบ", "Mid-term plan revision")}</b>
+    <p>${L("การเปลี่ยนค่าเป้าหมายหลังแผนประกาศใช้ต้องได้รับความเห็นชอบจากผู้บริหาร ค่าเป้าหมายจะเปลี่ยนเมื่ออนุมัติแล้วเท่านั้น", "Changing a target after the plan is in force needs the executive's approval. Targets change only once approved.")}</p></div></div>
+  <section class="panel"><header><h2>${L("คำขอทบทวนค่าเป้าหมาย", "Target revision requests")}</h2></header>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("ตัวชี้วัด", "KPI")}</th><th class="n">${L("ปี", "Year")}</th><th class="n">${L("เดิม → ใหม่", "From → to")}</th><th>${L("เหตุผล", "Reason")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
+      <tbody>${revs.map(v => { const k = findKpi(v.kpi);
+        return `<tr><td class="mono">${v.id}</td><td>${k ? `<span class="mono sub">${k.id}</span> ${esc(tx(k.name))}` : v.kpi}</td><td class="n">${PLAN_YEARS[v.y]}</td>
+          <td class="n">${fmt(v.from, v.from % 1 ? 1 : 0)} → <b>${fmt(v.to, v.to % 1 ? 1 : 0)}</b>${k ? ` <span class="sub">${tx(k.unit)}</span>` : ""}</td>
+          <td><span class="sub">${esc(tx(v.why))}</span><div class="sub">${esc(userName(v.by))} · ${fdate(v.t)}</div></td>
+          <td>${tag(tx(REV_ST[v.status][0]), REV_ST[v.status][1])}${v.decided ? `<div class="sub">${esc(userName(v.dBy))} · ${fdate(v.decided)}</div>` : ""}</td>
+          <td><div class="row" style="flex-wrap:nowrap">${ex && v.status === "pending" ? `<button class="btn primary" type="button" data-rvok="${v.id}">${L("อนุมัติ", "Approve")}</button><button class="btn danger" type="button" data-rvno="${v.id}">${L("ไม่อนุมัติ", "Reject")}</button>` : ""}${historyBtn(v.id, v.id)}</div></td></tr>`; }).join("")
+        || `<tr><td colspan="7" class="sub">${L("ยังไม่มีคำขอทบทวน", "No revision requests yet")}</td></tr>`}</tbody></table></div>
+    ${pl ? `<div class="body"><form class="inline-form" id="rev-form">
+      <div class="f"><label for="rv-kpi">${L("ตัวชี้วัด", "KPI")}</label><select id="rv-kpi">${allKpis().map(x => `<option value="${x.k.id}">${x.k.id} · ${esc(tx(x.k.name))}</option>`).join("")}</select></div>
+      <div class="f" style="flex:0 1 100px"><label for="rv-y">${L("ปี", "Year")}</label><select id="rv-y">${PLAN_YEARS.map((y, i) => `<option value="${i}">${y}</option>`).join("")}</select></div>
+      <div class="f" style="flex:0 1 120px"><label for="rv-to">${L("ค่าเป้าหมายใหม่", "New target")}</label><input type="number" step="any" min="0" id="rv-to" required></div>
+      <div class="f" style="flex:2 1 220px"><label for="rv-why">${L("เหตุผล", "Reason")}</label><input type="text" id="rv-why" required></div>
+      <button class="btn primary" type="submit">${L("เสนอผู้บริหาร", "Send to executive")}</button></form>
+      <p class="sub" id="rv-cur"></p></div>` : ""}</section>`;
+};
+STRAT_BIND.revise = () => {
+  const rv = id => S.planRevs.find(v => v.id === id);
+  const decide = (v, ok) => {
+    v.status = ok ? "approved" : "rejected"; v.decided = nowIso(); v.dBy = me().id;
+    const k = findKpi(v.kpi);
+    if (ok && k) k.targets[v.y] = v.to;
+    audit(ok ? ["อนุมัติการทบทวนค่าเป้าหมาย", "Approved a target revision"] : ["ไม่อนุมัติการทบทวนค่าเป้าหมาย", "Rejected a target revision"], `${v.id} ${v.kpi} ${PLAN_YEARS[v.y]}: ${v.from} → ${v.to}`);
+    notify(["plan"], ok ? [`ผู้บริหารอนุมัติ ${v.id} ค่าเป้าหมาย ${v.kpi} ปรับแล้ว`, `The executive approved ${v.id}; ${v.kpi} target updated`] : [`ผู้บริหารไม่อนุมัติ ${v.id}`, `The executive rejected ${v.id}`], "strat-revise");
+    commit(); route(); toast(ok ? L("อนุมัติแล้ว · ค่าเป้าหมายในแผนปรับแล้ว", "Approved · the plan target is updated") : L("ไม่อนุมัติ · ค่าเป้าหมายคงเดิม", "Rejected · the target stays as it was"));
+  };
+  $$("[data-rvok]").forEach(b => (b.onclick = () => decide(rv(b.dataset.rvok), true)));
+  $$("[data-rvno]").forEach(b => (b.onclick = () => decide(rv(b.dataset.rvno), false)));
+  const f = $("#rev-form");
+  if (!f) return;
+  const cur = () => { const k = findKpi($("#rv-kpi").value), y = Number($("#rv-y").value); $("#rv-cur").textContent = `${L("ค่าเป้าหมายปัจจุบัน", "Current target")}: ${fmt(k.targets[y], k.targets[y] % 1 ? 1 : 0)} ${tx(k.unit)}`; };
+  $("#rv-kpi").onchange = cur; $("#rv-y").onchange = cur; cur();
+  f.onsubmit = e => {
+    e.preventDefault();
+    const k = findKpi($("#rv-kpi").value), y = Number($("#rv-y").value), to = Number($("#rv-to").value), why = $("#rv-why").value.trim();
+    if (to === k.targets[y]) { toast(L("ค่าใหม่เท่ากับค่าเดิม", "The new value equals the current one")); return; }
+    const id = `PR-2571-${String(S.planRevs.length + 1).padStart(3, "0")}`;
+    S.planRevs.unshift({ id, kpi: k.id, y, from: k.targets[y], to, why: [why, why], by: me().id, t: nowIso(), status: "pending" });
+    audit(["เสนอทบทวนค่าเป้าหมายตัวชี้วัด", "Proposed a KPI target revision"], `${id} ${k.id}`);
+    notify(["exec"], [`คำขอทบทวนค่าเป้าหมาย ${id} (${k.id}) รอพิจารณา`, `Target revision ${id} (${k.id}) is waiting for you`], "strat-revise");
+    commit(); route(); toast(L("ส่งให้ผู้บริหารพิจารณาแล้ว", "Sent to the executive"));
+  };
+};
+{
+  const base = BIND.strategy;
+  BIND.strategy = () => { base(); (STRAT_BIND[STRAT_TAB] || (() => {}))(); };
+}
 
 /* ---- 46-submission.js ---- */
 // M05 Budget Submission (round 3): the package of internally approved requests, checked, previewed,

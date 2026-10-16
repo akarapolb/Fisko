@@ -233,6 +233,14 @@ SEEDS.sample = {
       { unit: "U01", v: [412, 38, 6, 0, 2] }, { unit: "U05", v: [0, 142, 64, 0, 1] }, { unit: "U03", v: [0, 129, 28.4, 0, 0.5] },
       { unit: "U04", v: [0, 104.3, 13.6, 4, 0.6] }, { unit: "U06", v: [0, 66.2, 0, 1.5, 0] }, { unit: "U02", v: [0, 49.1, 0, 0, 0.3] },
     ] },
+    // round 8: project bank — [unit, KPI, name, estimate (M baht), years, status, scores or null, note]
+    ideas: [
+      ["U04", "K2", ["ระบบนัดหมายรับบริการล่วงหน้าผ่านแอป", "App-based service appointments"], 12.5, 2, "proposed", null],
+      ["U03", "K4", ["แพลตฟอร์มแลกเปลี่ยนข้อมูลระหว่างหน่วยงาน", "Inter-agency data exchange platform"], 38, 3, "screened", [5, 3, 4, 3]],
+      ["U06", "K3", ["หลักสูตรนักวิเคราะห์ข้อมูลภาครัฐ", "Public-sector data analyst course"], 6.8, 1, "screened", [4, 5, 3, 4]],
+      ["U04", "K1", ["บริการรับรองเอกสารออนไลน์", "Online document certification"], 9.4, 1, "accepted", [5, 4, 5, 4]],
+      ["U05", "K6", ["ปรับปรุงสำนักงานบริการเขต 5 ให้ได้มาตรฐาน", "Bring the region 5 service office up to standard"], 24, 2, "rejected", [2, 3, 2, 3], ["รวมไว้ในแผนปรับปรุงอาคารปี 2572 แล้ว", "Already in the FY2572 building renovation plan"]],
+    ],
     dupes: [
       { id: "d1", save: 3.2, title: ["จัดหาเครื่องคอมพิวเตอร์ 120 เครื่อง", "120 computers requested twice"],
         desc: ["สำนักเทคโนโลยีสารสนเทศ (REQ-2571-011) และสำนักพัฒนาบริการประชาชน (REQ-2571-014) ขอครุภัณฑ์ชนิดเดียวกันสำหรับผู้ใช้กลุ่มเดียวกัน", "The IT Bureau (REQ-2571-011) and the Public Service Development Bureau (REQ-2571-014) request the same equipment for the same users"] },

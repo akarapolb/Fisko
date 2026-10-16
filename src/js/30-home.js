@@ -48,6 +48,19 @@ function myTasks() {
     R(L("ติดตามหน่วยงานที่เบิกจ่ายต่ำกว่าแผน", "Follow up units behind their spending plan"), "", TODAY, "mon-alerts", "p-bad");
     if (S.perf.report && S.perf.report.sent) R(L("อ่านรายงานประเมินผลกลางปี", "Read the mid-year evaluation report"), "", TODAY, "perf-report", "p-info");
   }
+  // Round 8: project bank, plan revisions and ceiling responses.
+  const ideas = S.ideas || [], resp = S.cons.resp || {};
+  if (ROLE === "plan") {
+    const nIdea = ideas.filter(i => i.status === "proposed").length;
+    if (nIdea) R(L("กลั่นกรองแนวคิดโครงการในคลังโครงการ", "Screen project ideas in the project bank"), `${nIdea} ${L("แนวคิด", "ideas")}`, cal("c2").date, "strat-bank", "p-info");
+    Object.keys(resp).filter(u => resp[u].st === "appeal").forEach(u => R(`${L("พิจารณาคำขอทบทวนกรอบวงเงิน", "Decide a ceiling appeal")}: ${unitName(u)}`, `${fmt(resp[u].amt, 1)} ${L("ลบ.", "M")} · ${tx(resp[u].why)}`, TODAY, "cons-responses", "p-warn"));
+  }
+  if (ROLE === "exec") (S.planRevs || []).filter(v => v.status === "pending").forEach(v => R(`${L("อนุมัติการทบทวนค่าเป้าหมาย", "Approve a target revision")} ${v.id}`, `${v.kpi} ${PLAN_YEARS[v.y]}: ${v.from} → ${v.to}`, TODAY, "strat-revise", "p-warn"));
+  if (ROLE === "div") {
+    const u = me().unit;
+    if (resp[u] && resp[u].st === "pending") R(L("ตอบรับกรอบวงเงินของหน่วยงาน", "Reply to your unit ceiling"), `${fmt(S.cons.unitCeil[u], 1)} ${L("ล้านบาท", "M baht")}`, cal("c2").date, "requests", "p-warn");
+    ideas.filter(i => i.unit === u && i.status === "accepted").forEach(i => R(`${L("จัดทำคำขอจากแนวคิดที่รับเข้าแผน", "Prepare a request from an accepted idea")} ${i.id}`, tx(i.name), cal("c2").date, "strat-bank", "p-info"));
+  }
   // Delegated work (round 7): cross-unit transfers this user may approve on an executive's behalf.
   const dg = ROLE !== "exec" && delegFor("exec", "transfer");
   if (dg) Object.values(S.allocs).forEach(A => A.transfers.filter(x => x.status === "pending").forEach(x => { const a = A.lines.find(l => l.id === x.from), b = A.lines.find(l => l.id === x.to);

@@ -229,6 +229,14 @@ SEEDS.dpt = {
       { unit: "D01", v: [1180, 95, 12, 0, 4] }, { unit: "D06", v: [0, 40, 420, 0, 6] }, { unit: "D08", v: [0, 60, 85, 15, 3] },
       { unit: "D04", v: [0, 36, 0, 0, 1] }, { unit: "D07", v: [0, 7, 21.9, 0, 1] }, { unit: "D05", v: [0, 14, 9.6, 0, 1] },
     ] },
+    // round 8: project bank — [unit, KPI, name, estimate (M baht), years, status, scores or null, note]
+    ideas: [
+      ["D07", "K4", ["ระบบขออนุญาตก่อสร้างออนไลน์ ระยะที่ 2 (เพิ่ม 20 จังหวัด)", "Online building permits phase 2 (20 more provinces)"], 45, 2, "proposed", null],
+      ["D06", "K1", ["เขื่อนป้องกันตลิ่งริมแม่น้ำ ช่วงที่ 3 (ตัวอย่าง)", "Riverbank protection wall, section 3 (sample)"], 180, 3, "screened", [5, 3, 5, 3]],
+      ["D04", "K3", ["จัดทำผังเมืองรวมจังหวัด 4 จังหวัด", "Comprehensive plans for 4 provinces"], 32, 2, "screened", [4, 4, 4, 4]],
+      ["D05", "K6", ["ตรวจสอบอาคารสาธารณะด้วยอากาศยานไร้คนขับ", "Drone inspection of public buildings"], 8.5, 1, "accepted", [4, 4, 3, 4]],
+      ["D06", "K2", ["สถานีสูบน้ำถาวรชุมชนริมน้ำ", "Permanent pumping stations for riverside communities"], 95, 3, "rejected", [3, 2, 4, 2], ["รอผลศึกษาความเหมาะสมปี 2571", "Waiting for the FY2571 feasibility study"]],
+    ],
     dupes: [
       { id: "d1", save: 30, title: ["เขื่อนป้องกันตลิ่งจุดเดียวกันขอ 2 ช่องทาง", "Same riverbank site requested twice"],
         desc: ["สำนักวิศวกรรมโยธา (REQ-2571-015) และสำนักงานโยธาธิการและผังเมืองจังหวัด ขอก่อสร้างตลิ่งช่วงเดียวกัน 1 แห่ง", "The Civil Engineering Bureau (REQ-2571-015) and a provincial office both request the same riverbank section"] },

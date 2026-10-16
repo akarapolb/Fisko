@@ -3,7 +3,8 @@ let CONS_TAB = "overview";
 const OPEN_PROG = new Set();
 const CONS_PANELS = {}, CONS_BIND = {};
 function consTabsBar() {
-  const t = [["overview", L("ภาพรวม", "Overview")], ["priority", L("จัดลำดับความสำคัญ", "Priority scoring")], ["ceilings", L("กรอบวงเงินรายหน่วยงาน", "Unit ceilings")], ["programme", L("ตามแผนงาน", "By programme")]];
+  const t = [["overview", L("ภาพรวม", "Overview")], ["priority", L("จัดลำดับความสำคัญ", "Priority scoring")], ["ceilings", L("กรอบวงเงินรายหน่วยงาน", "Unit ceilings")],
+    ["responses", `${L("การตอบรับกรอบ", "Ceiling responses")}${(() => { const n = S.cons.units.filter(u => consResp(u.unit).st === "appeal").length; return n ? ` (${n})` : ""; })()}`], ["programme", L("ตามแผนงาน", "By programme")], ["forward", L("ประมาณการล่วงหน้า 4 ปี", "Forward estimates")]];
   return `<div class="tabs" role="tablist">${t.map(([id, l]) => `<button class="tab ${id === CONS_TAB ? "on" : ""}" type="button" role="tab" aria-selected="${id === CONS_TAB}" data-ctab="${id}">${l}</button>`).join("")}</div>`;
 }
 const projReqs = () => S.requests.filter(r => !isPersonnel(r));
