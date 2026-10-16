@@ -94,6 +94,7 @@ td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowra
 .t-must { background: var(--accent-soft); color: var(--accent); }
 .t-should { background: var(--info-soft); color: var(--info); }
 .t-could { background: var(--tint-2); color: var(--muted); }
+.t-new { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
 .t-warn { background: var(--warn-soft); color: var(--warn); }
 .t-bad { background: var(--bad-soft); color: var(--bad); }
 
@@ -170,7 +171,7 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
 <body>
 <div class="layout">
 <nav class="toc" id="toc" aria-label="สารบัญ">
-  <div class="brand">Fisko<small>Solution Design Document · v0.2</small></div>
+  <div class="brand">Fisko<small>Solution Design Document · v0.3</small></div>
   <div class="tools"><button type="button" id="toc-toggle" aria-expanded="false">สารบัญ</button><button type="button" id="theme">ธีม</button></div>
   <ol>
     <li><a href="#s1"><span class="n">01</span>บทนำ</a></li>
@@ -199,12 +200,12 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
   <h1>Fisko<br><span style="font-size:.55em;color:var(--accent)">Agency e-Budgeting Management System (AEBMS)</span></h1>
   <p class="th">ระบบบริหารจัดการงบประมาณอิเล็กทรอนิกส์สำหรับหน่วยรับงบประมาณ</p>
   <div class="meta">
-    <div><span>เวอร์ชัน</span><b>0.2 ร่างเพื่อการหารือ</b></div>
+    <div><span>เวอร์ชัน</span><b>0.3 ร่างเพื่อการหารือ</b></div>
     <div><span>วันที่</span><b>16 ตุลาคม 2569</b></div>
     <div><span>จัดทำโดย</span><b>Avalant</b></div>
-    <div><span>ต่อยอดจาก</span><b>Conceptual Design v0.1</b></div>
+    <div><span>ต่อยอดจาก</span><b>Solution Design v0.2 และผลจากต้นแบบ</b></div>
   </div>
-  <div class="notice"><b>สถานะเอกสาร:</b> เป็นการออกแบบระดับโซลูชันเพื่อยืนยันขอบเขตและทิศทางร่วมกับหน่วยงาน ยังไม่ได้ตรวจเทียบกับ TOR ของหน่วยงานใดโดยเฉพาะ ตัวเลขเป้าหมาย ปริมาณข้อมูล และรายละเอียดการเชื่อมต่อทั้งหมดเป็นสมมติฐานที่ต้องยืนยันในขั้น Detailed Design</div>
+  <div class="notice"><b>สถานะเอกสาร:</b> เป็นการออกแบบระดับโซลูชันเพื่อยืนยันขอบเขตและทิศทางร่วมกับหน่วยงาน ยังไม่ได้ตรวจเทียบกับ TOR ของหน่วยงานใดโดยเฉพาะ ตัวเลขเป้าหมาย ปริมาณข้อมูล และรายละเอียดการเชื่อมต่อทั้งหมดเป็นสมมติฐานที่ต้องยืนยันในขั้น Detailed Design<br><b>ฉบับ 0.3:</b> เพิ่มข้อกำหนดที่ได้จากการทดลองใช้ต้นแบบรอบที่ 7–10 เช่น คลังโครงการ การชี้แจงงบประมาณ ขั้นตอนรัฐสภา งวดเงิน การคาดการณ์สิ้นปี การตรวจความผิดปกติ และความสามารถร่วมของแพลตฟอร์ม ข้อกำหนดที่เพิ่มมีป้าย <span class="tag t-new">ใหม่ v0.3</span> ค่าตัวเลขในต้นแบบเป็นข้อมูลตัวอย่าง ลำดับความสำคัญและเกณฑ์ที่ระบุเป็นข้อเสนอที่ต้องยืนยันกับหน่วยงาน</div>
 </header>
 
 <!-- ============================== 01 ============================== -->
@@ -227,10 +228,11 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
       <li>AI และการวิเคราะห์เพื่อสนับสนุนการตัดสินใจ (M09)</li>
       <li>การบริหารข้อมูลหลัก โครงสร้างงบประมาณ สิทธิ์ และ Workflow (M10)</li>
       <li>การเชื่อมต่อกับระบบภายนอกตามช่องทางที่ได้รับอนุญาต</li>
+      <li>การติดตามสถานะขั้นตอนจัดซื้อจัดจ้างของโครงการลงทุน (ติดตามเท่านั้น)</li>
       <li>การย้ายข้อมูลงบประมาณย้อนหลังเพื่อการเปรียบเทียบ</li></ul></td>
     <td><ul style="margin:0">
       <li>การบันทึกบัญชีและการเบิกจ่ายจริง ซึ่งยังทำในระบบบัญชีภาครัฐ</li>
-      <li>กระบวนการจัดซื้อจัดจ้าง</li>
+      <li>กระบวนการจัดซื้อจัดจ้าง (M07 เพียงติดตามสถานะขั้นตอนจาก e-GP)</li>
       <li>การบริหารงานบุคคลและเงินเดือน</li>
       <li>การแก้ไขระบบของสำนักงบประมาณหรือหน่วยงานภายนอก</li></ul></td>
   </tr></tbody>
@@ -252,7 +254,7 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
 <ul>
   <li>Conceptual Design: Agency e-Budgeting Management System (AEBMS) v0.1</li>
   <li>เอกสารนำเสนอ Conceptual Architecture &amp; Functional Modules (ตุลาคม 2569)</li>
-  <li>ต้นแบบหน้าจอ Fisko Prototype (ข้อมูลตัวอย่าง)</li>
+  <li>ต้นแบบหน้าจอ Fisko Prototype รอบที่ 1–10 (ข้อมูลตัวอย่าง) และสคริปต์สาธิต 15 นาที</li>
   <li>หลักเกณฑ์และแบบฟอร์มการจัดทำคำของบประมาณของสำนักงบประมาณ ฉบับที่ใช้ในปีงบประมาณที่ติดตั้งระบบ</li>
   <li>พระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562 และพระราชบัญญัติการรักษาความมั่นคงปลอดภัยไซเบอร์ พ.ศ. 2562</li>
   <li>มาตรฐานและแนวปฏิบัติด้านรัฐบาลดิจิทัลที่หน่วยงานถือปฏิบัติ</li>
@@ -264,6 +266,7 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
   <tbody>
     <tr><td class="id">M01–M10</td><td>รหัสโมดูลของระบบ</td></tr>
     <tr><td class="id">FR-Mxx-nn</td><td>ข้อกำหนดเชิงฟังก์ชันของโมดูล</td></tr>
+    <tr><td class="id">FR-PL-nn</td><td>ข้อกำหนดเชิงฟังก์ชันของความสามารถร่วมของแพลตฟอร์ม (Platform)</td></tr>
     <tr><td class="id">BR-nn</td><td>กฎทางธุรกิจ (Business Rule) ที่ตั้งค่าได้</td></tr>
     <tr><td class="id">IF-nn</td><td>รายการการเชื่อมต่อ (Interface)</td></tr>
     <tr><td class="id">NFR-xx-nn</td><td>ข้อกำหนดที่ไม่ใช่ฟังก์ชัน</td></tr>
@@ -296,7 +299,7 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
     <tr><td>สำนัก / กอง (ผู้จัดทำคำขอ)</td><td>จัดทำคำขอ รายงานผลการดำเนินงานและการใช้จ่าย</td><td>M02, M07, M08</td><td class="n">350</td></tr>
     <tr><td>การเงินและบัญชี</td><td>บันทึกวงเงิน จัดสรร โอนเปลี่ยนแปลง ติดตามเบิกจ่าย</td><td>M06, M07</td><td class="n">40</td></tr>
     <tr><td>คณะกรรมการพิจารณางบประมาณ</td><td>พิจารณาคำขอในรอบที่กำหนด</td><td>M04</td><td class="n">12</td></tr>
-    <tr><td>ผู้ตรวจสอบ</td><td>ตรวจสอบย้อนหลังแบบอ่านอย่างเดียว</td><td>M04, M10 (Audit)</td><td class="n">10</td></tr>
+    <tr><td>ผู้ตรวจสอบ</td><td>ตรวจสอบย้อนหลังแบบอ่านอย่างเดียว</td><td>M04, M09 (ความผิดปกติ), M10 (Audit)</td><td class="n">10</td></tr>
     <tr><td>ผู้ดูแลระบบ</td><td>ข้อมูลหลัก โครงสร้างงบประมาณ สิทธิ์ Workflow</td><td>M10</td><td class="n">5</td></tr>
   </tbody>
 </table></div>
@@ -334,16 +337,16 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
 <div class="tbl"><table>
   <thead><tr><th class="id">ขั้น</th><th>กิจกรรม</th><th>ผู้รับผิดชอบ</th><th>โมดูล</th><th>ผลลัพธ์</th></tr></thead>
   <tbody>
-    <tr><td class="id">1</td><td>กำหนดแผนและกรอบงบประมาณเบื้องต้น</td><td>กองแผนงาน</td><td>M01</td><td>Strategic Budget Framework, ปฏิทินงบประมาณ</td></tr>
+    <tr><td class="id">1</td><td>กำหนดแผนและกรอบงบประมาณเบื้องต้น คัดกรองแนวคิดโครงการในคลังโครงการ</td><td>กองแผนงาน</td><td>M01</td><td>Strategic Budget Framework, ปฏิทินงบประมาณ</td></tr>
     <tr><td class="id">2</td><td>จัดทำคำของบประมาณรายโครงการ/กิจกรรม</td><td>สำนัก / กอง</td><td>M02</td><td>คำขอที่ผ่านการตรวจความครบถ้วน</td></tr>
-    <tr><td class="id">3</td><td>พิจารณาและกลั่นกรอง (ส่งกลับแก้ไขได้)</td><td>กองแผนงาน</td><td>M04</td><td>วงเงินรอบที่ 2 พร้อมเหตุผล</td></tr>
-    <tr><td class="id">4</td><td>รวบรวมคำขอระดับกรม</td><td>กองแผนงาน</td><td>M03</td><td>ภาพรวมเทียบกรอบวงเงิน รายการซ้ำซ้อน</td></tr>
+    <tr><td class="id">3</td><td>พิจารณาและกลั่นกรอง ชี้แจงงบประมาณกับหน่วยงาน (ส่งกลับแก้ไขได้)</td><td>กองแผนงาน</td><td>M04</td><td>วงเงินรอบที่ 2 พร้อมเหตุผล</td></tr>
+    <tr><td class="id">4</td><td>รวบรวมคำขอระดับกรม แจ้งกรอบวงเงินและรับการตอบรับของหน่วยงาน</td><td>กองแผนงาน</td><td>M03</td><td>ภาพรวมเทียบกรอบวงเงิน รายการซ้ำซ้อน</td></tr>
     <tr><td class="id">5</td><td>คณะกรรมการพิจารณาและผู้บริหารเห็นชอบ</td><td>คณะกรรมการ / ผู้บริหาร</td><td>M04</td><td>วงเงินรอบที่ 3</td></tr>
     <tr><td class="id">6</td><td>จัดทำคำขอระดับหน่วยรับงบประมาณและชุดข้อมูลส่ง</td><td>กองแผนงาน</td><td>M05</td><td>เอกสารตามแบบฟอร์ม ไฟล์ส่งออก</td></tr>
-    <tr><td class="id">7</td><td>พิจารณาและแจ้งวงเงิน</td><td>สำนักงบประมาณ (ภายนอก)</td><td>M05</td><td>ผลพิจารณา คำขอปรับปรุง</td></tr>
-    <tr><td class="id">8</td><td>บันทึกวงเงินที่ได้รับและจัดสรร</td><td>การเงินและบัญชี</td><td>M06</td><td>วงเงินจัดสรรรายหน่วยงาน/โครงการ แผนการใช้จ่าย</td></tr>
-    <tr><td class="id">9</td><td>ดำเนินงาน เบิกจ่าย และรายงานความก้าวหน้า</td><td>สำนัก / กอง</td><td>M07</td><td>ผลการใช้จ่ายและความก้าวหน้า</td></tr>
-    <tr><td class="id">10</td><td>ประเมินผลสัมฤทธิ์</td><td>กองแผนงาน</td><td>M08</td><td>Output, Outcome เทียบตัวชี้วัด</td></tr>
+    <tr><td class="id">7</td><td>พิจารณาและแจ้งวงเงิน รวมการพิจารณาร่าง พ.ร.บ. ในรัฐสภา</td><td>สำนักงบประมาณ / รัฐสภา (ภายนอก) กองแผนงานบันทึกผล</td><td>M05</td><td>ผลพิจารณา คำขอปรับปรุง วงเงินสุดท้ายตาม พ.ร.บ.</td></tr>
+    <tr><td class="id">8</td><td>บันทึกวงเงินที่ได้รับ จัดสรร ขออนุมัติงวดเงิน และกันเงินเหลื่อมปี</td><td>การเงินและบัญชี</td><td>M06</td><td>วงเงินจัดสรรรายหน่วยงาน/โครงการ แผนการใช้จ่าย</td></tr>
+    <tr><td class="id">9</td><td>ดำเนินงาน เบิกจ่าย รายงานความก้าวหน้า คาดการณ์เบิกจ่ายสิ้นปี และติดตามขั้นตอนจัดซื้อจัดจ้าง</td><td>สำนัก / กอง</td><td>M07</td><td>ผลการใช้จ่ายและความก้าวหน้า</td></tr>
+    <tr><td class="id">10</td><td>ประเมินผลสัมฤทธิ์และประเมินโครงการ ส่งบทเรียนกลับคลังโครงการ</td><td>กองแผนงาน</td><td>M08</td><td>Output, Outcome เทียบตัวชี้วัด</td></tr>
   </tbody>
 </table></div>
 
@@ -352,11 +355,11 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
   <thead><tr><th>ความสามารถ</th><th>รายละเอียด</th></tr></thead>
   <tbody>
     <tr><td>Multi-Level Approval</td><td>กำหนดลำดับขั้นอนุมัติตามโครงสร้างหน่วยงาน และตามเงื่อนไข เช่น วงเงินหรือประเภทงบรายจ่าย</td></tr>
-    <tr><td>Delegation of Authority</td><td>มอบอำนาจชั่วคราวพร้อมช่วงวันที่และขอบเขต ระบบบันทึกผู้มอบและผู้รับมอบทุกครั้ง</td></tr>
+    <tr><td>Delegation of Authority</td><td>มอบอำนาจชั่วคราวพร้อมช่วงวันที่และขอบเขต (เช่น อนุมัติการโอน กลั่นกรอง บันทึกมติ) ผู้รับมอบทำรายการแทนได้ภายในช่วงที่มีผล ระบบแสดงและบันทึกว่า “ทำแทน” ใคร พร้อมเลขที่การมอบอำนาจ แจ้งผู้มอบ และยกเลิกได้</td></tr>
     <tr><td>Return for Revision</td><td>ส่งกลับไปขั้นใดก็ได้ก่อนหน้าพร้อมความเห็น ผู้จัดทำเห็นจุดที่ต้องแก้</td></tr>
     <tr><td>Version Control</td><td>ทุกการส่งหรือปรับวงเงินสร้างเวอร์ชันใหม่ เปรียบเทียบเวอร์ชันได้</td></tr>
-    <tr><td>Deadline Management</td><td>กำหนดเส้นตายตามปฏิทินงบประมาณ แจ้งเตือนก่อนครบกำหนดและเมื่อเลยกำหนด</td></tr>
-    <tr><td>Notifications</td><td>แจ้งเตือนในระบบและอีเมล ตามบทบาทและเหตุการณ์</td></tr>
+    <tr><td>Deadline Management</td><td>กำหนดเส้นตายตามปฏิทินงบประมาณและ SLA รายขั้น แจ้งเตือนก่อนครบกำหนด และยกระดับไปยังผู้ที่กำหนดเมื่อเลยกำหนด ตั้งค่าได้ใน M10</td></tr>
+    <tr><td>Notifications</td><td>แจ้งเตือนในระบบและอีเมล ตามบทบาทและเหตุการณ์ ข้อความมาจากแม่แบบที่ตั้งค่าได้ ช่องทางอื่น (เช่น LINE) เป็นทางเลือกตามที่หน่วยงานอนุญาต</td></tr>
     <tr><td>Audit Trail</td><td>บันทึกผู้ดำเนินการ เวลา การกระทำ ค่าก่อนและหลังเปลี่ยน แก้ไขไม่ได้</td></tr>
   </tbody>
 </table></div>
@@ -365,7 +368,7 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
 <!-- ============================== 04 ============================== -->
 <section class="ch" id="s4">
 <h2><span class="num">04</span>การออกแบบเชิงฟังก์ชัน</h2>
-<p class="lede">ข้อกำหนดเชิงฟังก์ชันหลักรายโมดูล ลำดับความสำคัญสะท้อนแนวทางรุ่นแรก ซึ่งเน้น M01–M05 และ M10</p>
+<p class="lede">ข้อกำหนดเชิงฟังก์ชันหลักรายโมดูล ลำดับความสำคัญสะท้อนแนวทางรุ่นแรก ซึ่งเน้น M01–M05 และ M10 ข้อกำหนดที่มีป้าย <span class="tag t-new">ใหม่ v0.3</span> ได้ทดลองในต้นแบบแล้ว และมีลำดับความสำคัญเป็นข้อเสนอ</p>
 
 <h3><span class="num">4.1</span>M01 · Strategic Planning</h3>
 <div class="tbl"><table>
@@ -376,6 +379,8 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
     <tr><td class="id">FR-M01-03</td><td>เชื่อมโยงกับยุทธศาสตร์ชาติและแผนระดับต่าง ๆ แบบหลายต่อหลาย</td><td><span class="tag t-must">Must</span></td></tr>
     <tr><td class="id">FR-M01-04</td><td>จัดโครงสร้างแผนงาน ผลผลิต/โครงการ กิจกรรม พร้อมหน่วยงานเจ้าของและผู้รับผิดชอบ</td><td><span class="tag t-must">Must</span></td></tr>
     <tr><td class="id">FR-M01-05</td><td>รายงานความสอดคล้องระหว่างแผนกับคำขอ (คำขอที่ไม่ผูกแผน แผนที่ไม่มีคำขอ)</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-M01-06</td><td><span class="tag t-new">ใหม่ v0.3</span> คลังโครงการ: หน่วยงานเสนอแนวคิดโครงการโดยระบุตัวชี้วัดที่รองรับ กองแผนงานให้คะแนนตามเกณฑ์ที่ตั้งค่าได้ รับเข้าแผนหรือไม่รับพร้อมเหตุผล และสร้างร่างคำขอใน M02 จากแนวคิดที่รับเข้าแผน</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-M01-07</td><td><span class="tag t-new">ใหม่ v0.3</span> ทบทวนแผนกลางรอบ: เสนอเปลี่ยนค่าเป้าหมายตัวชี้วัดพร้อมเหตุผล ผู้บริหารอนุมัติก่อนค่าเป้าหมายจึงมีผล และบันทึกทุกขั้นใน Audit Log</td><td><span class="tag t-should">Should</span></td></tr>
   </tbody>
 </table></div>
 
@@ -392,6 +397,8 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
     <tr><td class="id">FR-M02-07</td><td>ตรวจความครบถ้วนก่อนส่งตามกฎที่ตั้งค่าได้ แยกข้อผิดพลาดที่ส่งไม่ได้กับข้อสังเกต</td><td><span class="tag t-must">Must</span></td></tr>
     <tr><td class="id">FR-M02-08</td><td>เปรียบเทียบกับงบประมาณที่ได้รับและคำขอปีก่อน</td><td><span class="tag t-should">Should</span></td></tr>
     <tr><td class="id">FR-M02-09</td><td>ประมาณการงบบุคลากรจากข้อมูลอัตรากำลังที่นำเข้า</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-M02-10</td><td><span class="tag t-new">ใหม่ v0.3</span> เลือกรายการจากบัญชีราคามาตรฐานใน M10 เพื่อเติมงบรายจ่าย หน่วยนับ และราคา และแสดงเครื่องหมายเมื่อราคาเกินมาตรฐานขณะกรอก</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-M02-11</td><td><span class="tag t-new">ใหม่ v0.3</span> นำเข้ารายการงบประมาณโดยวางข้อมูลจาก Excel แสดงผลตรวจรายแถวก่อนเพิ่ม แถวที่ผิดไม่ถูกเพิ่ม และรักษาความสอดคล้องกับวงเงินรายปีของคำขอผูกพันหลายปี</td><td><span class="tag t-should">Should</span></td></tr>
   </tbody>
 </table></div>
 <h4>กฎทางธุรกิจตัวอย่าง (ตั้งค่าได้รายปี)</h4>
@@ -416,6 +423,8 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
     <tr><td class="id">FR-M03-03</td><td>ตรวจรายการที่อาจซ้ำซ้อนระหว่างหน่วยงานหรือกับปีก่อน และให้ผู้พิจารณายืนยัน</td><td><span class="tag t-should">Should</span></td></tr>
     <tr><td class="id">FR-M03-04</td><td>จัดลำดับความสำคัญโครงการตามเกณฑ์คะแนนที่ตั้งค่าได้</td><td><span class="tag t-should">Should</span></td></tr>
     <tr><td class="id">FR-M03-05</td><td>รายงานสรุปเพื่อเสนอผู้บริหาร</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M03-06</td><td><span class="tag t-new">ใหม่ v0.3</span> แจ้งกรอบวงเงินรายหน่วยงาน หน่วยงานตอบรับหรือขอทบทวนพร้อมวงเงินและเหตุผล กองแผนงานเพิ่มกรอบหรือคงเดิม และแจ้งผลกลับ</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-M03-07</td><td><span class="tag t-new">ใหม่ v0.3</span> ประมาณการรายจ่ายล่วงหน้า 4 ปี จากงบต่อเนื่อง ภาระผูกพันหลายปี และแนวคิดโครงการในคลังโครงการ เทียบกรอบวงเงินที่คาดการณ์ โดยสมมติฐานอัตราเพิ่มปรับได้</td><td><span class="tag t-should">Should</span></td></tr>
   </tbody>
 </table></div>
 
@@ -429,10 +438,14 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
     <tr><td class="id">FR-M04-04</td><td>ส่งกลับแก้ไขพร้อมความเห็นรายรายการ</td><td><span class="tag t-must">Must</span></td></tr>
     <tr><td class="id">FR-M04-05</td><td>เปรียบเทียบวงเงินทุกรอบในตารางเดียว พร้อมผลต่าง</td><td><span class="tag t-must">Must</span></td></tr>
     <tr><td class="id">FR-M04-06</td><td>บันทึกมติคณะกรรมการและแนบรายงานการประชุม</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-M04-07</td><td><span class="tag t-new">ใหม่ v0.3</span> การชี้แจงงบประมาณ: นัดหมายหน่วยงาน ส่งคำถามล่วงหน้า หน่วยงานตอบในระบบ กองแผนงานยอมรับคำชี้แจงหรือถามเพิ่ม และบันทึกว่าชี้แจงแล้ว</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-M04-08</td><td><span class="tag t-new">ใหม่ v0.3</span> แสดงผลกระทบของการปรับลดวงเงินต่อค่าเป้าหมายตัวชี้วัดปีแรกและระดับความเสี่ยง ก่อนคณะกรรมการตัดสินใจ</td><td><span class="tag t-could">Could</span></td></tr>
   </tbody>
 </table></div>
 <div class="callout"><b>ตัวอย่างการเก็บวงเงินหลายรอบ (ล้านบาท, ข้อมูลสมมติ)</b>
   โครงการ A: 20 → 18 → 15 · โครงการ B: 10 → 8 → 8 · โครงการ C: 15 → 12 → 10 · รวม 45 → 38 → 33 ทุกค่ายังเรียกดูได้พร้อมเหตุผลของแต่ละรอบ</div>
+<div class="callout"><b>วิธีประมาณผลกระทบของการปรับลด (FR-M04-08, ต้นแบบ)</b>
+  ค่าที่คาดว่าทำได้ = ค่าฐาน + (ค่าเป้าหมาย − ค่าฐาน) × สัดส่วนวงเงินที่คงไว้ · ระดับความเสี่ยงดูจากส่วนที่ต่ำกว่าเป้า: ≥ 15% สูง, 5–15% ปานกลาง, ต่ำกว่านั้นกระทบน้อย เป็นสมมติฐานเชิงสัดส่วนเพื่อประกอบการตัดสินใจ วิธีคำนวณจริงต้องยืนยันกับเจ้าของตัวชี้วัดใน Detailed Design</div>
 
 <h3><span class="num">4.5</span>M05 · Budget Submission</h3>
 <div class="tbl"><table>
@@ -442,6 +455,7 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
     <tr><td class="id">FR-M05-02</td><td>จัดทำเอกสารตามแบบฟอร์มที่กำหนด ส่งออก Excel และ PDF</td><td><span class="tag t-must">Must</span></td></tr>
     <tr><td class="id">FR-M05-03</td><td>ส่งออกข้อมูลตามรูปแบบที่ได้รับอนุญาตสำหรับการแลกเปลี่ยนกับระบบของสำนักงบประมาณ (IF-01)</td><td><span class="tag t-should">Should</span></td></tr>
     <tr><td class="id">FR-M05-04</td><td>บันทึกสถานะการส่ง ผลการพิจารณา และคำขอปรับปรุงจากสำนักงบประมาณ</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M05-05</td><td><span class="tag t-new">ใหม่ v0.3</span> ติดตามร่าง พ.ร.บ. งบประมาณรายจ่ายในรัฐสภาตามวาระ บันทึกวงเงินที่คณะกรรมาธิการปรับลดรายโครงการ การแปรญัตติขอคืน และวงเงินสุดท้ายเพื่อส่งต่อการจัดสรร</td><td><span class="tag t-should">Should</span></td></tr>
   </tbody>
 </table></div>
 
@@ -453,6 +467,8 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
     <tr><td class="id">FR-M06-02</td><td>จัดสรรตามหน่วยงาน โครงการ และกิจกรรม พร้อมตรวจไม่ให้เกินวงเงิน</td><td><span class="tag t-must">Must</span></td></tr>
     <tr><td class="id">FR-M06-03</td><td>จัดทำแผนการใช้จ่ายรายเดือน/รายไตรมาส</td><td><span class="tag t-must">Must</span></td></tr>
     <tr><td class="id">FR-M06-04</td><td>ปรับแผนและโอนเปลี่ยนแปลงผ่าน Workflow พร้อมตรวจวงเงินคงเหลือ</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M06-05</td><td><span class="tag t-new">ใหม่ v0.3</span> ขออนุมัติงวดเงินรายไตรมาสตามแผนการใช้จ่ายแยกตามงบรายจ่าย ตรวจไม่ให้เกินวงเงินที่ยังไม่ได้ขอ และบันทึกผลการอนุมัติ</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-M06-06</td><td><span class="tag t-new">ใหม่ v0.3</span> กันเงินไว้เบิกเหลื่อมปี: ติดตามเงินกันจากปีก่อน (การเบิกจ่าย กำหนดเวลา การขอขยายเวลา) และยื่นคำขอกันเงินใหม่ โดยตรวจเลขที่สัญญา วันที่ลงนาม วงเงิน และกำหนดเวลา ก่อนผู้บริหารอนุมัติ</td><td><span class="tag t-should">Should</span></td></tr>
   </tbody>
 </table></div>
 
@@ -465,10 +481,14 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
     <tr><td class="id">FR-M07-03</td><td>Drill-down ตามหน่วยงาน โครงการ หมวดรายจ่าย และช่วงเวลา</td><td><span class="tag t-must">Must</span></td></tr>
     <tr><td class="id">FR-M07-04</td><td>รายงานความก้าวหน้าโครงการโดยหน่วยงานเจ้าของ</td><td><span class="tag t-must">Must</span></td></tr>
     <tr><td class="id">FR-M07-05</td><td>แจ้งเตือนโครงการที่เบิกจ่ายต่ำกว่าแผนตามเกณฑ์</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-M07-06</td><td><span class="tag t-new">ใหม่ v0.3</span> คาดการณ์การเบิกจ่ายสิ้นปีรายหน่วยงานเทียบเป้าหมายเบิกจ่ายสะสมรายไตรมาสที่ตั้งค่าได้ (เช่น ตามมติคณะรัฐมนตรี) พร้อมประมาณวงเงินที่คาดว่าเบิกไม่ทัน</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-M07-07</td><td><span class="tag t-new">ใหม่ v0.3</span> ติดตามขั้นตอนจัดซื้อจัดจ้างของโครงการลงทุน (แผน เชิญชวน ผู้ชนะ สัญญา ตรวจรับ) เทียบวันที่แผน รับจาก e-GP (IF-04) หรือบันทึกด้วยมือเมื่อยังเชื่อมต่อไม่ได้ ระบบติดตามเท่านั้น ไม่ใช่ระบบจัดซื้อ</td><td><span class="tag t-could">Could</span></td></tr>
   </tbody>
 </table></div>
 <div class="callout"><b>สูตรตัวชี้วัดหลัก</b>
   อัตราการเบิกจ่าย = ผลเบิกจ่ายสะสม ÷ งบประมาณที่ได้รับ · ความก้าวหน้าตามแผน = ผลเบิกจ่ายสะสม ÷ แผนการใช้จ่ายสะสม · คงเหลือ = งบประมาณที่ได้รับ − ผลเบิกจ่ายสะสม (ตัวอย่าง: 520 ÷ 1,000 = 52%, 520 ÷ 600 = 86.7%, คงเหลือ 480 ล้านบาท)</div>
+<div class="callout"><b>วิธีคาดการณ์การเบิกจ่ายสิ้นปี (FR-M07-06, ต้นแบบ)</b>
+  คาดการณ์ ณ สิ้นงวด = ผลเบิกจ่ายสะสม + (แผนสะสมของงวดนั้น − แผนสะสมปัจจุบัน) × อัตราผลเทียบแผนที่ผ่านมา (จำกัดไม่เกิน 105%) และไม่เกินวงเงินที่ได้รับ เป้าหมายรายไตรมาสในต้นแบบเป็นตัวเลขตัวอย่าง ระบบจริงตั้งตามมติคณะรัฐมนตรีของปีนั้น</div>
 
 <h3><span class="num">4.8</span>M08 · Budget Performance</h3>
 <div class="tbl"><table>
@@ -477,6 +497,7 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
     <tr><td class="id">FR-M08-01</td><td>บันทึกผล Output และ Outcome ตามตัวชี้วัดของโครงการ</td><td><span class="tag t-must">Must</span></td></tr>
     <tr><td class="id">FR-M08-02</td><td>เชื่อมห่วงโซ่ Budget Input → Activities → Outputs → Outcomes → Impact</td><td><span class="tag t-should">Should</span></td></tr>
     <tr><td class="id">FR-M08-03</td><td>รายงานผลสัมฤทธิ์เทียบค่าเป้าหมายและงบประมาณที่ใช้</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M08-04</td><td><span class="tag t-new">ใหม่ v0.3</span> ประเมินโครงการตามกรอบ Logframe ด้วยเกณฑ์ 5 ด้าน (ความสอดคล้อง ประสิทธิผล ประสิทธิภาพ ผลกระทบ ความยั่งยืน) บันทึกข้อค้นพบและบทเรียน และส่งบทเรียนไปแสดงในคลังโครงการ M01</td><td><span class="tag t-should">Should</span></td></tr>
   </tbody>
 </table></div>
 
@@ -489,6 +510,8 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
     <tr><td class="id">FR-M09-02</td><td>ผู้ช่วยร่างเหตุผลความจำเป็นและตรวจคำขอก่อนส่ง</td><td><span class="tag t-should">Should</span></td></tr>
     <tr><td class="id">FR-M09-03</td><td>ผู้ช่วยตอบคำถามผู้บริหารด้วยภาษาธรรมชาติ พร้อมแหล่งอ้างอิง</td><td><span class="tag t-should">Should</span></td></tr>
     <tr><td class="id">FR-M09-04</td><td>จำลองทางเลือกการจัดสรรภายใต้วงเงินที่เปลี่ยน (What-if)</td><td><span class="tag t-could">Could</span></td></tr>
+    <tr><td class="id">FR-M09-05</td><td><span class="tag t-new">ใหม่ v0.3</span> ตรวจความผิดปกติของการใช้จ่าย (แบ่งซื้อแบ่งจ้าง เบิกจ่ายกระจุกปลายปี จ่ายก่อนตรวจรับ ผู้ขายรายเดียวสัดส่วนสูง) พร้อมคะแนนความเสี่ยง ผู้ตรวจสอบปิดรายการพร้อมคำชี้แจงหรือส่งตรวจสอบเพิ่มเติม</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-M09-06</td><td><span class="tag t-new">ใหม่ v0.3</span> ให้คะแนนคุณภาพเหตุผลความจำเป็นของคำขอตามเกณฑ์ที่ตั้งค่าได้ พร้อมข้อเสนอแนะการปรับปรุง</td><td><span class="tag t-could">Could</span></td></tr>
   </tbody>
 </table></div>
 
@@ -502,6 +525,21 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
     <tr><td class="id">FR-M10-04</td><td>ตั้งค่า Workflow สายอนุมัติ การมอบอำนาจ และปฏิทินงบประมาณ</td><td><span class="tag t-must">Must</span></td></tr>
     <tr><td class="id">FR-M10-05</td><td>ตั้งค่ากฎทางธุรกิจและแบบฟอร์ม/รายงาน โดยไม่ต้องแก้โค้ด</td><td><span class="tag t-must">Must</span></td></tr>
     <tr><td class="id">FR-M10-06</td><td>เรียกดูและส่งออก Audit Log</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-M10-07</td><td><span class="tag t-new">ใหม่ v0.3</span> ตั้งแม่แบบข้อความแจ้งเตือนต่อเหตุการณ์ ช่องทาง และตัวแปรแทนค่า พร้อมตัวอย่างข้อความ และตั้ง SLA การแจ้งเตือนล่วงหน้าและกติกายกระดับต่อขั้นตอน Workflow</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-M10-08</td><td><span class="tag t-new">ใหม่ v0.3</span> กำหนดระยะเวลาเก็บรักษาข้อมูลตามประเภท และแสดงสถานะการสำรองข้อมูล ผลทดสอบกู้คืนล่าสุด และค่า RPO/RTO</td><td><span class="tag t-should">Should</span></td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">4.11</span>ความสามารถร่วมของแพลตฟอร์ม</h3>
+<p>ความสามารถที่ใช้ร่วมกันทุกโมดูล ไม่ผูกกับโมดูลใดโมดูลหนึ่ง</p>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อกำหนด</th><th>ความสำคัญ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-PL-01</td><td><span class="tag t-new">ใหม่ v0.3</span> เข้าสู่ระบบผ่าน SSO ของหน่วยงานพร้อม MFA ผู้ใช้ที่ยังไม่ได้ตั้งค่า MFA ต้องตั้งค่าก่อนเข้าใช้งาน บัญชีที่ถูกระงับเข้าสู่ระบบไม่ได้ และบันทึกการเข้า/ออกจากระบบ</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-PL-02</td><td><span class="tag t-new">ใหม่ v0.3</span> ค้นหากลางข้ามโมดูล (หน้าจอ คำขอ ตัวชี้วัด โครงการ รายการจัดสรร การโอน การประชุม ผู้ใช้ กฎ การมอบอำนาจ) โดยแสดงเฉพาะสิ่งที่ผู้ใช้มีสิทธิ์เปิด และเรียกด้วยแป้นลัดได้</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-PL-03</td><td><span class="tag t-new">ใหม่ v0.3</span> ประวัติการเปลี่ยนแปลงรายรายการ เปิดดูได้จากรายการหลักทุกประเภท รวม Audit Log การทำงานของ AI เวอร์ชัน และความเห็นของรายการนั้นในลำดับเวลาเดียว</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-PL-04</td><td><span class="tag t-new">ใหม่ v0.3</span> การมอบอำนาจ: ผู้มีอำนาจมอบให้ผู้อื่นตามขอบเขตและช่วงวันที่ ผู้รับมอบทำรายการแทนได้ ระบบแสดงและบันทึกว่าทำแทนใคร แจ้งผู้มอบ และยกเลิกได้</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-PL-05</td><td><span class="tag t-new">ใหม่ v0.3</span> พื้นที่ทำงานของฉัน: รวมงานรอดำเนินการของผู้ใช้จากทุกโมดูล (รวมงานที่ได้รับมอบอำนาจ) พร้อมกำหนดส่ง และลิงก์ไปยังหน้าจอที่ต้องทำ</td><td><span class="tag t-must">Must</span></td></tr>
   </tbody>
 </table></div>
 </section>
@@ -527,20 +565,21 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
 <div class="tbl"><table>
   <thead><tr><th>Component</th><th>หน้าที่</th><th>ใช้โดย</th></tr></thead>
   <tbody>
-    <tr><td>Planning Service</td><td>แผน ยุทธศาสตร์ ตัวชี้วัด โครงสร้างแผนงาน</td><td>M01, M08</td></tr>
-    <tr><td>Budget Request Service</td><td>คำขอ รายการงบประมาณ การคำนวณ เอกสารแนบ</td><td>M02, M05</td></tr>
-    <tr><td>Review &amp; Version Service</td><td>รอบการพิจารณา เวอร์ชันวงเงิน เหตุผล ประวัติ</td><td>M03, M04</td></tr>
-    <tr><td>Allocation Service</td><td>วงเงินที่ได้รับ การจัดสรร แผนการใช้จ่าย การโอนเปลี่ยนแปลง</td><td>M06</td></tr>
-    <tr><td>Monitoring Service</td><td>ผลการใช้จ่าย ความก้าวหน้า การแจ้งเตือน</td><td>M07</td></tr>
-    <tr><td>Performance Service</td><td>ผล Output/Outcome เทียบตัวชี้วัด</td><td>M08</td></tr>
+    <tr><td>Planning Service</td><td>แผน ยุทธศาสตร์ ตัวชี้วัด โครงสร้างแผนงาน คลังโครงการ การทบทวนแผน</td><td>M01, M08</td></tr>
+    <tr><td>Budget Request Service</td><td>คำขอ รายการงบประมาณ การคำนวณ เอกสารแนบ การนำเข้าจาก Excel ชุดส่งและขั้นตอนรัฐสภา</td><td>M02, M05</td></tr>
+    <tr><td>Review &amp; Version Service</td><td>รอบการพิจารณา เวอร์ชันวงเงิน เหตุผล ประวัติ กรอบวงเงินและการตอบรับ การชี้แจง ผลกระทบของการปรับลด</td><td>M03, M04</td></tr>
+    <tr><td>Allocation Service</td><td>วงเงินที่ได้รับ การจัดสรร แผนการใช้จ่าย การโอนเปลี่ยนแปลง งวดเงิน เงินกันเหลื่อมปี</td><td>M06</td></tr>
+    <tr><td>Monitoring Service</td><td>ผลการใช้จ่าย ความก้าวหน้า การแจ้งเตือน คาดการณ์สิ้นปี ขั้นตอนจัดซื้อจัดจ้าง</td><td>M07</td></tr>
+    <tr><td>Performance Service</td><td>ผล Output/Outcome เทียบตัวชี้วัด การประเมินโครงการและบทเรียน</td><td>M08</td></tr>
     <tr><td>Workflow Engine</td><td>สายอนุมัติ งานรอดำเนินการ เส้นตาย การมอบอำนาจ</td><td>ทุกโมดูล</td></tr>
     <tr><td>Business Rules Engine</td><td>กฎตรวจความครบถ้วนและเงื่อนไขที่ตั้งค่าได้รายปี</td><td>M02–M06</td></tr>
     <tr><td>AI Orchestrator &amp; Agents</td><td>ผู้ช่วย AI การตรวจ การวิเคราะห์</td><td>M09</td></tr>
     <tr><td>Document Service / Document AI</td><td>จัดเก็บเอกสาร อ่านและสกัดข้อมูลจากเอกสารประกอบ</td><td>M02, M05, M09</td></tr>
     <tr><td>Reporting Service</td><td>Dashboard รายงาน แบบฟอร์ม การส่งออก</td><td>M03, M05, M07, M08</td></tr>
-    <tr><td>Notification Service</td><td>แจ้งเตือนในระบบและอีเมล</td><td>ทุกโมดูล</td></tr>
+    <tr><td>Notification Service</td><td>แม่แบบข้อความ ช่องทาง SLA และการยกระดับ แจ้งเตือนในระบบและอีเมล</td><td>ทุกโมดูล</td></tr>
     <tr><td>Identity &amp; Access Service</td><td>ยืนยันตัวตน บทบาท สิทธิ์ ขอบเขตหน่วยงาน</td><td>ทุกโมดูล</td></tr>
-    <tr><td>Audit Service</td><td>บันทึกเหตุการณ์แบบแก้ไขไม่ได้</td><td>ทุกโมดูล</td></tr>
+    <tr><td>Search Service</td><td>ดัชนีค้นหากลางที่กรองผลตามสิทธิ์ของผู้ใช้ก่อนแสดง</td><td>ทุกโมดูล</td></tr>
+    <tr><td>Audit Service</td><td>บันทึกเหตุการณ์แบบแก้ไขไม่ได้ และเป็นแหล่งข้อมูลของหน้าประวัติรายรายการ</td><td>ทุกโมดูล</td></tr>
     <tr><td>Integration Service</td><td>Adapter ระบบภายนอก ตารางเวลานำเข้า การกระทบยอด</td><td>M05, M07, M02</td></tr>
   </tbody>
 </table></div>
@@ -561,15 +600,24 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
   <tbody>
     <tr><td>Budget Workspace (งานของฉัน กำหนดส่ง การแจ้งเตือน)</td><td>ทุกบทบาท</td><td>ทุกโมดูล</td></tr>
     <tr><td>แผนยุทธศาสตร์และโครงสร้างแผนงาน</td><td>กองแผนงาน</td><td>M01</td></tr>
+    <tr><td>คลังโครงการและทบทวนแผน</td><td>กองแผนงาน สำนัก / กอง ผู้บริหาร</td><td>M01</td></tr>
     <tr><td>รายการคำขอ และแบบฟอร์มคำขอพร้อมผู้ช่วย AI</td><td>สำนัก / กอง</td><td>M02</td></tr>
     <tr><td>ภาพรวมคำขอระดับกรม</td><td>กองแผนงาน</td><td>M03</td></tr>
+    <tr><td>กรอบวงเงิน การตอบรับของหน่วยงาน และประมาณการล่วงหน้า 4 ปี</td><td>กองแผนงาน</td><td>M03</td></tr>
     <tr><td>กลั่นกรองหลายรอบและประวัติเวอร์ชัน</td><td>กองแผนงาน ผู้บริหาร</td><td>M04</td></tr>
+    <tr><td>การชี้แจงงบประมาณและผลกระทบของการปรับลด</td><td>กองแผนงาน สำนัก / กอง</td><td>M04</td></tr>
     <tr><td>ชุดข้อมูลส่งและสถานะการพิจารณา</td><td>กองแผนงาน</td><td>M05</td></tr>
+    <tr><td>ขั้นตอนร่าง พ.ร.บ. ในรัฐสภา</td><td>กองแผนงาน</td><td>M05</td></tr>
     <tr><td>จัดสรรและโอนเปลี่ยนแปลง</td><td>การเงิน</td><td>M06</td></tr>
+    <tr><td>งวดเงินและกันเงินเหลื่อมปี</td><td>การเงิน ผู้บริหาร</td><td>M06</td></tr>
     <tr><td>Executive Dashboard</td><td>ผู้บริหาร</td><td>M07</td></tr>
+    <tr><td>คาดการณ์สิ้นปีและขั้นตอนจัดซื้อจัดจ้าง</td><td>ผู้บริหาร การเงิน</td><td>M07</td></tr>
     <tr><td>ผลสัมฤทธิ์โครงการ</td><td>กองแผนงาน</td><td>M08</td></tr>
+    <tr><td>ประเมินโครงการและบทเรียน</td><td>กองแผนงาน</td><td>M08</td></tr>
     <tr><td>ผู้ช่วย AI งบประมาณ</td><td>ผู้บริหาร กองแผนงาน</td><td>M09</td></tr>
-    <tr><td>ตั้งค่าระบบ ข้อมูลหลัก สิทธิ์ Workflow Audit</td><td>ผู้ดูแลระบบ</td><td>M10</td></tr>
+    <tr><td>ความผิดปกติการใช้จ่ายและคุณภาพเหตุผลคำขอ</td><td>ผู้ตรวจสอบ กองแผนงาน</td><td>M09</td></tr>
+    <tr><td>ตั้งค่าระบบ ข้อมูลหลัก สิทธิ์ Workflow กฎ แม่แบบแจ้งเตือนและ SLA การเก็บรักษาและสำรองข้อมูล Audit</td><td>ผู้ดูแลระบบ</td><td>M10</td></tr>
+    <tr><td>เข้าสู่ระบบ ค้นหากลาง ประวัติรายรายการ การมอบอำนาจ</td><td>ทุกบทบาท</td><td>PL</td></tr>
   </tbody>
 </table></div>
 </section>
@@ -662,6 +710,19 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
     <tr><td>KPI / PerformanceResult</td><td>ตัวชี้วัด ค่าเป้าหมาย ผลที่ได้</td><td>หน่วยวัด, เป้าหมาย, ผล, งวด</td></tr>
     <tr><td>Document</td><td>เอกสารประกอบ</td><td>ประเภท, เวอร์ชัน, ที่จัดเก็บ, ผลสกัดข้อมูล</td></tr>
     <tr><td>WorkflowInstance / Task</td><td>สถานะการอนุมัติและงานรอดำเนินการ</td><td>ขั้น, ผู้รับผิดชอบ, เส้นตาย</td></tr>
+    <tr><td>ProjectIdea</td><td>แนวคิดโครงการในคลังโครงการ</td><td>ตัวชี้วัดที่รองรับ, หน่วยงาน, ประมาณการ, จำนวนปี, คะแนนรายเกณฑ์, สถานะ, คำขอที่สร้าง</td></tr>
+    <tr><td>PlanRevision</td><td>คำขอเปลี่ยนค่าเป้าหมายตัวชี้วัด</td><td>ตัวชี้วัด, ปี, ค่าเดิม/ค่าใหม่, เหตุผล, ผู้เสนอ, ผู้อนุมัติ</td></tr>
+    <tr><td>CeilingResponse</td><td>การตอบรับกรอบวงเงินรายหน่วยงาน</td><td>หน่วยงาน, กรอบ, สถานะ, วงเงินที่ขอเพิ่ม, เหตุผล, ผลพิจารณา</td></tr>
+    <tr><td>Hearing / HearingQuestion</td><td>การชี้แจงงบประมาณ</td><td>หน่วยงาน, วันนัด, คำถาม, คำตอบ, สถานะรายข้อ</td></tr>
+    <tr><td>BillStageResult</td><td>ผลรายโครงการตามวาระของร่าง พ.ร.บ.</td><td>โครงการ, วงเงินในร่าง, ปรับลด, เหตุผล, แปรญัตติ, วงเงินสุดท้าย</td></tr>
+    <tr><td>AllotmentRelease</td><td>คำขออนุมัติงวดเงิน</td><td>ไตรมาส, งบรายจ่าย, วงเงิน, สถานะ, วันที่อนุมัติ</td></tr>
+    <tr><td>CarryOver</td><td>เงินกันเหลื่อมปี (จากปีก่อนและคำขอใหม่)</td><td>เลขที่สัญญา/PO, วันที่ลงนาม, วงเงิน, เบิกจ่ายแล้ว, กำหนด, สถานะ</td></tr>
+    <tr><td>ProcurementMilestone</td><td>ขั้นตอนจัดซื้อจัดจ้างของโครงการลงทุน</td><td>โครงการ, ขั้น, วันที่แผน, วันที่จริง, แหล่งข้อมูล (e-GP / บันทึกมือ)</td></tr>
+    <tr><td>Evaluation / Lesson</td><td>การประเมินโครงการและบทเรียน</td><td>โครงการ, คะแนนรายเกณฑ์, ข้อค้นพบ, บทเรียน</td></tr>
+    <tr><td>AnomalyFlag</td><td>รายการผิดปกติที่ AI ชี้</td><td>ประเภท, หน่วยงาน, คะแนนความเสี่ยง, หลักฐาน, สถานะ, ผลการตรวจ</td></tr>
+    <tr><td>Delegation</td><td>การมอบอำนาจ</td><td>ผู้มอบ, ผู้รับมอบ, ขอบเขต, ช่วงวันที่, สถานะ</td></tr>
+    <tr><td>NotificationTemplate / EscalationRule</td><td>แม่แบบแจ้งเตือนและกติกา SLA</td><td>เหตุการณ์, ช่องทาง, ข้อความ, ระยะเตือน, ผู้รับยกระดับ</td></tr>
+    <tr><td>RetentionPolicy</td><td>ระยะเวลาเก็บรักษาตามประเภทข้อมูล</td><td>ประเภท, จำนวนปี, เหตุผลอ้างอิง</td></tr>
     <tr><td>AuditEvent</td><td>เหตุการณ์ตรวจสอบ</td><td>ผู้ใช้, การกระทำ, ค่าก่อน/หลัง, เวลา, IP</td></tr>
   </tbody>
 </table></div>
@@ -680,12 +741,15 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
   <thead><tr><th>ประเภทข้อมูล</th><th>ระยะเก็บรักษา (เสนอ)</th></tr></thead>
   <tbody>
     <tr><td>ข้อมูลงบประมาณและเวอร์ชันวงเงิน</td><td>ตลอดอายุระบบ ไม่น้อยกว่า 10 ปีงบประมาณ</td></tr>
-    <tr><td>เอกสารประกอบ</td><td>ตามระเบียบงานสารบรรณและนโยบายหน่วยงาน</td></tr>
+    <tr><td>เอกสารประกอบ</td><td>ตามระเบียบงานสารบรรณและนโยบายหน่วยงาน (เสนอเริ่มต้น 5 ปี)</td></tr>
     <tr><td>Audit Log</td><td>ไม่น้อยกว่า 10 ปี จัดเก็บแบบแก้ไขไม่ได้</td></tr>
     <tr><td>บันทึกคำถาม-คำตอบ AI</td><td>ไม่น้อยกว่า 1 ปี หรือตามนโยบายหน่วยงาน</td></tr>
+    <tr><td>บันทึกการทำงานของ AI Agent (รวมการตรวจความผิดปกติ)</td><td>ไม่น้อยกว่า 2 ปี</td></tr>
     <tr><td>Log ระบบ</td><td>ไม่น้อยกว่า 90 วันในระบบ และตามที่กฎหมายกำหนดสำหรับข้อมูลจราจรคอมพิวเตอร์</td></tr>
   </tbody>
 </table></div>
+
+<p class="small">ระยะเวลาเก็บรักษาแต่ละประเภทตั้งค่าได้ใน M10 (FR-M10-08) ข้อมูลที่ครบกำหนดจะแจ้งเจ้าของข้อมูลล่วงหน้า 30 วันก่อนลบ และ Audit Log แก้ไขไม่ได้ตลอดอายุการเก็บ</p>
 
 <h3><span class="num">7.5</span>การย้ายข้อมูลย้อนหลัง</h3>
 <p>นำเข้าข้อมูลคำขอ วงเงินที่ได้รับ และผลเบิกจ่ายย้อนหลังอย่างน้อย 3 ปีงบประมาณ จากไฟล์ที่หน่วยงานมี ผ่านขั้นตอนจับคู่รหัส ตรวจความถูกต้อง และกระทบยอดรวมกับรายงานที่หน่วยงานรับรอง ก่อนเปิดใช้งาน</p>
@@ -717,10 +781,11 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
     <tr><td class="id">IF-01</td><td>New e-Budgeting</td><td>ส่งออก / นำเข้า</td><td>คำของบประมาณ ผลพิจารณา</td><td>ไฟล์ตามรูปแบบที่กำหนด หรือ API หากได้รับอนุญาต</td><td>ตามรอบงบประมาณ</td><td><span class="tag t-warn">รอยืนยันช่องทาง</span></td></tr>
     <tr><td class="id">IF-02</td><td>New GFMIS Thai</td><td>นำเข้า</td><td>ผลเบิกจ่าย สถานะงบประมาณ</td><td>ไฟล์รายงาน หรือช่องทางที่ได้รับสิทธิ์</td><td>รายวัน / รายสัปดาห์</td><td><span class="tag t-warn">รอยืนยันสิทธิ์</span></td></tr>
     <tr><td class="id">IF-03</td><td>ERP / Financial</td><td>นำเข้า</td><td>ข้อมูลบัญชี การผูกพัน</td><td>API / ETL</td><td>รายวัน</td><td><span class="tag t-should">ขึ้นกับระบบหน่วยงาน</span></td></tr>
-    <tr><td class="id">IF-04</td><td>e-GP</td><td>นำเข้า</td><td>สถานะโครงการจัดซื้อจัดจ้าง</td><td>ข้อมูลที่เปิดให้ใช้งาน</td><td>รายสัปดาห์</td><td><span class="tag t-warn">รอยืนยันช่องทาง</span></td></tr>
+    <tr><td class="id">IF-04</td><td>e-GP</td><td>นำเข้า</td><td>สถานะโครงการจัดซื้อจัดจ้างและวันที่แต่ละขั้นตอน (ใช้ใน M07 ติดตามขั้นตอน)</td><td>ข้อมูลที่เปิดให้ใช้งาน</td><td>รายสัปดาห์</td><td><span class="tag t-warn">รอยืนยันช่องทาง</span></td></tr>
     <tr><td class="id">IF-05</td><td>HR / Payroll</td><td>นำเข้า</td><td>อัตรากำลัง เงินเดือน (ข้อมูลส่วนบุคคล)</td><td>API / ไฟล์ แบบสรุปเท่าที่จำเป็น</td><td>รายเดือน</td><td><span class="tag t-should">ขึ้นกับระบบหน่วยงาน</span></td></tr>
     <tr><td class="id">IF-06</td><td>Identity Provider</td><td>ยืนยันตัวตน</td><td>บัญชีผู้ใช้ กลุ่ม</td><td>SAML 2.0 / OpenID Connect</td><td>ทุกการเข้าสู่ระบบ</td><td><span class="tag t-must">จำเป็น</span></td></tr>
     <tr><td class="id">IF-07</td><td>Email / SMTP</td><td>ส่งออก</td><td>การแจ้งเตือน</td><td>SMTP ของหน่วยงาน</td><td>ตามเหตุการณ์</td><td><span class="tag t-must">จำเป็น</span></td></tr>
+    <tr><td class="id">IF-08</td><td>ช่องทางข้อความอื่น (เช่น LINE)</td><td>ส่งออก</td><td>การแจ้งเตือนที่หน่วยงานเลือกส่ง (ไม่มีข้อมูลลับ)</td><td>API ของผู้ให้บริการ</td><td>ตามเหตุการณ์</td><td><span class="tag t-could">ทางเลือก ต้องได้รับอนุญาต</span></td></tr>
   </tbody>
 </table></div>
 
@@ -732,6 +797,7 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
   <li><b>Idempotent:</b> นำเข้าซ้ำงวดเดิมได้โดยไม่เกิดข้อมูลซ้ำ</li>
   <li><b>กระทบยอด:</b> ทุกงวดเทียบยอดรวมกับแหล่งข้อมูล ส่วนต่างแสดงในรายงานให้ผู้รับผิดชอบตรวจ</li>
   <li><b>จัดการข้อผิดพลาด:</b> ลองใหม่อัตโนมัติตามรอบ บันทึกข้อผิดพลาด และแจ้งผู้ดูแลเมื่อเกินเกณฑ์</li>
+  <li><b>บันทึกด้วยมือเป็นทางสำรอง:</b> เมื่อการเชื่อมต่อใช้ไม่ได้ (เช่น e-GP) ผู้รับผิดชอบบันทึกข้อมูลด้วยมือ ระบบแสดงสถานะการเชื่อมต่อในหน้าจอ และใช้ข้อมูลจริงทับเมื่อเชื่อมต่อได้</li>
   <li><b>ความปลอดภัย:</b> TLS 1.2 ขึ้นไป, Mutual TLS หรือ OAuth 2.0 Client Credentials, จำกัด IP, ไฟล์เข้ารหัสระหว่างส่ง</li>
 </ul>
 </section>
@@ -761,10 +827,10 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
   <thead><tr><th class="id">รหัส</th><th>Agent</th><th>ข้อมูลนำเข้า</th><th>เครื่องมือ</th><th>ผลลัพธ์</th><th>ระดับการทำงาน</th></tr></thead>
   <tbody>
     <tr><td class="id">AG-01</td><td>Budget Preparation</td><td>ข้อมูลโครงการ คำขอคล้ายกันปีก่อน แผนยุทธศาสตร์</td><td>Budget Query, Document Retrieval</td><td>ร่างเหตุผลความจำเป็น ข้อเสนอตัวชี้วัด</td><td>ร่างให้ผู้ใช้แก้ไข</td></tr>
-    <tr><td class="id">AG-02</td><td>Budget Validation</td><td>คำขอ เอกสารแนบ กฎรายปี</td><td>Rule Check, Document AI</td><td>รายการข้อผิดพลาดและข้อสังเกต</td><td>แนะนำเท่านั้น</td></tr>
+    <tr><td class="id">AG-02</td><td>Budget Validation</td><td>คำขอ เอกสารแนบ กฎรายปี</td><td>Rule Check, Document AI</td><td>รายการข้อผิดพลาดและข้อสังเกต คะแนนคุณภาพเหตุผลพร้อมข้อเสนอแนะ</td><td>แนะนำเท่านั้น</td></tr>
     <tr><td class="id">AG-03</td><td>Budget Analysis</td><td>Data Mart หลายปี</td><td>Budget Query</td><td>แนวโน้ม การเปรียบเทียบ คำอธิบายส่วนต่าง</td><td>อ่านอย่างเดียว</td></tr>
     <tr><td class="id">AG-04</td><td>Budget Optimization</td><td>คำขอ คะแนนความสำคัญ กรอบวงเงิน</td><td>What-if Simulation</td><td>ทางเลือกการจัดสรรพร้อมสมมติฐาน</td><td>ข้อเสนอให้ผู้มีอำนาจพิจารณา</td></tr>
-    <tr><td class="id">AG-05</td><td>Budget Monitoring</td><td>แผนและผลการใช้จ่าย สถานะจัดซื้อจัดจ้าง</td><td>Budget Query</td><td>การแจ้งเตือนโครงการเสี่ยงพร้อมสาเหตุ</td><td>แจ้งเตือน</td></tr>
+    <tr><td class="id">AG-05</td><td>Budget Monitoring</td><td>แผนและผลการใช้จ่าย สถานะจัดซื้อจัดจ้าง</td><td>Budget Query</td><td>การแจ้งเตือนโครงการเสี่ยงพร้อมสาเหตุ รายการผิดปกติของการใช้จ่ายพร้อมคะแนนความเสี่ยง</td><td>แจ้งเตือน ผู้ตรวจสอบเป็นผู้ตัดสิน</td></tr>
     <tr><td class="id">AG-06</td><td>Executive Budget Assistant</td><td>คำถามภาษาธรรมชาติ</td><td>ทุกเครื่องมือแบบอ่านอย่างเดียว</td><td>คำตอบพร้อมตาราง แหล่งอ้างอิง สมมติฐาน</td><td>อ่านอย่างเดียว</td></tr>
   </tbody>
 </table></div>
@@ -786,6 +852,7 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
     <tr><td>คำสั่งแฝงในเอกสาร (Prompt Injection)</td><td>แยกเนื้อหาเอกสารเป็นข้อมูล ไม่ถือเป็นคำสั่ง จำกัดเครื่องมือเป็นอ่านอย่างเดียว ทดสอบเชิงรุก</td></tr>
     <tr><td>ข้อมูลส่วนบุคคลรั่วไหล</td><td>ปกปิดข้อมูลส่วนบุคคลก่อนส่งโมเดล ใช้ข้อมูลอัตรากำลังแบบสรุป</td></tr>
     <tr><td>AI ตัดสินใจแทนมนุษย์</td><td>ไม่มี Tool ที่บันทึก อนุมัติ หรือปรับวงเงิน ข้อเสนอต้องผ่าน Workflow ปกติ</td></tr>
+    <tr><td>AI ชี้รายการผิดปกติจนถูกเข้าใจว่าเป็นการกล่าวหา</td><td>แสดงเป็น “รายการที่ควรตรวจ” พร้อมหลักฐานและเหตุผล ไม่ระบุเจตนา ผู้ตรวจสอบเป็นผู้ตัดสิน และหน่วยงานมีช่องทางชี้แจง</td></tr>
     <tr><td>ข้อมูลออกนอกขอบเขต</td><td>LLM Gateway กำหนดปลายทางโมเดลที่อนุญาต บันทึกทุกคำขอ</td></tr>
   </tbody>
 </table></div>
@@ -799,8 +866,26 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
     <tr><td>ข้อผิดพลาดคำขอที่ Validation Agent ตรวจพบ</td><td class="n">≥ 90%</td><td>เทียบกับผลตรวจของกองแผนงาน</td></tr>
     <tr><td>ความพึงพอใจผู้ใช้ต่อร่างเหตุผล</td><td class="n">≥ 4 / 5</td><td>ให้คะแนนในหน้าจอ</td></tr>
     <tr><td>เวลาตอบสนอง</td><td class="n">≤ 10 วินาที</td><td>วัดที่ LLM Gateway (P90)</td></tr>
+    <tr><td>สัดส่วนรายการผิดปกติที่ผู้ตรวจสอบเห็นว่าควรตรวจต่อ</td><td class="n">≥ 50%</td><td>บันทึกผลการตรวจในระบบ</td></tr>
   </tbody>
 </table></div>
+
+<h3><span class="num">9.6</span>การตรวจความผิดปกติและคุณภาพเหตุผล</h3>
+<p>Budget Monitoring Agent (AG-05) ตรวจข้อมูลการใช้จ่ายและจัดซื้อจัดจ้างรายวัน ชี้รายการที่ควรให้ผู้ตรวจสอบพิจารณา โดยใช้กฎที่ตั้งค่าได้ร่วมกับคะแนนความเสี่ยงที่อธิบายหลักฐานได้ (FR-M09-05)</p>
+<div class="tbl"><table>
+  <thead><tr><th>ประเภท</th><th>เงื่อนไขตัวอย่าง</th><th>หลักฐานที่แสดง</th></tr></thead>
+  <tbody>
+    <tr><td>แบ่งซื้อแบ่งจ้าง</td><td>ผู้ขายรายเดียวหลายรายการในช่วงสั้น แต่ละรายการต่ำกว่าเกณฑ์วงเงินเล็กน้อย แต่รวมกันเกินเกณฑ์</td><td>รายการ วันที่ และวงเงินแต่ละครั้ง</td></tr>
+    <tr><td>เบิกจ่ายกระจุกปลายปี</td><td>สัดส่วนเบิกจ่ายของเดือนสุดท้ายสูงกว่าค่าเฉลี่ยของกรมหลายเท่า</td><td>สัดส่วนรายเดือนย้อนหลัง</td></tr>
+    <tr><td>จ่ายก่อนตรวจรับ</td><td>วันที่จ่ายเงินก่อนวันที่ตรวจรับพัสดุหรืองาน</td><td>วันที่ทั้งสองและจำนวนเงิน</td></tr>
+    <tr><td>ผู้ขายรายเดียวสัดส่วนสูง</td><td>ผู้ขายรายเดียวได้รับสัดส่วนของมูลค่าจัดซื้อของหน่วยงานสูงกว่าเกณฑ์</td><td>ชื่อผู้ขายและสัดส่วน</td></tr>
+  </tbody>
+</table></div>
+<ul>
+  <li>AI ชี้เท่านั้น ผู้ตรวจสอบบันทึกผลและเลือก “มีคำชี้แจง ปิดรายการ” หรือ “ส่งตรวจสอบเพิ่มเติม” ซึ่งแจ้งผู้บริหารและการเงิน และทุกการตัดสินอยู่ใน Audit Log</li>
+  <li>เกณฑ์ (เช่น เกณฑ์วงเงินจัดซื้อ 500,000 บาท ในตัวอย่าง) ตั้งค่าได้ ต้องยืนยันตามระเบียบพัสดุที่ใช้อยู่ และเป็นการตัดสินใจ D-08</li>
+  <li>คะแนนคุณภาพเหตุผลของคำขอ (FR-M09-06) คำนวณด้วยกฎที่โปร่งใส (ความยาว การระบุปัญหา ผู้ได้ประโยชน์ ตัวเลข และตัวชี้วัด) ไม่ใช้โมเดลภาษาตัดสินคะแนน ส่วนข้อเสนอแนะอาจให้ AG-02 ช่วยเรียบเรียง</li>
+</ul>
 </section>
 
 <!-- ============================== 10 ============================== -->
@@ -813,6 +898,8 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
   <li>Single Sign-On กับ Identity Provider ของหน่วยงาน (SAML 2.0 / OpenID Connect)</li>
   <li>Multi-Factor Authentication บังคับสำหรับผู้บริหาร กองแผนงาน การเงิน และผู้ดูแลระบบ</li>
   <li>Role-Based Access Control ผสานกับขอบเขตหน่วยงาน (ผู้ใช้เห็นเฉพาะข้อมูลของหน่วยงานตนและหน่วยงานใต้สังกัด)</li>
+  <li>ผู้ใช้ที่ยังไม่ได้ตั้งค่า MFA ต้องตั้งค่าก่อนเข้าใช้งาน และบัญชีที่ถูกระงับเข้าสู่ระบบไม่ได้ (FR-PL-01)</li>
+  <li>การมอบอำนาจจำกัดตามขอบเขตและช่วงวันที่ ผู้รับมอบทำได้เฉพาะรายการในขอบเขต ไม่เห็นข้อมูลเกินสิทธิ์ของตน และข้อเสนอสำหรับ Detailed Design คือไม่อนุญาตให้มอบต่อ (FR-PL-04)</li>
   <li>Session timeout เมื่อไม่ใช้งาน 30 นาที และยุติ Session เมื่อเปลี่ยนสิทธิ์</li>
   <li>บัญชีสิทธิ์สูงตรวจทานทุกไตรมาส และแยกหน้าที่ผู้ดูแลระบบกับผู้ใช้งานธุรกิจ</li>
 </ul>
@@ -826,17 +913,17 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
     <tr><td>สำนัก / กอง</td><td class="c mx-r">R</td><td class="c mx-u">CU</td><td class="c">–</td><td class="c mx-r">R</td><td class="c">–</td><td class="c mx-r">R</td><td class="c mx-u">U</td><td class="c mx-u">U</td><td class="c mx-u">U</td><td class="c">–</td></tr>
     <tr><td>การเงินและบัญชี</td><td class="c">–</td><td class="c mx-r">R</td><td class="c">–</td><td class="c">–</td><td class="c">–</td><td class="c mx-u">CU</td><td class="c mx-u">CU</td><td class="c">–</td><td class="c mx-u">U</td><td class="c">–</td></tr>
     <tr><td>คณะกรรมการ</td><td class="c">–</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-u">U</td><td class="c">–</td><td class="c">–</td><td class="c">–</td><td class="c">–</td><td class="c">–</td><td class="c">–</td></tr>
-    <tr><td>ผู้ตรวจสอบ</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c">–</td><td class="c mx-r">R</td></tr>
+    <tr><td>ผู้ตรวจสอบ</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-u">U</td><td class="c mx-r">R</td></tr>
     <tr><td>ผู้ดูแลระบบ</td><td class="c">–</td><td class="c">–</td><td class="c">–</td><td class="c">–</td><td class="c">–</td><td class="c">–</td><td class="c">–</td><td class="c">–</td><td class="c">–</td><td class="c mx-u">CU</td></tr>
   </tbody>
 </table></div>
-<p class="small">C = สร้าง · U = แก้ไข/ใช้งาน · R = อ่าน · A = อนุมัติ · – = ไม่มีสิทธิ์ ผู้ดูแลระบบไม่มีสิทธิ์เห็นหรือแก้ไขข้อมูลงบประมาณ</p>
+<p class="small">C = สร้าง · U = แก้ไข/ใช้งาน · R = อ่าน · A = อนุมัติ · – = ไม่มีสิทธิ์ ผู้ดูแลระบบไม่มีสิทธิ์เห็นหรือแก้ไขข้อมูลงบประมาณ · ผู้ตรวจสอบมีสิทธิ์ใช้งาน M09 เพื่อปิดหรือส่งตรวจต่อรายการผิดปกติ (FR-M09-05) ส่วนโมดูลอื่นยังอ่านอย่างเดียว</p>
 
 <h3><span class="num">10.3</span>การปกป้องข้อมูล</h3>
 <div class="tbl"><table>
   <thead><tr><th>ชั้นความลับ (เสนอ)</th><th>ตัวอย่าง</th><th>มาตรการ</th></tr></thead>
   <tbody>
-    <tr><td><span class="tag t-bad">ลับ</span></td><td>วงเงินระหว่างพิจารณา มติคณะกรรมการ ข้อมูลเงินเดือนรายบุคคล</td><td>จำกัดตามบทบาท ปกปิดใน UAT ไม่ส่งให้ AI แบบรายบุคคล</td></tr>
+    <tr><td><span class="tag t-bad">ลับ</span></td><td>วงเงินระหว่างพิจารณา มติคณะกรรมการ ข้อมูลเงินเดือนรายบุคคล ผลตรวจความผิดปกติที่ยังไม่ปิด</td><td>จำกัดตามบทบาท ปกปิดใน UAT ไม่ส่งให้ AI แบบรายบุคคล</td></tr>
     <tr><td><span class="tag t-warn">ใช้ภายใน</span></td><td>คำขอ แผนการใช้จ่าย ผลเบิกจ่าย</td><td>RBAC + ขอบเขตหน่วยงาน</td></tr>
     <tr><td><span class="tag t-could">เปิดเผยได้</span></td><td>งบประมาณที่ได้รับตามพระราชบัญญัติ ผลสัมฤทธิ์ที่เผยแพร่</td><td>เผยแพร่ได้หลังอนุมัติ</td></tr>
   </tbody>
@@ -849,6 +936,7 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
 
 <h3><span class="num">10.4</span>Audit และการตรวจจับ</h3>
 <ul>
+  <li>ทุกรายการหลักมีหน้าประวัติที่ดึงจาก Audit Log การทำงานของ AI เวอร์ชัน และความเห็น (FR-PL-03) และรายการที่ทำแทนผู้มอบอำนาจบันทึกทั้งชื่อผู้ทำและผู้มอบ</li>
   <li>บันทึกการเข้าสู่ระบบ การเปลี่ยนสิทธิ์ การสร้าง แก้ไข ส่ง อนุมัติ ส่งกลับ ปรับวงเงิน ส่งออกข้อมูล และการใช้ AI</li>
   <li>Audit Log จัดเก็บแบบเพิ่มอย่างเดียวและตรวจความครบถ้วนได้ ส่งต่อไปยัง SIEM ของหน่วยงาน</li>
   <li>แจ้งเตือนเหตุผิดปกติ เช่น เข้าสู่ระบบล้มเหลวต่อเนื่อง ส่งออกข้อมูลจำนวนมาก เข้าถึงนอกเวลาทำการ</li>
@@ -892,6 +980,8 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
     <tr><td class="id">NFR-US-01</td><td>Usability</td><td>รองรับเบราว์เซอร์ Chrome, Edge, Safari, Firefox รุ่นปัจจุบัน และหน้าจอมือถือ</td><td class="n">ทุกหน้าจอหลัก</td></tr>
     <tr><td class="id">NFR-US-02</td><td>Accessibility</td><td>การเข้าถึงสำหรับผู้ใช้ทุกกลุ่ม</td><td class="n">WCAG 2.1 AA</td></tr>
     <tr><td class="id">NFR-LC-01</td><td>Localization</td><td>ภาษาไทยเป็นหลัก ปี พ.ศ. และรูปแบบตัวเลขไทย</td><td class="n">ทุกหน้าจอและรายงาน</td></tr>
+    <tr><td class="id">NFR-SR-01</td><td>Search</td><td>เวลาแสดงผลค้นหากลาง (P90)</td><td class="n">≤ 1 วินาที</td></tr>
+    <tr><td class="id">NFR-NT-01</td><td>Notification</td><td>แจ้งเตือนในระบบหลังเกิดเหตุการณ์ และตรวจ SLA ทุกวันเวลา 07:00 น.</td><td class="n">≤ 1 นาที</td></tr>
   </tbody>
 </table></div>
 </section>
@@ -904,7 +994,7 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
   <thead><tr><th>ด้าน</th><th>แนวทาง</th></tr></thead>
   <tbody>
     <tr><td>Monitoring</td><td>ติดตามสถานะบริการ เวลาตอบสนอง ข้อผิดพลาด งานนำเข้าข้อมูล และค่าใช้จ่าย AI ต่อ Agent ผ่าน Dashboard ปฏิบัติการ</td></tr>
-    <tr><td>Backup</td><td>สำรองฐานข้อมูลเต็มรายวันและ Log ต่อเนื่อง สำรองไฟล์รายวัน เก็บสำเนานอกสถานที่ ทดสอบกู้คืนทุกไตรมาส</td></tr>
+    <tr><td>Backup</td><td>สำรองฐานข้อมูลเต็มรายวันและ Log ต่อเนื่อง สำรองไฟล์รายวัน เก็บสำเนานอกสถานที่ ทดสอบกู้คืนทุกไตรมาส สถานะการสำรอง ผลทดสอบกู้คืนล่าสุด และค่า RPO/RTO แสดงในหน้า M10 เก็บรักษาและสำรองข้อมูล</td></tr>
     <tr><td>Disaster Recovery</td><td>ซ้อมกู้ระบบปีละ 1 ครั้งตามเป้าหมาย RPO/RTO</td></tr>
     <tr><td>Release</td><td>ปล่อยรุ่นผ่าน DEV → SIT → UAT → PROD มีแผนย้อนกลับทุกครั้ง หลีกเลี่ยงช่วงใกล้กำหนดส่งคำขอ</td></tr>
     <tr><td>การเปลี่ยนปีงบประมาณ</td><td>เตรียมโครงสร้าง กฎ แบบฟอร์ม และปฏิทินของปีใหม่ล่วงหน้า ทดสอบใน UAT ก่อนเปิดรับคำขอ</td></tr>
@@ -941,6 +1031,7 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
   <li>Unit และ Integration Test อัตโนมัติในทุก build</li>
   <li>SIT ครอบคลุม Workflow ทุกเส้นทาง รวมการส่งกลับแก้ไขและการมอบอำนาจ</li>
   <li>UAT ด้วยสถานการณ์จริงของหน่วยงาน อย่างน้อย 1 รอบวงจรงบประมาณจำลอง</li>
+  <li>ทดสอบการแจ้งเตือน SLA และการยกระดับด้วยเวลาจำลอง รวมกรณีเลยกำหนดหลายวัน</li>
   <li>Performance Test ที่ผู้ใช้พร้อมกัน 150 คนตาม NFR-CP-02</li>
   <li>Security Test และ Penetration Test ตามบท 10.6</li>
   <li>AI Evaluation ด้วยชุดคำถามรับรองตามบท 9.5</li>
@@ -968,6 +1059,8 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
     <tr><td>ข้อมูลย้อนหลังไม่สมบูรณ์หรือรหัสไม่ตรงกัน</td><td><span class="tag t-warn">ปานกลาง</span></td><td>ประเมินข้อมูลตั้งแต่ต้น ใช้ Cross-year mapping กระทบยอดกับรายงานรับรอง</td></tr>
     <tr><td>Go-Live ตรงกับช่วงจัดทำคำขอ</td><td><span class="tag t-bad">สูง</span></td><td>วางแผน Go-Live ก่อนเปิดรับคำขอของปีถัดไปอย่างน้อย 1 เดือน</td></tr>
     <tr><td>ผู้ใช้ไม่เชื่อถือผลจาก AI</td><td><span class="tag t-should">ต่ำ</span></td><td>แสดงแหล่งอ้างอิงทุกคำตอบ เริ่มจาก Use case อ่านอย่างเดียว</td></tr>
+    <tr><td>ผู้ใช้เข้าใจว่า AI ที่ตรวจความผิดปกติกำลังกล่าวหาหน่วยงาน</td><td><span class="tag t-warn">ปานกลาง</span></td><td>สื่อสารว่าเป็น “รายการที่ควรตรวจ” พร้อมหลักฐาน ผู้ตรวจสอบเป็นผู้ตัดสิน เกณฑ์ตั้งค่าได้ และมีช่องทางชี้แจง</td></tr>
+    <tr><td>การมอบอำนาจถูกใช้เกินขอบเขตหรือเกินช่วงเวลา</td><td><span class="tag t-warn">ปานกลาง</span></td><td>จำกัดขอบเขตและวันที่ในระบบ แสดงและบันทึก “ทำแทน” ทุกรายการ แจ้งผู้มอบ และให้ผู้ตรวจสอบเรียกดูได้</td></tr>
   </tbody>
 </table></div>
 
@@ -981,6 +1074,9 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
     <tr><td class="id">D-04</td><td>จำนวนรอบการกลั่นกรองและผู้พิจารณา</td><td>ตามโครงสร้างองค์กรจริง</td><td>กองแผนงาน</td></tr>
     <tr><td class="id">D-05</td><td>ปีย้อนหลังที่ต้องย้ายข้อมูล</td><td>3 ปี / 5 ปี</td><td>กองแผนงาน</td></tr>
     <tr><td class="id">D-06</td><td>แบบฟอร์มและรายงานที่ใช้จริง</td><td>รายการแบบฟอร์มและรายงานผู้บริหาร</td><td>กองแผนงาน</td></tr>
+    <tr><td class="id">D-07</td><td>ช่องทางแจ้งเตือนนอกจากในระบบและอีเมล</td><td>เฉพาะในระบบและอีเมล / เพิ่ม LINE หรือช่องทางอื่น (IF-08)</td><td>ฝ่าย IT, DPO</td></tr>
+    <tr><td class="id">D-08</td><td>เกณฑ์ความผิดปกติและเป้าหมายเบิกจ่ายรายไตรมาส</td><td>ค่าเริ่มต้นจากระเบียบพัสดุและมติคณะรัฐมนตรีของปีนั้น</td><td>ผู้ตรวจสอบ กองแผนงาน การเงิน</td></tr>
+    <tr><td class="id">D-09</td><td>ขอบเขตที่มอบอำนาจได้ และการมอบต่อ</td><td>รายการอนุมัติที่มอบได้ตามระเบียบ / ห้ามมอบต่อ</td><td>ผู้บริหาร ฝ่ายกฎหมาย</td></tr>
   </tbody>
 </table></div>
 </section>
@@ -998,6 +1094,11 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
     <tr><td>คำขอผูกพันข้ามปี</td><td>รายการที่ใช้งบประมาณต่อเนื่องมากกว่าหนึ่งปีงบประมาณ</td></tr>
     <tr><td>โอนเปลี่ยนแปลง</td><td>การปรับวงเงินระหว่างรายการหรือโครงการตามระเบียบ</td></tr>
     <tr><td>RAG</td><td>การค้นคืนเอกสารที่เกี่ยวข้องแล้วให้โมเดลตอบโดยอ้างอิงเอกสารนั้น</td></tr>
+    <tr><td>คลังโครงการ (Project Bank)</td><td>รายการแนวคิดโครงการที่ยังไม่เป็นคำขอ ใช้คัดกรองและให้คะแนนก่อนเข้าสู่การจัดทำคำขอ</td></tr>
+    <tr><td>งวดเงิน</td><td>การอนุมัติให้ใช้เงินงบประมาณเป็นรายงวด (ไตรมาส) ตามแผนการใช้จ่าย</td></tr>
+    <tr><td>เงินกันเหลื่อมปี</td><td>เงินงบประมาณที่ก่อหนี้ผูกพันแล้วแต่เบิกจ่ายไม่ทันสิ้นปีงบประมาณ และขอกันไว้เบิกในปีถัดไปตามเงื่อนไข</td></tr>
+    <tr><td>แปรญัตติ</td><td>ขั้นตอนที่หน่วยรับงบประมาณขอคืนงบประมาณที่คณะกรรมาธิการปรับลดระหว่างพิจารณาร่าง พ.ร.บ.</td></tr>
+    <tr><td>Logframe</td><td>กรอบเชื่อมปัจจัยนำเข้า กิจกรรม ผลผลิต และผลลัพธ์ของโครงการ ใช้ในการประเมินโครงการ</td></tr>
     <tr><td>RPO / RTO</td><td>ข้อมูลที่ยอมให้สูญหายได้สูงสุด / เวลาที่ใช้กู้ระบบให้กลับมาใช้งาน</td></tr>
   </tbody>
 </table></div>
@@ -1006,16 +1107,17 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
 <div class="tbl"><table>
   <thead><tr><th>โมดูล</th><th class="n">Must</th><th class="n">Should</th><th class="n">Could</th><th>บทที่เกี่ยวข้อง</th></tr></thead>
   <tbody>
-    <tr><td>M01 Strategic Planning</td><td class="n">4</td><td class="n">1</td><td class="n">0</td><td>3, 4.1, 7</td></tr>
-    <tr><td>M02 Budget Preparation</td><td class="n">7</td><td class="n">2</td><td class="n">0</td><td>4.2, 5, 9</td></tr>
-    <tr><td>M03 Budget Consolidation</td><td class="n">3</td><td class="n">2</td><td class="n">0</td><td>4.3</td></tr>
-    <tr><td>M04 Review &amp; Approval</td><td class="n">5</td><td class="n">1</td><td class="n">0</td><td>3.3, 4.4, 7.3</td></tr>
-    <tr><td>M05 Budget Submission</td><td class="n">3</td><td class="n">1</td><td class="n">0</td><td>4.5, 8</td></tr>
-    <tr><td>M06 Budget Allocation</td><td class="n">4</td><td class="n">0</td><td class="n">0</td><td>4.6</td></tr>
-    <tr><td>M07 Execution &amp; Monitoring</td><td class="n">4</td><td class="n">1</td><td class="n">0</td><td>4.7, 8</td></tr>
-    <tr><td>M08 Budget Performance</td><td class="n">2</td><td class="n">1</td><td class="n">0</td><td>4.8</td></tr>
-    <tr><td>M09 Budget Intelligence</td><td class="n">1</td><td class="n">2</td><td class="n">1</td><td>9</td></tr>
-    <tr><td>M10 System Administration</td><td class="n">6</td><td class="n">0</td><td class="n">0</td><td>4.10, 10</td></tr>
+    <tr><td>M01 Strategic Planning</td><td class="n">4</td><td class="n">3</td><td class="n">0</td><td>3, 4.1, 7</td></tr>
+    <tr><td>M02 Budget Preparation</td><td class="n">7</td><td class="n">4</td><td class="n">0</td><td>4.2, 5, 9</td></tr>
+    <tr><td>M03 Budget Consolidation</td><td class="n">3</td><td class="n">4</td><td class="n">0</td><td>4.3</td></tr>
+    <tr><td>M04 Review &amp; Approval</td><td class="n">5</td><td class="n">2</td><td class="n">1</td><td>3.3, 4.4, 7.3</td></tr>
+    <tr><td>M05 Budget Submission</td><td class="n">3</td><td class="n">2</td><td class="n">0</td><td>4.5, 8</td></tr>
+    <tr><td>M06 Budget Allocation</td><td class="n">4</td><td class="n">2</td><td class="n">0</td><td>4.6</td></tr>
+    <tr><td>M07 Execution &amp; Monitoring</td><td class="n">4</td><td class="n">2</td><td class="n">1</td><td>4.7, 8</td></tr>
+    <tr><td>M08 Budget Performance</td><td class="n">2</td><td class="n">2</td><td class="n">0</td><td>4.8</td></tr>
+    <tr><td>M09 Budget Intelligence</td><td class="n">1</td><td class="n">3</td><td class="n">2</td><td>9</td></tr>
+    <tr><td>M10 System Administration</td><td class="n">6</td><td class="n">2</td><td class="n">0</td><td>4.10, 10</td></tr>
+    <tr><td>PL ความสามารถร่วมของแพลตฟอร์ม</td><td class="n">4</td><td class="n">1</td><td class="n">0</td><td>4.11, 10.1</td></tr>
   </tbody>
 </table></div>
 
@@ -1025,6 +1127,7 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
   <tbody>
     <tr><td>0.1</td><td>ตุลาคม 2569</td><td>Conceptual Design</td></tr>
     <tr><td>0.2</td><td>16 ตุลาคม 2569</td><td>Solution Design ฉบับร่างเพื่อการหารือ ครอบคลุมฟังก์ชัน แอปพลิเคชัน สถาปัตยกรรม ข้อมูล การเชื่อมต่อ AI และความมั่นคงปลอดภัย</td></tr>
+    <tr><td>0.3</td><td>16 ตุลาคม 2569</td><td>เพิ่มข้อกำหนดจากต้นแบบรอบที่ 7–10: คลังโครงการ ทบทวนแผน ตอบรับกรอบวงเงิน ประมาณการล่วงหน้า การชี้แจงงบประมาณ ผลกระทบของการปรับลด ขั้นตอนรัฐสภา งวดเงิน กันเงินเหลื่อมปี คาดการณ์สิ้นปี ขั้นตอนจัดซื้อจัดจ้าง ประเมินโครงการ ความผิดปกติการใช้จ่าย คุณภาพเหตุผล แม่แบบแจ้งเตือนและ SLA การเก็บรักษาข้อมูล และความสามารถร่วม (เข้าสู่ระบบ ค้นหา ประวัติ การมอบอำนาจ) พร้อมประเด็นตัดสินใจ D-07 ถึง D-09</td></tr>
   </tbody>
 </table></div>
 </section>

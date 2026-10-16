@@ -216,6 +216,6 @@ function buildOrg(cfg) {
     { id: "R4", cls: ["บันทึกการทำงานของ AI", "AI activity log"], years: 2, basis: ["การกำกับดูแล AI", "AI governance"], size: 1.1 },
     { id: "R5", cls: ["ประวัติการสนทนากับผู้ช่วย AI", "AI assistant chats"], years: 1, basis: ["PDPA · เก็บเท่าที่จำเป็น", "PDPA · keep only what is needed"], size: 0.6 },
   ];
-  s.backup = { full: "2026-10-12T01:00", incr: "2026-10-16T01:00", restore: "2026-07-20T10:00", rpo: 24, rto: 4, log: [] };
+  s.backup = { full: "2026-10-12T01:00", incr: "2026-10-16T01:00", restore: "2026-07-20T10:00", rpo: 1, rto: 4, log: [] };
   return s;
 }
