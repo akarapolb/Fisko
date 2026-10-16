@@ -2,7 +2,8 @@
 // whole request, then send it back or forward. Requesters see the comments and mark them resolved.
 let CMT_OPEN = null; // index of the line whose comment box is open
 const lineKey = it => it.type + "|" + nameKey(it.name);
-const canReview = r => (ROLE === "plan" && r.status === "plan") || (ROLE === "exec" && r.status === "committee");
+const canReview = r => (r.status === "plan" && acting("plan", "review")) || (r.status === "committee" && acting("exec", "committee"));
+const reviewBy = r => (r.status === "plan" ? onBehalf("plan", "review") : onBehalf("exec", "committee"));
 const openComments = r => (r.comments || []).filter(c => !c.resolved);
 
 function cmtHtml(r, c) {
@@ -28,7 +29,7 @@ function generalComments(r) {
 function reviewButtons(r) {
   if (!canReview(r)) return "";
   return `<button class="btn danger" type="button" id="rv-return">${L("ส่งกลับแก้ไข", "Return for revision")}</button>
-    <button class="btn primary" type="button" id="rv-pass">${ROLE === "exec" ? L("เห็นชอบคำขอ", "Approve request") : L("ผ่านการกลั่นกรอง · เสนอต่อ", "Pass review · send on")}</button>`;
+    <button class="btn primary" type="button" id="rv-pass">${r.status === "committee" ? L("เห็นชอบคำขอ", "Approve request") : L("ผ่านการกลั่นกรอง · เสนอต่อ", "Pass review · send on")}${reviewBy(r) ? ` (${L("แทน", "on behalf")})` : ""}</button>`;
 }
 function addComment(r, line, text) {
   r.comments = r.comments || [];
@@ -63,16 +64,17 @@ function bindReviewMode(r) {
   const ret = $("#rv-return");
   if (ret) ret.onclick = () => {
     if (!openComments(r).length) { toast(L("ใส่ความเห็นอย่างน้อย 1 ข้อก่อนส่งกลับ เพื่อให้ผู้จัดทำรู้ว่าต้องแก้อะไร", "Add at least one comment first so the requester knows what to fix")); return; }
+    const by = reviewBy(r);
     r.status = "returned"; r.updated = TODAY;
-    audit(["ส่งคำขอกลับแก้ไข", "Returned a request for revision"], r.id);
+    audit(["ส่งคำขอกลับแก้ไข", "Returned a request for revision"], r.id + by);
     notify(["div"], [`คำขอ ${r.id} ถูกส่งกลับแก้ไข มีความเห็น ${openComments(r).length} ข้อ`, `Request ${r.id} was returned with ${openComments(r).length} comments`], "requests");
     commit(); renderShell(); route(); toast(L("ส่งกลับแก้ไขแล้ว · แจ้งผู้จัดทำในระบบและอีเมล", "Returned · requester notified in-app and by email"));
   };
   const pass = $("#rv-pass");
   if (pass) pass.onclick = () => {
-    const toCommittee = ROLE === "plan";
+    const toCommittee = r.status === "plan", by = reviewBy(r);
     r.status = toCommittee ? "committee" : "approved"; r.updated = TODAY;
-    audit(toCommittee ? ["ผ่านการกลั่นกรองและเสนอคณะกรรมการ", "Passed review and sent to the committee"] : ["เห็นชอบคำขอ", "Approved a request"], r.id);
+    audit(toCommittee ? ["ผ่านการกลั่นกรองและเสนอคณะกรรมการ", "Passed review and sent to the committee"] : ["เห็นชอบคำขอ", "Approved a request"], r.id + by);
     notify(toCommittee ? ["exec"] : ["plan", "div"], toCommittee ? [`คำขอ ${r.id} เข้าวาระคณะกรรมการ`, `Request ${r.id} is on the committee agenda`] : [`ผู้บริหารเห็นชอบคำขอ ${r.id}`, `Request ${r.id} was approved`], toCommittee ? "review" : "requests");
     commit(); renderShell(); route(); toast(toCommittee ? L("เสนอคณะกรรมการแล้ว", "Sent to the committee") : L("เห็นชอบแล้ว · พร้อมรวมในชุดส่งสำนักงบประมาณ", "Approved · ready for the Budget Bureau package"));
   };

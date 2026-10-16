@@ -101,5 +101,15 @@ function buildOrg(cfg) {
     { t: "2026-10-14T16:05", agent: "AG-06", user: U("exec"), action: ["ตอบคำถามผู้บริหาร", "Answered an executive question"], target: "M09", sources: 2, ok: true },
     { t: "2026-10-14T16:07", agent: "AG-06", user: U("div"), action: ["ปฏิเสธคำถามที่เกินสิทธิ์ข้อมูล", "Declined a question beyond data permissions"], target: "M09", sources: 0, ok: false },
   ];
+
+  // round 7: delegation of authority — the executive is travelling and has delegated transfer approvals
+  s.delegations = [
+    { id: "D-2570-001", from: U("exec"), to: U("plan"), scopes: ["transfer"], start: "2026-10-14", end: "2026-10-24", status: "active", t: "2026-10-13T17:00",
+      why: ["เดินทางไปราชการต่างประเทศ", "Official travel abroad"] },
+    { id: "D-2569-014", from: U("fin"), to: (s.users.find(u => u.role === "fin" && !u.primary) || s.users.find(u => u.role === "plan" && !u.primary) || { id: U("plan") }).id, scopes: ["transfer"], start: "2026-08-01", end: "2026-08-05", status: "active", t: "2026-07-30T09:00",
+      why: ["ลาพักผ่อน", "Annual leave"] },
+  ];
+  s.audit.unshift({ t: "2026-10-13T17:00", user: U("exec"), role: "exec", action: ["มอบอำนาจ", "Delegated authority"], target: "D-2570-001" });
+  return s;
   return s;
 }

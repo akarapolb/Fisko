@@ -28,7 +28,7 @@ const fyLabel = fy => L(`ปีงบประมาณ พ.ศ. ${fy}`, `FY${fy
 
 // ---------- organizations and state ----------
 const SEEDS = {}; // id -> { name: [th, en], seed: () => state }, registered by data files
-const DATA_V = 5; // bump when the seed shape changes so saved demo state is reseeded
+const DATA_V = 6; // bump when the seed shape changes so saved demo state is reseeded
 let ORG = "sample";
 let S = null;
 const key = () => "fisko-v1-" + ORG;
@@ -57,7 +57,15 @@ const ROLES = {
   admin: ["ผู้ดูแลระบบ", "System Administrator"],
 };
 let ROLE = ROLES[store.get("fisko-role")] ? store.get("fisko-role") : "plan";
-const me = () => S.users.find(u => u.role === ROLE && u.primary) || S.users.find(u => u.role === ROLE) || S.users[0];
+// Signed-in session (round 7). The role switcher still works as a demo shortcut: it moves the session
+// to that role's demo user. me() is the signed-in user when their role matches the current role.
+let SESSION = null;
+try { SESSION = JSON.parse(store.get("fisko-session") || "null"); } catch (e) { SESSION = null; }
+const me = () => {
+  const su = SESSION && S && S.users.find(u => u.id === SESSION.user);
+  if (su && su.role === ROLE) return su;
+  return S.users.find(u => u.role === ROLE && u.primary) || S.users.find(u => u.role === ROLE) || S.users[0];
+};
 const unitOf = id => S.units.find(u => u.id === id) || { name: ["-", "-"] };
 const unitName = id => tx(unitOf(id).name);
 const userName = id => tx((S.users.find(u => u.id === id) || { name: ["-", "-"] }).name);
@@ -101,7 +109,8 @@ function route() {
   CUR = v;
   const n = NAV.find(x => x.id === v) || (v === "request" ? NAV.find(x => x.id === "requests") : null);
   $$("#nav a").forEach(a => a.classList.toggle("on", n && a.dataset.v === n.id));
-  $("#crumb").innerHTML = `${esc(tx(S.org))} · <b>${n ? tx(n.label) : v === "demo" ? L("คู่มือการสาธิต", "Demo guide") : ""}</b>`;
+  const extra = { demo: ["คู่มือการสาธิต", "Demo guide"], delegation: ["การมอบอำนาจ", "Delegation of authority"] };
+  $("#crumb").innerHTML = `${esc(tx(S.org))} · <b>${n ? tx(n.label) : extra[v] ? tx(extra[v]) : ""}</b>`;
   const view = $("#view");
   if (n && !n.roles.includes(ROLE)) {
     view.innerHTML = `<div class="panel"><div class="body"><h2 style="margin:0 0 6px">${L("ไม่มีสิทธิ์เข้าถึง", "No access")}</h2>

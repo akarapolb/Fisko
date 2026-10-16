@@ -37,6 +37,7 @@
 
 * { box-sizing: border-box; }
 html, body { height: 100%; }
+[hidden] { display: none !important; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--font); }
 button, input, select, textarea { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
@@ -403,6 +404,55 @@ input[type="file"] { max-width: 100%; min-width: 0; }
 .kpi.hl { background: var(--hl); border-color: var(--hl); }
 .welcome, .ai-box, .chain-card.impact { background: var(--hl); }
 .panel > .body .callout, .msg.u { background: var(--hl); }
+
+/* ---------- round 7: global search, user menu, history drawer, sign-in ---------- */
+.gsearch { position: relative; flex: 0 1 260px; min-width: 0; }
+.gsearch input { width: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font: inherit; font-size: 13.5px; color: var(--ink); }
+.spanel { position: absolute; top: calc(100% + 6px); right: 0; width: min(420px, calc(100vw - 32px)); max-height: 60vh; overflow: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 16px 40px rgba(10, 11, 34, .22); z-index: 31; padding: 6px; }
+.sgroup { font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 8px 8px 4px; display: flex; gap: 6px; }
+.sitem { padding: 7px 8px; border-radius: 8px; cursor: pointer; display: flex; flex-direction: column; min-width: 0; }
+.sitem b { font-weight: 600; font-size: 14px; overflow-wrap: anywhere; }
+.sitem small { color: var(--muted); font-size: 12.5px; overflow-wrap: anywhere; }
+.sitem:hover, .sitem.on { background: var(--surface-2); }
+.sitem.on { box-shadow: inset 3px 0 0 var(--accent); }
+.userchip { padding: 3px; border-radius: 99px; }
+.avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--info-soft); color: var(--info); display: grid; place-items: center; font-weight: 700; font-size: 13px; flex: none; }
+.umenu .nitem[tabindex] { cursor: pointer; }
+.hist-btn { padding: 1px 8px; font-size: 12px; margin-left: 4px; vertical-align: middle; }
+.hdrawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(440px, 100vw); background: var(--surface); border-left: 1px solid var(--line); box-shadow: -16px 0 40px rgba(10, 11, 34, .2); z-index: 40; display: flex; flex-direction: column;
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); padding-right: env(safe-area-inset-right, 0px); }
+.hdrawer header { display: flex; align-items: flex-start; gap: 8px; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+.hdrawer header b { display: block; font-size: 16px; overflow-wrap: anywhere; }
+.h-body { padding: 16px 18px; overflow: auto; flex: 1; }
+.h-body .timeline .sub { overflow-wrap: anywhere; }
+.signin { position: fixed; inset: 0; z-index: 50; background: var(--rail); display: grid; place-items: center; overflow: auto;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background-image: radial-gradient(circle at 15% 10%, var(--rail-2), transparent 55%); }
+.si-card { width: min(480px, 100%); background: var(--surface); border-radius: 16px; padding: 26px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 24px 60px rgba(0, 0, 0, .35); min-width: 0; }
+.si-card h2 { margin: 0; font-size: 22px; }
+.si-brand { display: flex; align-items: center; gap: 10px; }
+.si-brand small { display: block; color: var(--muted); font-size: 12.5px; }
+.si-foot { border-top: 1px solid var(--line); padding-top: 12px; margin: 0; font-size: 12.5px; }
+.acc-list { display: flex; flex-direction: column; gap: 6px; max-height: 46vh; overflow: auto; }
+.acc { display: flex; align-items: center; gap: 10px; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; cursor: pointer; font: inherit; color: var(--ink); }
+.acc:hover { border-color: var(--accent); background: var(--surface-2); }
+.acc > span:nth-child(2) { flex: 1; min-width: 0; }
+.acc b { display: block; font-weight: 600; }
+.acc small { display: block; color: var(--muted); font-size: 12.5px; }
+.acc.off { opacity: .55; }
+.sso-wait { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 24px 0; text-align: center; color: var(--ink-2); }
+.spinner { width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--accent); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.mfa { display: flex; flex-direction: column; gap: 10px; }
+.qr { display: grid; grid-template-columns: repeat(11, 8px); gap: 1px; padding: 8px; background: #fff; border: 1px solid var(--line); border-radius: 8px; flex: none; }
+.qr i { width: 8px; height: 8px; background: #fff; }
+.qr i.on { background: #10112B; }
+@media (max-width: 860px) {
+  .gsearch { flex-basis: 100%; order: 10; }
+  .spanel { width: 100%; left: 0; right: auto; }
+  .si-card { padding: 20px; }
+}
+td.mono { white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -416,17 +466,22 @@ input[type="file"] { max-width: 100%; min-width: 0; }
     <div class="top" id="top">
       <div class="crumb" id="crumb"></div>
       <div class="sp"></div>
+      <div class="gsearch"><input type="search" id="gsearch" autocomplete="off" aria-label="Search" aria-controls="spanel" aria-expanded="false"><div class="spanel" id="spanel" role="listbox" hidden></div></div>
       <span class="sample" id="sample-tag"></span>
       <select id="org" class="orgsel" aria-label="Organization"></select>
       <div class="seg" role="group" aria-label="Language"><button type="button" data-lang="th">TH</button><button type="button" data-lang="en">EN</button></div>
       <select id="role" aria-label="Role"></select>
       <button class="iconbtn" id="bell" type="button" aria-haspopup="true" aria-expanded="false"><span id="bell-label"></span><span class="cnt" id="bell-cnt" hidden></span></button>
       <button class="iconbtn" id="theme" type="button"></button>
+      <button class="iconbtn userchip" id="userchip" type="button" aria-haspopup="true" aria-expanded="false"></button>
     </div>
     <div class="npanel" id="npanel" hidden></div>
+    <div class="npanel umenu" id="umenu" hidden></div>
     <main class="view" id="view"></main>
   </div>
 </div>
+<aside class="hdrawer" id="hdrawer" hidden aria-label="History"></aside>
+<div class="signin" id="signin" hidden></div>
 <div class="toast" id="toast" hidden></div>
 <script>
 
@@ -461,7 +516,7 @@ const fyLabel = fy => L(`ปีงบประมาณ พ.ศ. ${fy}`, `FY${fy
 
 // ---------- organizations and state ----------
 const SEEDS = {}; // id -> { name: [th, en], seed: () => state }, registered by data files
-const DATA_V = 5; // bump when the seed shape changes so saved demo state is reseeded
+const DATA_V = 6; // bump when the seed shape changes so saved demo state is reseeded
 let ORG = "sample";
 let S = null;
 const key = () => "fisko-v1-" + ORG;
@@ -490,7 +545,15 @@ const ROLES = {
   admin: ["ผู้ดูแลระบบ", "System Administrator"],
 };
 let ROLE = ROLES[store.get("fisko-role")] ? store.get("fisko-role") : "plan";
-const me = () => S.users.find(u => u.role === ROLE && u.primary) || S.users.find(u => u.role === ROLE) || S.users[0];
+// Signed-in session (round 7). The role switcher still works as a demo shortcut: it moves the session
+// to that role's demo user. me() is the signed-in user when their role matches the current role.
+let SESSION = null;
+try { SESSION = JSON.parse(store.get("fisko-session") || "null"); } catch (e) { SESSION = null; }
+const me = () => {
+  const su = SESSION && S && S.users.find(u => u.id === SESSION.user);
+  if (su && su.role === ROLE) return su;
+  return S.users.find(u => u.role === ROLE && u.primary) || S.users.find(u => u.role === ROLE) || S.users[0];
+};
 const unitOf = id => S.units.find(u => u.id === id) || { name: ["-", "-"] };
 const unitName = id => tx(unitOf(id).name);
 const userName = id => tx((S.users.find(u => u.id === id) || { name: ["-", "-"] }).name);
@@ -534,7 +597,8 @@ function route() {
   CUR = v;
   const n = NAV.find(x => x.id === v) || (v === "request" ? NAV.find(x => x.id === "requests") : null);
   $$("#nav a").forEach(a => a.classList.toggle("on", n && a.dataset.v === n.id));
-  $("#crumb").innerHTML = `${esc(tx(S.org))} · <b>${n ? tx(n.label) : v === "demo" ? L("คู่มือการสาธิต", "Demo guide") : ""}</b>`;
+  const extra = { demo: ["คู่มือการสาธิต", "Demo guide"], delegation: ["การมอบอำนาจ", "Delegation of authority"] };
+  $("#crumb").innerHTML = `${esc(tx(S.org))} · <b>${n ? tx(n.label) : extra[v] ? tx(extra[v]) : ""}</b>`;
   const view = $("#view");
   if (n && !n.roles.includes(ROLE)) {
     view.innerHTML = `<div class="panel"><div class="body"><h2 style="margin:0 0 6px">${L("ไม่มีสิทธิ์เข้าถึง", "No access")}</h2>
@@ -750,6 +814,16 @@ function buildOrg(cfg) {
     { t: "2026-10-14T16:05", agent: "AG-06", user: U("exec"), action: ["ตอบคำถามผู้บริหาร", "Answered an executive question"], target: "M09", sources: 2, ok: true },
     { t: "2026-10-14T16:07", agent: "AG-06", user: U("div"), action: ["ปฏิเสธคำถามที่เกินสิทธิ์ข้อมูล", "Declined a question beyond data permissions"], target: "M09", sources: 0, ok: false },
   ];
+
+  // round 7: delegation of authority — the executive is travelling and has delegated transfer approvals
+  s.delegations = [
+    { id: "D-2570-001", from: U("exec"), to: U("plan"), scopes: ["transfer"], start: "2026-10-14", end: "2026-10-24", status: "active", t: "2026-10-13T17:00",
+      why: ["เดินทางไปราชการต่างประเทศ", "Official travel abroad"] },
+    { id: "D-2569-014", from: U("fin"), to: (s.users.find(u => u.role === "fin" && !u.primary) || s.users.find(u => u.role === "plan" && !u.primary) || { id: U("plan") }).id, scopes: ["transfer"], start: "2026-08-01", end: "2026-08-05", status: "active", t: "2026-07-30T09:00",
+      why: ["ลาพักผ่อน", "Annual leave"] },
+  ];
+  s.audit.unshift({ t: "2026-10-13T17:00", user: U("exec"), role: "exec", action: ["มอบอำนาจ", "Delegated authority"], target: "D-2570-001" });
+  return s;
   return s;
 }
 
@@ -1302,11 +1376,14 @@ function renderShell() {
   org.innerHTML = orgs.map(o => `<option value="${o}" ${o === ORG ? "selected" : ""}>${esc(tx(SEEDS[o].name))}</option>`).join("");
   org.hidden = orgs.length < 2;
   $("#role").innerHTML = Object.keys(ROLES).map(r => `<option value="${r}" ${r === ROLE ? "selected" : ""}>${tx(ROLES[r])}</option>`).join("");
-  $$(".seg button").forEach(b => b.classList.toggle("on", b.dataset.lang === LANG));
+  $$("#top .seg button").forEach(b => b.classList.toggle("on", b.dataset.lang === LANG));
   $("#bell-label").textContent = L("แจ้งเตือน", "Alerts");
   $("#theme").textContent = L("ธีม", "Theme");
+  $("#gsearch").placeholder = L("ค้นหา (Ctrl+K)", "Search (Ctrl+K)");
+  renderUserChip();
   updateBell();
   $("#npanel").hidden = true;
+  $("#umenu").hidden = true;
 }
 
 function updateBell() {
@@ -1355,8 +1432,17 @@ VIEWS.soon = n => `
 
 function bindShell() {
   $("#org").onchange = e => { ORG = e.target.value; store.set("fisko-org", ORG); load(); resetUi(); renderShell(); go("home"); toast(tx(SEEDS[ORG].name)); };
-  $$(".seg button").forEach(b => b.onclick = () => { LANG = b.dataset.lang; store.set("fisko-lang", LANG); renderShell(); route(); });
-  $("#role").onchange = e => { ROLE = e.target.value; store.set("fisko-role", ROLE); renderShell(); route(); toast(`${L("สลับเป็นบทบาท", "Switched to")} ${tx(ROLES[ROLE])} · ${tx(me().name)}`); };
+  $$("#top .seg button").forEach(b => b.onclick = () => { LANG = b.dataset.lang; store.set("fisko-lang", LANG); renderShell(); route(); });
+  $("#role").onchange = e => {
+    ROLE = e.target.value; store.set("fisko-role", ROLE);
+    if (SESSION) { SESSION.user = me().id; store.set("fisko-session", JSON.stringify(SESSION)); }
+    renderShell(); route(); toast(`${L("สลับเป็นบทบาท", "Switched to")} ${tx(ROLES[ROLE])} · ${tx(me().name)}`);
+  };
+  $("#userchip").onclick = e => { e.stopPropagation(); toggleNotes(false); toggleUserMenu(); };
+  document.addEventListener("click", e => { if (!$("#umenu").hidden && !e.target.closest("#umenu")) toggleUserMenu(false); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#umenu").hidden) { toggleUserMenu(false); $("#userchip").focus(); } });
+  bindSearch();
+  bindHistory();
   $("#bell").onclick = e => { e.stopPropagation(); toggleNotes(); };
   document.addEventListener("click", e => { if (!$("#npanel").hidden && !e.target.closest("#npanel")) toggleNotes(false); });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#npanel").hidden) { toggleNotes(false); $("#bell").focus(); } });
@@ -1418,6 +1504,10 @@ function myTasks() {
     R(L("ติดตามหน่วยงานที่เบิกจ่ายต่ำกว่าแผน", "Follow up units behind their spending plan"), "", TODAY, "mon-alerts", "p-bad");
     if (S.perf.report && S.perf.report.sent) R(L("อ่านรายงานประเมินผลกลางปี", "Read the mid-year evaluation report"), "", TODAY, "perf-report", "p-info");
   }
+  // Delegated work (round 7): cross-unit transfers this user may approve on an executive's behalf.
+  const dg = ROLE !== "exec" && delegFor("exec", "transfer");
+  if (dg) Object.values(S.allocs).forEach(A => A.transfers.filter(x => x.status === "pending").forEach(x => { const a = A.lines.find(l => l.id === x.from), b = A.lines.find(l => l.id === x.to);
+    if (a.type !== b.type || a.unit !== b.unit) R(`${L("อนุมัติการโอนเปลี่ยนแปลงแทนผู้บริหาร", "Approve budget transfer for the executive")} ${x.id}`, `${mb(x.amount)} ${L("ลบ.", "M")} · ${L("ตามหนังสือมอบอำนาจ", "under delegation")} ${dg.id}`, dg.end, "alloc-transfers", "p-warn"); }));
   if (ROLE === "fin") {
     const open = S.gfmis.filter(g => !g.ok).length;
     if (open) R(L("กระทบยอดผลเบิกจ่ายกับ GFMIS", "Reconcile disbursement with GFMIS"), `${open} ${L("รายการไม่ตรง", "rows differ")}`, TODAY, "mon-import", "p-warn");
@@ -1841,7 +1931,7 @@ VIEWS.request = () => {
   <div class="head"><div><div class="eyebrow">M02 · Budget Preparation · <span class="mono">${r.id}</span></div>
     ${ed ? `<input type="text" id="rname" value="${esc(tx(r.name))}" aria-label="${L("ชื่อโครงการ", "Project name")}" style="font-size:22px;font-weight:700;width:min(640px,100%)">` : `<h1>${esc(tx(r.name))}</h1>`}
     <div class="row" style="margin-top:8px">${pill(r.status)}<span class="sub">${unitName(r.unit)}${r.multi ? " · " + L("คำขอผูกพันต่อเนื่อง 2 ปี (2571–2572)", "2-year commitment (2571–2572)") : ""}</span></div></div>
-    <div class="sp"></div><div class="row"><button class="btn" type="button" onclick="go('requests')">${L("กลับรายการ", "Back to list")}</button>${reviewButtons(r)}
+    <div class="sp"></div><div class="row"><button class="btn" type="button" onclick="go('requests')">${L("กลับรายการ", "Back to list")}</button>${historyBtn(r.id, r.id)}${reviewButtons(r)}
       ${ed ? `<button class="btn" type="button" id="save">${L("บันทึกร่าง", "Save draft")}</button><button class="btn primary" type="button" id="submit">${L("ส่งให้กองแผนงาน", "Send to Planning")}</button>` : ""}</div></div>
   ${ed ? "" : `<div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("โหมดดูอย่างเดียว", "View only")}</b><p>${ROLE !== "div" ? L("แก้ไขได้เฉพาะผู้จัดทำคำขอของหน่วยงาน", "Only the requesting unit can edit") : L("คำขอนี้ส่งแล้วหรือไม่ใช่ของหน่วยงานคุณ", "This request is submitted or belongs to another unit")}</p></div></div>`}
   <div class="hier" aria-label="${L("โครงสร้างงบประมาณ", "Budget structure")}"><span>${fyLabel(2571)}</span><em>›</em><span>${esc(tx(S.org))}</span>${lin.map(n => `<em>›</em><span>${esc(tx(n.name))}</span>`).join("")}</div>
@@ -2199,7 +2289,8 @@ BIND.review = () => {
 // whole request, then send it back or forward. Requesters see the comments and mark them resolved.
 let CMT_OPEN = null; // index of the line whose comment box is open
 const lineKey = it => it.type + "|" + nameKey(it.name);
-const canReview = r => (ROLE === "plan" && r.status === "plan") || (ROLE === "exec" && r.status === "committee");
+const canReview = r => (r.status === "plan" && acting("plan", "review")) || (r.status === "committee" && acting("exec", "committee"));
+const reviewBy = r => (r.status === "plan" ? onBehalf("plan", "review") : onBehalf("exec", "committee"));
 const openComments = r => (r.comments || []).filter(c => !c.resolved);
 
 function cmtHtml(r, c) {
@@ -2225,7 +2316,7 @@ function generalComments(r) {
 function reviewButtons(r) {
   if (!canReview(r)) return "";
   return `<button class="btn danger" type="button" id="rv-return">${L("ส่งกลับแก้ไข", "Return for revision")}</button>
-    <button class="btn primary" type="button" id="rv-pass">${ROLE === "exec" ? L("เห็นชอบคำขอ", "Approve request") : L("ผ่านการกลั่นกรอง · เสนอต่อ", "Pass review · send on")}</button>`;
+    <button class="btn primary" type="button" id="rv-pass">${r.status === "committee" ? L("เห็นชอบคำขอ", "Approve request") : L("ผ่านการกลั่นกรอง · เสนอต่อ", "Pass review · send on")}${reviewBy(r) ? ` (${L("แทน", "on behalf")})` : ""}</button>`;
 }
 function addComment(r, line, text) {
   r.comments = r.comments || [];
@@ -2260,16 +2351,17 @@ function bindReviewMode(r) {
   const ret = $("#rv-return");
   if (ret) ret.onclick = () => {
     if (!openComments(r).length) { toast(L("ใส่ความเห็นอย่างน้อย 1 ข้อก่อนส่งกลับ เพื่อให้ผู้จัดทำรู้ว่าต้องแก้อะไร", "Add at least one comment first so the requester knows what to fix")); return; }
+    const by = reviewBy(r);
     r.status = "returned"; r.updated = TODAY;
-    audit(["ส่งคำขอกลับแก้ไข", "Returned a request for revision"], r.id);
+    audit(["ส่งคำขอกลับแก้ไข", "Returned a request for revision"], r.id + by);
     notify(["div"], [`คำขอ ${r.id} ถูกส่งกลับแก้ไข มีความเห็น ${openComments(r).length} ข้อ`, `Request ${r.id} was returned with ${openComments(r).length} comments`], "requests");
     commit(); renderShell(); route(); toast(L("ส่งกลับแก้ไขแล้ว · แจ้งผู้จัดทำในระบบและอีเมล", "Returned · requester notified in-app and by email"));
   };
   const pass = $("#rv-pass");
   if (pass) pass.onclick = () => {
-    const toCommittee = ROLE === "plan";
+    const toCommittee = r.status === "plan", by = reviewBy(r);
     r.status = toCommittee ? "committee" : "approved"; r.updated = TODAY;
-    audit(toCommittee ? ["ผ่านการกลั่นกรองและเสนอคณะกรรมการ", "Passed review and sent to the committee"] : ["เห็นชอบคำขอ", "Approved a request"], r.id);
+    audit(toCommittee ? ["ผ่านการกลั่นกรองและเสนอคณะกรรมการ", "Passed review and sent to the committee"] : ["เห็นชอบคำขอ", "Approved a request"], r.id + by);
     notify(toCommittee ? ["exec"] : ["plan", "div"], toCommittee ? [`คำขอ ${r.id} เข้าวาระคณะกรรมการ`, `Request ${r.id} is on the committee agenda`] : [`ผู้บริหารเห็นชอบคำขอ ${r.id}`, `Request ${r.id} was approved`], toCommittee ? "review" : "requests");
     commit(); renderShell(); route(); toast(toCommittee ? L("เสนอคณะกรรมการแล้ว", "Sent to the committee") : L("เห็นชอบแล้ว · พร้อมรวมในชุดส่งสำนักงบประมาณ", "Approved · ready for the Budget Bureau package"));
   };
@@ -2309,16 +2401,16 @@ REV_BIND.queue = () => $$("[data-open]").forEach(b => (b.onclick = () => openReq
 // ---- meetings ----
 const agendaName = id => { const x = S.review.find(v => v.id === id) || S.requests.find(v => v.id === id); return x ? tx(x.name) : id; };
 REV_PANELS.meetings = () => {
-  const canRec = ROLE === "plan" || ROLE === "exec";
+  const canRec = ROLE === "plan" || acting("exec", "committee");
   return S.meetings.slice().reverse().map(m => {
     if (m.status === "held") return `
-    <section class="panel"><header><h2>${L("การประชุมคณะกรรมการพิจารณางบประมาณ", "Budget committee")} ${tx(m.no)}</h2><span class="sp"></span>${tag(L("ประชุมแล้ว", "Held"), "p-ok")}</header>
+    <section class="panel"><header><h2>${L("การประชุมคณะกรรมการพิจารณางบประมาณ", "Budget committee")} ${tx(m.no)}</h2><span class="sp"></span>${historyBtn(m.id + "|" + m.no[0] + "|" + m.no[1], tx(m.no))}${tag(L("ประชุมแล้ว", "Held"), "p-ok")}</header>
       <div class="body row"><span>${fdate(m.date)}</span><span class="sub">·</span><span>${L("ผู้เข้าประชุม", "Attendees")} ${m.attendees} ${L("คน", "")}</span><span class="sub">·</span>${m.docs.map(d => tag(esc(d), "p-mute")).join("")}</div>
       <div class="tbl-wrap"><table><thead><tr><th>${L("วาระ", "Item")}</th><th>${L("มติ", "Resolution")}</th><th class="n">${L("วงเงินที่มีมติ (ลบ.)", "Resolved amount (M)")}</th><th>${L("หมายเหตุ", "Note")}</th></tr></thead>
         <tbody>${Object.keys(m.items).map(k => { const it = m.items[k]; return `<tr><td><span class="mono sub">${k}</span> ${esc(agendaName(k))}</td><td>${tag(tx(RES[it.res][0]), RES[it.res][1])}</td><td class="n">${it.amount != null ? fmt(it.amount, 1) : "—"}</td><td class="sub">${esc(tx(it.note))}</td></tr>`; }).join("")}</tbody></table></div></section>`;
     const agenda = S.requests.filter(r => r.status === "committee");
     return `
-    <section class="panel"><header><h2>${L("การประชุมคณะกรรมการพิจารณางบประมาณ", "Budget committee")} ${tx(m.no)}</h2><span class="sp"></span>${tag(`${L("กำหนดประชุม", "Scheduled")} ${fdate(m.date)}`, "p-info")}</header>
+    <section class="panel"><header><h2>${L("การประชุมคณะกรรมการพิจารณางบประมาณ", "Budget committee")} ${tx(m.no)}</h2><span class="sp"></span>${historyBtn(m.id + "|" + m.no[0] + "|" + m.no[1], tx(m.no))}${tag(`${L("กำหนดประชุม", "Scheduled")} ${fdate(m.date)}`, "p-info")}</header>
       ${agenda.length ? `<div class="tbl-wrap"><table><thead><tr><th>${L("วาระ", "Item")}</th><th class="n">${L("วงเงินขอ (ลบ.)", "Requested (M)")}</th><th style="width:220px">${L("มติ", "Resolution")}</th><th class="n" style="width:130px">${L("วงเงินที่มีมติ", "Resolved (M)")}</th><th>${L("หมายเหตุ", "Note")}</th></tr></thead>
         <tbody>${agenda.map(r => `<tr><td><a href="#" data-req="${r.id}" class="mono">${r.id}</a> ${esc(tx(r.name))}</td><td class="n">${mb(r.amount)}</td>
           <td><select data-res="${r.id}" ${canRec ? "" : "disabled"} aria-label="${L("มติ", "Resolution")} ${r.id}">${Object.keys(RES).map(k => `<option value="${k}">${tx(RES[k][0])}</option>`).join("")}</select></td>
@@ -2349,7 +2441,7 @@ REV_BIND.meetings = () => {
     m.docs = [L(`รายงานการประชุม${tx(m.no)}.pdf`, `Minutes ${tx(m.no)}.pdf`)];
     const n = S.meetings.length + 1;
     S.meetings.push({ id: "M-" + n, no: [`ครั้งที่ ${n}/2570`, `Meeting ${n}/2570`], date: addDays(TODAY, 30), status: "scheduled", attendees: 0, docs: [], items: {} });
-    audit(["บันทึกมติคณะกรรมการพิจารณางบประมาณ", "Recorded budget committee resolutions"], `${tx(m.no)} · ${agenda.length} ${L("วาระ", "items")}`);
+    audit(["บันทึกมติคณะกรรมการพิจารณางบประมาณ", "Recorded budget committee resolutions"], `${m.id} ${tx(m.no)}${onBehalf("exec", "committee")} ·${agenda.length} ${L("วาระ", "items")}`);
     notify(["plan", "div"], [`บันทึกมติการประชุม ${m.no[0]} แล้ว`, `Resolutions for ${m.no[1]} are recorded`], "review");
     commit(); renderShell(); route(); toast(L("บันทึกมติแล้ว · ปรับสถานะคำขอตามมติ", "Resolutions recorded · request statuses updated"));
   };
@@ -2775,7 +2867,7 @@ STRAT.kpis = () => {
   return `
   <section class="panel"><header><h2>${L("ค่าเป้าหมายตัวชี้วัด 5 ปี", "5-year KPI targets")}</h2><span class="sp"></span>${tag(ed ? L("แก้ไขได้", "Editable") : L("ดูอย่างเดียว", "View only"), ed ? "p-ok" : "p-mute")}</header>
     <div class="tbl-wrap"><table class="targets"><thead><tr><th>${L("ตัวชี้วัด", "KPI")}</th><th>${L("หน่วย", "Unit")}</th><th class="n">${L("ฐาน", "Baseline")}</th>${PLAN_YEARS.map(y => `<th class="n">${y}</th>`).join("")}<th>${L("เจ้าของ", "Owner")}</th></tr></thead>
-      <tbody>${allKpis().map(({ k, st }) => `<tr><td><span class="mono sub">${st.id}·${k.id}</span> ${esc(tx(k.name))}</td><td class="sub">${tx(k.unit)}</td><td class="n">${fmt(k.base, k.base % 1 ? 1 : 0)}</td>
+      <tbody>${allKpis().map(({ k, st }) => `<tr><td><span class="mono sub">${st.id}·${k.id}</span> ${esc(tx(k.name))} ${historyBtn(k.id, k.id + " " + tx(k.name))}</td><td class="sub">${tx(k.unit)}</td><td class="n">${fmt(k.base, k.base % 1 ? 1 : 0)}</td>
         ${k.targets.map((t, i) => `<td class="n"><input type="number" step="any" min="0" data-k="${k.id}" data-y="${i}" value="${t}" ${ds} aria-label="${esc(tx(k.name))} ${PLAN_YEARS[i]}" style="width:84px"></td>`).join("")}
         <td><select data-own="${k.id}" ${ds} aria-label="${L("เจ้าของ", "Owner")}">${S.units.filter(u => u.parent).map(u => `<option value="${u.id}" ${u.id === k.owner ? "selected" : ""}>${esc(tx(u.name))}</option>`).join("")}</select></td></tr>`).join("")}</tbody></table></div>
     ${ed ? `<div class="body"><form class="inline-form" id="kpi-form">
@@ -3144,10 +3236,12 @@ ALLOC.transfers = () => {
   return `
   <section class="panel"><header><h2>${L("รายการโอนเปลี่ยนแปลง", "Budget transfers")}</h2><span class="sp"></span><span class="sub">${L("ผู้อนุมัติตามอำนาจ: ภายในหน่วยงานโดยผู้อำนวยการกองคลัง · ข้ามหน่วยงานหรือต่างงบรายจ่ายโดยผู้บริหาร", "Approval by authority: within a unit by the finance director; across units or budget types by an executive")}</span></header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("โอนจาก", "From")}</th><th>${L("โอนไป", "To")}</th><th class="n">${L("ลบ.", "M")}</th><th>${L("ผู้อนุมัติ", "Approver")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
-      <tbody>${A.transfers.slice().reverse().map(t => { const lv = transferLevel(t), canAp = t.status === "pending" && ((lv[0] === "same" && ROLE === "fin") || (lv[0] !== "same" && ROLE === "exec"));
+      <tbody>${A.transfers.slice().reverse().map(t => { const lv = transferLevel(t), canAp = t.status === "pending" && ((lv[0] === "same" && acting("fin", "transfer")) || (lv[0] !== "same" && acting("exec", "transfer")));
+        const by = lv[0] === "same" ? onBehalf("fin", "transfer") : onBehalf("exec", "transfer");
         return `<tr><td class="mono">${t.id}<div class="sub">${fdate(t.t)}</div></td><td>${esc(lineLabel(lineOf(t.from)))}</td><td>${esc(lineLabel(lineOf(t.to)))}<div class="sub">${esc(tx(t.why))}</div></td><td class="n">${mb(t.amount)}</td>
           <td class="sub">${lv[1]}</td><td>${tag(ST[t.status][0], ST[t.status][1])}</td>
-          <td>${canAp ? `<div class="row" style="flex-wrap:nowrap"><button class="btn primary" type="button" data-tap="${t.id}">${L("อนุมัติ", "Approve")}</button><button class="btn danger" type="button" data-trj="${t.id}">${L("ไม่อนุมัติ", "Reject")}</button></div>` : ""}</td></tr>`; }).join("")}</tbody></table></div>
+          <td><div class="row" style="flex-wrap:nowrap">${canAp ? `<button class="btn primary" type="button" data-tap="${t.id}">${by ? L("อนุมัติแทน", "Approve on behalf") : L("อนุมัติ", "Approve")}</button><button class="btn danger" type="button" data-trj="${t.id}">${L("ไม่อนุมัติ", "Reject")}</button>` : ""}${historyBtn(t.id, t.id)}</div>
+            ${canAp && by ? `<div class="sub" style="margin-top:4px">${by.slice(3)}</div>` : ""}</td></tr>`; }).join("")}</tbody></table></div>
     ${ed ? `<div class="body"><form class="inline-form" id="tr-form">
       <div class="f"><label for="tr-from">${L("โอนจาก", "From")}</label><select id="tr-from">${A.lines.map(l => `<option value="${l.id}">${esc(lineLabel(l))} (${mb(l.amount - pendingOut(l.id))})</option>`).join("")}</select></div>
       <div class="f"><label for="tr-to">${L("โอนไป", "To")}</label><select id="tr-to">${A.lines.map((l, i) => `<option value="${l.id}" ${i === 1 ? "selected" : ""}>${esc(lineLabel(l))}</option>`).join("")}</select></div>
@@ -3233,7 +3327,9 @@ BIND.allocation = () => {
       a.amount -= t.amount; b.amount += t.amount; scalePlan(a, a.amount); scalePlan(b, b.amount);
       if (a.type !== b.type) { A.byType[a.type] -= t.amount; A.byType[b.type] = (A.byType[b.type] || 0) + t.amount; }
     }
-    audit([ok ? "อนุมัติการโอนเปลี่ยนแปลง" : "ไม่อนุมัติการโอนเปลี่ยนแปลง", ok ? "Approved a transfer" : "Rejected a transfer"], t.id);
+    const lv = transferLevel(t), by = lv[0] === "same" ? onBehalf("fin", "transfer") : onBehalf("exec", "transfer");
+    audit([ok ? "อนุมัติการโอนเปลี่ยนแปลง" : "ไม่อนุมัติการโอนเปลี่ยนแปลง", ok ? "Approved a transfer" : "Rejected a transfer"], t.id + by);
+    if (by) notify([lv[0] === "same" ? "fin" : "exec"], [`${userName(me().id)} ${ok ? "อนุมัติ" : "ไม่อนุมัติ"} ${t.id} แทนคุณตามการมอบอำนาจ`, `${userName(me().id)} ${ok ? "approved" : "rejected"} ${t.id} on your behalf`], "allocation");
     notify(["fin"], [`${t.id} ${ok ? "อนุมัติแล้ว" : "ไม่อนุมัติ"}`, `${t.id} was ${ok ? "approved" : "rejected"}`], "allocation"); re();
     toast(ok ? L("อนุมัติแล้ว · ปรับวงเงินและแผนการใช้จ่ายของทั้งสองรายการ", "Approved · both lines' amounts and plans updated") : L("ไม่อนุมัติแล้ว", "Rejected"));
   };
@@ -3525,13 +3621,17 @@ BIND_ADMIN.structure = () => {
 ADMIN.users = () => `
   <section class="panel"><header><h2>${L("ผู้ใช้งาน", "Users")}</h2><span class="sp"></span><span class="sub">${L("ยืนยันตัวตนผ่าน SSO ของหน่วยงาน", "Sign-in through the organization's SSO")}</span></header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("ชื่อ", "Name")}</th><th>${L("หน่วยงาน", "Unit")}</th><th style="width:220px">${L("บทบาท", "Role")}</th><th class="c">MFA</th><th class="c">${L("ใช้งาน", "Active")}</th></tr></thead>
-      <tbody>${S.users.map((u, i) => `<tr><td>${esc(tx(u.name))}${u.primary ? ` <span class="sub">(${L("ผู้ใช้ตัวอย่างของบทบาท", "demo user for role")})</span>` : ""}</td><td class="sub">${unitName(u.unit)}</td>
+      <tbody>${S.users.map((u, i) => `<tr><td>${esc(tx(u.name))} ${historyBtn(u.name[0] + "|" + u.name[1], tx(u.name))}${u.primary ? ` <span class="sub">(${L("ผู้ใช้ตัวอย่างของบทบาท", "demo user for role")})</span>` : ""}</td><td class="sub">${unitName(u.unit)}</td>
         <td><select data-urole="${i}" aria-label="${L("บทบาทของ", "Role of")} ${esc(tx(u.name))}" ${u.primary ? "disabled" : ""}>${Object.keys(ROLES).map(r => `<option value="${r}" ${r === u.role ? "selected" : ""}>${tx(ROLES[r])}</option>`).join("")}</select></td>
         <td class="c">${sw("mfa-" + i, u.mfa)}</td><td class="c">${sw("act-" + i, u.active, u.primary)}</td></tr>`).join("")}</tbody></table></div></section>
   <section class="panel"><header><h2>${L("สิทธิ์ตามบทบาทและโมดูล", "Role and module permissions")}</h2><span class="sp"></span><span class="sub">C ${L("สร้าง", "create")} · U ${L("ใช้งาน/แก้ไข", "use/edit")} · R ${L("อ่าน", "read")} · A ${L("อนุมัติ", "approve")}</span></header>
     <div class="tbl-wrap"><table class="mx"><thead><tr><th>${L("บทบาท", "Role")}</th>${["M01", "M02", "M03", "M04", "M05", "M06", "M07", "M08", "M09", "M10"].map(m => `<th class="c">${m}</th>`).join("")}</tr></thead>
       <tbody>${Object.keys(MATRIX).map(r => `<tr><td>${tx(ROLES[r])}</td>${MATRIX[r].map(v => `<td class="c" style="color:var(--${v === "A" ? "accent" : v.includes("U") ? "info" : "muted"})">${v}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
-    <div class="body sub">${L("ผู้ดูแลระบบไม่มีสิทธิ์เห็นหรือแก้ไขข้อมูลงบประมาณ", "Administrators cannot see or change budget data")}</div></section>`;
+    <div class="body sub">${L("ผู้ดูแลระบบไม่มีสิทธิ์เห็นหรือแก้ไขข้อมูลงบประมาณ", "Administrators cannot see or change budget data")}</div></section>
+  <section class="panel"><header><h2>${L("การมอบอำนาจ", "Delegations of authority")}</h2><span class="sp"></span>
+      <button class="btn" type="button" onclick="go('delegation')">${L("จัดการการมอบอำนาจ", "Manage delegations")}</button></header>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("ผู้มอบ", "From")}</th><th>${L("ผู้รับมอบ", "To")}</th><th>${L("ช่วงเวลา", "Period")}</th><th>${L("สถานะ", "Status")}</th></tr></thead>
+      <tbody>${(S.delegations || []).map(d => `<tr><td class="mono">${d.id}</td><td>${esc(userName(d.from))}</td><td>${esc(userName(d.to))}</td><td class="sub">${fdate(d.start)} – ${fdate(d.end)}</td><td>${tag(tx(DSTATE[delegState(d)][0]), DSTATE[delegState(d)][1])}</td></tr>`).join("")}</tbody></table></div></section>`;
 BIND_ADMIN.users = () => {
   $$("[data-urole]").forEach(s => (s.onchange = () => { const u = S.users[s.dataset.urole]; const old = u.role; u.role = s.value; audit(["เปลี่ยนบทบาทผู้ใช้", "Changed a user's role"], `${tx(u.name)}: ${tx(ROLES[old])} → ${tx(ROLES[u.role])}`); commit(); toast(L("บันทึกบทบาทแล้ว", "Role saved")); }));
   S.users.forEach((u, i) => {
@@ -3569,7 +3669,7 @@ BIND_ADMIN.workflow = () => {
 ADMIN.rules = () => `
   <section class="panel"><header><h2>${L("กฎทางธุรกิจปี 2571", "FY2571 business rules")}</h2><span class="sp"></span><span class="sub">${L("ใช้ตรวจความครบถ้วนใน M02 ทันทีที่บันทึก", "Applied to M02 checks as soon as you save")}</span></header>
     <div class="tbl-wrap"><table><thead><tr><th class="c" style="width:70px">${L("ใช้งาน", "On")}</th><th>${L("รหัส", "ID")}</th><th>${L("กฎ", "Rule")}</th><th style="width:160px">${L("ค่ากำหนด", "Setting")}</th><th style="width:170px">${L("เมื่อไม่ผ่าน", "If it fails")}</th></tr></thead>
-      <tbody>${S.rules.map((r, i) => `<tr><td class="c">${sw("rule-" + i, r.on)}</td><td class="mono">${r.id}</td><td>${tx(r.name)}</td>
+      <tbody>${S.rules.map((r, i) => `<tr><td class="c">${sw("rule-" + i, r.on)}</td><td class="mono">${r.id}</td><td>${tx(r.name)} ${historyBtn(r.id, r.id)}</td>
         <td>${r.param != null ? `<label class="field-inline"><input type="number" min="0" data-rp="${i}" value="${r.param}" style="width:80px" aria-label="${r.id}"> ${tx(r.unit)}</label>` : `<span class="sub">—</span>`}</td>
         <td><select data-re="${i}" aria-label="${r.id}"><option value="block" ${r.effect === "block" ? "selected" : ""}>${L("ห้ามส่ง", "Block sending")}</option><option value="warn" ${r.effect === "warn" ? "selected" : ""}>${L("ข้อสังเกต", "Warn only")}</option></select></td></tr>`).join("")}</tbody></table></div></section>`;
 BIND_ADMIN.rules = () => {
@@ -3638,7 +3738,7 @@ BIND.admin = () => {
 const DEMO = [
   { t: "0:00", role: "plan", link: "home", title: ["แพลตฟอร์มเดียว 6 บทบาท", "One platform, six roles"],
     say: ["Fisko รวมวงจรงบประมาณทั้งหมดไว้ในระบบเดียว แต่ละบทบาทเห็นเฉพาะงานของตนเอง พร้อมกำหนดส่งจากปฏิทินงบประมาณ", "Fisko holds the whole budget cycle. Each role sees only its own work, with deadlines from the budget calendar."],
-    do: ["ชี้งานของฉันและปฏิทิน สลับภาษา TH/EN และสลับหน่วยงานตัวอย่าง", "Point at My tasks and the calendar; switch TH/EN and the sample organization"] },
+    do: ["เข้าสู่ระบบด้วย SSO และรหัส MFA (246810) ชี้งานของฉันและปฏิทิน ลองค้นหาด้วย Ctrl+K สลับภาษา TH/EN และสลับหน่วยงานตัวอย่าง", "Sign in with SSO and the MFA code (246810); point at My tasks and the calendar; try Ctrl+K search; switch TH/EN and the sample organization"] },
   { t: "1:00", role: "plan", link: "strat-align", title: ["M01 จากยุทธศาสตร์สู่คำขอ", "M01 From strategy to requests"],
     say: ["ทุกคำขอผูกกับกิจกรรมและตัวชี้วัด ระบบบอกได้ทันทีว่าวงเงินกี่เปอร์เซ็นต์สอดคล้องกับแผน และตัวชี้วัดใดยังไม่มีงบรองรับ", "Every request links to an activity and KPI, so you see at once how much budget follows the plan and which KPIs have no funding."],
     do: ["ชี้เส้นทางโครงการตัวอย่างด้านล่าง แล้วเปิดแท็บแผนผังยุทธศาสตร์", "Show the storyline trace at the bottom, then the Strategy map tab"] },
@@ -3691,13 +3791,279 @@ BIND.demo = () => {
   }));
 };
 
+/* ---- 54-identity.js ---- */
+// Identity (round 7): simulated SSO sign-in with MFA, the user menu, and delegation of authority.
+// The MFA code below is a fixed demo value for this prototype; the real system uses an authenticator app.
+const DEMO_OTP = "246810";
+let SIGN = { step: "pick", user: null, err: "" };
+
+// ---------- delegation ----------
+const SCOPES = {
+  transfer: { role: ["exec", "fin"], name: ["อนุมัติโอนเปลี่ยนแปลง", "Approve budget transfers"] },
+  review: { role: ["plan"], name: ["กลั่นกรองคำขอ", "Review budget requests"] },
+  committee: { role: ["exec"], name: ["พิจารณาคำขอระดับผู้บริหาร", "Executive decisions on requests"] },
+};
+const userById = id => S.users.find(u => u.id === id) || { name: ["-", "-"], role: "" };
+const delegState = d => d.status === "revoked" ? "revoked" : TODAY < d.start ? "future" : TODAY > d.end ? "expired" : "active";
+const DSTATE = { active: [["มีผล", "Active"], "p-ok"], future: [["ยังไม่ถึงกำหนด", "Scheduled"], "p-info"], expired: [["หมดอายุ", "Expired"], "p-mute"], revoked: [["ยกเลิกแล้ว", "Revoked"], "p-bad"] };
+// Active delegations that let the current user act for someone holding `role`, for `scope`.
+function delegFor(role, scope) {
+  if (!S.delegations) return null;
+  return S.delegations.find(d => delegState(d) === "active" && d.to === me().id && d.scopes.includes(scope) && userById(d.from).role === role) || null;
+}
+// True when the current user holds `role` or acts for it through an active delegation.
+const acting = (role, scope) => ROLE === role || !!delegFor(role, scope);
+const onBehalf = (role, scope) => { const d = ROLE === role ? null : delegFor(role, scope); return d ? ` · ${L("แทน", "on behalf of")} ${tx(userById(d.from).name)} (${d.id})` : ""; };
+
+VIEWS.delegation = () => {
+  const mine = S.delegations.filter(d => d.from === me().id || d.to === me().id || ROLE === "admin");
+  const myScopes = Object.keys(SCOPES).filter(k => SCOPES[k].role.includes(ROLE));
+  return `
+  <div class="head"><div><div class="eyebrow">${L("การมอบอำนาจ", "Delegation of authority")}</div><h1>${L("มอบอำนาจการอนุมัติ", "Delegate approvals")}</h1>
+    <p>${L("ผู้รับมอบอนุมัติแทนได้เฉพาะงานและช่วงเวลาที่กำหนด ทุกการอนุมัติแทนถูกบันทึกพร้อมเลขที่การมอบอำนาจ", "A delegate can approve only the chosen work within the chosen dates. Every approval made on someone's behalf is logged with the delegation number.")}</p></div></div>
+  ${myScopes.length ? `<section class="panel"><header><h2>${L("มอบอำนาจใหม่", "New delegation")}</h2><span class="sp"></span><span class="sub">${L("ผู้มอบ", "From")}: ${esc(tx(me().name))}</span></header>
+    <div class="body"><form class="inline-form" id="dg-form">
+      <div class="f"><label for="dg-to">${L("ผู้รับมอบ", "Delegate")}</label><select id="dg-to">${S.users.filter(u => u.id !== me().id && u.active && ["plan", "exec", "fin"].includes(u.role)).map(u => `<option value="${u.id}">${esc(tx(u.name))} · ${tx(ROLES[u.role])}</option>`).join("")}</select></div>
+      <div class="f"><label for="dg-scope">${L("งานที่มอบ", "Work delegated")}</label><select id="dg-scope">${myScopes.map(k => `<option value="${k}">${tx(SCOPES[k].name)}</option>`).join("")}</select></div>
+      <div class="f" style="flex:0 1 160px"><label for="dg-start">${L("ตั้งแต่", "From")}</label><input type="date" id="dg-start" value="${TODAY}" required></div>
+      <div class="f" style="flex:0 1 160px"><label for="dg-end">${L("ถึง", "To")}</label><input type="date" id="dg-end" value="${addDays(TODAY, 7)}" required></div>
+      <div class="f"><label for="dg-why">${L("เหตุผล", "Reason")}</label><input type="text" id="dg-why" required></div>
+      <button class="btn primary" type="submit">${L("มอบอำนาจ", "Delegate")}</button></form></div></section>`
+    : `<div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("บทบาทนี้ไม่มีอำนาจอนุมัติที่มอบต่อได้", "This role has no approvals to delegate")}</b><p>${L("ผู้บริหาร กองแผนงาน และการเงิน มอบอำนาจได้", "Executives, Planning and Finance can delegate")}</p></div></div>`}
+  <section class="panel"><header><h2>${ROLE === "admin" ? L("การมอบอำนาจทั้งหมด", "All delegations") : L("การมอบอำนาจที่เกี่ยวกับฉัน", "Delegations involving me")}</h2></header>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("ผู้มอบ", "From")}</th><th>${L("ผู้รับมอบ", "To")}</th><th>${L("งาน", "Work")}</th><th>${L("ช่วงเวลา", "Period")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
+      <tbody>${mine.slice().reverse().map(d => { const st = delegState(d);
+        return `<tr><td class="mono">${d.id}</td><td>${esc(tx(userById(d.from).name))}<div class="sub">${tx(ROLES[userById(d.from).role] || ["", ""])}</div></td><td>${esc(tx(userById(d.to).name))}<div class="sub">${tx(ROLES[userById(d.to).role] || ["", ""])}</div></td>
+          <td>${d.scopes.map(k => tx(SCOPES[k].name)).join(", ")}<div class="sub">${esc(tx(d.why))}</div></td><td class="sub" style="white-space:nowrap">${fdate(d.start)} – ${fdate(d.end)}</td><td>${tag(tx(DSTATE[st][0]), DSTATE[st][1])}</td>
+          <td><div class="row" style="flex-wrap:nowrap">${historyBtn(d.id, d.id)}${(st === "active" || st === "future") && (d.from === me().id || ROLE === "admin") ? `<button class="btn danger" type="button" data-revoke="${d.id}">${L("ยกเลิก", "Revoke")}</button>` : ""}</div></td></tr>`; }).join("")
+        || `<tr><td colspan="7" class="sub">${L("ยังไม่มีการมอบอำนาจ", "No delegations yet")}</td></tr>`}</tbody></table></div></section>`;
+};
+BIND.delegation = () => {
+  const f = $("#dg-form");
+  if (f) f.onsubmit = e => {
+    e.preventDefault();
+    const start = $("#dg-start").value, end = $("#dg-end").value;
+    if (end < start) { toast(L("วันสิ้นสุดต้องไม่ก่อนวันเริ่ม", "The end date can't be before the start date")); return; }
+    const why = $("#dg-why").value.trim(), id = `D-2570-${String(S.delegations.length + 1).padStart(3, "0")}`;
+    const d = { id, from: me().id, to: $("#dg-to").value, scopes: [$("#dg-scope").value], start, end, status: "active", t: nowIso(), why: [why, why] };
+    S.delegations.push(d);
+    audit(["มอบอำนาจ", "Delegated authority"], `${id} → ${tx(userById(d.to).name)}`);
+    notify([userById(d.to).role], [`คุณได้รับมอบอำนาจ ${tx(SCOPES[d.scopes[0]].name)} จาก ${userById(d.from).name[0]} (${id})`, `You received delegated authority from ${userById(d.from).name[1]} (${id})`], "delegation");
+    commit(); route(); toast(L("มอบอำนาจแล้ว · แจ้งผู้รับมอบแล้ว", "Delegated · the delegate has been notified"));
+  };
+  $$("[data-revoke]").forEach(b => (b.onclick = () => {
+    const d = S.delegations.find(x => x.id === b.dataset.revoke); d.status = "revoked";
+    audit(["ยกเลิกการมอบอำนาจ", "Revoked a delegation"], d.id); commit(); route(); toast(L("ยกเลิกการมอบอำนาจแล้ว", "Delegation revoked"));
+  }));
+};
+
+// ---------- user menu ----------
+function renderUserChip() {
+  const u = me(), ini = tx(u.name).replace(/^(ดร\.|Dr\.)\s*/, "").slice(0, 1);
+  const n = S.delegations ? S.delegations.filter(d => delegState(d) === "active" && d.to === u.id).length : 0;
+  $("#userchip").innerHTML = `<span class="avatar">${esc(ini)}</span>${n ? `<span class="cnt" style="background:var(--info)">${n}</span>` : ""}`;
+  $("#userchip").setAttribute("aria-label", `${tx(u.name)} · ${tx(ROLES[ROLE])}`);
+}
+function toggleUserMenu(show) {
+  const p = $("#umenu"), b = $("#userchip"), s = show === undefined ? p.hidden : show;
+  if (s) {
+    const u = me(), act = S.delegations.filter(d => delegState(d) === "active" && d.to === u.id);
+    p.innerHTML = `<header><b>${esc(tx(u.name))}</b></header>
+      <div class="nitem" style="cursor:default"><i></i><div>${tx(ROLES[ROLE])} · ${unitName(u.unit)}<small>${u.mfa ? L("ยืนยันตัวตนสองชั้นแล้ว", "Two-factor sign-in on") : L("ยังไม่เปิด MFA", "MFA not set up")} · ${L("เข้าสู่ระบบด้วย SSO", "Signed in with SSO")}</small></div></div>
+      ${act.map(d => `<div class="nitem unread" style="cursor:default"><i></i><div>${L("ได้รับมอบอำนาจจาก", "Acting for")} ${esc(tx(userById(d.from).name))}<small>${d.scopes.map(k => tx(SCOPES[k].name)).join(", ")} · ${L("ถึง", "until")} ${fdate(d.end)}</small></div></div>`).join("")}
+      <div class="nitem" tabindex="0" id="um-deleg"><i></i><div>${L("การมอบอำนาจ", "Delegation of authority")}</div></div>
+      <div class="nitem" tabindex="0" id="um-out"><i></i><div>${L("ออกจากระบบ", "Sign out")}</div></div>`;
+    $("#um-deleg").onclick = () => { toggleUserMenu(false); go("delegation"); };
+    $("#um-out").onclick = () => { toggleUserMenu(false); signOut(); };
+  }
+  p.hidden = !s; b.setAttribute("aria-expanded", String(s));
+}
+
+// ---------- sign-in ----------
+function startSession(u) {
+  SESSION = { user: u.id, org: ORG, t: nowIso() };
+  store.set("fisko-session", JSON.stringify(SESSION));
+  ROLE = u.role; store.set("fisko-role", ROLE);
+  audit(["เข้าสู่ระบบด้วย SSO และ MFA", "Signed in with SSO and MFA"], tx(u.name)); commit();
+  $("#signin").hidden = true; SIGN = { step: "pick", user: null, err: "" };
+  renderShell(); go("home");
+  toast(`${L("ยินดีต้อนรับ", "Welcome")} ${tx(u.name)}`);
+}
+function signOut() {
+  audit(["ออกจากระบบ", "Signed out"], tx(me().name)); commit();
+  SESSION = null; store.del("fisko-session"); showSignIn();
+}
+function qrPattern(seed) { // decorative QR-like pattern, not a real code
+  let h = ""; for (let i = 0; i < 121; i++) { const on = ((i * 7 + seed * 13) % 5 < 2) || [0, 1, 2, 10, 11, 12, 22, 23, 24].includes(i % 33); h += `<i class="${on ? "on" : ""}"></i>`; } return h;
+}
+function showSignIn() {
+  const el = $("#signin"), users = S.users.slice().sort((a, b) => (b.primary ? 1 : 0) - (a.primary ? 1 : 0));
+  let body = "";
+  if (SIGN.step === "pick") body = `
+    <p class="sub">${L("เลือกบัญชีตัวอย่างเพื่อจำลองการเข้าสู่ระบบผ่านบัญชีหน่วยงาน (SSO)", "Choose a sample account to simulate signing in with the organization's account (SSO)")}</p>
+    <div class="acc-list">${users.map(u => `<button type="button" class="acc ${u.active ? "" : "off"}" data-acc="${u.id}">
+      <span class="avatar">${esc(tx(u.name).slice(0, 1))}</span><span><b>${esc(tx(u.name))}</b><small>${tx(ROLES[u.role])} · ${esc(unitName(u.unit))}</small></span>
+      ${!u.active ? tag(L("ระงับ", "Suspended"), "p-bad") : !u.mfa ? tag(L("ยังไม่มี MFA", "No MFA"), "p-warn") : ""}</button>`).join("")}</div>`;
+  if (SIGN.step === "sso") body = `<div class="sso-wait"><span class="spinner" aria-hidden="true"></span><p>${L("กำลังยืนยันตัวตนกับผู้ให้บริการบัญชีของหน่วยงาน…", "Checking with the organization's identity provider…")}</p></div>`;
+  if (SIGN.step === "mfa" || SIGN.step === "setup") {
+    const u = userById(SIGN.user);
+    body = `<div class="mfa">${SIGN.step === "setup" ? `<div class="alert"><div class="ic" style="background:var(--warn-soft);color:var(--warn)">!</div><div><b>${L("บัญชีนี้ต้องตั้งค่าการยืนยันตัวตนสองชั้นก่อนใช้งาน", "This account must set up two-factor sign-in first")}</b><p>${L("ตามนโยบายความมั่นคงปลอดภัยของหน่วยงาน", "Required by the organization's security policy")}</p></div></div>
+        <div class="row" style="align-items:center;gap:16px"><div class="qr" aria-label="${L("ตัวอย่างคิวอาร์โค้ด", "Sample QR code")}">${qrPattern(u.id.length)}</div><span class="sub">${L("สแกนด้วยแอปยืนยันตัวตน แล้วกรอกรหัส 6 หลัก", "Scan with an authenticator app, then enter the 6-digit code")}</span></div>` : ""}
+      <b>${esc(tx(u.name))}</b><span class="sub">${L("กรอกรหัส 6 หลักจากแอปยืนยันตัวตน", "Enter the 6-digit code from your authenticator app")}</span>
+      <form id="otp-form" class="row" style="flex-wrap:nowrap"><input type="text" id="otp" inputmode="numeric" maxlength="6" autocomplete="one-time-code" aria-label="${L("รหัส 6 หลัก", "6-digit code")}" style="font-family:var(--mono);font-size:20px;letter-spacing:.3em;width:160px">
+        <button class="btn primary" type="submit">${L("ยืนยัน", "Verify")}</button></form>
+      ${SIGN.err ? `<span style="color:var(--bad);font-size:13.5px">${SIGN.err}</span>` : ""}
+      <span class="sub">${L("รหัสสำหรับต้นแบบนี้", "Code for this prototype")}: <span class="mono">${DEMO_OTP}</span></span>
+      <button class="btn ghost" type="button" id="si-back">${L("เลือกบัญชีอื่น", "Choose another account")}</button></div>`;
+  }
+  el.innerHTML = `<div class="si-card" role="dialog" aria-modal="true" aria-labelledby="si-title">
+    <div class="si-brand"><div class="brand-mark">Fk</div><div><b id="si-title">Fisko</b><small>${L("แพลตฟอร์มงบประมาณ (AEBMS)", "Budget platform (AEBMS)")}</small></div>
+      <div class="seg" role="group" aria-label="Language" style="margin-left:auto"><button type="button" data-silang="th" class="${LANG === "th" ? "on" : ""}">TH</button><button type="button" data-silang="en" class="${LANG === "en" ? "on" : ""}">EN</button></div></div>
+    <h2>${L("เข้าสู่ระบบ", "Sign in")}</h2>
+    ${Object.keys(SEEDS).length > 1 ? `<label class="field-inline" for="si-org">${L("หน่วยงาน", "Organization")} <select id="si-org">${Object.keys(SEEDS).map(o => `<option value="${o}" ${o === ORG ? "selected" : ""}>${esc(tx(SEEDS[o].name))}</option>`).join("")}</select></label>` : ""}
+    ${body}
+    <p class="sub si-foot">${L("ต้นแบบเพื่อการหารือ · ไม่ใช้รหัสผ่านจริง · ข้อมูลทั้งหมดเป็นข้อมูลตัวอย่าง", "Discussion prototype · no real passwords · all data is sample data")}</p></div>`;
+  el.hidden = false;
+  $$("[data-silang]").forEach(b => (b.onclick = () => { LANG = b.dataset.silang; store.set("fisko-lang", LANG); renderShell(); showSignIn(); }));
+  const so = $("#si-org"); if (so) so.onchange = () => { ORG = so.value; store.set("fisko-org", ORG); load(); resetUi(); renderShell(); SIGN = { step: "pick", user: null, err: "" }; showSignIn(); };
+  $$("[data-acc]").forEach(b => (b.onclick = () => {
+    const u = userById(b.dataset.acc);
+    if (!u.active) { toast(L("บัญชีนี้ถูกระงับ ติดต่อผู้ดูแลระบบ", "This account is suspended. Contact the administrator.")); return; }
+    SIGN = { step: "sso", user: u.id, err: "" }; showSignIn();
+    setTimeout(() => { SIGN.step = u.mfa ? "mfa" : "setup"; showSignIn(); const o = $("#otp"); if (o) o.focus(); }, 700);
+  }));
+  const back = $("#si-back"); if (back) back.onclick = () => { SIGN = { step: "pick", user: null, err: "" }; showSignIn(); };
+  const of = $("#otp-form");
+  if (of) of.onsubmit = e => {
+    e.preventDefault();
+    const u = userById(SIGN.user);
+    if ($("#otp").value.trim() !== DEMO_OTP) { SIGN.err = L("รหัสไม่ถูกต้อง ลองอีกครั้ง", "That code isn't right. Try again."); showSignIn(); $("#otp").focus(); return; }
+    if (SIGN.step === "setup") { u.mfa = true; audit(["ตั้งค่าการยืนยันตัวตนสองชั้น", "Set up two-factor sign-in"], tx(u.name)); }
+    startSession(u);
+  };
+}
+
+/* ---- 56-search.js ---- */
+// Global search (round 7): one box across pages and records, filtered by what the current role may open.
+let S_HITS = [], S_SEL = 0;
+const STYPE = {
+  page: ["หน้า", "Page"], request: ["คำขอ", "Request"], kpi: ["ตัวชี้วัด", "KPI"], strategy: ["ยุทธศาสตร์", "Strategy"],
+  activity: ["กิจกรรม", "Activity"], project: ["โครงการที่ใช้จ่าย", "Project"], line: ["รายการจัดสรร", "Allocation line"],
+  transfer: ["โอนเปลี่ยนแปลง", "Transfer"], meeting: ["การประชุม", "Meeting"], user: ["ผู้ใช้", "User"], rule: ["กฎ", "Rule"], delegation: ["การมอบอำนาจ", "Delegation"],
+};
+function searchItems() {
+  const out = [], add = (type, page, label, sub, run, hay) => { if (allowed(page)) out.push({ type, label, sub, run, hay: (label + " " + sub + " " + (hay || "")).toLowerCase() }); };
+  NAV.filter(n => n.roles.includes(ROLE)).forEach(n => add("page", n.id, tx(n.label), n.code, () => go(n.id), n.label.join(" ")));
+  (ROLE === "div" ? S.requests.filter(r => r.unit === me().unit) : S.requests).forEach(r =>
+    add("request", "requests", `${r.id} ${tx(r.name)}`, `${unitName(r.unit)} · ${tx(STATUS[r.status][0])}`, () => openReq(r.id), [].concat(r.name).join(" ") + " " + budgetCode(r)));
+  allKpis().forEach(({ k, st }) => add("kpi", "strategy", `${k.id} ${tx(k.name)}`, `${st.id} · ${unitName(k.owner)}`, () => jump("strat-kpis"), k.name.join(" ")));
+  S.strategy.items.forEach(st => add("strategy", "strategy", `${st.id} ${tx(st.name)}`, natName(st.nat), () => jump("strat-map"), st.name.join(" ")));
+  (S.structure[2571] || []).filter(a => a.lvl === "activity").forEach(a => add("activity", "strategy", `${a.code} ${tx(a.name)}`, fyLabel(2571), () => jump("strat-links"), a.name.join(" ")));
+  S.dash.projects.forEach(p => add("project", "dashboard", tx(p.name), unitName(p.unit), () => { MON_TAB = "drill"; DRILL_U = p.unit; DRILL_P = p.id; go("dashboard"); }, [].concat(p.name).join(" ")));
+  Object.values(S.allocs).forEach(A => {
+    A.lines.forEach(l => add("line", "allocation", `${l.id} ${tx(l.name)}`, `${unitName(l.unit)} · ${fyLabel(A.fy)}`, () => { ALLOC_FY = A.fy; ALLOC_TAB = "allocate"; OPEN_UNIT.add(l.unit); go("allocation"); }, [].concat(l.name).join(" ")));
+    A.transfers.forEach(t => add("transfer", "allocation", t.id, `${mb(t.amount)} ${L("ลบ.", "M")} · ${tx(t.why)}`, () => { ALLOC_FY = A.fy; ALLOC_TAB = "transfers"; go("allocation"); }, t.why.join(" ")));
+  });
+  S.meetings.forEach(m => add("meeting", "review", `${L("การประชุม", "Meeting")} ${tx(m.no)}`, fdate(m.date), () => jump("rev-meetings"), m.no.join(" ")));
+  if (ROLE === "admin") {
+    S.users.forEach(u => add("user", "admin", tx(u.name), `${tx(ROLES[u.role])} · ${unitName(u.unit)}`, () => jump("admin-users"), u.name.join(" ")));
+    S.rules.forEach(r => add("rule", "admin", `${r.id} ${tx(r.name)}`, r.on ? L("ใช้งาน", "On") : L("ปิด", "Off"), () => jump("admin-rules"), r.name.join(" ")));
+  }
+  S.delegations.filter(d => ROLE === "admin" || d.from === me().id || d.to === me().id).forEach(d => out.push({ type: "delegation", label: d.id, sub: `${tx(userById(d.from).name)} → ${tx(userById(d.to).name)}`, run: () => go("delegation"), hay: (d.id + " " + d.why.join(" ")).toLowerCase() }));
+  return out;
+}
+function runSearch(q) {
+  const p = $("#spanel"), inp = $("#gsearch");
+  q = q.trim().toLowerCase();
+  if (!q) { p.hidden = true; inp.setAttribute("aria-expanded", "false"); return; }
+  const words = q.split(/\s+/);
+  const hits = searchItems().filter(i => words.every(w => i.hay.includes(w)));
+  const by = {}; hits.forEach(h => (by[h.type] = by[h.type] || []).push(h));
+  S_HITS = []; let html = "";
+  Object.keys(STYPE).forEach(t => { if (!by[t]) return;
+    html += `<div class="sgroup">${tx(STYPE[t])} <span class="sub">${by[t].length}</span></div>`;
+    by[t].slice(0, 6).forEach(h => { html += `<div class="sitem" role="option" id="sh-${S_HITS.length}" data-si="${S_HITS.length}"><b>${esc(h.label)}</b><small>${esc(h.sub)}</small></div>`; S_HITS.push(h); });
+  });
+  p.innerHTML = html || `<div class="sitem" style="cursor:default"><small>${L("ไม่พบผลลัพธ์ที่ตรงกับ", "Nothing matches")} “${esc(q)}”</small></div>`;
+  p.hidden = false; inp.setAttribute("aria-expanded", "true");
+  S_SEL = 0; markSel();
+  $$("#spanel [data-si]").forEach(el => (el.onmousedown = e => { e.preventDefault(); pick(Number(el.dataset.si)); }));
+}
+function markSel() { $$("#spanel .sitem").forEach(el => el.classList.toggle("on", Number(el.dataset.si) === S_SEL)); const el = $("#sh-" + S_SEL); if (el) { el.scrollIntoView({ block: "nearest" }); $("#gsearch").setAttribute("aria-activedescendant", el.id); } }
+function pick(i) { const h = S_HITS[i]; if (!h) return; $("#gsearch").value = ""; $("#spanel").hidden = true; $("#gsearch").blur(); h.run(); }
+function bindSearch() {
+  const inp = $("#gsearch");
+  inp.oninput = () => runSearch(inp.value);
+  inp.onfocus = () => { if (inp.value) runSearch(inp.value); };
+  inp.onblur = () => setTimeout(() => ($("#spanel").hidden = true), 120);
+  inp.onkeydown = e => {
+    if (e.key === "ArrowDown") { e.preventDefault(); S_SEL = Math.min(S_HITS.length - 1, S_SEL + 1); markSel(); }
+    if (e.key === "ArrowUp") { e.preventDefault(); S_SEL = Math.max(0, S_SEL - 1); markSel(); }
+    if (e.key === "Enter") { e.preventDefault(); pick(S_SEL); }
+    if (e.key === "Escape") { inp.value = ""; $("#spanel").hidden = true; inp.blur(); }
+  };
+  document.addEventListener("keydown", e => {
+    const typing = /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);
+    if ((e.key === "k" && (e.ctrlKey || e.metaKey)) || (e.key === "/" && !typing)) { if ($("#signin").hidden) { e.preventDefault(); inp.focus(); } }
+  });
+}
+
+/* ---- 58-history.js ---- */
+// Record history drawer (round 7): every audit entry, AI action and version that mentions a record.
+// Any element with data-hist="<key>" opens it; historyBtn() renders the standard button.
+const historyBtn = (key, title) => `<button class="btn ghost hist-btn" type="button" data-hist="${esc(key)}" data-hist-title="${esc(title || key)}" aria-label="${L("ประวัติของ", "History of")} ${esc(title || key)}">${L("ประวัติ", "History")}</button>`;
+function historyItems(key) {
+  // A key may list alternatives separated by "|" (for example a record's Thai and English names).
+  // Whole-token match, so "K1" does not also pick up "K12".
+  const res = key.split("|").filter(Boolean).map(k => new RegExp(`(^|[^A-Za-z0-9])${k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}($|[^A-Za-z0-9])`, "i"));
+  const hit = s => res.some(re => re.test(s || "")), out = [];
+  key = key.split("|")[0];
+  S.audit.forEach(a => { if (hit(a.target)) out.push({ t: a.t, who: userName(a.user), role: a.role, what: tx(a.action), detail: a.target, kind: "audit" }); });
+  (S.aiLog || []).forEach(a => { if (hit(a.target)) out.push({ t: a.t, who: a.user === "system" ? L("ระบบอัตโนมัติ", "Automatic") : userName(a.user), role: null, what: `${a.agent} · ${tx(a.action)}`, detail: a.ok ? `${a.sources} ${L("แหล่งอ้างอิง", "sources")}` : L("ปฏิเสธ", "Declined"), kind: "ai" }); });
+  const r = S.requests.find(x => x.id === key);
+  if (r) {
+    (r.versions || []).forEach(v => out.push({ t: v.t, who: userName(v.by), role: null, what: `${L("บันทึกเวอร์ชัน", "Saved version")} v${v.v}`, detail: `${tx(v.note)} · ${fmt(v.amount)} ${L("บาท", "baht")}`, kind: "version" }));
+    (r.comments || []).forEach(c => out.push({ t: c.t, who: userName(c.by), role: c.role, what: c.resolved ? L("ความเห็น (แก้แล้ว)", "Comment (resolved)") : L("ความเห็น", "Comment"), detail: tx(c.text), kind: "comment" }));
+  }
+  const seen = new Set();
+  return out.filter(i => { const s = i.t + i.what + i.detail; if (seen.has(s)) return false; seen.add(s); return true; }).sort((a, b) => (a.t < b.t ? 1 : -1));
+}
+const HKIND = { audit: ["บันทึกการใช้งาน", "Audit"], ai: ["AI", "AI"], version: ["เวอร์ชัน", "Version"], comment: ["ความเห็น", "Comment"] };
+let H_LAST = null;
+function openHistory(key, title, opener) {
+  const d = $("#hdrawer"), items = historyItems(key);
+  H_LAST = opener || document.activeElement;
+  d.innerHTML = `<header><div><div class="eyebrow">${L("ประวัติการเปลี่ยนแปลง", "Change history")}</div><b>${esc(title)}</b></div><span class="sp"></span>
+      <button class="btn ghost" type="button" id="h-close" aria-label="${L("ปิด", "Close")}">✕</button></header>
+    <div class="h-body">${items.length ? `<ol class="timeline">${items.map(i => `<li class="done"><span class="dot"></span><div><b style="font-weight:600">${esc(i.what)}</b> ${tag(tx(HKIND[i.kind]), i.kind === "ai" ? "p-info" : i.kind === "comment" ? "p-warn" : "p-mute")}
+        <small>${esc(i.who)}${i.role ? " · " + tx(ROLES[i.role]) : ""} · ${fdate(i.t, true)}</small>${i.detail ? `<div class="sub">${esc(i.detail)}</div>` : ""}</div></li>`).join("")}</ol>`
+      : `<span class="sub">${L("ยังไม่มีประวัติของรายการนี้", "No history for this record yet")}</span>`}
+      <p class="sub" style="margin-top:12px">${L("ดึงจากบันทึกการใช้งานแบบแก้ไขไม่ได้ (M10)", "Drawn from the append-only audit log (M10)")}</p></div>`;
+  d.hidden = false;
+  $("#h-close").onclick = closeHistory;
+  $("#h-close").focus();
+}
+function closeHistory() { $("#hdrawer").hidden = true; if (H_LAST && H_LAST.focus) H_LAST.focus(); }
+function bindHistory() {
+  document.addEventListener("click", e => {
+    const b = e.target.closest("[data-hist]");
+    if (b) { e.preventDefault(); e.stopPropagation(); openHistory(b.dataset.hist, b.dataset.histTitle || b.dataset.hist, b); return; }
+    const d = $("#hdrawer");
+    if (!d.hidden && !e.target.closest("#hdrawer")) closeHistory();
+  }, true);
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#hdrawer").hidden) closeHistory(); });
+}
+
 /* ---- 99-boot.js ---- */
 // Boot: pick the saved organization, load its state, draw the shell and the current page.
+// With no signed-in session, the sign-in screen opens on top.
 ORG = SEEDS[store.get("fisko-org")] ? store.get("fisko-org") : "sample";
 load();
+if (SESSION) { const su = S.users.find(u => u.id === SESSION.user); if (su) ROLE = su.role; }
 bindShell();
 renderShell();
 route();
+if (!SESSION) showSignIn();
 </script>
 </body>
 </html>

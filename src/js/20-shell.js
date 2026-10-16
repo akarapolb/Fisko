@@ -52,11 +52,14 @@ function renderShell() {
   org.innerHTML = orgs.map(o => `<option value="${o}" ${o === ORG ? "selected" : ""}>${esc(tx(SEEDS[o].name))}</option>`).join("");
   org.hidden = orgs.length < 2;
   $("#role").innerHTML = Object.keys(ROLES).map(r => `<option value="${r}" ${r === ROLE ? "selected" : ""}>${tx(ROLES[r])}</option>`).join("");
-  $$(".seg button").forEach(b => b.classList.toggle("on", b.dataset.lang === LANG));
+  $$("#top .seg button").forEach(b => b.classList.toggle("on", b.dataset.lang === LANG));
   $("#bell-label").textContent = L("แจ้งเตือน", "Alerts");
   $("#theme").textContent = L("ธีม", "Theme");
+  $("#gsearch").placeholder = L("ค้นหา (Ctrl+K)", "Search (Ctrl+K)");
+  renderUserChip();
   updateBell();
   $("#npanel").hidden = true;
+  $("#umenu").hidden = true;
 }
 
 function updateBell() {
@@ -105,8 +108,17 @@ VIEWS.soon = n => `
 
 function bindShell() {
   $("#org").onchange = e => { ORG = e.target.value; store.set("fisko-org", ORG); load(); resetUi(); renderShell(); go("home"); toast(tx(SEEDS[ORG].name)); };
-  $$(".seg button").forEach(b => b.onclick = () => { LANG = b.dataset.lang; store.set("fisko-lang", LANG); renderShell(); route(); });
-  $("#role").onchange = e => { ROLE = e.target.value; store.set("fisko-role", ROLE); renderShell(); route(); toast(`${L("สลับเป็นบทบาท", "Switched to")} ${tx(ROLES[ROLE])} · ${tx(me().name)}`); };
+  $$("#top .seg button").forEach(b => b.onclick = () => { LANG = b.dataset.lang; store.set("fisko-lang", LANG); renderShell(); route(); });
+  $("#role").onchange = e => {
+    ROLE = e.target.value; store.set("fisko-role", ROLE);
+    if (SESSION) { SESSION.user = me().id; store.set("fisko-session", JSON.stringify(SESSION)); }
+    renderShell(); route(); toast(`${L("สลับเป็นบทบาท", "Switched to")} ${tx(ROLES[ROLE])} · ${tx(me().name)}`);
+  };
+  $("#userchip").onclick = e => { e.stopPropagation(); toggleNotes(false); toggleUserMenu(); };
+  document.addEventListener("click", e => { if (!$("#umenu").hidden && !e.target.closest("#umenu")) toggleUserMenu(false); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#umenu").hidden) { toggleUserMenu(false); $("#userchip").focus(); } });
+  bindSearch();
+  bindHistory();
   $("#bell").onclick = e => { e.stopPropagation(); toggleNotes(); };
   document.addEventListener("click", e => { if (!$("#npanel").hidden && !e.target.closest("#npanel")) toggleNotes(false); });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#npanel").hidden) { toggleNotes(false); $("#bell").focus(); } });

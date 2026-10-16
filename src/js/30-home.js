@@ -48,6 +48,10 @@ function myTasks() {
     R(L("ติดตามหน่วยงานที่เบิกจ่ายต่ำกว่าแผน", "Follow up units behind their spending plan"), "", TODAY, "mon-alerts", "p-bad");
     if (S.perf.report && S.perf.report.sent) R(L("อ่านรายงานประเมินผลกลางปี", "Read the mid-year evaluation report"), "", TODAY, "perf-report", "p-info");
   }
+  // Delegated work (round 7): cross-unit transfers this user may approve on an executive's behalf.
+  const dg = ROLE !== "exec" && delegFor("exec", "transfer");
+  if (dg) Object.values(S.allocs).forEach(A => A.transfers.filter(x => x.status === "pending").forEach(x => { const a = A.lines.find(l => l.id === x.from), b = A.lines.find(l => l.id === x.to);
+    if (a.type !== b.type || a.unit !== b.unit) R(`${L("อนุมัติการโอนเปลี่ยนแปลงแทนผู้บริหาร", "Approve budget transfer for the executive")} ${x.id}`, `${mb(x.amount)} ${L("ลบ.", "M")} · ${L("ตามหนังสือมอบอำนาจ", "under delegation")} ${dg.id}`, dg.end, "alloc-transfers", "p-warn"); }));
   if (ROLE === "fin") {
     const open = S.gfmis.filter(g => !g.ok).length;
     if (open) R(L("กระทบยอดผลเบิกจ่ายกับ GFMIS", "Reconcile disbursement with GFMIS"), `${open} ${L("รายการไม่ตรง", "rows differ")}`, TODAY, "mon-import", "p-warn");

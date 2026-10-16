@@ -106,7 +106,7 @@ VIEWS.request = () => {
   <div class="head"><div><div class="eyebrow">M02 · Budget Preparation · <span class="mono">${r.id}</span></div>
     ${ed ? `<input type="text" id="rname" value="${esc(tx(r.name))}" aria-label="${L("ชื่อโครงการ", "Project name")}" style="font-size:22px;font-weight:700;width:min(640px,100%)">` : `<h1>${esc(tx(r.name))}</h1>`}
     <div class="row" style="margin-top:8px">${pill(r.status)}<span class="sub">${unitName(r.unit)}${r.multi ? " · " + L("คำขอผูกพันต่อเนื่อง 2 ปี (2571–2572)", "2-year commitment (2571–2572)") : ""}</span></div></div>
-    <div class="sp"></div><div class="row"><button class="btn" type="button" onclick="go('requests')">${L("กลับรายการ", "Back to list")}</button>${reviewButtons(r)}
+    <div class="sp"></div><div class="row"><button class="btn" type="button" onclick="go('requests')">${L("กลับรายการ", "Back to list")}</button>${historyBtn(r.id, r.id)}${reviewButtons(r)}
       ${ed ? `<button class="btn" type="button" id="save">${L("บันทึกร่าง", "Save draft")}</button><button class="btn primary" type="button" id="submit">${L("ส่งให้กองแผนงาน", "Send to Planning")}</button>` : ""}</div></div>
   ${ed ? "" : `<div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("โหมดดูอย่างเดียว", "View only")}</b><p>${ROLE !== "div" ? L("แก้ไขได้เฉพาะผู้จัดทำคำขอของหน่วยงาน", "Only the requesting unit can edit") : L("คำขอนี้ส่งแล้วหรือไม่ใช่ของหน่วยงานคุณ", "This request is submitted or belongs to another unit")}</p></div></div>`}
   <div class="hier" aria-label="${L("โครงสร้างงบประมาณ", "Budget structure")}"><span>${fyLabel(2571)}</span><em>›</em><span>${esc(tx(S.org))}</span>${lin.map(n => `<em>›</em><span>${esc(tx(n.name))}</span>`).join("")}</div>

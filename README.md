@@ -19,6 +19,7 @@ This repository holds the conceptual design material and a clickable prototype p
 
 - All 10 modules: M01 Strategic Planning, M02 Budget Preparation, M03 Consolidation, M04 Review & Approval, M05 Submission, M06 Allocation, M07 Execution Monitoring, M08 Performance, M09 Budget Intelligence (AI), M10 System Administration.
 - Six roles (division, planning, executive, finance, auditor, administrator), Thai/English, light and dark themes.
+- Simulated SSO sign-in with two-factor codes (the prototype code is `246810`), global search (Ctrl+K or `/`), a change-history drawer on records, and delegation of authority (acting on another user's behalf, recorded in the audit log).
 - Two sample organizations: a fictional department, and กรมโยธาธิการและผังเมือง with fictional figures and an indicative unit structure.
 - State is kept in the browser's local storage. Use **Reset data** or the **Demo guide** (bottom of the left menu) to start over.
 

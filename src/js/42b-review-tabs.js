@@ -31,16 +31,16 @@ REV_BIND.queue = () => $$("[data-open]").forEach(b => (b.onclick = () => openReq
 // ---- meetings ----
 const agendaName = id => { const x = S.review.find(v => v.id === id) || S.requests.find(v => v.id === id); return x ? tx(x.name) : id; };
 REV_PANELS.meetings = () => {
-  const canRec = ROLE === "plan" || ROLE === "exec";
+  const canRec = ROLE === "plan" || acting("exec", "committee");
   return S.meetings.slice().reverse().map(m => {
     if (m.status === "held") return `
-    <section class="panel"><header><h2>${L("การประชุมคณะกรรมการพิจารณางบประมาณ", "Budget committee")} ${tx(m.no)}</h2><span class="sp"></span>${tag(L("ประชุมแล้ว", "Held"), "p-ok")}</header>
+    <section class="panel"><header><h2>${L("การประชุมคณะกรรมการพิจารณางบประมาณ", "Budget committee")} ${tx(m.no)}</h2><span class="sp"></span>${historyBtn(m.id + "|" + m.no[0] + "|" + m.no[1], tx(m.no))}${tag(L("ประชุมแล้ว", "Held"), "p-ok")}</header>
       <div class="body row"><span>${fdate(m.date)}</span><span class="sub">·</span><span>${L("ผู้เข้าประชุม", "Attendees")} ${m.attendees} ${L("คน", "")}</span><span class="sub">·</span>${m.docs.map(d => tag(esc(d), "p-mute")).join("")}</div>
       <div class="tbl-wrap"><table><thead><tr><th>${L("วาระ", "Item")}</th><th>${L("มติ", "Resolution")}</th><th class="n">${L("วงเงินที่มีมติ (ลบ.)", "Resolved amount (M)")}</th><th>${L("หมายเหตุ", "Note")}</th></tr></thead>
         <tbody>${Object.keys(m.items).map(k => { const it = m.items[k]; return `<tr><td><span class="mono sub">${k}</span> ${esc(agendaName(k))}</td><td>${tag(tx(RES[it.res][0]), RES[it.res][1])}</td><td class="n">${it.amount != null ? fmt(it.amount, 1) : "—"}</td><td class="sub">${esc(tx(it.note))}</td></tr>`; }).join("")}</tbody></table></div></section>`;
     const agenda = S.requests.filter(r => r.status === "committee");
     return `
-    <section class="panel"><header><h2>${L("การประชุมคณะกรรมการพิจารณางบประมาณ", "Budget committee")} ${tx(m.no)}</h2><span class="sp"></span>${tag(`${L("กำหนดประชุม", "Scheduled")} ${fdate(m.date)}`, "p-info")}</header>
+    <section class="panel"><header><h2>${L("การประชุมคณะกรรมการพิจารณางบประมาณ", "Budget committee")} ${tx(m.no)}</h2><span class="sp"></span>${historyBtn(m.id + "|" + m.no[0] + "|" + m.no[1], tx(m.no))}${tag(`${L("กำหนดประชุม", "Scheduled")} ${fdate(m.date)}`, "p-info")}</header>
       ${agenda.length ? `<div class="tbl-wrap"><table><thead><tr><th>${L("วาระ", "Item")}</th><th class="n">${L("วงเงินขอ (ลบ.)", "Requested (M)")}</th><th style="width:220px">${L("มติ", "Resolution")}</th><th class="n" style="width:130px">${L("วงเงินที่มีมติ", "Resolved (M)")}</th><th>${L("หมายเหตุ", "Note")}</th></tr></thead>
         <tbody>${agenda.map(r => `<tr><td><a href="#" data-req="${r.id}" class="mono">${r.id}</a> ${esc(tx(r.name))}</td><td class="n">${mb(r.amount)}</td>
           <td><select data-res="${r.id}" ${canRec ? "" : "disabled"} aria-label="${L("มติ", "Resolution")} ${r.id}">${Object.keys(RES).map(k => `<option value="${k}">${tx(RES[k][0])}</option>`).join("")}</select></td>
@@ -71,7 +71,7 @@ REV_BIND.meetings = () => {
     m.docs = [L(`รายงานการประชุม${tx(m.no)}.pdf`, `Minutes ${tx(m.no)}.pdf`)];
     const n = S.meetings.length + 1;
     S.meetings.push({ id: "M-" + n, no: [`ครั้งที่ ${n}/2570`, `Meeting ${n}/2570`], date: addDays(TODAY, 30), status: "scheduled", attendees: 0, docs: [], items: {} });
-    audit(["บันทึกมติคณะกรรมการพิจารณางบประมาณ", "Recorded budget committee resolutions"], `${tx(m.no)} · ${agenda.length} ${L("วาระ", "items")}`);
+    audit(["บันทึกมติคณะกรรมการพิจารณางบประมาณ", "Recorded budget committee resolutions"], `${m.id} ${tx(m.no)}${onBehalf("exec", "committee")} ·${agenda.length} ${L("วาระ", "items")}`);
     notify(["plan", "div"], [`บันทึกมติการประชุม ${m.no[0]} แล้ว`, `Resolutions for ${m.no[1]} are recorded`], "review");
     commit(); renderShell(); route(); toast(L("บันทึกมติแล้ว · ปรับสถานะคำขอตามมติ", "Resolutions recorded · request statuses updated"));
   };

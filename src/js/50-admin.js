@@ -115,13 +115,17 @@ BIND_ADMIN.structure = () => {
 ADMIN.users = () => `
   <section class="panel"><header><h2>${L("ผู้ใช้งาน", "Users")}</h2><span class="sp"></span><span class="sub">${L("ยืนยันตัวตนผ่าน SSO ของหน่วยงาน", "Sign-in through the organization's SSO")}</span></header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("ชื่อ", "Name")}</th><th>${L("หน่วยงาน", "Unit")}</th><th style="width:220px">${L("บทบาท", "Role")}</th><th class="c">MFA</th><th class="c">${L("ใช้งาน", "Active")}</th></tr></thead>
-      <tbody>${S.users.map((u, i) => `<tr><td>${esc(tx(u.name))}${u.primary ? ` <span class="sub">(${L("ผู้ใช้ตัวอย่างของบทบาท", "demo user for role")})</span>` : ""}</td><td class="sub">${unitName(u.unit)}</td>
+      <tbody>${S.users.map((u, i) => `<tr><td>${esc(tx(u.name))} ${historyBtn(u.name[0] + "|" + u.name[1], tx(u.name))}${u.primary ? ` <span class="sub">(${L("ผู้ใช้ตัวอย่างของบทบาท", "demo user for role")})</span>` : ""}</td><td class="sub">${unitName(u.unit)}</td>
         <td><select data-urole="${i}" aria-label="${L("บทบาทของ", "Role of")} ${esc(tx(u.name))}" ${u.primary ? "disabled" : ""}>${Object.keys(ROLES).map(r => `<option value="${r}" ${r === u.role ? "selected" : ""}>${tx(ROLES[r])}</option>`).join("")}</select></td>
         <td class="c">${sw("mfa-" + i, u.mfa)}</td><td class="c">${sw("act-" + i, u.active, u.primary)}</td></tr>`).join("")}</tbody></table></div></section>
   <section class="panel"><header><h2>${L("สิทธิ์ตามบทบาทและโมดูล", "Role and module permissions")}</h2><span class="sp"></span><span class="sub">C ${L("สร้าง", "create")} · U ${L("ใช้งาน/แก้ไข", "use/edit")} · R ${L("อ่าน", "read")} · A ${L("อนุมัติ", "approve")}</span></header>
     <div class="tbl-wrap"><table class="mx"><thead><tr><th>${L("บทบาท", "Role")}</th>${["M01", "M02", "M03", "M04", "M05", "M06", "M07", "M08", "M09", "M10"].map(m => `<th class="c">${m}</th>`).join("")}</tr></thead>
       <tbody>${Object.keys(MATRIX).map(r => `<tr><td>${tx(ROLES[r])}</td>${MATRIX[r].map(v => `<td class="c" style="color:var(--${v === "A" ? "accent" : v.includes("U") ? "info" : "muted"})">${v}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
-    <div class="body sub">${L("ผู้ดูแลระบบไม่มีสิทธิ์เห็นหรือแก้ไขข้อมูลงบประมาณ", "Administrators cannot see or change budget data")}</div></section>`;
+    <div class="body sub">${L("ผู้ดูแลระบบไม่มีสิทธิ์เห็นหรือแก้ไขข้อมูลงบประมาณ", "Administrators cannot see or change budget data")}</div></section>
+  <section class="panel"><header><h2>${L("การมอบอำนาจ", "Delegations of authority")}</h2><span class="sp"></span>
+      <button class="btn" type="button" onclick="go('delegation')">${L("จัดการการมอบอำนาจ", "Manage delegations")}</button></header>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("ผู้มอบ", "From")}</th><th>${L("ผู้รับมอบ", "To")}</th><th>${L("ช่วงเวลา", "Period")}</th><th>${L("สถานะ", "Status")}</th></tr></thead>
+      <tbody>${(S.delegations || []).map(d => `<tr><td class="mono">${d.id}</td><td>${esc(userName(d.from))}</td><td>${esc(userName(d.to))}</td><td class="sub">${fdate(d.start)} – ${fdate(d.end)}</td><td>${tag(tx(DSTATE[delegState(d)][0]), DSTATE[delegState(d)][1])}</td></tr>`).join("")}</tbody></table></div></section>`;
 BIND_ADMIN.users = () => {
   $$("[data-urole]").forEach(s => (s.onchange = () => { const u = S.users[s.dataset.urole]; const old = u.role; u.role = s.value; audit(["เปลี่ยนบทบาทผู้ใช้", "Changed a user's role"], `${tx(u.name)}: ${tx(ROLES[old])} → ${tx(ROLES[u.role])}`); commit(); toast(L("บันทึกบทบาทแล้ว", "Role saved")); }));
   S.users.forEach((u, i) => {
@@ -159,7 +163,7 @@ BIND_ADMIN.workflow = () => {
 ADMIN.rules = () => `
   <section class="panel"><header><h2>${L("กฎทางธุรกิจปี 2571", "FY2571 business rules")}</h2><span class="sp"></span><span class="sub">${L("ใช้ตรวจความครบถ้วนใน M02 ทันทีที่บันทึก", "Applied to M02 checks as soon as you save")}</span></header>
     <div class="tbl-wrap"><table><thead><tr><th class="c" style="width:70px">${L("ใช้งาน", "On")}</th><th>${L("รหัส", "ID")}</th><th>${L("กฎ", "Rule")}</th><th style="width:160px">${L("ค่ากำหนด", "Setting")}</th><th style="width:170px">${L("เมื่อไม่ผ่าน", "If it fails")}</th></tr></thead>
-      <tbody>${S.rules.map((r, i) => `<tr><td class="c">${sw("rule-" + i, r.on)}</td><td class="mono">${r.id}</td><td>${tx(r.name)}</td>
+      <tbody>${S.rules.map((r, i) => `<tr><td class="c">${sw("rule-" + i, r.on)}</td><td class="mono">${r.id}</td><td>${tx(r.name)} ${historyBtn(r.id, r.id)}</td>
         <td>${r.param != null ? `<label class="field-inline"><input type="number" min="0" data-rp="${i}" value="${r.param}" style="width:80px" aria-label="${r.id}"> ${tx(r.unit)}</label>` : `<span class="sub">—</span>`}</td>
         <td><select data-re="${i}" aria-label="${r.id}"><option value="block" ${r.effect === "block" ? "selected" : ""}>${L("ห้ามส่ง", "Block sending")}</option><option value="warn" ${r.effect === "warn" ? "selected" : ""}>${L("ข้อสังเกต", "Warn only")}</option></select></td></tr>`).join("")}</tbody></table></div></section>`;
 BIND_ADMIN.rules = () => {

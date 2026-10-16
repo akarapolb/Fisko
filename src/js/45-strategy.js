@@ -46,7 +46,7 @@ STRAT.kpis = () => {
   return `
   <section class="panel"><header><h2>${L("ค่าเป้าหมายตัวชี้วัด 5 ปี", "5-year KPI targets")}</h2><span class="sp"></span>${tag(ed ? L("แก้ไขได้", "Editable") : L("ดูอย่างเดียว", "View only"), ed ? "p-ok" : "p-mute")}</header>
     <div class="tbl-wrap"><table class="targets"><thead><tr><th>${L("ตัวชี้วัด", "KPI")}</th><th>${L("หน่วย", "Unit")}</th><th class="n">${L("ฐาน", "Baseline")}</th>${PLAN_YEARS.map(y => `<th class="n">${y}</th>`).join("")}<th>${L("เจ้าของ", "Owner")}</th></tr></thead>
-      <tbody>${allKpis().map(({ k, st }) => `<tr><td><span class="mono sub">${st.id}·${k.id}</span> ${esc(tx(k.name))}</td><td class="sub">${tx(k.unit)}</td><td class="n">${fmt(k.base, k.base % 1 ? 1 : 0)}</td>
+      <tbody>${allKpis().map(({ k, st }) => `<tr><td><span class="mono sub">${st.id}·${k.id}</span> ${esc(tx(k.name))} ${historyBtn(k.id, k.id + " " + tx(k.name))}</td><td class="sub">${tx(k.unit)}</td><td class="n">${fmt(k.base, k.base % 1 ? 1 : 0)}</td>
         ${k.targets.map((t, i) => `<td class="n"><input type="number" step="any" min="0" data-k="${k.id}" data-y="${i}" value="${t}" ${ds} aria-label="${esc(tx(k.name))} ${PLAN_YEARS[i]}" style="width:84px"></td>`).join("")}
         <td><select data-own="${k.id}" ${ds} aria-label="${L("เจ้าของ", "Owner")}">${S.units.filter(u => u.parent).map(u => `<option value="${u.id}" ${u.id === k.owner ? "selected" : ""}>${esc(tx(u.name))}</option>`).join("")}</select></td></tr>`).join("")}</tbody></table></div>
     ${ed ? `<div class="body"><form class="inline-form" id="kpi-form">

@@ -2,7 +2,7 @@
 const DEMO = [
   { t: "0:00", role: "plan", link: "home", title: ["แพลตฟอร์มเดียว 6 บทบาท", "One platform, six roles"],
     say: ["Fisko รวมวงจรงบประมาณทั้งหมดไว้ในระบบเดียว แต่ละบทบาทเห็นเฉพาะงานของตนเอง พร้อมกำหนดส่งจากปฏิทินงบประมาณ", "Fisko holds the whole budget cycle. Each role sees only its own work, with deadlines from the budget calendar."],
-    do: ["ชี้งานของฉันและปฏิทิน สลับภาษา TH/EN และสลับหน่วยงานตัวอย่าง", "Point at My tasks and the calendar; switch TH/EN and the sample organization"] },
+    do: ["เข้าสู่ระบบด้วย SSO และรหัส MFA (246810) ชี้งานของฉันและปฏิทิน ลองค้นหาด้วย Ctrl+K สลับภาษา TH/EN และสลับหน่วยงานตัวอย่าง", "Sign in with SSO and the MFA code (246810); point at My tasks and the calendar; try Ctrl+K search; switch TH/EN and the sample organization"] },
   { t: "1:00", role: "plan", link: "strat-align", title: ["M01 จากยุทธศาสตร์สู่คำขอ", "M01 From strategy to requests"],
     say: ["ทุกคำขอผูกกับกิจกรรมและตัวชี้วัด ระบบบอกได้ทันทีว่าวงเงินกี่เปอร์เซ็นต์สอดคล้องกับแผน และตัวชี้วัดใดยังไม่มีงบรองรับ", "Every request links to an activity and KPI, so you see at once how much budget follows the plan and which KPIs have no funding."],
     do: ["ชี้เส้นทางโครงการตัวอย่างด้านล่าง แล้วเปิดแท็บแผนผังยุทธศาสตร์", "Show the storyline trace at the bottom, then the Strategy map tab"] },

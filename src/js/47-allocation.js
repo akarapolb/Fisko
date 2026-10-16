@@ -101,10 +101,12 @@ ALLOC.transfers = () => {
   return `
   <section class="panel"><header><h2>${L("รายการโอนเปลี่ยนแปลง", "Budget transfers")}</h2><span class="sp"></span><span class="sub">${L("ผู้อนุมัติตามอำนาจ: ภายในหน่วยงานโดยผู้อำนวยการกองคลัง · ข้ามหน่วยงานหรือต่างงบรายจ่ายโดยผู้บริหาร", "Approval by authority: within a unit by the finance director; across units or budget types by an executive")}</span></header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("โอนจาก", "From")}</th><th>${L("โอนไป", "To")}</th><th class="n">${L("ลบ.", "M")}</th><th>${L("ผู้อนุมัติ", "Approver")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
-      <tbody>${A.transfers.slice().reverse().map(t => { const lv = transferLevel(t), canAp = t.status === "pending" && ((lv[0] === "same" && ROLE === "fin") || (lv[0] !== "same" && ROLE === "exec"));
+      <tbody>${A.transfers.slice().reverse().map(t => { const lv = transferLevel(t), canAp = t.status === "pending" && ((lv[0] === "same" && acting("fin", "transfer")) || (lv[0] !== "same" && acting("exec", "transfer")));
+        const by = lv[0] === "same" ? onBehalf("fin", "transfer") : onBehalf("exec", "transfer");
         return `<tr><td class="mono">${t.id}<div class="sub">${fdate(t.t)}</div></td><td>${esc(lineLabel(lineOf(t.from)))}</td><td>${esc(lineLabel(lineOf(t.to)))}<div class="sub">${esc(tx(t.why))}</div></td><td class="n">${mb(t.amount)}</td>
           <td class="sub">${lv[1]}</td><td>${tag(ST[t.status][0], ST[t.status][1])}</td>
-          <td>${canAp ? `<div class="row" style="flex-wrap:nowrap"><button class="btn primary" type="button" data-tap="${t.id}">${L("อนุมัติ", "Approve")}</button><button class="btn danger" type="button" data-trj="${t.id}">${L("ไม่อนุมัติ", "Reject")}</button></div>` : ""}</td></tr>`; }).join("")}</tbody></table></div>
+          <td><div class="row" style="flex-wrap:nowrap">${canAp ? `<button class="btn primary" type="button" data-tap="${t.id}">${by ? L("อนุมัติแทน", "Approve on behalf") : L("อนุมัติ", "Approve")}</button><button class="btn danger" type="button" data-trj="${t.id}">${L("ไม่อนุมัติ", "Reject")}</button>` : ""}${historyBtn(t.id, t.id)}</div>
+            ${canAp && by ? `<div class="sub" style="margin-top:4px">${by.slice(3)}</div>` : ""}</td></tr>`; }).join("")}</tbody></table></div>
     ${ed ? `<div class="body"><form class="inline-form" id="tr-form">
       <div class="f"><label for="tr-from">${L("โอนจาก", "From")}</label><select id="tr-from">${A.lines.map(l => `<option value="${l.id}">${esc(lineLabel(l))} (${mb(l.amount - pendingOut(l.id))})</option>`).join("")}</select></div>
       <div class="f"><label for="tr-to">${L("โอนไป", "To")}</label><select id="tr-to">${A.lines.map((l, i) => `<option value="${l.id}" ${i === 1 ? "selected" : ""}>${esc(lineLabel(l))}</option>`).join("")}</select></div>
@@ -190,7 +192,9 @@ BIND.allocation = () => {
       a.amount -= t.amount; b.amount += t.amount; scalePlan(a, a.amount); scalePlan(b, b.amount);
       if (a.type !== b.type) { A.byType[a.type] -= t.amount; A.byType[b.type] = (A.byType[b.type] || 0) + t.amount; }
     }
-    audit([ok ? "อนุมัติการโอนเปลี่ยนแปลง" : "ไม่อนุมัติการโอนเปลี่ยนแปลง", ok ? "Approved a transfer" : "Rejected a transfer"], t.id);
+    const lv = transferLevel(t), by = lv[0] === "same" ? onBehalf("fin", "transfer") : onBehalf("exec", "transfer");
+    audit([ok ? "อนุมัติการโอนเปลี่ยนแปลง" : "ไม่อนุมัติการโอนเปลี่ยนแปลง", ok ? "Approved a transfer" : "Rejected a transfer"], t.id + by);
+    if (by) notify([lv[0] === "same" ? "fin" : "exec"], [`${userName(me().id)} ${ok ? "อนุมัติ" : "ไม่อนุมัติ"} ${t.id} แทนคุณตามการมอบอำนาจ`, `${userName(me().id)} ${ok ? "approved" : "rejected"} ${t.id} on your behalf`], "allocation");
     notify(["fin"], [`${t.id} ${ok ? "อนุมัติแล้ว" : "ไม่อนุมัติ"}`, `${t.id} was ${ok ? "approved" : "rejected"}`], "allocation"); re();
     toast(ok ? L("อนุมัติแล้ว · ปรับวงเงินและแผนการใช้จ่ายของทั้งสองรายการ", "Approved · both lines' amounts and plans updated") : L("ไม่อนุมัติแล้ว", "Rejected"));
   };
