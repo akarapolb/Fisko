@@ -73,7 +73,7 @@ Object.assign(STYPE, { plan: ["แผนจัดซื้อ", "Plan item"], co
 
 NAV.push(
   { id: "procurement", code: "PR", group: "procurement", app: "procurement", jumpPrefix: "prc", roles: ["proc", "prochead", "div", "exec", "plan", "fin", "audit"], label: ["Fisko Procurement · จัดซื้อจัดจ้าง", "Fisko Procurement"],
-    tabs: [["cases", ["แฟ้มจัดซื้อ", "Case files"], "P1"], ["plan", ["แผนจัดซื้อ", "Procurement plan"], "P2"], ["reqn", ["ใบขอซื้อขอจ้าง", "Requisitions"], "P3"], ["contracts", ["สัญญาและงวดงาน", "Contracts and phases"], "P4"], ["egp", ["ไฟล์จาก e-GP", "e-GP file"], "P5"], ["analytics", ["วิเคราะห์และตัวชี้วัด", "Analytics and KPIs"], "P6"], ["flags", ["สัญญาณเตือน", "Red flags"], "P7"], ["ocds", ["ส่งออก OCDS", "OCDS export"], "P8"]],
+    tabs: [["cases", ["แฟ้มจัดซื้อ", "Case files"], "P1"], ["plan", ["แผนจัดซื้อ", "Procurement plan"], "P2"], ["reqn", ["ใบขอซื้อขอจ้าง", "Requisitions"], "P3"], ["contracts", ["สัญญาและงวดงาน", "Contracts and phases"], "P4"], ["egp", ["ไฟล์จาก e-GP", "e-GP file"], "P5"], ["analytics", ["วิเคราะห์และตัวชี้วัด", "Analytics and KPIs"], "P6"], ["flags", ["สัญญาณเตือน", "Red flags"], "P7"], ["ocds", ["ส่งออก OCDS", "OCDS export"], "P8"], ["ai", ["ผู้ช่วย AI", "AI assistant"], "P9"]],
     tabGet: () => PROC_TAB, tabSet: v => (PROC_TAB = v) },
   { id: "finance", code: "FN", group: "finance", app: "finance", jumpPrefix: "fnc", roles: ["fin", "exec", "plan", "audit"], label: ["Fisko Finance · ผูกพันและเบิกจ่าย", "Fisko Finance"],
     tabs: [["chain", ["สายงบประมาณถึงการจ่าย", "Allocation to payment"], "F1"], ["pay", ["ขออนุมัติเบิกจ่าย", "Payments"], "F2"], ["recon", ["กระทบยอด GFMIS", "GFMIS reconciliation"], "F3"]],

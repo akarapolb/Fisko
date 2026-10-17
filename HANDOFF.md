@@ -92,7 +92,7 @@ Conventions worth knowing before you edit:
 ## 5. State and data
 
 - State is kept per organisation in `localStorage` under `fisko-v1-<org>` (`sample` or `dpt`). Other keys: `fisko-session`, `fisko-lang`, `fisko-role`, `fisko-org`, `fisko-app`.
-- `DATA_V` in `00-core.js` (now **14**) is the seed version. **Bump it whenever you change the shape of seeded data**, or browsers that already hold old saved state will keep the old shape and break. Bumping resets everyone's saved demo data once.
+- `DATA_V` in `00-core.js` (now **15**) is the seed version. **Bump it whenever you change the shape of seeded data**, or browsers that already hold old saved state will keep the old shape and break. Bumping resets everyone's saved demo data once.
 - Seed data is built by `buildOrg()` in `06-seedhelp.js`. Rounds 7 to 10 add their data at the end of that function, in clearly commented blocks.
 - All dates are anchored to a constant, `TODAY = "2026-10-16"` in `00-core.js`, **not the computer's clock**. So deadlines, "days left" and delegation periods behave the same on any day. Only the time of day comes from the real clock.
 - Two organisations: a fictional department (`sample`), and กรมโยธาธิการและผังเมือง (`dpt`) with fictional figures and an indicative unit structure. Keep real-agency data out of the published build. The filename pattern `*data-dpt*` is what does that.
@@ -228,3 +228,14 @@ New file `65-analytics.js` (after `64-duties.js`, before `66-apps.js`). Three ne
 - **Seed fix:** contract 2's phase 1 signatures now fall on the delivery day, so RF-07 does not fire on sample data.
 - **Tested:** 728 renders, the full triage workflow by clicking, KPI and OCDS output checks, 375 px width.
 - **Not done:** P4 (AI use cases AI-01 to AI-11), the KPIs shared with Finance (acceptance-to-payment time, monthly commitment forecast), KPI-03 working-day counting and waiting-time separation, per-supplier and per-unit comparison views, and data-quality rules beyond KPI-14.
+
+## 16. Procurement AI use cases, P4 (round 16)
+
+New file `67-procai.js` (loads last of the procurement files). One new Procurement tab, `ai` (deep link `prc-ai`).
+
+- **No model is called.** Everything is rules or statistics, labelled version `rules-1`. Replacing a use case with a model later means swapping the function behind it (`aiConsolidate`, `aiRefPrice`, `aiSpecCheck`, `aiDelay`, `aiAnswer`, `aiSupplier`, `aiDraft`); the screens, logging and limits stay.
+- **Agents:** AG-07 (drafting), AG-08 (contract monitoring) and AG-10 (insight) are added to `S.agents` and appear in M09 → AI Agents, where the executive can switch them off. AG-02 and AG-05 (existing) cover AI-04, AI-05 and AI-01. Every action calls `aiLog()`, which writes to `S.aiLog` (so it shows in the M09 log) with the agent, user, target, number of sources, outcome and version. A switched-off agent blocks its use case with a message.
+- **Use cases built:** AI-01 name-similarity scan of the plan with an R-02 note; AI-03 reference price range from past contracts of the same kind, only recorded after the officer confirms; AI-04 TOR text check for brand and model wording plus the case checklist; AI-05 method advice with the rule and the documents needed; AI-07 delay-risk score 0 to 100 with reasons and a reminder-letter draft; AI-02 and AI-11 drafts (TOR, committee order, acceptance certificate, supplier letter) kept in `S.aiDrafts` with the AI text, the final text and the share of words edited; AI-09 answers only from `KPIS`, naming the source KPI, and declines questions outside the KPI set; AI-10 supplier summary from confirmed data.
+- **Limits enforced:** AI-09 refuses requests to rank or score bids, select a supplier, announce a winner or approve, and the refusal is logged as not ok. No AI action writes to case steps 6 to 8. AI-06 (checking bidders' documents) is not built because no bidder documents are held (design decision D-P04).
+- **Tested:** 788 renders across roles, languages and both organisations, the full set of use cases by clicking, the agent-off block, declines, and 375 px width.
+- **Not done:** the design's AI quality measures other than draft-edit share (red-flag precision exists in P3), prompt-injection tests (no documents are read by a model yet), and real model integration through an LLM gateway.
