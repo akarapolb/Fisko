@@ -24,6 +24,7 @@ Everything is labelled sample data. The name Fisko still needs a trademark check
 | Demo script (Thai) | `Fisko_Demo_Script.html` | 15 steps, 15 minutes, matches the in-app demo guide. |
 | Customer deck | `Fisko_Conceptual_Architecture.pptx` / `.pdf` | Built on the customer's CPAxtra template. Not touched since round 1. |
 | Roadmap | `ROADMAP.md` | What each module's deeper feature was. All built. |
+| Product family concept (Thai) | `Fisko_Product_Family_Concept.html` | v0.2. Fisko Budget, Procurement and Finance on one shared core. Decisions D-F01 to D-F03 and D-F06 are recorded in it. |
 | Prototype source | `src/` | The only place to edit the prototype. |
 
 Links and places:
@@ -150,14 +151,15 @@ Customer-facing:
 1. Confirm the proposals above with the agency, especially priorities, thresholds and the cabinet targets.
 2. Settle the open decisions D-01 to D-09 in section 14 of the design document (deployment model, multi-organisation approach, allowed AI models, review rounds, history depth, forms, notification channels, anomaly thresholds, delegable approvals).
 3. Check the design against the agency's actual TOR, then write the Detailed Design (the demo closes by proposing six document sets and a workshop on real approval lines and forms).
-4. Run the Fisko trademark check.
+4. Run the Fisko trademark check, covering the sub-names Fisko Budget, Fisko Procurement and Fisko Finance (decision D-F06).
+5. Product family: the direction is decided (build Procurement and Finance in parallel, as separate products on one core, with light versions first). Still open with the agency: the segregation-of-duties policy (D-F04) and the e-GP and GFMIS access channels (D-F05). Sizing, time and cost have not been estimated.
 
 Engineering, if the prototype is kept going:
 
-5. Add automated checks. The render sweep and demo click-through are good candidates to turn into a script.
-6. Test in Safari and Firefox, and run an accessibility audit against WCAG 2.1 AA.
-7. Keep the design document's traceability table (appendix A.2) in step with the requirement rows when either changes. It is edited by hand.
-8. Replace simulated pieces with real ones only after integration channels are approved by each system owner (IF-01 to IF-08).
+6. Add automated checks. The render sweep and demo click-through are good candidates to turn into a script.
+7. Test in Safari and Firefox, and run an accessibility audit against WCAG 2.1 AA.
+8. Keep the design document's traceability table (appendix A.2) in step with the requirement rows when either changes. It is edited by hand.
+9. Replace simulated pieces with real ones only after integration channels are approved by each system owner (IF-01 to IF-08).
 
 ## 11. Gotchas
 

@@ -13,7 +13,7 @@ This repository holds the conceptual design material and a clickable prototype p
 | `Fisko_Demo_Script.html` | 15-minute presenter script (Thai, with English lines). |
 | `Fisko_Solution_Design.html` | Solution Design Document v0.3 (Thai): functional, application, technical, data, integration, AI and security design. |
 | `Fisko_Conceptual_Architecture.pptx` / `.pdf` | Customer deck: conceptual architecture and functional modules. |
-| `Fisko_Product_Family_Concept.html` | Concept v0.1 (Thai): Fisko Budget, Procurement and Finance as one product family on a shared core. Draft for decision. |
+| `Fisko_Product_Family_Concept.html` | Concept v0.2 (Thai): Fisko Budget, Procurement and Finance as one product family on a shared core. Decisions D-F01 to D-F03 and D-F06 recorded; D-F04 and D-F05 open. |
 | `HANDOFF.md` | Where things stand, how to run and change the prototype, decisions, limits and next steps. |
 | `ROADMAP.md` | The deeper feature planned for each module (all built). |
 | `src/` | Prototype source. |
