@@ -21,7 +21,7 @@ Everything is labelled sample data. The name Fisko still needs a trademark check
 | Prototype (standalone) | `Fisko_Prototype.html` | Opens directly in a browser. Has both sample organisations. |
 | Prototype (published build) | `fisko-prototype.html` | Same code but **without** the กรมโยธา sample. Published as an artifact. |
 | Solution design (Thai) | `Fisko_Solution_Design.html` | v0.3. Functional, application, technical, data, integration, AI and security design. |
-| Demo script (Thai) | `Fisko_Demo_Script.html` | 24 steps: 15 minutes plus a 10-minute Procurement and Finance extension (steps 16 to 24). Matches the in-app demo guide. |
+| Demo script (Thai) | `Fisko_Demo_Script.html` | 25 steps: 15 minutes plus a 12-minute Procurement and Finance extension (steps 16 to 25). Matches the in-app demo guide. |
 | Customer deck | `Fisko_Conceptual_Architecture.pptx` / `.pdf` | Built on the customer's CPAxtra template. Not touched since round 1. |
 | Roadmap | `ROADMAP.md` | What each module's deeper feature was. All built. |
 | Product family concept (Thai) | `Fisko_Product_Family_Concept.html` | v0.2. Fisko Budget, Procurement and Finance on one shared core. Decisions D-F01 to D-F03 and D-F06 are recorded in it. |
@@ -92,7 +92,7 @@ Conventions worth knowing before you edit:
 ## 5. State and data
 
 - State is kept per organisation in `localStorage` under `fisko-v1-<org>` (`sample` or `dpt`). Other keys: `fisko-session`, `fisko-lang`, `fisko-role`, `fisko-org`, `fisko-app`.
-- `DATA_V` in `00-core.js` (now **20**) is the seed version. **Bump it whenever you change the shape of seeded data**, or browsers that already hold old saved state will keep the old shape and break. Bumping resets everyone's saved demo data once.
+- `DATA_V` in `00-core.js` (now **21**) is the seed version. **Bump it whenever you change the shape of seeded data**, or browsers that already hold old saved state will keep the old shape and break. Bumping resets everyone's saved demo data once.
 - Seed data is built by `buildOrg()` in `06-seedhelp.js`. Rounds 7 to 10 add their data at the end of that function, in clearly commented blocks.
 - All dates are anchored to a constant, `TODAY = "2026-10-16"` in `00-core.js`, **not the computer's clock**. So deadlines, "days left" and delegation periods behave the same on any day. Only the time of day comes from the real clock.
 - Two organisations: a fictional department (`sample`), and กรมโยธาธิการและผังเมือง (`dpt`) with fictional figures and an indicative unit structure. Keep real-agency data out of the published build. The filename pattern `*data-dpt*` is what does that.
@@ -316,3 +316,15 @@ Builds round Q5 of the design v0.2 (FR-PR-26, 60 to 62; chapter 13). New file `6
 - **Timeline:** open cases show the expected signing date (diamond) and the P10–P90 range.
 - **Name clashes:** `FY_END` and `FY_MONTHS` already exist in the budget modules, so this file uses `PFY_END` and `PFY_MONTHS`.
 - **Tested:** about 670 renders, forecast numbers and determinism, each lever, scenario saving with real data unchanged, role cards for five roles, the Finance notice, Gantt markers, the 9 demo extension steps, and 375 px width.
+
+## 23. Agentic AI, simulated, Q6 (round 23)
+
+Builds round Q6 of the design v0.2 (FR-PR-58, 59; chapter 11; decision D-P09). New file `67b-agents.js` (after `67-procai.js`). New Procurement page `agents` (P17). This completes every round in the design (P0 to P4, Q1 to Q6).
+
+- **No model is called.** Each agent's plan is a template built from the current state (`planCopilot`, `planWatch`, `planReporter`, `planInsight`). Each step calls an existing rule function through `EXEC[tool]`, and writes go through `applyStep`. To use a real model later, replace the planners and the text in `EXEC`; the register, levels, trace and approvals stay.
+- **Tool register:** `TOOLS` lists each tool with its kind (read, draft, propose, write, notify) and the agents allowed to use it. A step whose tool isn't allowed for the agent is blocked. Scoring bids, awarding, signing, approving and paying are not in the register at all, and the page says so.
+- **Levels:** `S.agentLevels` per agent. L0 only suggests (nothing is written, drafts are shown only); L1 saves drafts; L2 writes after a person approves each step; L3 also creates tasks and notifications by itself (AG-12 only). The executive changes levels with a reason, which is audited and notified to Audit. Seed: AG-11 L2, AG-12 L3, AG-13 L1, AG-10 L0.
+- **Runs:** `S.agentRuns` keep every step with status, output, the before/after of a write, timing and who decided. A run stops at the first write that needs approval. Only someone who could do the action themselves can approve it (for example only the head of procurement can approve publishing the monthly report). There is no approve-all; each decision records the seconds taken, and approvals under 3 seconds are counted as unusually fast. A run can be stopped at any time.
+- **Agents:** AG-11 Case Copilot prepares a case at step 3 or 4 (method, move to step 4, reference price, TOR from the library with a spec-lock check, a committee clear of SD-06 with the order number typed by the person, criteria, the e-GP pack; or a request for quotation on the small path). Committee members still have to declare conflicts themselves. AG-12 Contract Watch scores delivery risk, drafts reminder letters (not sent), creates tasks (stored in `S.agentTasks`, replaced on each run) and notifies on penalties over the cap. AG-13 Compliance Reporter reads the month, checks gaps, drafts and proposes publishing. AG-10 answers a multi-step question from KPIs, forecasts and flags.
+- **Demo:** step 25 runs the Case Copilot on PC-2570-006 after the earlier steps.
+- **Tested:** about 700 renders, every agent end to end at different levels (L0, L1, L2, L3), the permission rule on approvals, level changes, agent off, the 10 demo extension steps, and 375 px width.

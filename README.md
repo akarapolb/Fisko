@@ -10,7 +10,7 @@ This repository holds the conceptual design material and a clickable prototype p
 |---|---|
 | `Fisko_Prototype.html` | Standalone clickable prototype. Open it directly in a browser. Includes both sample organizations. |
 | `fisko-prototype.html` | Build of the prototype for publishing as a claude.ai artifact (no document wrapper; excludes the real-agency sample). |
-| `Fisko_Demo_Script.html` | Presenter script (Thai): 15 minutes plus a 10-minute Procurement and Finance extension (steps 16 to 24). |
+| `Fisko_Demo_Script.html` | Presenter script (Thai): 15 minutes plus a 12-minute Procurement and Finance extension (steps 16 to 25). |
 | `Fisko_Solution_Design.html` | Solution Design Document v0.3 (Thai): functional, application, technical, data, integration, AI and security design. |
 | `Fisko_Conceptual_Architecture.pptx` / `.pdf` | Customer deck: conceptual architecture and functional modules. |
 | `Fisko_Product_Family_Concept.html` | Concept v0.2 (Thai): Fisko Budget, Procurement and Finance as one product family on a shared core. Decisions D-F01 to D-F03 and D-F06 recorded; D-F04 and D-F05 open. |
@@ -34,6 +34,7 @@ This repository holds the conceptual design material and a clickable prototype p
 - Round 20 built Q3 (plan and reports): procurement **categories**, **plan versions** proposed by the officer, approved by the executive and recorded as published in e-GP (requisitions only for items in the published plan), demand intake from M06 lines and next year's M02 requests, the **monthly procurement summary** in the สขร.1 layout with gap checks and publishing, an **audit dossier** per case, and a **timeline (Gantt)** of every case against the fiscal year.
 - Round 21 built Q4 (document intake, simulated OCR): sample invoices, delivery notes, bank guarantees and quotations are "read" with a confidence per field (one field misread on purpose); checks V-01 to V-07 run for real; a person verifies low-confidence fields and fixes errors before confirming; confirmed data feeds the payment gate, delivery dates, the guarantee register and case quotations. Uploaded files open as an empty form. Registered as agent AG-14 in M09.
 - Round 22 built Q5 (forecast and what-if): a **Forecast** page (F-01 monthly commitments and payments with P10–P90, F-02 chance each open case signs before a chosen cut-off, F-03 price trend by category, F-04 carry-over risk with a notice to Finance, F-05 officer workload), a **What-if** page with levers W-01 to W-06 plus the signing cut-off, compared side by side and saved as scenarios (real data never changes), forecast markers on the case timeline, and dashboard cards for each role on the Analytics page.
+- Round 23 built Q6 (agentic AI, simulated): an **Agents** page where Case Copilot (AG-11), Contract Watch (AG-12), Compliance Reporter (AG-13) and a multi-step Insight agent (AG-10) take a goal, plan steps from a template, call tools from a register, and stop for a person at every write, one step at a time. Autonomy levels L0 to L3 are set by the executive with a reason. Steps, timing and approvals are traced and logged. With this round, rounds P0 to P4 and Q1 to Q6 of the Procurement design are all in the prototype; the demo guide has 25 steps.
 - An **app switcher** (click the logo at the top of the menu) moves between Fisko Budget, Fisko Procurement and Fisko Finance. Each app shows only its own menu; My Workspace and System Administration are shared.
 - Simulated SSO sign-in with two-factor codes (the prototype code is `246810`), global search (Ctrl+K or `/`), a change-history drawer on records, and delegation of authority (acting on another user's behalf, recorded in the audit log).
 - Two sample organizations: a fictional department, and กรมโยธาธิการและผังเมือง with fictional figures and an indicative unit structure.
@@ -60,7 +61,7 @@ This regenerates `Fisko_Prototype.html` and `fisko-prototype.html`.
 | `src/js/20-shell.js`, `30-home.js` | Navigation, top bar, notifications, My Workspace |
 | `src/js/40*`–`48*` | Modules M07, M02, M04, M03, M09, M01, M05, M06, M08 |
 | `src/js/50-admin.js` | M10 System Administration |
-| `src/js/60-procurement.js`, `61-cases.js`, `61b-sourcing.js`, `63-contracts.js`, `63b-contract-late.js`, `61c-planreports.js`, `63c-docs.js`, `65b-forecast.js`, `65-analytics.js`, `67-procai.js`, `62-finance.js`, `64-duties.js` | Fisko Procurement (plan, requisitions, contracts), procurement case files and rules, Fisko Finance, duty-separation rules |
+| `src/js/60-procurement.js`, `61-cases.js`, `61b-sourcing.js`, `63-contracts.js`, `63b-contract-late.js`, `61c-planreports.js`, `63c-docs.js`, `65b-forecast.js`, `67b-agents.js`, `65-analytics.js`, `67-procai.js`, `62-finance.js`, `64-duties.js` | Fisko Procurement (plan, requisitions, contracts), procurement case files and rules, Fisko Finance, duty-separation rules |
 | `src/js/66-apps.js` | App switcher and the per-app menu |
 | `src/js/52-demo.js` | In-app demo guide |
 | `src/js/99-boot.js` | Startup |
