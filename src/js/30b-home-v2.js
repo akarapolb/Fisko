@@ -56,6 +56,6 @@ VIEWS.home = () => {
   BIND.home = () => {
     base();
     $$("[data-hf]").forEach(b => (b.onclick = () => { HOME_F = b.dataset.hf; route(); }));
-    $$("[data-app]").forEach(b => (b.onclick = () => { if (typeof switchApp === "function") switchApp(b.dataset.app); }));
+    $$(".apptile[data-app]").forEach(b => (b.onclick = () => { if (typeof switchApp === "function") switchApp(b.dataset.app); }));
   };
 }

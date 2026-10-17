@@ -127,6 +127,7 @@ function route() {
     view.innerHTML = VIEWS[v]();
     (BIND[v] || (() => {}))();
     if (typeof bindLinks === "function") bindLinks(view);
+    if (typeof uiDecorate === "function") uiDecorate(view);
   }
   window.scrollTo(0, 0);
 }
