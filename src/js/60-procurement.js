@@ -128,7 +128,7 @@ PROC.egp = () => {
 
 VIEWS.procurement = () => {
   if (!PROC[PROC_TAB]) PROC_TAB = "cases";
-  const tabs = [["cases", L("แฟ้มจัดซื้อ", "Case files")], ["plan", L("แผนจัดซื้อ", "Procurement plan")], ["reqn", `${L("ใบขอซื้อขอจ้าง", "Requisitions")}${S.reqn.filter(r => r.status === "pending").length ? ` (${S.reqn.filter(r => r.status === "pending").length})` : ""}`], ["contracts", L("สัญญาและงวดงาน", "Contracts and phases")], ["egp", L("ไฟล์จาก e-GP", "e-GP file")]];
+  const tabs = [["cases", L("แฟ้มจัดซื้อ", "Case files")], ["plan", L("แผนจัดซื้อ", "Procurement plan")], ["reqn", `${L("ใบขอซื้อขอจ้าง", "Requisitions")}${S.reqn.filter(r => r.status === "pending").length ? ` (${S.reqn.filter(r => r.status === "pending").length})` : ""}`], ["contracts", L("สัญญาและงวดงาน", "Contracts and phases")], ["egp", L("ไฟล์จาก e-GP", "e-GP file")], ["analytics", L("วิเคราะห์", "Analytics")], ["flags", L("สัญญาณเตือน", "Red flags")], ["ocds", L("ส่งออก OCDS", "OCDS export")]];
   return `
   <div class="head"><div><div class="eyebrow">Fisko Procurement · ${L("เวอร์ชันเบา", "light version")}</div><h1>${L("จัดซื้อจัดจ้าง", "Procurement")}</h1>
     <p>${L("เตรียมและติดตามการจัดซื้อที่ผูกกับรายการจัดสรร ขั้นตอนทางการยังทำใน e-GP", "Prepare and track procurement tied to allocation lines. The official steps stay in e-GP.")} · ${fyLabel(FAM_FY)}</p></div></div>

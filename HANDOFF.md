@@ -92,7 +92,7 @@ Conventions worth knowing before you edit:
 ## 5. State and data
 
 - State is kept per organisation in `localStorage` under `fisko-v1-<org>` (`sample` or `dpt`). Other keys: `fisko-session`, `fisko-lang`, `fisko-role`, `fisko-org`, `fisko-app`.
-- `DATA_V` in `00-core.js` (now **13**) is the seed version. **Bump it whenever you change the shape of seeded data**, or browsers that already hold old saved state will keep the old shape and break. Bumping resets everyone's saved demo data once.
+- `DATA_V` in `00-core.js` (now **14**) is the seed version. **Bump it whenever you change the shape of seeded data**, or browsers that already hold old saved state will keep the old shape and break. Bumping resets everyone's saved demo data once.
 - Seed data is built by `buildOrg()` in `06-seedhelp.js`. Rounds 7 to 10 add their data at the end of that function, in clearly commented blocks.
 - All dates are anchored to a constant, `TODAY = "2026-10-16"` in `00-core.js`, **not the computer's clock**. So deadlines, "days left" and delegation periods behave the same on any day. Only the time of day comes from the real clock.
 - Two organisations: a fictional department (`sample`), and กรมโยธาธิการและผังเมือง (`dpt`) with fictional figures and an indicative unit structure. Keep real-agency data out of the published build. The filename pattern `*data-dpt*` is what does that.
@@ -215,3 +215,16 @@ Builds P2 of `Fisko_Procurement_Design.html`. New file `63-contracts.js` (loads 
 - **Reason fields:** the case "failed" and "cancel" actions now use an inline reason box. Published artifact pages can't show `prompt()` dialogs, so never use them.
 - **Tested:** 616 renders, gate (missing invoice, mismatch, release, wrong amount, net of penalty), delivery, dissent and resolution, partial acceptance, variations by both ladder levels, SD-08 block, force majeure extension, guarantee return, closing, M10 decimal settings, 375 px width.
 - **Not done:** the supplier register and scoring beyond the case, weekly supervisor reports and mid-contract assessment points (FR-PR-19), contract termination, SD-07 (conflict of interest declaration). P3 (analytics, red flags, OCDS export) and P4 (AI) remain.
+
+## 15. Analytics, red flags and OCDS, P3 (round 15)
+
+New file `65-analytics.js` (after `64-duties.js`, before `66-apps.js`). Three new Procurement tabs: `analytics`, `flags`, `ocds` (deep links `prc-analytics`, `prc-flags`, `prc-ocds`).
+
+- **Semantic layer:** `KPIS` holds KPI-01..14, each one function returning value, sample size `n` and a note. Dashboards (and later an AI assistant) must call these, never recompute. `stepTimes()` gives KPI-03 from `S.caseEvents`. The funnel counts `caseState()`. With 6 sample cases most KPIs rest on 2 to 3 records, and the page says so.
+- **Red flags:** `detectFlags()` derives flags from live data on every render, so nothing goes stale. Implemented: RF-01 (split purchases, both explained ones and clusters), RF-02, RF-03, RF-04, RF-05, RF-06, RF-07 (acceptance before delivery, payment before acceptance), RF-08, RF-09, RF-10. Weights are 40, 25 or 10; the score per case is the sum capped at 100. Settings `rfMinAnnounce`, `rfRatioPct`, `rfGrowthPct`, `rfRepeatWins`, `rfNearPct` live in `S.pcfg` and M10 → Procurement rules.
+- **Workflow:** state per flag in `S.rfRev[key]` (key is `RF-xx|<case, contract or requisition id>`). Audit and the head of procurement see all flags; the head or audit can ask for an explanation; the procurement officer (or the owning unit's requester) answers only flags that were asked; Audit alone decides (accept, data fixed, escalate, false positive). Everything is in the audit log and the false-positive rate is shown. Nothing is ever blocked automatically.
+- **Seed:** three flags show at the start (single bidder on case 2, winning price near the reference on cases 1 and 2). Raising the two small seeded requisitions adds an RF-01.
+- **OCDS:** `ocdsRelease(c)` builds one release per case that has an announcement or award (planning, tender, awards, contracts with amendments, implementation transactions from approved payments). Method map: specific to limited, e-bidding to open. It leaves out losing bids, committees and internal reasons. The OCID prefix and the exact format are placeholders to confirm with the Comptroller General's Department. Download is inert on the published page, so Copy is the main path there.
+- **Seed fix:** contract 2's phase 1 signatures now fall on the delivery day, so RF-07 does not fire on sample data.
+- **Tested:** 728 renders, the full triage workflow by clicking, KPI and OCDS output checks, 375 px width.
+- **Not done:** P4 (AI use cases AI-01 to AI-11), the KPIs shared with Finance (acceptance-to-payment time, monthly commitment forecast), KPI-03 working-day counting and waiting-time separation, per-supplier and per-unit comparison views, and data-quality rules beyond KPI-14.

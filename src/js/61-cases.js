@@ -407,6 +407,11 @@ ADMIN.procrules = () => {
       ${num("acceptWd", L("ตรวจรับงานก่อสร้าง งวดทั่วไป (วันทำการ)", "Construction acceptance, ordinary phase (working days)"), CONF_TAG("B"))}
       ${num("acceptWdLast", L("ตรวจรับงานก่อสร้าง งวดสุดท้าย (วันทำการ)", "Construction acceptance, last phase (working days)"), CONF_TAG("B"))}
       ${num("invoiceTol", L("ค่าเผื่อใบแจ้งหนี้ (บาท)", "Invoice tolerance (baht)"), CONF_TAG("C"))}
+      ${num("rfMinAnnounce", L("RF-08 ระยะประกาศขั้นต่ำ (วัน)", "RF-08 shortest announcement (days)"), CONF_TAG("C"))}
+      ${num("rfRatioPct", L("RF-05 ราคาชนะต่อราคากลาง (ร้อยละ)", "RF-05 winning price vs reference (%)"), CONF_TAG("C"))}
+      ${num("rfGrowthPct", L("RF-06 สัญญาโตเกิน (ร้อยละ)", "RF-06 contract growth over (%)"), CONF_TAG("C"))}
+      ${num("rfRepeatWins", L("RF-04 ชนะซ้ำตั้งแต่ (ครั้ง)", "RF-04 repeat wins from (count)"), CONF_TAG("C"))}
+      ${num("rfNearPct", L("RF-02 ใกล้เพดาน (ร้อยละ)", "RF-02 near the ceiling (%)"), CONF_TAG("C"))}
       ${ad ? `<button class="btn primary" type="button" id="pc-save">${L("บันทึกค่าตั้ง", "Save settings")}</button>` : ""}</div></section>
   <section class="panel"><header><h2>${L("วันหยุดราชการ (ตัวอย่าง)", "Public holidays (sample)")}</h2><span class="sp"></span><span class="sub">${L("ใช้นับวันทำการของช่วงอุทธรณ์", "Used to count working days in the appeal period")}</span></header>
     <div class="body row">${S.holidays.map((h, i) => `<span class="pill p-mute">${fdate(h)}${ad ? ` <button class="btn ghost" type="button" data-hrm="${i}" aria-label="${L("ลบ", "Remove")} ${h}">×</button>` : ""}</span>`).join("") || "—"}</div>
@@ -419,7 +424,7 @@ BIND_ADMIN.procrules = () => {
     commit(); route(); toast(L("บันทึกแล้ว", "Saved")); }; });
   const sv = $("#pc-save");
   if (sv) sv.onclick = () => {
-    const v = {}; for (const k of ["specificMax", "singleInspectorMax", "minMembers", "appealDays", "splitDays", "penaltyPct", "penaltyCapPct", "guaranteePct", "guaranteeWarnDays", "ladderPct", "extDaysHead", "acceptWd", "acceptWdLast", "invoiceTol"]) { const x = Number($("#pc-" + k).value); v[k] = k === "penaltyPct" ? x : Math.round(x); }
+    const v = {}; for (const k of ["specificMax", "singleInspectorMax", "minMembers", "appealDays", "splitDays", "penaltyPct", "penaltyCapPct", "guaranteePct", "guaranteeWarnDays", "ladderPct", "extDaysHead", "acceptWd", "acceptWdLast", "invoiceTol", "rfMinAnnounce", "rfRatioPct", "rfGrowthPct", "rfRepeatWins", "rfNearPct"]) { const x = Number($("#pc-" + k).value); v[k] = k === "penaltyPct" ? x : Math.round(x); }
     if (Object.values(v).some(x => !(x >= 0)) || v.minMembers < 2 || v.specificMax < 1 || v.singleInspectorMax < 1) { toast(L("ค่าไม่ถูกต้อง", "Check the values")); return; }
     Object.assign(S.pcfg, v); S.mrules.filter(r => r.id === "MR-01").forEach(r => (r.max = v.specificMax));
     audit(["แก้ค่าตั้งจัดซื้อจัดจ้าง", "Changed procurement settings"], Object.entries(v).map(([k, x]) => `${k}=${x}`).join(" ")); commit(); route(); toast(L("บันทึกค่าตั้งแล้ว", "Settings saved"));

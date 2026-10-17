@@ -240,6 +240,7 @@ function seedContracts(s, K) {
     c.guarantee = { type: "bank", amount: Math.round(c.amount * 0.05), expires: "2027-04-30", status: "held", t: c.signed + "T15:00", by: K.PO };
     c.phases.forEach(ph => { ph.ext = 0; ph.extV = 0; ph.dissent = []; });
     const p1 = c.phases[0]; p1.delivered = i === 0 ? "2026-10-14" : "2026-10-16"; p1.result = "ok"; p1.okAmount = p1.amount; p1.cert = { n: 2, t: p1.signs[1].t };
+    if (i === 1) p1.signs.forEach((sg, k) => (sg.t = "2026-10-16T" + (k ? "10:30" : "09:00")));
     if (i === 0) p1.invoice = { no: "INV-69-0412", amount: p1.amount, date: "2026-10-14", vendor: c.vendor[0], contract: c.no, by: K.FN };
   });
   s.contracts[0].vars.push({ id: s.contracts[0].id + "-V1", kind: "time", why: "ฝนตกหนักผิดปกติ ส่งวัสดุไม่ได้", by: K.PO, t: "2026-10-15T09:00", status: "pending", decided: null, days: 15, phase: 2, code: "force", who: "prochead" });
