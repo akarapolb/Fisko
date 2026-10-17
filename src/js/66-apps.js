@@ -2,9 +2,9 @@
 // Each app shows only its own menu. My Workspace and System Administration are shared by every app.
 // The page you open decides the current app, so deep links, tasks and notifications switch apps by themselves.
 const APPS = {
-  budget: { name: ["Fisko Budget", "Fisko Budget"], desc: ["วางแผนและบริหารงบประมาณ", "Plan and manage the budget"], groups: ["form", "exec", "intel"], mark: "B", color: "var(--accent-2)" },
-  procurement: { name: ["Fisko Procurement", "Fisko Procurement"], desc: ["เตรียมและติดตามการจัดซื้อจัดจ้าง", "Prepare and track procurement"], groups: ["procurement"], mark: "P", color: "#8C8FEA" },
-  finance: { name: ["Fisko Finance", "Fisko Finance"], desc: ["วงเงินผูกพันและการเบิกจ่าย", "Commitments and payments"], groups: ["finance"], mark: "F", color: "#E2A93B" },
+  budget: { name: ["Fisko Budget", "Fisko Budget"], desc: ["วางแผนและบริหารงบประมาณ", "Plan and manage the budget"], groups: ["form", "exec", "intel"], mark: "B", color: "var(--app-b)" },
+  procurement: { name: ["Fisko Procurement", "Fisko Procurement"], desc: ["เตรียมและติดตามการจัดซื้อจัดจ้าง", "Prepare and track procurement"], groups: ["procurement"], mark: "P", color: "var(--app-p)" },
+  finance: { name: ["Fisko Finance", "Fisko Finance"], desc: ["วงเงินผูกพันและการเบิกจ่าย", "Commitments and payments"], groups: ["finance"], mark: "F", color: "var(--app-f)" },
 };
 const APP_LAST = {}; // last page opened in each app, so switching back returns you there
 NAV.forEach(n => { if (!n.app) n.app = n.id === "home" || n.id === "admin" ? "all" : "budget"; });

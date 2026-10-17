@@ -69,7 +69,7 @@ function ring(share, o = {}) {
     <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="${o.fs || s * 0.26}" font-weight="700" fill="var(--ink)">${o.label != null ? o.label : Math.round(p * 100) + "%"}</text></svg>`;
 }
 // avatar with initials and a colour from the user id
-const AV_COLORS = ["#4F46E5", "#16A34A", "#0EA5E9", "#F59E0B", "#EC4899", "#7C3AED", "#14B8A6", "#EF4444"];
+const AV_COLORS = ["#5B6B8C", "#6B7A99", "#4A5D8A", "#7A8599", "#64748B", "#56627A", "#6E7C91", "#4B5A78"];
 function av(uid) { const n = typeof userName === "function" ? userName(uid) : String(uid), h = [...String(uid)].reduce((a, c) => a + c.charCodeAt(0), 0); return `<span class="av" title="${esc(n)}" style="background:${AV_COLORS[h % AV_COLORS.length]}">${esc(n.replace(/^(นาย|นาง|นางสาว|Mr\.?|Ms\.?|Mrs\.?)\s*/, "").slice(0, 1))}</span>`; }
 const avs = ids => `<span class="avs">${[...new Set(ids.filter(Boolean))].slice(0, 4).map(av).join("")}</span>`;
 // stat card: label, value, optional icon, trend, sparkline or ring, and a link

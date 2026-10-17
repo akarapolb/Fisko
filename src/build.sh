@@ -17,7 +17,7 @@ scripts() { # $1 = filename pattern to leave out
 
 {
   cat src/head.html
-  printf '<style>\n'; cat src/styles.css src/theme.css; printf '</style>\n'
+  printf '<style>\n'; cat src/styles.css src/theme.css src/calm.css; printf '</style>\n'
   cat src/body.html
   scripts '*data-dpt*'
 } > fisko-prototype.html
@@ -26,7 +26,7 @@ scripts() { # $1 = filename pattern to leave out
   printf '<!doctype html>\n<html lang="th">\n<head>\n<meta charset="utf-8">\n'
   printf '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n'
   grep -v 'claude:viewport-fit-sides' src/head.html
-  printf '<style>\n'; cat src/styles.css src/theme.css; printf '</style>\n</head>\n<body>\n'
+  printf '<style>\n'; cat src/styles.css src/theme.css src/calm.css; printf '</style>\n</head>\n<body>\n'
   cat src/body.html
   scripts '__none__'
   printf '</body>\n</html>\n'

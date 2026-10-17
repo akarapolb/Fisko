@@ -975,6 +975,148 @@ details.strat > summary:hover { background: var(--surface-2); }
 .chain-card { border-radius: var(--r); box-shadow: var(--sh-1); }
 .welcome, .ai-box { border-radius: 16px; background: linear-gradient(135deg, #12164A, #1F2470); }
 @media (max-width: 860px) { .rounds3 { grid-template-columns: minmax(0, 1fr); } .rbar { height: 60px; } .head > .headico { display: none; } }
+/* ==========================================================================
+   Calm layer (round 26): quieter, more professional. Loaded after theme.css.
+   One accent (slate navy) for actions and the current item; green, amber and
+   red only as small status dots; neutral icons; flat surfaces with thin
+   borders; semibold type; a light sidebar; no glows, gradients or motion.
+   ========================================================================== */
+:root {
+  --bg: #F7F8FA; --surface: #FFFFFF; --surface-2: #F4F5F7; --surface-3: #E9EBEF; --line: #E5E7EB; --line-2: #D7DAE0;
+  --ink: #111827; --ink-2: #374151; --muted: #6B7280; --faint: #9CA3AF;
+  --accent: #2B3A67; --accent-2: #3B4C80; --accent-soft: #EEF1F7; --accent-ink: #2B3A67;
+  --info: #3B4C80; --info-soft: #EEF1F7; --violet: #5B6380; --sky: #4B6A88; --amber: #B7791F;
+  --ok: #15803D; --ok-dot: #16A34A; --warn: #A16207; --warn-soft: #FBF6EA; --bad: #B91C1C; --bad-soft: #FBEFEF;
+  --c-1: #2B3A67; --c-2: #6B7A99; --c-3: #9AA6BF; --c-4: #B7791F; --c-5: #5B6380; --c-6: #C5CBD8;
+  --app-b: #2B3A67; --app-p: #4A5D8A; --app-f: #5C6B7D;
+  --side: #FFFFFF; --side-ink: #374151; --side-muted: #9CA3AF; --side-hover: #F3F4F6; --side-on: #EEF1F7; --side-on-ink: #1F2A50; --side-line: #E5E7EB;
+  --r: 10px; --r-sm: 8px; --r-xs: 7px;
+  --sh-1: none; --sh-2: 0 1px 2px rgba(17, 24, 39, .05); --sh-3: 0 10px 30px rgba(17, 24, 39, .12);
+  --ring: 0 0 0 3px rgba(43, 58, 103, .14);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0E1015; --surface: #15181F; --surface-2: #1B1F27; --surface-3: #242934; --line: #262B36; --line-2: #313744;
+  --ink: #E8EAEE; --ink-2: #C3C8D2; --muted: #8F96A3; --faint: #6B7280;
+  --accent: #9DB0E3; --accent-2: #B5C4EC; --accent-soft: #1E2534; --accent-ink: #B5C4EC; --info: #9DB0E3; --info-soft: #1E2534;
+  --ok: #4ADE80; --ok-dot: #22C55E; --warn: #E0B65C; --warn-soft: #2A2416; --bad: #F08A8A; --bad-soft: #2E1B1B;
+  --c-1: #9DB0E3; --c-2: #6F7FA3; --c-3: #4E5A75; --c-4: #E0B65C; --c-5: #8C93AC; --c-6: #3A4256;
+  --app-b: #6F84C2; --app-p: #7E8FB8; --app-f: #8592A6;
+  --side: #12151B; --side-ink: #C3C8D2; --side-muted: #6B7280; --side-hover: #1B1F27; --side-on: #1E2534; --side-on-ink: #DCE3F5; --side-line: #222630;
+  --sh-2: none; --sh-3: 0 10px 30px rgba(0, 0, 0, .5); color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0E1015; --surface: #15181F; --surface-2: #1B1F27; --surface-3: #242934; --line: #262B36; --line-2: #313744;
+  --ink: #E8EAEE; --ink-2: #C3C8D2; --muted: #8F96A3; --faint: #6B7280;
+  --accent: #9DB0E3; --accent-2: #B5C4EC; --accent-soft: #1E2534; --accent-ink: #B5C4EC; --info: #9DB0E3; --info-soft: #1E2534;
+  --ok: #4ADE80; --ok-dot: #22C55E; --warn: #E0B65C; --warn-soft: #2A2416; --bad: #F08A8A; --bad-soft: #2E1B1B;
+  --c-1: #9DB0E3; --c-2: #6F7FA3; --c-3: #4E5A75; --c-4: #E0B65C; --c-5: #8C93AC; --c-6: #3A4256;
+  --app-b: #6F84C2; --app-p: #7E8FB8; --app-f: #8592A6;
+  --side: #12151B; --side-ink: #C3C8D2; --side-muted: #6B7280; --side-hover: #1B1F27; --side-on: #1E2534; --side-on-ink: #DCE3F5; --side-line: #222630;
+  --sh-2: none; --sh-3: 0 10px 30px rgba(0, 0, 0, .5); color-scheme: dark; }
+
+/* ---------- light sidebar ---------- */
+.rail { background: var(--side); border-right: 1px solid var(--side-line); }
+.brand { color: var(--ink); } .brand:hover { background: var(--side-hover); }
+.brand b { color: var(--ink); } .brand small { color: var(--muted); } .brand-caret { color: var(--side-muted); }
+.brand-mark { color: #fff; box-shadow: none; border-radius: 9px; }
+.nav-h { color: var(--side-muted); letter-spacing: .1em; }
+.nav a { color: var(--side-ink); font-weight: 500; }
+.nav a:hover { background: var(--side-hover); color: var(--ink); }
+.nav a.on { background: var(--side-on); color: var(--side-on-ink); font-weight: 600; }
+.nav a.on::before { background: var(--accent); left: -12px; }
+.nav .ni { color: var(--side-muted); } .nav a:hover .ni, .nav a.on .ni { color: var(--accent); }
+.nav .badge { background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line); }
+.rail-foot { color: var(--side-muted); }
+.rail-foot .btn { background: var(--surface); border-color: var(--line); color: var(--ink-2); }
+.rail-foot .btn:hover { background: var(--side-hover); }
+@media (max-width: 860px) { .rail { background: var(--side); border-right: 0; border-bottom: 1px solid var(--side-line); } }
+
+/* ---------- top bar ---------- */
+.top { background: color-mix(in srgb, var(--surface) 92%, transparent); }
+.sample { background: var(--surface-2); color: var(--muted); border: 1px solid var(--line); }
+.iconbtn .cnt { background: var(--accent); }
+.userchip .avatar { background: var(--accent); }
+
+/* ---------- surfaces: flat, thin borders, no glow, no motion ---------- */
+.panel, .kpi, .stat-card, .card, .apptile, .alert, .col, .rcol, .docimg, .docsum, .fields, .sample-tile, .docitem, .chain-card, .callout { box-shadow: none !important; }
+.panel > header { background: var(--surface); }
+.kpi::after, .stat-card::after, .kpi[data-ui]::before, .hero::after { display: none !important; }
+.kpi:hover, .stat-card:hover, .card:hover, .apptile:hover, .sample-tile:hover { transform: none; }
+.card:hover, .apptile:hover, .docitem:hover { border-color: var(--line-2); }
+.view > *, .toast { animation: none !important; }
+.btn { box-shadow: none; border-color: var(--line-2); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: none; }
+.btn.primary:hover { filter: none; background: color-mix(in srgb, var(--accent) 88%, #000); box-shadow: none; }
+:root[data-theme="dark"] .btn.primary { color: #0E1015; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn.primary { color: #0E1015; } }
+.btn.danger { color: var(--bad); border-color: var(--line-2); }
+
+/* ---------- type ---------- */
+.head h1, .hero h1 { font-size: 24px; font-weight: 600; letter-spacing: -.015em; }
+.case-hero h2 { font-size: 20px; font-weight: 600; }
+.panel > header h2 { font-weight: 600; }
+.kpi .v, .stat-card .sv { font-size: 24px; font-weight: 600; letter-spacing: -.02em; }
+.rcol .rv { font-size: 22px; font-weight: 600; }
+.eyebrow { color: var(--muted); letter-spacing: .08em; font-weight: 600; }
+.eyebrow::before { display: none; }
+th { color: var(--muted); font-weight: 600; }
+
+/* ---------- icons: neutral ---------- */
+.chipico, .chipico.ok, .chipico.warn, .chipico.bad, .chipico.info, .chipico.violet,
+.kpi .kico, .kico.ok, .kico.warn, .kico.bad, .kico.info, .kico.violet { background: var(--surface-2); color: var(--muted); }
+.head > .headico { background: var(--surface); color: var(--ink-2); border: 1px solid var(--line); box-shadow: none; }
+.alert .ic { background: var(--surface-2) !important; color: var(--muted) !important; }
+
+/* ---------- status: outline pills with a small coloured dot ---------- */
+.pill, .p-ok, .p-warn, .p-bad, .p-info, .p-mute { background: var(--surface) !important; border: 1px solid var(--line-2) !important; color: var(--ink-2) !important; font-weight: 500; }
+.p-ok::before { background: var(--ok-dot); } .p-warn::before { background: var(--amber); } .p-bad::before { background: var(--bad); } .p-info::before { background: var(--accent); } .p-mute::before { background: var(--faint); }
+.trend.up, .trend.down, .trend.flat { background: transparent; padding: 0; }
+.trend.up { color: var(--ok); } .trend.down { color: var(--bad); } .trend.flat { color: var(--muted); }
+.check .m.ok, .m.ok { background: transparent; color: var(--ok); border: 1px solid var(--line-2); }
+.m.no { background: transparent; color: var(--bad); border: 1px solid var(--line-2); } .m.wa { background: transparent; color: var(--warn); border: 1px solid var(--line-2); }
+.chk.ok, .chk.no, .chk.wa { background: var(--surface); border-color: var(--line-2); color: var(--ink-2); }
+.chk.ok .ico { color: var(--ok); } .chk.no .ico { color: var(--bad); } .chk.wa .ico { color: var(--warn); }
+.verify { color: var(--warn); border-color: var(--line-2); background: var(--surface); }
+.verify.on { color: var(--ok); background: var(--surface); border-color: var(--line-2); }
+
+/* ---------- My Workspace ---------- */
+.hero { background: var(--surface); color: var(--ink); border: 1px solid var(--line); box-shadow: none; }
+.hero p, .hero .hstat span { color: var(--muted); }
+.hero .hero-meta span, .hero .hstat { background: var(--surface-2); border-color: var(--line); color: var(--ink-2); backdrop-filter: none; }
+.hero .hstat b { font-weight: 600; }
+.apptile .am { box-shadow: none; }
+.tlist .prio, .tlist .prio.p-info, .tlist .prio.p-ok { background: var(--line-2); }
+.tlist .prio.p-warn { background: var(--amber); } .tlist .prio.p-bad { background: var(--bad); }
+.fchip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+:root[data-theme="dark"] .fchip.on { color: #0E1015; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .fchip.on { color: #0E1015; } }
+.cal li.mine .d { background: var(--accent-soft); color: var(--accent-ink); }
+.appdot::before { background: var(--faint); }
+.appchip { background: var(--surface-2) !important; color: var(--ink-2); border: 1px solid var(--line); }
+
+/* ---------- procurement and documents ---------- */
+.funnel > div { background: var(--c-2); opacity: 1; } .funnel > div:hover { background: var(--accent); }
+.segbar > i.ok { background: var(--accent); } .segbar > i.now { background: linear-gradient(90deg, var(--accent), var(--surface-3)); }
+.col-h::before { background: var(--faint); }
+.stepper li.done::before, .stepper li.now::before { background: var(--accent); }
+.stepper li.done .dot { background: var(--accent); border-color: var(--accent); }
+.stepper li.now .dot { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); transform: none; }
+.nextcard { background: var(--surface); border-color: var(--line); }
+.frow.need { background: var(--warn-soft); box-shadow: inset 3px 0 0 var(--amber); }
+.dropzone { background: var(--surface-2); }
+.dropzone:hover, .dropzone.over { background: var(--accent-soft); color: var(--accent); }
+.docitem.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft) !important; }
+.rcol.hl { background: var(--surface); border-color: var(--accent); }
+.prog > i, .bar i { background: var(--accent); }
+.kpi.hl, .kpi.hl[data-ui] { background: var(--surface); border: 1px solid var(--line); color: var(--ink); box-shadow: inset 3px 0 0 var(--accent) !important; }
+.kpi.hl .l, .kpi.hl .v small { color: var(--muted); } .kpi.hl .v { color: var(--ink); }
+.welcome, .ai-box { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+.ai-box h3 { color: var(--accent); } .ai-box p { color: var(--muted); }
+.ai-box .btn { background: var(--surface); border-color: var(--line-2); color: var(--ink); }
+.ai-out { background: var(--surface-2); color: var(--ink); }
+.msg.u, .panel > .body .msg.u { background: var(--accent); color: #fff; }
+:root[data-theme="dark"] .msg.u { color: #0E1015; }
+.toast { background: #1F2937; }
+.c1 { background: var(--c-1); } .c2 { background: var(--c-2); } .c3 { background: var(--c-3); } .c4 { background: var(--c-4); } .c5 { background: var(--c-6); }
 </style>
 </head>
 <body>
@@ -1312,7 +1454,7 @@ function ring(share, o = {}) {
     <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="${o.fs || s * 0.26}" font-weight="700" fill="var(--ink)">${o.label != null ? o.label : Math.round(p * 100) + "%"}</text></svg>`;
 }
 // avatar with initials and a colour from the user id
-const AV_COLORS = ["#4F46E5", "#16A34A", "#0EA5E9", "#F59E0B", "#EC4899", "#7C3AED", "#14B8A6", "#EF4444"];
+const AV_COLORS = ["#5B6B8C", "#6B7A99", "#4A5D8A", "#7A8599", "#64748B", "#56627A", "#6E7C91", "#4B5A78"];
 function av(uid) { const n = typeof userName === "function" ? userName(uid) : String(uid), h = [...String(uid)].reduce((a, c) => a + c.charCodeAt(0), 0); return `<span class="av" title="${esc(n)}" style="background:${AV_COLORS[h % AV_COLORS.length]}">${esc(n.replace(/^(นาย|นาง|นางสาว|Mr\.?|Ms\.?|Mrs\.?)\s*/, "").slice(0, 1))}</span>`; }
 const avs = ids => `<span class="avs">${[...new Set(ids.filter(Boolean))].slice(0, 4).map(av).join("")}</span>`;
 // stat card: label, value, optional icon, trend, sparkline or ring, and a link
@@ -8784,9 +8926,9 @@ function seedForecast(s) {
 // Each app shows only its own menu. My Workspace and System Administration are shared by every app.
 // The page you open decides the current app, so deep links, tasks and notifications switch apps by themselves.
 const APPS = {
-  budget: { name: ["Fisko Budget", "Fisko Budget"], desc: ["วางแผนและบริหารงบประมาณ", "Plan and manage the budget"], groups: ["form", "exec", "intel"], mark: "B", color: "var(--accent-2)" },
-  procurement: { name: ["Fisko Procurement", "Fisko Procurement"], desc: ["เตรียมและติดตามการจัดซื้อจัดจ้าง", "Prepare and track procurement"], groups: ["procurement"], mark: "P", color: "#8C8FEA" },
-  finance: { name: ["Fisko Finance", "Fisko Finance"], desc: ["วงเงินผูกพันและการเบิกจ่าย", "Commitments and payments"], groups: ["finance"], mark: "F", color: "#E2A93B" },
+  budget: { name: ["Fisko Budget", "Fisko Budget"], desc: ["วางแผนและบริหารงบประมาณ", "Plan and manage the budget"], groups: ["form", "exec", "intel"], mark: "B", color: "var(--app-b)" },
+  procurement: { name: ["Fisko Procurement", "Fisko Procurement"], desc: ["เตรียมและติดตามการจัดซื้อจัดจ้าง", "Prepare and track procurement"], groups: ["procurement"], mark: "P", color: "var(--app-p)" },
+  finance: { name: ["Fisko Finance", "Fisko Finance"], desc: ["วงเงินผูกพันและการเบิกจ่าย", "Commitments and payments"], groups: ["finance"], mark: "F", color: "var(--app-f)" },
 };
 const APP_LAST = {}; // last page opened in each app, so switching back returns you there
 NAV.forEach(n => { if (!n.app) n.app = n.id === "home" || n.id === "admin" ? "all" : "budget"; });
