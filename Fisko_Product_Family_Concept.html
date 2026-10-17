@@ -1,0 +1,494 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fisko Product Family Concept</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: sticky chapter index on the left, one reading column (~72ch prose, full-width tables and diagrams) on the right */
+:root {
+  --bg: #FFFFFF; --paper: #FFFFFF; --tint: #F4F5FA; --tint-2: #EEF0F7; --line: #DDDEE9;
+  --ink: #1C1D3F; --ink-2: #45465C; --muted: #7A7B92;
+  --navy: #1A1B50; --navy-2: #232366; --navy-ink: #C9CADF;
+  --accent: #1B9E29; --accent-2: #2AD03D; --accent-soft: #E4FBE7;
+  --warn: #A86A0C; --warn-soft: #FCF1DB; --bad: #B9381D; --bad-soft: #FBE3DA; --info: #3A3B9A; --info-soft: #E6E7F7;
+  --font: "IBM Plex Sans Thai", "Leelawadee UI", Tahoma, system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0F1029; --paper: #13153A; --tint: #1A1C44; --tint-2: #20224D; --line: #2D2F5E;
+  --ink: #ECEDF7; --ink-2: #C3C4D8; --muted: #8E90AE;
+  --navy: #0A0B22; --navy-2: #232366; --navy-ink: #B6B8D3;
+  --accent: #3DD552; --accent-2: #2AD03D; --accent-soft: #163A24;
+  --warn: #E7AA45; --warn-soft: #3A2C12; --bad: #F2805F; --bad-soft: #42201A; --info: #A9ABF5; --info-soft: #262862; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0F1029; --paper: #13153A; --tint: #1A1C44; --tint-2: #20224D; --line: #2D2F5E;
+  --ink: #ECEDF7; --ink-2: #C3C4D8; --muted: #8E90AE;
+  --navy: #0A0B22; --navy-2: #232366; --navy-ink: #B6B8D3;
+  --accent: #3DD552; --accent-2: #2AD03D; --accent-soft: #163A24;
+  --warn: #E7AA45; --warn-soft: #3A2C12; --bad: #F2805F; --bad-soft: #42201A; --info: #A9ABF5; --info-soft: #262862; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 20px; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.75 var(--font); }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.mono, code { font-family: var(--mono); font-size: .85em; }
+code { background: var(--tint-2); padding: 1px 5px; border-radius: 4px; }
+
+.layout { display: grid; grid-template-columns: 290px minmax(0, 1fr); }
+.toc { position: sticky; top: 0; height: 100vh; overflow: auto; background: var(--navy); color: var(--navy-ink); padding: 28px 18px 40px; font-size: 14px; }
+.toc .brand { color: #fff; font-weight: 700; font-size: 17px; line-height: 1.3; }
+.toc .brand small { display: block; color: var(--navy-ink); font-weight: 400; font-size: 12.5px; margin-top: 2px; }
+.toc ol { list-style: none; margin: 22px 0 0; padding: 0; counter-reset: c; }
+.toc li { margin: 1px 0; }
+.toc a { display: grid; grid-template-columns: 28px 1fr; gap: 6px; color: var(--navy-ink); text-decoration: none; padding: 6px 8px; border-radius: 7px; line-height: 1.4; }
+.toc a:hover { background: var(--navy-2); color: #fff; }
+.toc a.on { background: var(--navy-2); color: #fff; }
+.toc a .n { font-family: var(--mono); font-size: 11.5px; color: #8A8CB5; padding-top: 2px; }
+.toc a.on .n { color: var(--accent-2); }
+.toc .tools { margin-top: 22px; display: flex; gap: 8px; }
+.toc button { background: var(--navy-2); color: #fff; border: 1px solid #3A3B77; border-radius: 7px; padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+
+main { min-width: 0; padding-block: 0 80px; padding-left: max(28px, env(safe-area-inset-left, 0px)); padding-right: max(28px, env(safe-area-inset-right, 0px)); }
+.doc { max-width: 1080px; margin: 0 auto; }
+.prose { max-width: 74ch; }
+
+.cover { padding: 64px 0 40px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.eyebrow { font-size: 12.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+.cover h1 { font-size: clamp(30px, 4.2vw, 46px); line-height: 1.2; margin: 10px 0 8px; text-wrap: balance; }
+.cover .th { font-size: 20px; color: var(--ink-2); margin: 0; }
+.meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: 30px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.meta div { padding: 12px 16px; border-right: 1px solid var(--line); }
+.meta div:last-child { border-right: 0; }
+.meta span { display: block; font-size: 12px; color: var(--muted); letter-spacing: .04em; }
+.meta b { font-weight: 600; font-size: 15px; }
+.notice { margin-top: 18px; background: var(--warn-soft); color: var(--ink); border-radius: 10px; padding: 12px 16px; font-size: 14.5px; }
+.notice b { color: var(--warn); }
+
+section.ch { padding-top: 56px; }
+h2 { font-size: 28px; line-height: 1.3; margin: 0 0 6px; display: flex; gap: 14px; align-items: baseline; text-wrap: balance; }
+h2 .num { font-family: var(--mono); font-size: 15px; color: var(--accent); font-weight: 600; }
+.lede { color: var(--ink-2); margin: 0 0 22px; max-width: 74ch; }
+h3 { font-size: 19px; margin: 34px 0 10px; line-height: 1.4; }
+h3 .num { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-right: 8px; font-weight: 500; }
+h4 { font-size: 16px; margin: 22px 0 6px; }
+p { margin: 0 0 14px; }
+ul, ol { margin: 0 0 14px; padding-left: 22px; }
+li { margin: 3px 0; }
+.small { font-size: 13.5px; color: var(--muted); }
+
+.tbl { overflow-x: auto; margin: 10px 0 18px; border: 1px solid var(--line); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.55; }
+th { background: var(--tint); text-align: left; font-size: 12.5px; letter-spacing: .03em; color: var(--ink-2); font-weight: 600; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: bottom; }
+td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.id, th.id { white-space: nowrap; font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); }
+td.c, th.c { text-align: center; }
+td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.tag { display: inline-block; border-radius: 99px; padding: 1px 9px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.t-must { background: var(--accent-soft); color: var(--accent); }
+.t-should { background: var(--info-soft); color: var(--info); }
+.t-could { background: var(--tint-2); color: var(--muted); }
+.t-new { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+.t-warn { background: var(--warn-soft); color: var(--warn); }
+.t-bad { background: var(--bad-soft); color: var(--bad); }
+
+.callout { border-radius: 10px; padding: 14px 18px; margin: 14px 0 18px; background: var(--tint); }
+.callout.dark { background: var(--navy); color: #fff; }
+.callout.dark b { color: var(--accent-2); }
+.callout b:first-child { display: block; margin-bottom: 2px; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 12px 0 20px; }
+.card { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; background: var(--paper); }
+.card b { display: block; font-size: 15px; margin-bottom: 2px; }
+.card span { font-size: 13.5px; color: var(--ink-2); line-height: 1.6; display: block; }
+.card .k { font-family: var(--mono); font-size: 12px; color: var(--accent); margin-bottom: 4px; }
+
+/* layered architecture diagram */
+.arch { display: grid; grid-template-columns: minmax(0, 1fr) 210px; gap: 10px; margin: 14px 0 20px; }
+.layers { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.layer { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 10px; align-items: stretch; }
+.layer .lb { background: var(--navy-2); color: #fff; border-radius: 8px; padding: 10px 12px; font-weight: 600; font-size: 14px; line-height: 1.35; }
+.layer .lb small { display: block; color: var(--navy-ink); font-weight: 400; font-size: 12px; }
+.layer.top .lb { background: var(--accent); }
+.layer .chips { display: flex; flex-wrap: wrap; gap: 6px; align-content: center; background: var(--tint); border-radius: 8px; padding: 8px; }
+.chip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; font-size: 13px; }
+.chip.g { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.gov { background: var(--navy); color: #fff; border-radius: 8px; padding: 12px 14px; font-size: 13px; }
+.gov b { color: var(--accent-2); display: block; margin-bottom: 6px; font-size: 14px; }
+.gov ul { padding-left: 16px; margin: 0; }
+.gov li { color: var(--navy-ink); }
+
+/* flow */
+.flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0 20px; }
+.flow .st { background: var(--tint); border-radius: 8px; padding: 8px 12px; font-size: 13.5px; line-height: 1.4; }
+.flow .st b { display: block; font-family: var(--mono); font-size: 11.5px; color: var(--accent); }
+.flow .ar { color: var(--muted); }
+
+/* integration hub */
+.hub { display: grid; grid-template-columns: 1fr minmax(180px, 240px) 1fr; gap: 14px; align-items: center; margin: 14px 0 20px; }
+.hub .side { display: flex; flex-direction: column; gap: 8px; }
+.hub .ext { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 13.5px; background: var(--paper); }
+.hub .ext b { display: block; font-size: 14px; }
+.hub .core { background: var(--navy); color: #fff; border-radius: 12px; padding: 18px; text-align: center; }
+.hub .core b { color: var(--accent-2); font-size: 18px; display: block; }
+.hub .core span { font-size: 12.5px; color: var(--navy-ink); display: block; margin-top: 6px; }
+
+.matrix td.c { font-family: var(--mono); font-size: 12.5px; font-weight: 600; }
+.mx-a { color: var(--accent); } .mx-r { color: var(--muted); } .mx-u { color: var(--info); }
+
+footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+
+@media (max-width: 980px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .toc { position: static; height: auto; padding: 16px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px)); }
+  .toc ol { display: none; }
+  .toc.open ol { display: block; }
+  main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .meta div:nth-child(2) { border-right: 0; }
+  .meta div:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+  .arch { grid-template-columns: minmax(0, 1fr); }
+  .layer { grid-template-columns: minmax(0, 1fr); }
+  .hub { grid-template-columns: minmax(0, 1fr); }
+}
+@media (min-width: 981px) { #toc-toggle { display: none; } }
+@media print {
+  .toc { display: none; }
+  .layout { display: block; }
+  main { padding: 0; }
+  section.ch { break-before: page; padding-top: 0; }
+  .tbl { overflow: visible; }
+  tr, .card, .callout { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="toc" id="toc" aria-label="สารบัญ">
+  <div class="brand">Fisko<small>Product Family Concept · v0.1</small></div>
+  <div class="tools"><button type="button" id="toc-toggle" aria-expanded="false">สารบัญ</button><button type="button" id="theme">ธีม</button></div>
+  <ol>
+    <li><a href="#s1"><span class="n">01</span>วัตถุประสงค์และสถานะ</a></li>
+    <li><a href="#s2"><span class="n">02</span>ทำไมต้องเป็นตระกูลผลิตภัณฑ์</a></li>
+    <li><a href="#s3"><span class="n">03</span>ผลิตภัณฑ์ทั้งสาม</a></li>
+    <li><a href="#s4"><span class="n">04</span>สายโซ่เดียวจากงบประมาณถึงการจ่ายเงิน</a></li>
+    <li><a href="#s5"><span class="n">05</span>แกนกลางที่ใช้ร่วมกัน</a></li>
+    <li><a href="#s6"><span class="n">06</span>ขอบเขตกับระบบภาครัฐ</a></li>
+    <li><a href="#s7"><span class="n">07</span>การแยกหน้าที่และการควบคุมภายใน</a></li>
+    <li><a href="#s8"><span class="n">08</span>AI ในตระกูลผลิตภัณฑ์</a></li>
+    <li><a href="#s9"><span class="n">09</span>ลำดับการพัฒนา</a></li>
+    <li><a href="#s10"><span class="n">10</span>ความเสี่ยงและประเด็นที่ต้องตัดสินใจ</a></li>
+  </ol>
+</nav>
+
+<main>
+<div class="doc">
+
+<header class="cover">
+  <div class="eyebrow">Product Family Concept</div>
+  <h1>Fisko Budget · Finance · Procurement<br><span style="font-size:.55em;color:var(--accent)">แนวคิดตระกูลผลิตภัณฑ์บนแพลตฟอร์มเดียว</span></h1>
+  <p class="th">จากงบประมาณ สู่สัญญา สู่การจ่ายเงิน ในสายโซ่ข้อมูลเดียวของหน่วยงาน</p>
+  <div class="meta">
+    <div><span>เวอร์ชัน</span><b>0.1 ฉบับร่างแนวคิด</b></div>
+    <div><span>วันที่</span><b>17 ตุลาคม 2569</b></div>
+    <div><span>จัดทำโดย</span><b>Avalant</b></div>
+    <div><span>ต่อยอดจาก</span><b>Fisko Solution Design v0.3</b></div>
+  </div>
+  <div class="notice"><b>สถานะเอกสาร:</b> เป็นแนวคิดเพื่อใช้ตัดสินใจ ไม่ใช่ข้อผูกพันด้านขอบเขต เวลา หรือค่าใช้จ่าย ข้อความที่เกี่ยวกับระเบียบ ระบบ GFMIS และ e-GP เป็นความเข้าใจเบื้องต้น ต้องตรวจกับเจ้าของระบบและฝ่ายกฎหมายก่อนออกแบบจริง ขั้นตอนและตัวเลขที่ยกเป็นตัวอย่างมาจากข้อมูลสมมติในต้นแบบ</div>
+</header>
+
+<!-- ============================== 01 ============================== -->
+<section class="ch" id="s1">
+<h2><span class="num">01</span>วัตถุประสงค์และสถานะ</h2>
+<p class="lede">ตอบคำถามเดียว: ถ้าขยาย Fisko จากงบประมาณไปสู่การเงินและการจัดซื้อจัดจ้าง ควรเป็นรูปแบบใด</p>
+<div class="prose">
+<p>ปัจจุบัน <b>Fisko</b> คือระบบบริหารงบประมาณของหน่วยรับงบประมาณ (โมดูล M01–M10) มีต้นแบบที่ใช้งานได้และเอกสาร Solution Design v0.3 เอกสารนี้เสนอให้เรียกส่วนนี้ว่า <b>Fisko Budget</b> และพิจารณาเพิ่มอีกสองผลิตภัณฑ์ คือ <b>Fisko Finance</b> และ <b>Fisko Procurement</b> บนแกนกลางเดียวกัน</p>
+<p>เอกสารนี้ยังไม่ใช่การออกแบบรายละเอียด ใช้เพื่อ (1) ตกลงว่าแต่ละผลิตภัณฑ์ทำอะไรและไม่ทำอะไร (2) เห็นว่าข้อมูลเชื่อมกันอย่างไร (3) เลือกลำดับการพัฒนา และ (4) เตรียมประเด็นที่ต้องตัดสินใจ</p>
+</div>
+<div class="callout"><b>หลักที่ใช้ตลอดเอกสาร</b> Finance และ Procurement เป็นชั้น “เตรียม ควบคุม และติดตาม” ของหน่วยงาน ที่เชื่อมกับระบบภาครัฐ ไม่ใช่ระบบที่เข้าไปแทน GFMIS หรือ e-GP</div>
+</section>
+
+<!-- ============================== 02 ============================== -->
+<section class="ch" id="s2">
+<h2><span class="num">02</span>ทำไมต้องเป็นตระกูลผลิตภัณฑ์</h2>
+<p class="lede">ปัญหาที่หน่วยงานเจอไม่ได้อยู่ในขั้นเดียว แต่อยู่ที่รอยต่อระหว่างขั้น</p>
+
+<h3><span class="num">2.1</span>ปัญหาที่ต้องยืนยันกับหน่วยงาน</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ปัญหา</th><th>ผลที่เกิด</th></tr></thead>
+  <tbody>
+    <tr><td>ข้อมูลขาดตอน: วงเงินอยู่ในระบบงบประมาณ สัญญาอยู่ในแฟ้มหรือระบบของพัสดุ การจ่ายเงินอยู่ใน GFMIS</td><td>ต้องกระทบยอดด้วยมือ ตอบคำถามผู้บริหารช้า ข้อมูลแต่ละฝ่ายไม่ตรงกัน</td></tr>
+    <tr><td>รู้ช้าว่าโครงการติดขั้นตอนจัดซื้อจัดจ้าง</td><td>เบิกจ่ายล่าช้า ต้องขอกันเงินเหลื่อมปี หรือเงินเหลือคืน</td></tr>
+    <tr><td>ผู้ตรวจสอบต้องประกอบหลักฐานจากหลายแหล่ง</td><td>ตรวจย้อนหลังยาก ตรวจพบเรื่องผิดปกติช้า</td></tr>
+    <tr><td>แต่ละฝ่ายใช้รหัสและชื่อโครงการต่างกัน</td><td>เปรียบเทียบข้ามขั้นไม่ได้ ต้องจับคู่ด้วยมือ</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">2.2</span>ต้นแบบ Fisko Budget ชี้ทิศทางนี้แล้ว</h3>
+<p>ต้นแบบมีส่วนแบบ “เวอร์ชันเบา” ที่แตะรอยต่อเหล่านี้อยู่แล้ว ซึ่งชี้ว่าความต้องการมีจริง และบอกว่าควรต่อยอดตรงไหน</p>
+<div class="tbl"><table>
+  <thead><tr><th>ส่วนที่มีในต้นแบบ</th><th>แตะรอยต่อใด</th><th>ข้อจำกัดปัจจุบัน</th></tr></thead>
+  <tbody>
+    <tr><td>M07 ขั้นตอนจัดซื้อจัดจ้างของโครงการลงทุน</td><td>งบประมาณ → การจัดซื้อ</td><td>ติดตามวันที่ 5 ขั้น ไม่มีสัญญาหรืองวดงานจริง บันทึกด้วยมือเมื่อ e-GP ยังเชื่อมไม่ได้</td></tr>
+    <tr><td>M06 เงินกันเหลื่อมปีและงวดเงิน</td><td>การจัดซื้อ → การเงิน</td><td>ตรวจเลขที่สัญญากับวันที่ลงนาม แต่ไม่มีทะเบียนสัญญา</td></tr>
+    <tr><td>M07 นำเข้าและกระทบยอดผลเบิกจ่ายกับ GFMIS</td><td>การเงิน → งบประมาณ</td><td>ระดับสรุป ไม่ถึงรายรายการหรือรายสัญญา</td></tr>
+    <tr><td>M09 ตรวจความผิดปกติของการใช้จ่าย</td><td>การจัดซื้อ → การจ่ายเงิน</td><td>ข้อมูลตัวอย่าง ยังไม่มีข้อมูลสัญญาและการตรวจรับจริง</td></tr>
+  </tbody>
+</table></div>
+<p class="small">ในข้อมูลตัวอย่างของกรมตัวอย่าง โครงการลงทุนส่วนใหญ่ล่าช้ากว่าแผนจัดซื้อ ซึ่งเป็นสถานการณ์ที่ต้องการมองเห็นให้เร็วขึ้น</p>
+</section>
+
+<!-- ============================== 03 ============================== -->
+<section class="ch" id="s3">
+<h2><span class="num">03</span>ผลิตภัณฑ์ทั้งสาม</h2>
+<p class="lede">สามผลิตภัณฑ์ ใช้แกนเดียวกัน ขายหรือเปิดใช้ทีละผลิตภัณฑ์ได้</p>
+
+<div class="cards">
+  <div class="card"><div class="k">01 · FISKO BUDGET</div><b>วางแผนและบริหารงบประมาณ</b><span>แผน คำขอ รวบรวม พิจารณา ส่งสำนักงบประมาณ จัดสรร ติดตาม ประเมินผล · พร้อมในรูปต้นแบบ (v0.3)</span></div>
+  <div class="card"><div class="k">02 · FISKO PROCUREMENT</div><b>เตรียมและติดตามการจัดซื้อจัดจ้าง</b><span>แผนจัดซื้อผูกรายการงบ ขอซื้อขอจ้าง ทะเบียนสัญญาและงวดงาน ตรวจรับ · ข้อเสนอ</span></div>
+  <div class="card"><div class="k">03 · FISKO FINANCE</div><b>ควบคุมวงเงินผูกพันและการเบิกจ่าย</b><span>ภาระผูกพันจากสัญญา แผนเบิกจ่าย ขออนุมัติเบิกจ่ายภายใน กระทบยอด GFMIS เงินกัน · ข้อเสนอ</span></div>
+</div>
+
+<div class="tbl"><table>
+  <thead><tr><th></th><th>Fisko Budget</th><th>Fisko Procurement</th><th>Fisko Finance</th></tr></thead>
+  <tbody>
+    <tr><td><b>ผู้ใช้หลัก</b></td><td>กองแผนงาน สำนัก / กอง ผู้บริหาร</td><td>เจ้าหน้าที่พัสดุ ผู้ขอซื้อขอจ้าง คณะกรรมการ ผู้บริหาร</td><td>การเงินและบัญชี ผู้บริหาร ผู้ตรวจสอบ</td></tr>
+    <tr><td><b>ความสามารถหลัก</b></td><td>M01–M10 ตาม Solution Design v0.3</td><td>แผนจัดซื้อประจำปีผูกรายการงบ · ใบขอซื้อขอจ้างและสายอนุมัติ · ร่างขอบเขตงาน (TOR) และราคากลางโดยมี AI ช่วย · ทะเบียนสัญญาและงวดงาน · งานของคณะกรรมการ (กำหนดขอบเขต พิจารณา ตรวจรับ) · ประเมินผู้ขาย</td><td>ควบคุมวงเงินผูกพันจากสัญญาเทียบวงเงินจัดสรร · แผนเบิกจ่ายและประมาณการกระแสเงินสดรายเดือน · ขออนุมัติเบิกจ่ายภายในก่อนบันทึกใน GFMIS · กระทบยอดกับ GFMIS รายรายการ · เงินกันเหลื่อมปีและการปิดปี</td></tr>
+    <tr><td><b>ผู้เป็นเจ้าของข้อมูลทางการ</b></td><td>ระบบของสำนักงบประมาณ (ข้อมูลที่ยื่นและวงเงินที่ได้รับ)</td><td>ระบบ e-GP (ขั้นตอนและผลการจัดซื้อจัดจ้างทางการ)</td><td>ระบบ GFMIS (การบันทึกบัญชีและการจ่ายเงินทางการ)</td></tr>
+    <tr><td><b>Fisko ไม่ทำ</b></td><td>ไม่แทนระบบของสำนักงบประมาณ</td><td>ไม่ประกาศหรือรับซองแทน e-GP ไม่ตัดสินผู้ชนะแทนคณะกรรมการ</td><td>ไม่บันทึกบัญชีทางการ ไม่สั่งจ่ายเงิน ไม่แทน GFMIS</td></tr>
+    <tr><td><b>สถานะ</b></td><td><span class="tag t-must">ต้นแบบพร้อม</span></td><td><span class="tag t-should">ข้อเสนอ</span></td><td><span class="tag t-should">ข้อเสนอ</span></td></tr>
+  </tbody>
+</table></div>
+<p class="small">ขั้นตอนที่ระเบียบกำหนดให้ทำใน e-GP หรือ GFMIS ยังทำในระบบนั้น Fisko เตรียมข้อมูล ตรวจ และติดตาม ขอบเขตที่แน่ชัดต้องยืนยันตามกฎหมายและระเบียบพัสดุและการเงินการคลังที่ใช้อยู่ (ประเด็น D-F05)</p>
+
+<h3><span class="num">3.1</span>ส่วนเบาที่มีใน Fisko Budget ตอนนี้</h3>
+<div class="callout"><b>กติกาไม่ให้มีสองที่เก็บ</b> ส่วนเบาใน Fisko Budget (ขั้นตอนจัดซื้อ M07, เงินกันและงวดเงิน M06, กระทบยอด GFMIS M07) ยังคงอยู่ เมื่อเปิดใช้ Procurement หรือ Finance ส่วนเหล่านี้จะอ่านข้อมูลจากผลิตภัณฑ์นั้นแทนการกรอกด้วยมือ ผู้ใช้ไม่ต้องกรอกซ้ำ และไม่มีตัวเลขสองชุด</div>
+</section>
+
+<!-- ============================== 04 ============================== -->
+<section class="ch" id="s4">
+<h2><span class="num">04</span>สายโซ่เดียวจากงบประมาณถึงการจ่ายเงิน</h2>
+<p class="lede">ทุกรายการอ้างรหัสงบประมาณเดียวกัน จึงย้อนตามได้ทั้งสายและเห็นทั้งสาย</p>
+
+<div class="flow">
+  <div class="st"><b>BUDGET</b>รายการจัดสรร</div><span class="ar">→</span>
+  <div class="st"><b>BUDGET</b>งวดเงิน</div><span class="ar">→</span>
+  <div class="st"><b>PROCUREMENT</b>รายการในแผนจัดซื้อ</div><span class="ar">→</span>
+  <div class="st"><b>PROCUREMENT</b>ใบขอซื้อขอจ้าง</div><span class="ar">→</span>
+  <div class="st"><b>e-GP</b>กระบวนการจัดซื้อทางการ</div>
+</div>
+<div class="flow">
+  <div class="st"><b>PROCUREMENT</b>สัญญาและงวดงาน</div><span class="ar">→</span>
+  <div class="st"><b>PROCUREMENT</b>ตรวจรับ</div><span class="ar">→</span>
+  <div class="st"><b>FINANCE</b>ภาระผูกพัน</div><span class="ar">→</span>
+  <div class="st"><b>FINANCE</b>คำขออนุมัติเบิกจ่าย</div><span class="ar">→</span>
+  <div class="st"><b>GFMIS</b>จ่ายเงินทางการ</div><span class="ar">→</span>
+  <div class="st"><b>FINANCE</b>กระทบยอด</div><span class="ar">→</span>
+  <div class="st"><b>BUDGET</b>ผลสัมฤทธิ์ (M08)</div>
+</div>
+
+<h3><span class="num">4.1</span>วัตถุข้อมูลและความเป็นเจ้าของ</h3>
+<div class="tbl"><table>
+  <thead><tr><th>วัตถุข้อมูล</th><th>สร้างและดูแลโดย</th><th>อ้างถึง</th></tr></thead>
+  <tbody>
+    <tr><td>รายการจัดสรรและงวดเงิน</td><td>Budget (M06)</td><td>รหัสงบประมาณ กิจกรรม ตัวชี้วัด</td></tr>
+    <tr><td>รายการในแผนจัดซื้อ</td><td>Procurement</td><td>รายการจัดสรรของ Budget</td></tr>
+    <tr><td>ใบขอซื้อขอจ้าง</td><td>Procurement</td><td>รายการในแผนจัดซื้อ</td></tr>
+    <tr><td>สัญญา งวดงาน และผลตรวจรับ</td><td>Procurement</td><td>ใบขอซื้อขอจ้าง และเลขที่โครงการใน e-GP</td></tr>
+    <tr><td>ภาระผูกพัน</td><td>Finance</td><td>สัญญา และรายการจัดสรร</td></tr>
+    <tr><td>คำขออนุมัติเบิกจ่ายและผลการกระทบยอด</td><td>Finance</td><td>ภาระผูกพัน ผลตรวจรับ และรายการจาก GFMIS</td></tr>
+    <tr><td>ผลผลิตและผลลัพธ์</td><td>Budget (M08)</td><td>สัญญาและงวดงานที่ตรวจรับแล้ว</td></tr>
+  </tbody>
+</table></div>
+<div class="callout"><b>คำถามที่ตอบได้เมื่อสายครบ</b> “โครงการนี้ได้รับจัดสรรเท่าไร ผูกพันแล้วเท่าไร จ่ายแล้วเท่าไร สัญญาใดล่าช้า และงบที่เหลือจะเบิกทันสิ้นปีหรือไม่” ในวันนี้ Fisko Budget ตอบได้เพียงส่วนแรกและส่วนสุดท้ายจากข้อมูลสรุป</div>
+</section>
+
+<!-- ============================== 05 ============================== -->
+<section class="ch" id="s5">
+<h2><span class="num">05</span>แกนกลางที่ใช้ร่วมกัน</h2>
+<p class="lede">แกนเดียวทำให้ผู้ใช้ล็อกอินครั้งเดียว ใช้บทบาทเดียว และให้ผลิตภัณฑ์ใหม่ไม่ต้องสร้างของเดิมซ้ำ</p>
+<div class="tbl"><table>
+  <thead><tr><th>บริการแกนกลาง</th><th>ใช้ร่วมกันอย่างไร</th><th>อ้างอิง Solution Design</th></tr></thead>
+  <tbody>
+    <tr><td>Identity &amp; Access</td><td>ผู้ใช้และบทบาทชุดเดียว ข้ามผลิตภัณฑ์ SSO และ MFA เหมือนกัน</td><td>10.1 · FR-PL-01</td></tr>
+    <tr><td>Workflow และการมอบอำนาจ</td><td>สายอนุมัติของขอซื้อและเบิกจ่ายใช้เครื่องยนต์เดียวกับคำขอ</td><td>3.3 · FR-PL-04</td></tr>
+    <tr><td>Business Rules</td><td>กฎตรวจก่อนทำรายการของแต่ละผลิตภัณฑ์ตั้งค่าได้ใน M10</td><td>4.2 · FR-M10-05</td></tr>
+    <tr><td>Audit และประวัติรายรายการ</td><td>หน้าประวัติแสดงสายตั้งแต่จัดสรรถึงจ่าย</td><td>10.4 · FR-PL-03</td></tr>
+    <tr><td>Notification และ SLA</td><td>แม่แบบ ช่องทาง และกติกายกระดับชุดเดียว</td><td>FR-M10-07</td></tr>
+    <tr><td>ค้นหากลาง</td><td>ค้นสัญญา ใบขอซื้อ รายการเบิกจ่าย ร่วมกับคำขอ</td><td>FR-PL-02</td></tr>
+    <tr><td>ข้อมูลหลัก</td><td>หน่วยงาน โครงสร้างงบประมาณ รหัส ผู้ขาย ราคามาตรฐาน</td><td>4.10 · 7.3</td></tr>
+    <tr><td>Integration Layer</td><td>Adapter เดียวต่อระบบภายนอก ใช้ไฟล์หรือบันทึกด้วยมือเป็นทางสำรอง</td><td>บท 8</td></tr>
+    <tr><td>AI Platform</td><td>Orchestrator แนวป้องกัน และบันทึกการใช้งานเดียวกัน</td><td>บท 9</td></tr>
+  </tbody>
+</table></div>
+<p>เกณฑ์แบ่งงาน: สิ่งที่ผู้ใช้ทำเหมือนกันทุกผลิตภัณฑ์อยู่ในแกน ส่วนโมเดลข้อมูลและหน้าจอเฉพาะงานอยู่ในผลิตภัณฑ์ ผลิตภัณฑ์เพิ่มได้โดยไม่แก้แกน ตามหลัก Core / Configuration / Customization ใน Solution Design 5.3 รูปแบบติดตั้งยังเป็นระบบเดียวต่อหน่วยงาน เปิดใช้ผลิตภัณฑ์ที่ต้องการ (ประเด็น D-F03)</p>
+</section>
+
+<!-- ============================== 06 ============================== -->
+<section class="ch" id="s6">
+<h2><span class="num">06</span>ขอบเขตกับระบบภาครัฐ</h2>
+<p class="lede">เชื่อมแทนทำซ้ำ ใช้ข้อมูลที่ระบบทางการอนุญาตเท่านั้น</p>
+
+<div class="hub">
+  <div class="side">
+    <div class="ext"><b>New e-Budgeting</b>สำนักงบประมาณ</div>
+    <div class="ext"><b>GFMIS</b>บัญชีและการจ่ายเงิน</div>
+    <div class="ext"><b>e-GP</b>จัดซื้อจัดจ้าง</div>
+  </div>
+  <div class="core"><b>Fisko</b><span>Budget · Procurement · Finance<br>แกนกลางเดียว</span></div>
+  <div class="side">
+    <div class="ext"><b>ERP / บัญชีหน่วยงาน</b>ข้อมูลบัญชีภายใน</div>
+    <div class="ext"><b>HR / Payroll</b>อัตรากำลัง</div>
+    <div class="ext"><b>Identity Provider</b>SSO ของหน่วยงาน</div>
+  </div>
+</div>
+
+<div class="tbl"><table>
+  <thead><tr><th>ระบบ</th><th>Fisko Budget</th><th>Fisko Procurement</th><th>Fisko Finance</th></tr></thead>
+  <tbody>
+    <tr><td>New e-Budgeting (IF-01)</td><td>ส่งออกคำขอ รับผลพิจารณา</td><td>–</td><td>–</td></tr>
+    <tr><td>GFMIS (IF-02)</td><td>นำเข้าผลเบิกจ่ายระดับสรุป</td><td>–</td><td>กระทบยอดรายรายการ เทียบกับภาระผูกพัน (ระดับการอ่าน/เขียนต้องยืนยัน)</td></tr>
+    <tr><td>e-GP (IF-04)</td><td>ติดตามขั้นตอน (M07)</td><td>นำเข้าสถานะและผลการจัดซื้อ อ้างเลขที่โครงการ (การส่งข้อมูลกลับต้องยืนยันว่า e-GP รับได้หรือไม่)</td><td>ไม่เชื่อมตรง ใช้สัญญาและผลตรวจรับจาก Fisko Procurement เพื่อสร้างภาระผูกพัน</td></tr>
+    <tr><td>ERP (IF-03)</td><td>–</td><td>–</td><td>นำเข้าข้อมูลบัญชีและการผูกพันของหน่วยงาน</td></tr>
+    <tr><td>HR / Payroll (IF-05)</td><td>ประมาณการงบบุคลากร</td><td>–</td><td>–</td></tr>
+  </tbody>
+</table></div>
+<ul>
+  <li>ทุกช่องทางผ่าน Integration Layer ตามบท 8 ของ Solution Design และใช้ได้เฉพาะช่องทางที่เจ้าของระบบอนุญาต</li>
+  <li>เมื่อเชื่อมต่อไม่ได้ ใช้ไฟล์หรือบันทึกด้วยมือเป็นทางสำรอง เหมือนที่ M07 ทำกับ e-GP แล้ว และข้อมูลจริงทับเมื่อเชื่อมได้</li>
+  <li>รายการเชื่อมต่อใหม่ที่ต้องเพิ่ม (เช่น ทะเบียนสัญญา ผลตรวจรับ) ให้กำหนดในขั้น Detailed Design ภายใต้รหัส IF ถัดไป</li>
+</ul>
+</section>
+
+<!-- ============================== 07 ============================== -->
+<section class="ch" id="s7">
+<h2><span class="num">07</span>การแยกหน้าที่และการควบคุมภายใน</h2>
+<p class="lede">เมื่อสายโซ่ครบ ระบบต้องกันไม่ให้คนเดียวทำหลายขั้นต่อเนื่องในรายการเดียวกัน</p>
+
+<div class="tbl"><table>
+  <thead><tr><th>ขั้นตอน</th><th>ผู้รับผิดชอบ (บทบาท)</th><th>ห้ามเป็นบุคคลเดียวกับ</th></tr></thead>
+  <tbody>
+    <tr><td>ขอซื้อ / ขอจ้าง</td><td>สำนัก / กอง ผู้ขอ</td><td>ผู้อนุมัติขอซื้อ</td></tr>
+    <tr><td>อนุมัติขอซื้อและผูกพันงบ</td><td>ผู้มีอำนาจตามวงเงิน โดยการเงินยืนยันวงเงิน</td><td>ผู้ขอ</td></tr>
+    <tr><td>ดำเนินการจัดซื้อจัดจ้าง</td><td>เจ้าหน้าที่พัสดุ</td><td>กรรมการตรวจรับรายการนั้น</td></tr>
+    <tr><td>ตรวจรับ</td><td>คณะกรรมการตรวจรับ</td><td>ผู้ดำเนินการจัดซื้อรายการนั้น</td></tr>
+    <tr><td>ขออนุมัติเบิกจ่าย</td><td>เจ้าหน้าที่การเงิน</td><td>ผู้อนุมัติเบิกจ่าย</td></tr>
+    <tr><td>อนุมัติเบิกจ่าย</td><td>ผู้มีอำนาจตามระเบียบ</td><td>ผู้ขอเบิกจ่าย และกรรมการตรวจรับรายการนั้น</td></tr>
+    <tr><td>กระทบยอดกับ GFMIS</td><td>การเงินและบัญชี</td><td>ผู้อนุมัติเบิกจ่ายรายการนั้น</td></tr>
+  </tbody>
+</table></div>
+<p class="small">ตารางเป็นข้อเสนอเริ่มต้น ต้องตรวจกับระเบียบและนโยบายควบคุมภายในของแต่ละหน่วยงาน (ประเด็น D-F04) บทบาทใหม่ที่ต้องเพิ่ม: เจ้าหน้าที่พัสดุ และคณะกรรมการตรวจรับ</p>
+
+<ul>
+  <li>ระบบตรวจกฎแยกหน้าที่ตอนทำรายการ และบอกเหตุผลเมื่อทำไม่ได้</li>
+  <li>การมอบอำนาจไม่ข้ามกฎ ผู้รับมอบที่เป็นบุคคลเดียวกับขั้นก่อนหน้าทำรายการนั้นไม่ได้</li>
+  <li>การขอยกเว้นกฎต้องมีเหตุผลและผู้อนุมัติ และรายงานให้ผู้ตรวจสอบเห็นทุกครั้ง</li>
+  <li>AI ไม่ทำรายการใด ๆ ในสายนี้ ทุกขั้นเป็นการตัดสินใจของมนุษย์</li>
+</ul>
+</section>
+
+<!-- ============================== 08 ============================== -->
+<section class="ch" id="s8">
+<h2><span class="num">08</span>AI ในตระกูลผลิตภัณฑ์</h2>
+<p class="lede">ใช้แนวป้องกันเดิมทั้งหมด: อ่านตามสิทธิ์ แสดงแหล่งอ้างอิง บันทึกการใช้งาน และมนุษย์ตัดสินใจ</p>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>Agent</th><th>ผลิตภัณฑ์</th><th>ทำอะไร</th><th>ระดับการทำงาน</th></tr></thead>
+  <tbody>
+    <tr><td class="id">AG-05</td><td>Budget Monitoring (ขยาย)</td><td>ทุกผลิตภัณฑ์</td><td>ตรวจความผิดปกติตลอดสาย เช่น จ่ายก่อนตรวจรับ แบ่งซื้อแบ่งจ้าง เมื่อมีข้อมูลสัญญาและตรวจรับจริง</td><td>แจ้งเตือน ผู้ตรวจสอบตัดสิน</td></tr>
+    <tr><td class="id">AG-07</td><td>Procurement Drafting (เสนอ)</td><td>Procurement</td><td>ร่างขอบเขตงาน (TOR) และเสนอราคากลางจากบัญชีราคามาตรฐานและสัญญาเดิม</td><td>ร่างให้ผู้ใช้แก้ไข</td></tr>
+    <tr><td class="id">AG-08</td><td>Contract Monitoring (เสนอ)</td><td>Procurement</td><td>เตือนงวดงานล่าช้าและสัญญาใกล้ครบกำหนด</td><td>แจ้งเตือน</td></tr>
+    <tr><td class="id">AG-09</td><td>Cash Forecast (เสนอ)</td><td>Finance</td><td>คาดการณ์การเบิกจ่ายรายเดือนจากสัญญาและงวดงาน ใช้กับคาดการณ์สิ้นปีของ Budget</td><td>อ่านอย่างเดียว</td></tr>
+  </tbody>
+</table></div>
+<ul>
+  <li>AI ไม่อนุมัติ ไม่สั่งจ่าย ไม่เลือกผู้ขาย และไม่ตัดสินผลการพิจารณาของคณะกรรมการ</li>
+  <li>ข้อมูลผู้ขายและการจ่ายเงินจัดเป็นชั้น “ลับ” ปกปิดในสภาพแวดล้อมทดสอบ ตามหลักในบท 10.3 ของ Solution Design</li>
+  <li>รหัส AG-07 ถึง AG-09 เป็นรหัสชั่วคราวเพื่อการอ้างอิงในเอกสารนี้</li>
+</ul>
+</section>
+
+<!-- ============================== 09 ============================== -->
+<section class="ch" id="s9">
+<h2><span class="num">09</span>ลำดับการพัฒนา</h2>
+<p class="lede">ข้อเสนอ: เริ่ม Procurement แบบเบาก่อน แล้วต่อ Finance แบบเบา จากนั้นเพิ่มความลึก</p>
+
+<div class="tbl"><table>
+  <thead><tr><th>ระยะ</th><th>ขอบเขต</th><th>เงื่อนไขก่อนเริ่ม</th><th>สิ่งที่เห็นเมื่อเสร็จ</th></tr></thead>
+  <tbody>
+    <tr><td><b>0 · Fisko Budget</b><br><span class="small">ต้นแบบเสร็จ</span></td><td>M01–M10 ตาม Solution Design v0.3</td><td>ยืนยันขอบเขตกับหน่วยงาน (D-01 ถึง D-09)</td><td>วงจรงบประมาณครบ จากแผนถึงผลสัมฤทธิ์</td></tr>
+    <tr><td><b>1 · Procurement แบบเบา</b></td><td>แผนจัดซื้อผูกรายการงบ · ใบขอซื้อขอจ้างและสายอนุมัติ · ทะเบียนสัญญาและงวดงาน · อ่านสถานะจาก e-GP · ส่วนเบาของ M07 อ่านจากที่นี่</td><td>ตกลงช่องทาง e-GP หรือไฟล์ · ทบทวนระเบียบพัสดุ · กำหนดบทบาทพัสดุและกรรมการ</td><td>เห็นโครงการที่ติดจัดซื้อก่อนสายเกินไป และเห็นสัญญากับรายการงบในที่เดียว</td></tr>
+    <tr><td><b>2 · Finance แบบเบา</b></td><td>ภาระผูกพันจากสัญญา · กระทบยอด GFMIS รายรายการ · เงินกันเหลื่อมปีเต็มรูปแบบ · แผนเบิกจ่าย</td><td>ตกลงช่องทาง GFMIS · อนุมัตินโยบายแยกหน้าที่ (D-F04)</td><td>ตอบได้ว่า “จัดสรร ผูกพัน จ่าย เหลือ” รายโครงการ</td></tr>
+    <tr><td><b>3 · เพิ่มความลึก</b></td><td>ร่าง TOR ด้วย AI · งานคณะกรรมการและตรวจรับ · ขออนุมัติเบิกจ่ายภายใน · ประเมินผู้ขาย · AI Agent ใหม่</td><td>ผลการใช้งานระยะ 1–2 และความต้องการจริงของหน่วยงาน</td><td>สายโซ่ครบวงจรพร้อมการควบคุมภายใน</td></tr>
+  </tbody>
+</table></div>
+<p class="small">เอกสารนี้ไม่ประมาณระยะเวลาและค่าใช้จ่าย ต้องทำ Sizing หลังยืนยัน D-F01 ถึง D-F03 เหตุผลที่เสนอ Procurement ก่อน: ความล่าช้าของการจัดซื้อเป็นสาเหตุหลักที่ทำให้เบิกจ่ายไม่ทัน ผลจึงเห็นได้เร็วที่สุด ส่วน Finance พึ่งข้อมูลสัญญาจาก Procurement และแตะกฎการเงินการคลังที่เข้มกว่า จึงควรตามหลัง</p>
+
+<div class="callout dark"><b>ทางเลือกทดสอบแนวคิดก่อนลงทุน</b> เพิ่มแท็บ Procurement ในต้นแบบ Fisko Budget (แผนจัดซื้อผูกรายการงบ ทะเบียนสัญญา งวดงาน และการจำลองกฎแยกหน้าที่) ใช้ข้อมูลตัวอย่างชุดเดิม เพื่อให้หน่วยงานเห็นสายโซ่ก่อนตัดสินใจ</div>
+</section>
+
+<!-- ============================== 10 ============================== -->
+<section class="ch" id="s10">
+<h2><span class="num">10</span>ความเสี่ยงและประเด็นที่ต้องตัดสินใจ</h2>
+<p class="lede">ประเด็นที่ต้องปิดก่อนเริ่มระยะ 1</p>
+
+<h3><span class="num">10.1</span>ความเสี่ยง</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ความเสี่ยง</th><th>ผลกระทบ</th><th>มาตรการ</th></tr></thead>
+  <tbody>
+    <tr><td>ถูกมองว่าเข้าไปแทน GFMIS หรือ e-GP</td><td><span class="tag t-bad">สูง</span></td><td>ระบุรายการ “ไม่ทำ” ในทุกเอกสาร เชื่อมแทนทำซ้ำ และขอความเห็นเจ้าของระบบตั้งแต่ต้น</td></tr>
+    <tr><td>กติกาแยกหน้าที่ไม่ผ่านการตรวจของหน่วยงานหรือผู้ตรวจสอบ</td><td><span class="tag t-bad">สูง</span></td><td>ตั้งเป็นกฎที่ปรับได้ใน M10 ทดสอบกับกรณีจริงใน UAT และให้ผู้ตรวจสอบร่วมกำหนด</td></tr>
+    <tr><td>ข้อมูลผู้ขายและการจ่ายเงินเป็นข้อมูลอ่อนไหว</td><td><span class="tag t-bad">สูง</span></td><td>จัดชั้นความลับ ปกปิดข้อมูลในสภาพแวดล้อมทดสอบ ทำ DPIA และจำกัดสิทธิ์ตามบทบาท</td></tr>
+    <tr><td>ไม่ได้รับอนุญาตเชื่อมต่อ e-GP หรือ GFMIS ตามเวลา</td><td><span class="tag t-bad">สูง</span></td><td>ใช้ไฟล์และบันทึกด้วยมือเป็นทางสำรอง ออกแบบให้เปลี่ยนเป็น API ได้โดยไม่กระทบหน้าจอ</td></tr>
+    <tr><td>ผู้ตัดสินใจซื้อแต่ละผลิตภัณฑ์ต่างกัน (แผนงาน การเงิน พัสดุ)</td><td><span class="tag t-warn">ปานกลาง</span></td><td>ขายและเปิดใช้ทีละผลิตภัณฑ์ แต่ใช้ข้อมูลร่วม หาผู้สนับสนุนระดับผู้บริหารที่เห็นทั้งสาย</td></tr>
+    <tr><td>ขอบเขตบวมจนทำให้ Fisko Budget ล่าช้า</td><td><span class="tag t-warn">ปานกลาง</span></td><td>ล็อกขอบเขต Budget ก่อน เริ่มผลิตภัณฑ์ใหม่เมื่อเงื่อนไขของแต่ละระยะครบ</td></tr>
+    <tr><td>ชื่อผลิตภัณฑ์ยังไม่ได้ตรวจเครื่องหมายการค้า</td><td><span class="tag t-should">ต่ำ</span></td><td>ตรวจชื่อ Fisko พร้อมชื่อรอง Budget Finance Procurement ในรอบเดียว</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">10.2</span>ประเด็นที่ต้องตัดสินใจ</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ประเด็น</th><th>ตัวเลือก</th><th>ผู้ตัดสินใจ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">D-F01</td><td>หน่วยงานต้องการ Finance และ Procurement จริงหรือไม่ และใครเป็นเจ้าของ</td><td>กองแผนงาน / การเงิน / พัสดุ / ผู้บริหารเป็นผู้สนับสนุน</td><td>ผู้บริหาร</td></tr>
+    <tr><td class="id">D-F02</td><td>ลำดับการพัฒนา</td><td>Procurement ก่อน (เสนอ) / Finance ก่อน / พร้อมกัน</td><td>ผู้บริหาร Avalant และหน่วยงาน</td></tr>
+    <tr><td class="id">D-F03</td><td>รูปแบบเชิงพาณิชย์และการติดตั้ง</td><td>แยกผลิตภัณฑ์บนแกนเดียว (เสนอ) / ขายรวมเป็นชุด</td><td>Avalant</td></tr>
+    <tr><td class="id">D-F04</td><td>นโยบายแยกหน้าที่และการมอบอำนาจข้ามขั้นตอน</td><td>ใช้ตารางในบท 7 เป็นค่าเริ่มต้น / ปรับตามนโยบายหน่วยงาน</td><td>ผู้ตรวจสอบ ฝ่ายกฎหมาย</td></tr>
+    <tr><td class="id">D-F05</td><td>ช่องทางและระดับการเข้าถึง e-GP และ GFMIS</td><td>อ่านอย่างเดียว / อ่านและเขียน / ไฟล์เท่านั้น</td><td>ฝ่าย IT เจ้าของระบบ</td></tr>
+    <tr><td class="id">D-F06</td><td>ชื่อผลิตภัณฑ์และการตรวจเครื่องหมายการค้า</td><td>Fisko Budget / Procurement / Finance หรือชื่ออื่น</td><td>Avalant</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<footer class="end">© 2026 Avalant. All rights reserved. · เอกสารแนวคิดฉบับร่างเพื่อการหารือ ไม่ใช่ข้อผูกพัน ข้อมูลตัวอย่างทั้งหมดเป็นข้อมูลสมมติ</footer>
+</div>
+</main>
+</div>
+
+<script>
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc ol a'));
+  var secs = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+  function onScroll() {
+    var y = window.scrollY + 120, cur = 0;
+    secs.forEach(function (s, i) { if (s && s.offsetTop <= y) cur = i; });
+    links.forEach(function (a, i) { a.classList.toggle('on', i === cur); });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+  var toc = document.getElementById('toc'), tg = document.getElementById('toc-toggle');
+  tg.addEventListener('click', function () { var o = toc.classList.toggle('open'); tg.setAttribute('aria-expanded', o); });
+  links.forEach(function (a) { a.addEventListener('click', function () { toc.classList.remove('open'); tg.setAttribute('aria-expanded', 'false'); }); });
+  document.getElementById('theme').addEventListener('click', function () {
+    var r = document.documentElement, cur = r.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    r.dataset.theme = cur === 'dark' ? 'light' : 'dark';
+  });
+})();
+</script>
+</body>
+</html>
