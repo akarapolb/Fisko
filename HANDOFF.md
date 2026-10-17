@@ -92,7 +92,7 @@ Conventions worth knowing before you edit:
 ## 5. State and data
 
 - State is kept per organisation in `localStorage` under `fisko-v1-<org>` (`sample` or `dpt`). Other keys: `fisko-session`, `fisko-lang`, `fisko-role`, `fisko-org`, `fisko-app`.
-- `DATA_V` in `00-core.js` (now **19**) is the seed version. **Bump it whenever you change the shape of seeded data**, or browsers that already hold old saved state will keep the old shape and break. Bumping resets everyone's saved demo data once.
+- `DATA_V` in `00-core.js` (now **20**) is the seed version. **Bump it whenever you change the shape of seeded data**, or browsers that already hold old saved state will keep the old shape and break. Bumping resets everyone's saved demo data once.
 - Seed data is built by `buildOrg()` in `06-seedhelp.js`. Rounds 7 to 10 add their data at the end of that function, in clearly commented blocks.
 - All dates are anchored to a constant, `TODAY = "2026-10-16"` in `00-core.js`, **not the computer's clock**. So deadlines, "days left" and delegation periods behave the same on any day. Only the time of day comes from the real clock.
 - Two organisations: a fictional department (`sample`), and กรมโยธาธิการและผังเมือง (`dpt`) with fictional figures and an indicative unit structure. Keep real-agency data out of the published build. The filename pattern `*data-dpt*` is what does that.
@@ -301,3 +301,18 @@ Builds round Q4 of the design v0.2 (FR-PR-56, 57; chapter 12; decision D-P10). N
 - **Agent and quality:** registered as AG-14 Document Intake Agent in `S.agents`; switching it off in M09 blocks new reads. Each read is logged in the AI log. The page shows the share of fields confirmed without edits, the quality measure from design chapter 8.3.
 - **Name clash to remember:** `67-procai.js` already uses `DOC_T` for draft types, so this file uses `DOC_TYPE`. All files share one script scope; check `node --check` after adding constants.
 - **Tested:** about 880 renders including every sample in review, a click-through of all four document types plus upload, duplicate and agent-off cases (16 checks), the 9 demo extension steps, and 375 px width.
+
+## 22. Forecast and what-if, Q5 (round 22)
+
+Builds round Q5 of the design v0.2 (FR-PR-26, 60 to 62; chapter 13). New file `65b-forecast.js` (after `65-analytics.js`). New Procurement pages `forecast` and `whatif`; the menu now has P1 to P16.
+
+- **Durations:** `stageSamples()` reads stage durations from the case events. A stage with fewer than `fcMinN` (3) cases falls back to `S.pcfg.fcSla` with a ±30% spread, and the page lists which stages use defaults. A seeded random generator (`rng`, one seed per case) makes results repeatable.
+- **F-02:** `simCase(c, opt)` runs `fcRuns` (400) simulations of the remaining stages per open case (plan start 45 days before the planned month, e-GP closing date when known, appeal window in working days) and returns the chance of signing by the cut-off, median, P10, P90 and the longest stage. `opt` takes `methods`, `delay`, `speed` and `cutoff`.
+- **Cut-off:** selectable on both pages: fiscal-year end (`S.pcfg.signCutoff`), end of Q2, end of Q1. With 11 months left, everything signs by year end, which is honest; the earlier cut-offs show risk. The Q2 date stands for a spending-acceleration target and is level C.
+- **F-01:** commitments (actual by signing month plus expected from the simulations, with P10–P90 per month) and payments (actual plus unpaid phases at due date + the acceptance-to-payment lag, plus expected payments from simulated contracts in three thirds). Drawn as an SVG chart.
+- **F-03, F-04, F-05:** price ratio per category with a yearly index; cases below the `carryRisk` chance (50%) with a button that notifies Finance; weekly officer hours from `stageHours` against `weekHours` × officers.
+- **What-if:** `runScenario(w)` recomputes everything from parameters only: W-01 cut of not-yet-approved plan items (latest first, lockable), W-02 specific-method ceiling, W-03 extra days on one stage, W-04 price rise against reserves, W-05 penalty rate and approval ladder, W-06 officers (workload over capacity slows every stage). Up to four scenarios are saved in `S.scenarios` for side-by-side comparison.
+- **Role cards:** the Analytics page opens with four cards for the signed-in role (officer, head, executive, Audit, Finance), each linking to its page.
+- **Timeline:** open cases show the expected signing date (diamond) and the P10–P90 range.
+- **Name clashes:** `FY_END` and `FY_MONTHS` already exist in the budget modules, so this file uses `PFY_END` and `PFY_MONTHS`.
+- **Tested:** about 670 renders, forecast numbers and determinism, each lever, scenario saving with real data unchanged, role cards for five roles, the Finance notice, Gantt markers, the 9 demo extension steps, and 375 px width.

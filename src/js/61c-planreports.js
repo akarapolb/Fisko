@@ -162,6 +162,7 @@ PROC.gantt = () => {
       <div style="min-width:0"><button class="btn ghost" type="button" data-gopen="${c.id}" style="padding:2px 6px"><span class="mono">${c.id}</span></button><div class="sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(tx(p.name))}</div></div>
       <div style="position:relative;height:30px;background:var(--surface-2);border-radius:6px">
         ${live ? bar(created, prepEnd, "var(--info)", L("เตรียมการ", "Preparation")) + bar(srcStart, awd || TODAY, "var(--warn)", L("ดำเนินการใน e-GP และพิจารณาผล", "Sourcing and evaluation")) + (con ? bar(con.signed, conEnd(con), "var(--accent)", L("ช่วงสัญญา", "Contract period")) : "") : bar(created, TODAY, "var(--muted)", L("ยกเลิก", "Cancelled"))}
+        ${live ? fcMarker(c, x) : ""}
         <span title="${L("เดือนที่กำหนดในแผน", "Planned month")}" style="position:absolute;top:2px;bottom:2px;left:${x(p.month)}%;width:2px;background:var(--ink)"></span></div></div>`;
   }).join("");
   return `<section class="panel"><header><h2>${L("ไทม์ไลน์แฟ้มทั้งหมด", "All cases on a timeline")}</h2><span class="sp"></span><span class="sub">FR-PR-55</span></header>
@@ -172,7 +173,7 @@ PROC.gantt = () => {
         <span style="position:absolute;top:0;bottom:0;left:calc(210px + (100% - 210px) * ${x(TODAY) / 100});width:2px;background:var(--bad)"></span>
         <span style="position:absolute;top:0;bottom:0;left:calc(210px + (100% - 210px) * ${x("2026-10-01") / 100});width:1px;background:var(--line);border-left:1px dashed var(--muted)" title="${L("เริ่มปีงบประมาณ", "Fiscal year starts")}"></span></div>
     </div></div>
-    <div class="body sub">${L("ช่วงที่ยังไม่เกิดขึ้นจะแสดงเมื่อมีวันที่จริง การคาดการณ์วันลงนามจะเพิ่มในรอบ Q5", "Stretches that haven't happened show once they have real dates. Forecast signing dates come in round Q5.")}</div></section>`;
+    <div class="body sub">${L("รูปข้าวหลามตัด = วันที่คาดว่าลงนาม (ค่ากลาง) เส้นจาง = ช่วง P10 ถึง P90 จากพยากรณ์ F-02", "Diamond = expected signing date (median); faint line = P10 to P90 from forecast F-02")}</div></section>`;
 };
 function bindGantt() { $$("[data-gopen]").forEach(b => (b.onclick = () => { CASE_OPEN = b.dataset.gopen; PROC_TAB = "cases"; route(); })); }
 
