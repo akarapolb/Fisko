@@ -43,8 +43,8 @@ function renderShell() {
   org.hidden = orgs.length < 2;
   $("#role").innerHTML = Object.keys(ROLES).map(r => `<option value="${r}" ${r === ROLE ? "selected" : ""}>${tx(ROLES[r])}</option>`).join("");
   $$("#top .seg button").forEach(b => b.classList.toggle("on", b.dataset.lang === LANG));
-  $("#bell-label").textContent = L("แจ้งเตือน", "Alerts");
-  $("#theme").textContent = L("ธีม", "Theme");
+  $("#bell-label").innerHTML = icon("bell", 18); $("#bell").setAttribute("aria-label", L("แจ้งเตือน", "Alerts")); $("#bell").title = L("แจ้งเตือน", "Alerts");
+  $("#theme").innerHTML = `<span class="ico" style="width:18px;height:18px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/></svg></span>`; $("#theme").setAttribute("aria-label", L("สลับธีม", "Switch theme")); $("#theme").title = L("สลับธีม", "Switch theme");
   $("#gsearch").placeholder = L("ค้นหา (Ctrl+K)", "Search (Ctrl+K)");
   renderUserChip();
   updateBell();

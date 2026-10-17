@@ -64,6 +64,7 @@ function conPanel(c) {
   const gs = guarSt(c), pen = conPenalty(c), vars = c.vars || [], head = ROLE === "prochead" || canSpend();
   const prevOk = ph => ph.n === 1 || phaseAccepted(c.phases[ph.n - 2]);
   return `<section class="panel"><header><h2><span class="mono">${c.id}</span> · ${esc(tx(famPlan(c.plan).name))}</h2><span class="sp"></span>${historyBtn(c.id, c.id)}${(c.ver || 1) > 1 ? tag(`${L("ฉบับที่", "Version")} ${c.ver}`, "p-info") : ""}${pen ? tag(`${L("ค่าปรับสะสม", "Penalty")} ${fmt(pen)}`, penaltyWarn(c) ? "p-bad" : "p-warn") : ""}${tag(`${L("วงเงินสัญญา", "Contract")} ${mb(c.amount)} ${L("ลบ.", "M")}`, "p-info")}</header>
+    ${phaseTrack(c)}
     <div class="body row"><span>${esc(tx(c.vendor))}</span><span class="sub">·</span><span class="mono sub">${esc(c.no)}</span><span class="sub">·</span><span class="sub">${L("ลงนาม", "Signed")} ${fdate(c.signed)}</span><span class="sub">·</span><span class="sub">${esc(lineLabel(l))}</span>
       ${famPlan(c.plan).egp ? `<span class="sub">·</span><span class="sub mono">${famPlan(c.plan).egp.no}</span>` : ""}${cs ? `<span class="sub">·</span><button class="btn ghost" type="button" data-copen2="${cs.id}">${cs.id}</button>` : ""}</div>
     <div class="body" style="padding-top:0"><span class="sub">${L("คณะกรรมการตรวจรับ", "Acceptance committee")}:</span> ${c.inspectors.map(id => esc(userName(id))).join(", ")}

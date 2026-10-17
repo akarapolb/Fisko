@@ -114,7 +114,8 @@ function route() {
   const n = NAV.find(x => x.id === v) || (v === "request" ? NAV.find(x => x.id === "requests") : null);
   appSync(n);
   const extra = { demo: ["คู่มือการสาธิต", "Demo guide"], delegation: ["การมอบอำนาจ", "Delegation of authority"] };
-  $("#crumb").innerHTML = `${esc(tx(S.org))} · <b>${n ? tx(n.label) : extra[v] ? tx(extra[v]) : ""}</b>`;
+  const tabL = n && n.tabs ? (n.tabs.find(t => t[0] === n.tabGet()) || [])[1] : null;
+  $("#crumb").innerHTML = `${esc(tx(S.org))} · ${n ? (tabL ? `${esc(tx(APPS[n.app] ? APPS[n.app].name : n.label))} · <b>${tx(tabL)}</b>` : `<b>${tx(n.label)}</b>`) : `<b>${extra[v] ? tx(extra[v]) : ""}</b>`}`;
   const view = $("#view");
   if (n && !n.roles.includes(ROLE)) {
     view.innerHTML = `<div class="panel"><div class="body"><h2 style="margin:0 0 6px">${L("ไม่มีสิทธิ์เข้าถึง", "No access")}</h2>
@@ -125,6 +126,7 @@ function route() {
   } else {
     view.innerHTML = VIEWS[v]();
     (BIND[v] || (() => {}))();
+    if (typeof bindLinks === "function") bindLinks(view);
   }
   window.scrollTo(0, 0);
 }

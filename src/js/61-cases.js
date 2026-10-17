@@ -197,19 +197,15 @@ function caseDetail(c) {
         <div style="flex:1 1 100%"><span class="sub">${L("กรรมการ (อย่างน้อย", "Members (at least")} ${S.pcfg.minMembers - 1}${L(" คน และควรมีผู้ชำนาญการหรือผู้ทรงคุณวุฒิ)", ", ideally including an expert)")}</span><div class="row">${memberPick("cm-" + key, [])}</div></div>
         <button class="btn primary" type="submit">${L("บันทึกคำสั่งแต่งตั้ง", "Save the order")}</button></form>` : ""}</div>`; };
   return `
-  <section class="panel"><header><button class="btn ghost" type="button" id="case-back">← ${L("กลับรายการ", "Back to list")}</button><h2 style="margin-left:8px"><span class="mono">${c.id}</span> · ${esc(caseName(c))}</h2><span class="sp"></span>${historyBtn(c.id, c.id)}${caseStTag(c)}</header>
-    <div class="body row"><span class="sub">${esc(lineLabel(famLine(c.line)))}</span><span class="sub">·</span><span>${tx(KINDS[c.kind])}</span><span class="sub">·</span><span>${mb(rq ? rq.amount : p.est)} ${L("ลบ.", "M")}</span>${rq ? `<span class="sub">·</span><span class="mono sub">${rq.id}</span>` : ""}${con ? `<span class="sub">·</span><span class="mono sub">${con.id}</span>` : ""}
-      ${rq && rq.splitWhy ? tag(L("มีคำชี้แจงการแตกซื้อ", "Split explained"), "p-warn") : ""}${c.egp && c.egp.bidders === 1 ? tag(L("ผู้ยื่นรายเดียว", "Single bidder"), "p-warn") : ""}</div>
-    <div class="body" style="padding-top:0">${stepper(c)}</div></section>
+  <section class="panel"><div class="case-hero">${ring(n === 0 ? 0 : n / 12, { size: 76, stroke: 7, label: n === 0 ? "–" : `${n}/12`, fs: 17, color: n === 0 ? "var(--muted)" : n >= 9 ? "var(--accent)" : "var(--info)" })}
+      <div style="min-width:0"><div class="row" style="gap:8px"><button class="btn ghost" type="button" id="case-back" style="height:28px;padding:0 10px">← ${L("กลับ", "Back")}</button><span class="mono sub">${c.id}</span>${caseStTag(c)}</div>
+        <h2 style="margin-top:6px">${esc(caseName(c))}</h2>
+        <div class="facts"><span class="fact">${svgI("building")}${esc(lineLabel(famLine(c.line)))}</span><span class="fact">${svgI("tag")}${tx(KINDS[c.kind])}${c.method ? " · " + tx(PMETHOD[c.method]) : ""}</span><span class="fact">${svgI("coins")}<b>${mb(rq ? rq.amount : p.est)}</b> ${L("ลบ.", "M")}</span>${rq ? `<span class="fact">${svgI("file")}<span class="mono">${rq.id}</span></span>` : ""}${con ? `<span class="fact">${svgI("pen")}<span class="mono">${con.id}</span></span>` : ""}
+          ${rq && rq.splitWhy ? tag(L("มีคำชี้แจงการแตกซื้อ", "Split explained"), "p-warn") : ""}${c.egp && c.egp.bidders === 1 ? tag(L("ผู้ยื่นรายเดียว", "Single bidder"), "p-warn") : ""}</div></div>
+      <div class="row">${historyBtn(c.id, c.id)}</div></div>
+    <div class="body" style="padding-top:2px">${stepper(c)}</div></section>
   ${c.cancelled ? `<div class="alert"><div class="ic" style="background:var(--bad-soft);color:var(--bad)">!</div><div><b>${L("แฟ้มนี้ถูกยกเลิก", "This case was cancelled")}</b><p>${esc(c.cancelled.why)} · ${esc(userName(c.cancelled.by))} · ${fdate(c.cancelled.t, true)}</p></div></div>` : ""}
-  ${n >= 1 && n <= 8 && !c.cancelled ? `<section class="panel"><header><h2>${L("ขั้นตอนนี้", "This step")}: ${tx([CASE_STATES[n].th, CASE_STATES[n].en])}</h2><span class="sp"></span>${whoTag(nx.who)}</header>
-    <div class="body"><ul class="check">${chk.length ? chk.map(x => `<li><span class="m ${x.ok ? "ok" : "no"}">${x.ok ? "✓" : "×"}</span><div>${esc(x.label)}</div></li>`).join("") : `<li class="sub">${esc(L(nx.th, nx.en))}</li>`}</ul>
-      <div class="row" style="margin-top:10px">${edit && [3, 4, 5].includes(n) ? `<button class="btn primary" type="button" id="case-move" ${allOk ? "" : "disabled"}>${n === 3 ? L("ไปขั้นจัดทำ TOR และราคากลาง", "Move to TOR and reference price") : n === 4 ? (comp ? L("เข้าสู่การดำเนินการใน e-GP", "Move to e-GP sourcing") : L("ประกาศผู้เสนอราคาที่เลือก", "Award to the chosen supplier")) : L("เข้าสู่การพิจารณาผล", "Move to evaluation")}</button>` : ""}
-        ${edit && n === 7 && !(c.appeal && c.appeal.status === "open") ? `<button class="btn primary" type="button" id="case-move" ${allOk ? "" : "disabled"}>${L("ไปขั้นทำสัญญา", "Move to contracting")}</button>` : ""}
-        ${n === 8 && isProcRole() ? `<button class="btn primary" type="button" id="case-tocon">${L("สร้างสัญญา", "Create the contract")}</button>` : ""}
-        ${(edit && n >= 4 && n <= 7) || (isProcRole() && n >= 2 && n <= 8) ? `<input type="text" id="case-reason" placeholder="${L("เหตุผล (สำหรับล้มเหลวหรือยกเลิก)", "Reason (for failed or cancel)")}" style="min-width:220px" aria-label="${L("เหตุผล", "Reason")}">` : ""}
-        ${edit && n >= 4 && n <= 7 ? `<button class="btn" type="button" id="case-fail">${L("ล้มเหลว ดำเนินการใหม่", "Failed, rerun")}</button>` : ""}
-        ${isProcRole() && n >= 2 && n <= 8 ? `<button class="btn danger" type="button" id="case-cancel">${L("ยกเลิกการจัดซื้อ", "Cancel procurement")}</button>` : ""}</div></div></section>` : ""}
+  <div class="case-grid"><div class="case-main">
   ${sec(3, L("วิธีจัดซื้อ", "Procurement method"), `
     <div class="row"><span class="sub">${L("ชนิดงาน", "Kind")}</span><b>${tx(KINDS[c.kind])}</b><span class="sub">·</span><span class="sub">${L("ระบบแนะนำ", "Advice")}</span><b>${rec.method ? tx(PMETHOD[rec.method]) : "—"}</b>${rec.rule ? tag(`${L("กฎ", "Rule")} ${rec.rule.id} · ${rec.rule.conf}`, rec.rule.conf === "A" ? "p-ok" : rec.rule.conf === "B" ? "p-info" : "p-mute") : ""}</div>
     <div class="sub">${esc(tx(rec.why))}</div>
@@ -257,8 +253,17 @@ function caseDetail(c) {
     : `<span class="sub">${L("วิธีนี้ไม่มีช่วงอุทธรณ์ตามค่าตั้งใน M10", "This method has no appeal period in the M10 settings")}</span>`)}
   ${sec(8, L("สัญญา", "Contract"), con ? `<div><span class="mono">${con.id}</span> · ${esc(tx(con.vendor))} · ${mb(con.amount)} ${L("ลบ.", "M")} <button class="btn" type="button" id="case-gocon">${L("เปิดสัญญา", "Open the contract")}</button></div>${closePanel(c, con)}` : `<span class="sub">${n === 8 ? L("พร้อมสร้างสัญญา วงเงินสัญญาต้องไม่เกินราคาที่ประกาศ", "Ready for the contract. Its amount can't exceed the announced price.") : ""}</span>`)}
   ${CASE_PANELS.map(f => f(c)).join("")}
+  </div><aside class="case-side">
+  ${n >= 1 && n <= 8 && !c.cancelled ? `<section class="panel nextcard"><header>${chipIco("arrow", "ok")}<h2>${L("ขั้นตอนนี้", "This step")}: ${tx([CASE_STATES[n].th, CASE_STATES[n].en])}</h2><span class="sp"></span>${whoTag(nx.who)}</header>
+    <div class="body"><ul class="check">${chk.length ? chk.map(x => `<li><span class="m ${x.ok ? "ok" : "no"}">${x.ok ? "✓" : "×"}</span><div>${esc(x.label)}</div></li>`).join("") : `<li class="sub">${esc(L(nx.th, nx.en))}</li>`}</ul>
+      <div class="row" style="margin-top:10px">${edit && [3, 4, 5].includes(n) ? `<button class="btn primary" type="button" id="case-move" ${allOk ? "" : "disabled"}>${n === 3 ? L("ไปขั้นจัดทำ TOR และราคากลาง", "Move to TOR and reference price") : n === 4 ? (comp ? L("เข้าสู่การดำเนินการใน e-GP", "Move to e-GP sourcing") : L("ประกาศผู้เสนอราคาที่เลือก", "Award to the chosen supplier")) : L("เข้าสู่การพิจารณาผล", "Move to evaluation")}</button>` : ""}
+        ${edit && n === 7 && !(c.appeal && c.appeal.status === "open") ? `<button class="btn primary" type="button" id="case-move" ${allOk ? "" : "disabled"}>${L("ไปขั้นทำสัญญา", "Move to contracting")}</button>` : ""}
+        ${n === 8 && isProcRole() ? `<button class="btn primary" type="button" id="case-tocon">${L("สร้างสัญญา", "Create the contract")}</button>` : ""}
+        ${(edit && n >= 4 && n <= 7) || (isProcRole() && n >= 2 && n <= 8) ? `<input type="text" id="case-reason" placeholder="${L("เหตุผล (สำหรับล้มเหลวหรือยกเลิก)", "Reason (for failed or cancel)")}" style="min-width:220px" aria-label="${L("เหตุผล", "Reason")}">` : ""}
+        ${edit && n >= 4 && n <= 7 ? `<button class="btn" type="button" id="case-fail">${L("ล้มเหลว ดำเนินการใหม่", "Failed, rerun")}</button>` : ""}
+        ${isProcRole() && n >= 2 && n <= 8 ? `<button class="btn danger" type="button" id="case-cancel">${L("ยกเลิกการจัดซื้อ", "Cancel procurement")}</button>` : ""}</div></div></section>` : ""}
   <section class="panel"><header><h2>${L("ไทม์ไลน์ของแฟ้ม", "Case timeline")}</h2><span class="sp"></span><span class="sub">${ev.length} ${L("เหตุการณ์", "events")}</span></header>
-    <div class="body"><ol class="timeline">${ev.map(e => `<li class="done"><span class="dot"></span><div><b style="font-weight:600">${tx(CASE_EV[e.type] || [e.type, e.type])}</b><small>${esc(userName(e.by))} · ${fdate(e.t, true)}</small>${e.detail ? `<div class="sub">${esc(e.detail)}</div>` : ""}</div></li>`).join("") || `<li class="sub">—</li>`}</ol></div></section>`;
+    <div class="body"><ol class="timeline">${ev.map(e => `<li class="done"><span class="dot"></span><div><b style="font-weight:600">${tx(CASE_EV[e.type] || [e.type, e.type])}</b><small>${esc(userName(e.by))} · ${fdate(e.t, true)}</small>${e.detail ? `<div class="sub">${esc(e.detail)}</div>` : ""}</div></li>`).join("") || `<li class="sub">—</li>`}</ol></div></section></aside></div>`;
 }
 
 // ---------- actions ----------

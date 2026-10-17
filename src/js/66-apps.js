@@ -65,8 +65,8 @@ function renderNav() {
     if (!items.length) return;
     html += `<div class="nav-h">${tx(GROUPS[g])}</div>`;
     items.forEach(n => {
-      if (n.tabs) n.tabs.forEach(([id, label, code]) => (html += `<a href="#${n.id}" data-v="${n.id}" data-tab="${id}"><span class="code">${code}</span>${tx(label)}${tabBadge(n.id, id)}</a>`));
-      else html += `<a href="#${n.id}" data-v="${n.id}"><span class="code">${n.code}</span>${tx(n.label)}${n.soon ? `<span class="soon">${L("รอบ", "R")} ${n.soon}</span>` : navBadge(n.id)}</a>`;
+      if (n.tabs) n.tabs.forEach(([id, label, code]) => (html += `<a href="#${n.id}" data-v="${n.id}" data-tab="${id}" title="${code}"><span class="ni">${svgI(NAV_ICON[id] || "dot")}</span><span class="code">${code}</span><span class="nl">${tx(label)}</span>${tabBadge(n.id, id)}</a>`));
+      else html += `<a href="#${n.id}" data-v="${n.id}" title="${n.code}"><span class="ni">${svgI(NAV_ICON[n.id] || "dot")}</span><span class="code">${n.code}</span><span class="nl">${tx(n.label)}</span>${n.soon ? `<span class="soon">${L("รอบ", "R")} ${n.soon}</span>` : navBadge(n.id)}</a>`;
     });
   });
   $("#nav").innerHTML = html;

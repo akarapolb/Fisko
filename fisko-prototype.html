@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Inter:wght@400;500;600;700;800&display=swap">
 <style>
 /* Layout: fixed navy rail + working canvas; every screen = summary strip, then the working table or form */
 :root {
@@ -511,6 +511,371 @@ button.brand:hover, button.brand[aria-expanded="true"] { background: var(--rail-
 .appcur { color: var(--accent); font-weight: 700; flex: none; }
 .appchip { display: inline-block; font-size: 11.5px; font-weight: 600; border-radius: 6px; padding: 0 6px; margin-right: 6px; color: #10112B; background: var(--c, var(--accent-2)); vertical-align: 1px; }
 @media (max-width: 860px) { button.brand { margin: 0; padding: 6px 8px; } }
+/* ==========================================================================
+   Fisko design system v2 (round 24): "clean enterprise".
+   Loaded after styles.css, so it restyles every screen through the same class
+   names. Brand stays navy + green; neutrals are navy-tinted; type is Inter for
+   Latin and Anuphan for Thai; surfaces use soft elevation instead of heavy lines.
+   ========================================================================== */
+:root {
+  --bg: #F5F6FA; --surface: #FFFFFF; --surface-2: #F1F3F8; --surface-3: #E9ECF4; --line: #E3E6EF; --line-2: #D5D9E6;
+  --ink: #0E1133; --ink-2: #3A3E62; --muted: #6A6E8C; --faint: #9A9DB5;
+  --rail: #0F1238; --rail-2: #1B1F55; --rail-3: #262B6B; --rail-ink: #B9BCDC; --hl: #0F1238;
+  --accent: #16A34A; --accent-2: #22C55E; --accent-soft: #E7F8EE; --accent-ink: #0B6B30;
+  --warn: #B45309; --warn-soft: #FEF3E2; --bad: #DC2626; --bad-soft: #FDECEC; --info: #4F46E5; --info-soft: #EEF0FF;
+  --violet: #7C3AED; --sky: #0EA5E9; --amber: #F59E0B;
+  --c-1: #4F46E5; --c-2: #16A34A; --c-3: #0EA5E9; --c-4: #F59E0B; --c-5: #EC4899; --c-6: #7C3AED;
+  --font: "Inter", "Anuphan", "IBM Plex Sans Thai", "Leelawadee UI", Tahoma, system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", monospace;
+  --r: 14px; --r-sm: 10px; --r-xs: 8px;
+  --sh-1: 0 1px 2px rgba(14, 17, 51, .05), 0 1px 3px rgba(14, 17, 51, .05);
+  --sh-2: 0 2px 4px rgba(14, 17, 51, .04), 0 8px 24px rgba(14, 17, 51, .07);
+  --sh-3: 0 12px 40px rgba(14, 17, 51, .16);
+  --ring: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+  --ease: cubic-bezier(.2, .7, .2, 1);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0B0D24; --surface: #13163A; --surface-2: #1A1E48; --surface-3: #232858; --line: #262A5A; --line-2: #333870;
+  --ink: #EDEEFA; --ink-2: #C3C6E2; --muted: #9195BC; --faint: #6D71A0;
+  --rail: #080A1E; --rail-2: #14183F; --rail-3: #1E2356; --rail-ink: #A9ACD3; --hl: #1E2356;
+  --accent: #34D36B; --accent-2: #4ADE80; --accent-soft: #11351F; --accent-ink: #8BF0B0;
+  --warn: #F5B14A; --warn-soft: #3A2A10; --bad: #F87171; --bad-soft: #3C1818; --info: #A5A8FF; --info-soft: #23265E;
+  --sh-1: 0 1px 2px rgba(0, 0, 0, .35); --sh-2: 0 8px 24px rgba(0, 0, 0, .35); --sh-3: 0 16px 48px rgba(0, 0, 0, .5); color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0B0D24; --surface: #13163A; --surface-2: #1A1E48; --surface-3: #232858; --line: #262A5A; --line-2: #333870;
+  --ink: #EDEEFA; --ink-2: #C3C6E2; --muted: #9195BC; --faint: #6D71A0;
+  --rail: #080A1E; --rail-2: #14183F; --rail-3: #1E2356; --rail-ink: #A9ACD3; --hl: #1E2356;
+  --accent: #34D36B; --accent-2: #4ADE80; --accent-soft: #11351F; --accent-ink: #8BF0B0;
+  --warn: #F5B14A; --warn-soft: #3A2A10; --bad: #F87171; --bad-soft: #3C1818; --info: #A5A8FF; --info-soft: #23265E;
+  --sh-1: 0 1px 2px rgba(0, 0, 0, .35); --sh-2: 0 8px 24px rgba(0, 0, 0, .35); --sh-3: 0 16px 48px rgba(0, 0, 0, .5); color-scheme: dark; }
+
+body { font: 14.5px/1.55 var(--font); letter-spacing: -.003em; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+h1, h2, h3 { letter-spacing: -.015em; }
+::selection { background: color-mix(in srgb, var(--accent) 25%, transparent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+* { scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
+
+/* ---------- shell: menu rail ---------- */
+.app { grid-template-columns: 264px 1fr; }
+.rail { background: radial-gradient(120% 60% at 0% 0%, #1B2066 0%, transparent 60%), linear-gradient(180deg, var(--rail) 0%, #0A0C2A 100%); padding: 18px 12px; gap: 16px; border-right: 1px solid rgba(255, 255, 255, .04); overflow-y: auto; }
+.brand { padding: 8px; border-radius: 12px; border: 0; background: transparent; color: #fff; cursor: pointer; width: 100%; text-align: left; transition: background .15s var(--ease); }
+.brand:hover { background: rgba(255, 255, 255, .06); }
+.brand-mark { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--accent-2), #0EA5E9); color: #fff; box-shadow: 0 4px 14px rgba(34, 197, 94, .35); font-family: var(--font); font-weight: 800; letter-spacing: -.02em; }
+.brand b { font-size: 15.5px; letter-spacing: -.01em; }
+.brand small { color: #8E92C4; }
+.nav { gap: 1px; }
+.nav-h { font-size: 10.5px; letter-spacing: .14em; color: #6F74AE; padding: 16px 12px 6px; font-weight: 600; }
+.nav a { padding: 8px 10px; border-radius: 10px; font-size: 14px; gap: 11px; color: #C5C8E8; position: relative; transition: background .15s var(--ease), color .15s var(--ease); }
+.nav a:hover { background: rgba(255, 255, 255, .06); color: #fff; }
+.nav a.on { background: linear-gradient(90deg, rgba(34, 197, 94, .16), rgba(34, 197, 94, .04)); color: #fff; box-shadow: none; font-weight: 600; }
+.nav a.on::before { content: ""; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: var(--accent-2); }
+.nav .code { display: none; }
+.nav .ni { width: 18px; height: 18px; flex: none; display: grid; place-items: center; color: #8E92C4; transition: color .15s var(--ease); }
+.nav a:hover .ni, .nav a.on .ni { color: var(--accent-2); }
+.nav .ni svg { width: 18px; height: 18px; }
+.nav .badge { background: rgba(34, 197, 94, .18); color: #7CF0A6; font-size: 11px; padding: 0 7px; line-height: 18px; }
+.rail-foot { color: #6F74AE; }
+.rail-foot .btn { background: rgba(255, 255, 255, .06); border-color: rgba(255, 255, 255, .08); color: #DDE0F7; border-radius: 9px; }
+.rail-foot .btn:hover { background: rgba(255, 255, 255, .1); }
+
+/* ---------- shell: top bar ---------- */
+.top { background: color-mix(in srgb, var(--surface) 80%, transparent); backdrop-filter: saturate(160%) blur(14px); border-bottom: 1px solid var(--line); padding-block: 10px; gap: 10px; }
+.crumb { font-size: 13px; max-width: 360px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.top .seg, .top select, .top .iconbtn, .top .sample { flex: none; }
+.gsearch input { width: 230px; height: 38px; border-radius: 10px; background: var(--surface-2); border: 1px solid transparent; padding: 0 12px 0 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%236A6E8C' stroke-width='2' stroke-linecap='round' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 12px center; transition: border-color .15s, box-shadow .15s, background-color .15s; }
+.gsearch input:focus { background-color: var(--surface); border-color: var(--accent); box-shadow: var(--ring); outline: none; }
+.sample { background: var(--warn-soft); color: var(--warn); font-size: 11.5px; letter-spacing: .02em; }
+.top select, .orgsel, #role { height: 36px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); padding: 0 28px 0 10px; font-size: 13.5px; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%236A6E8C' stroke-width='2.2' stroke-linecap='round' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 9px center; }
+.seg { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 3px; height: 36px; }
+.seg button { border-radius: 7px; font-size: 12.5px; padding: 0 10px; }
+.seg button.on { background: var(--surface); color: var(--ink); box-shadow: var(--sh-1); }
+.iconbtn { height: 36px; min-width: 36px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); transition: background .15s, border-color .15s; }
+.iconbtn:hover { border-color: var(--line-2); background: var(--surface-2); }
+.iconbtn .cnt { background: var(--bad); box-shadow: 0 0 0 2px var(--surface); }
+
+/* ---------- page ---------- */
+.view { gap: 20px; padding-block: 28px 56px; max-width: 1400px; }
+.head { align-items: flex-end; gap: 14px; }
+.head h1 { font-size: 28px; font-weight: 700; letter-spacing: -.025em; line-height: 1.2; }
+.head p { color: var(--muted); font-size: 14.5px; }
+.eyebrow { font-size: 11.5px; letter-spacing: .12em; color: var(--accent); display: inline-flex; align-items: center; gap: 8px; }
+.eyebrow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 20%, transparent); }
+
+/* ---------- cards and panels ---------- */
+.panel { border-radius: var(--r); border: 1px solid var(--line); box-shadow: var(--sh-1); overflow: hidden; transition: box-shadow .2s var(--ease); }
+.panel > header { padding: 14px 18px; border-bottom: 1px solid var(--line); background: linear-gradient(180deg, var(--surface) 0%, color-mix(in srgb, var(--surface-2) 40%, var(--surface)) 100%); }
+.panel > header h2 { font-size: 15px; font-weight: 650; letter-spacing: -.01em; }
+.panel .body { padding: 18px; }
+.callout { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 12px 14px; }
+.alert { border-radius: var(--r-sm); background: var(--surface); border: 1px solid var(--line); box-shadow: var(--sh-1); padding: 14px 16px; align-items: start; }
+.alert .ic { width: 32px; height: 32px; border-radius: 10px; font-family: var(--font); font-size: 13px; }
+.alert b { font-size: 14px; font-weight: 650; }
+
+/* KPI cards */
+.kpis { gap: 14px; }
+.kpi { border-radius: var(--r); box-shadow: var(--sh-1); padding: 16px 18px; gap: 4px; position: relative; overflow: hidden; transition: transform .18s var(--ease), box-shadow .18s var(--ease); }
+.kpi:hover { transform: translateY(-1px); box-shadow: var(--sh-2); }
+.kpi .l { font-size: 12px; font-weight: 600; letter-spacing: .02em; color: var(--muted); }
+.kpi .v { font-size: 28px; font-weight: 700; letter-spacing: -.03em; line-height: 1.15; }
+.kpi .v small { font-size: 12.5px; letter-spacing: 0; }
+.kpi .d { font-size: 12px; }
+.kpi::after { content: ""; position: absolute; inset: auto -30px -30px auto; width: 90px; height: 90px; border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--accent) 10%, transparent) 0%, transparent 70%); pointer-events: none; }
+.kpi[data-rcl]:hover { border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.kpi.hl { background: linear-gradient(135deg, #12164A, #1F2470); border-color: transparent; }
+
+/* ---------- controls ---------- */
+.btn { height: 36px; padding: 0 14px; border-radius: 10px; font-weight: 600; font-size: 13.5px; border: 1px solid var(--line); background: var(--surface); box-shadow: var(--sh-1); transition: transform .12s var(--ease), box-shadow .15s var(--ease), background .15s, border-color .15s; white-space: nowrap; }
+.btn:hover { border-color: var(--line-2); background: var(--surface-2); }
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: linear-gradient(180deg, #1DB954 0%, var(--accent) 100%); border-color: color-mix(in srgb, var(--accent) 80%, #000); color: #fff; box-shadow: 0 1px 2px rgba(22, 163, 74, .3), inset 0 1px 0 rgba(255, 255, 255, .18); }
+.btn.primary:hover { filter: brightness(1.05); box-shadow: 0 4px 14px rgba(22, 163, 74, .3), inset 0 1px 0 rgba(255, 255, 255, .18); }
+.btn.danger { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 30%, var(--line)); }
+.btn.danger:hover { background: var(--bad-soft); }
+.btn.ghost { box-shadow: none; border-color: transparent; background: transparent; }
+.btn.ghost:hover { background: var(--surface-2); }
+.btn:disabled { box-shadow: none; filter: grayscale(.3); }
+select, input[type="text"], input[type="number"], input[type="date"], input[type="search"], textarea { border-radius: var(--r-xs); border: 1px solid var(--line-2); background: var(--surface); min-height: 36px; padding: 6px 10px; transition: border-color .15s, box-shadow .15s; }
+select:focus, input:focus, textarea:focus { border-color: var(--accent); box-shadow: var(--ring); outline: none; }
+input[type="range"] { accent-color: var(--accent); width: 100%; }
+input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); width: 16px; height: 16px; }
+.f label { font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+.tabs { gap: 4px; border-bottom: 1px solid var(--line); }
+.tab { border-radius: 8px 8px 0 0; font-weight: 600; font-size: 13.5px; color: var(--muted); }
+.tab.on { color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); }
+
+/* ---------- tables ---------- */
+.tbl-wrap { overflow-x: auto; }
+table { font-size: 13.5px; }
+th { background: transparent; font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--faint); font-weight: 650; padding: 11px 14px; border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 1; background: var(--surface); }
+td { padding: 11px 14px; border-bottom: 1px solid var(--line); }
+tbody tr { transition: background .12s; }
+tbody tr:hover td { background: color-mix(in srgb, var(--surface-2) 70%, transparent); }
+td .sub { font-size: 12.5px; }
+
+/* ---------- pills, tags, status ---------- */
+.pill { padding: 3px 10px; font-size: 12px; font-weight: 600; gap: 6px; border: 1px solid transparent; }
+.pill::before { width: 6px; height: 6px; }
+.p-ok { background: var(--accent-soft); color: var(--accent-ink); border-color: color-mix(in srgb, var(--accent) 18%, transparent); }
+.p-ok::before { background: var(--accent); }
+.p-warn { border-color: color-mix(in srgb, var(--warn) 18%, transparent); }
+.p-bad { border-color: color-mix(in srgb, var(--bad) 18%, transparent); }
+.p-info { border-color: color-mix(in srgb, var(--info) 18%, transparent); }
+.p-mute { border-color: var(--line); }
+
+/* ---------- lists, checks, timelines ---------- */
+.check li { font-size: 13.5px; }
+.check .m { width: 20px; height: 20px; font-size: 11px; }
+.timeline li { gap: 12px; padding-bottom: 16px; }
+.timeline li::before { left: 7px; background: linear-gradient(var(--line-2), var(--line)); }
+.timeline .dot { width: 16px; height: 16px; border-width: 2px; margin-top: 3px; }
+.timeline li.done .dot { box-shadow: 0 0 0 3px var(--accent-soft); }
+
+/* case stepper: a track with 12 numbered stops, labels under each */
+.stepper { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 0; position: relative; padding-top: 4px; }
+.stepper li { flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 0 2px; border: 0; background: transparent; border-radius: 0; font-size: 11px; line-height: 1.25; position: relative; color: var(--faint); box-shadow: none !important; }
+.stepper li::before { content: ""; position: absolute; top: 11px; left: -50%; right: 50%; height: 3px; background: var(--surface-3); z-index: 0; }
+.stepper li:first-child::before { display: none; }
+.stepper li.done::before, .stepper li.now::before { background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+.stepper .dot { width: 24px; height: 24px; font-size: 11px; position: relative; z-index: 1; background: var(--surface); border: 2px solid var(--line-2); color: var(--muted); transition: transform .2s var(--ease); }
+.stepper li.done .dot { background: var(--accent); border-color: var(--accent); color: #fff; }
+.stepper li.now .dot { background: var(--surface); border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 5px var(--accent-soft); transform: scale(1.12); }
+.stepper li.now { color: var(--ink); font-weight: 650; }
+.stepper li.done { color: var(--ink-2); }
+.stepper .nm { display: block; max-width: 92px; }
+
+/* ---------- toast ---------- */
+.toast { background: #0E1133; border-radius: 12px; box-shadow: var(--sh-3); padding: 12px 16px; animation: toast-in .25s var(--ease); }
+@keyframes toast-in { from { transform: translateY(8px); } to { transform: none; } }
+
+/* ---------- motion ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .view > * { animation: rise .35s var(--ease); }
+  @keyframes rise { from { transform: translateY(6px); } to { transform: none; } }
+}
+
+/* ==========================================================================
+   New components (round 24)
+   ========================================================================== */
+.ico { display: inline-grid; place-items: center; flex: none; }
+.ico svg { width: 100%; height: 100%; }
+.chipico { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: var(--surface-2); color: var(--ink-2); flex: none; }
+.chipico svg { width: 18px; height: 18px; }
+.chipico.ok { background: var(--accent-soft); color: var(--accent); } .chipico.warn { background: var(--warn-soft); color: var(--warn); } .chipico.bad { background: var(--bad-soft); color: var(--bad); } .chipico.info { background: var(--info-soft); color: var(--info); } .chipico.violet { background: color-mix(in srgb, var(--violet) 12%, transparent); color: var(--violet); }
+
+/* stat card with icon, value, trend and a small chart */
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.stat-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--sh-1); padding: 16px 18px; display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: start; position: relative; overflow: hidden; transition: transform .18s var(--ease), box-shadow .18s var(--ease); cursor: default; }
+.stat-card[data-link] { cursor: pointer; }
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--sh-2); }
+.stat-card .sl { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .02em; }
+.stat-card .sv { font-size: 30px; font-weight: 750; letter-spacing: -.035em; line-height: 1.1; grid-column: 1; font-variant-numeric: tabular-nums; }
+.stat-card .sv small { font-size: 13px; font-weight: 500; color: var(--muted); margin-left: 4px; letter-spacing: 0; }
+.stat-card .sx { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--muted); }
+.stat-card .chipico { grid-row: 1 / span 2; grid-column: 2; }
+.trend { display: inline-flex; align-items: center; gap: 3px; font-weight: 650; font-size: 12px; padding: 1px 7px; border-radius: 99px; }
+.trend.up { color: var(--accent-ink); background: var(--accent-soft); } .trend.down { color: var(--bad); background: var(--bad-soft); } .trend.flat { color: var(--muted); background: var(--surface-2); }
+.spark { display: block; }
+.ring { display: block; }
+.ring text { font-family: var(--font); }
+
+/* progress */
+.prog { height: 6px; border-radius: 99px; background: var(--surface-3); overflow: hidden; display: flex; }
+.prog > i { display: block; height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 99px; transition: width .4s var(--ease); }
+.prog.info > i { background: linear-gradient(90deg, var(--info), #818CF8); } .prog.warn > i { background: linear-gradient(90deg, #F59E0B, #FBBF24); }
+.segbar { display: flex; gap: 3px; height: 8px; }
+.segbar > i { flex: 1; border-radius: 99px; background: var(--surface-3); }
+.segbar > i.ok { background: var(--accent); } .segbar > i.now { background: linear-gradient(90deg, var(--accent), var(--surface-3)); } .segbar > i.warn { background: var(--amber); } .segbar > i.bad { background: var(--bad); } .segbar > i.info { background: var(--info); }
+
+/* avatars */
+.av { width: 26px; height: 26px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 11px; font-weight: 700; color: #fff; flex: none; box-shadow: 0 0 0 2px var(--surface); }
+.avs { display: inline-flex; } .avs .av + .av { margin-left: -7px; }
+
+/* home: hero */
+.hero { position: relative; overflow: hidden; border-radius: 18px; padding: 26px 28px; color: #fff; background: radial-gradient(90% 140% at 100% 0%, rgba(34, 197, 94, .35) 0%, transparent 55%), radial-gradient(70% 120% at 0% 100%, rgba(79, 70, 229, .45) 0%, transparent 60%), linear-gradient(135deg, #0F1238 0%, #1B2066 100%); box-shadow: var(--sh-2); display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 20px; align-items: center; }
+.hero::after { content: ""; position: absolute; inset: 0; background-image: radial-gradient(rgba(255, 255, 255, .08) 1px, transparent 1px); background-size: 18px 18px; mask-image: linear-gradient(90deg, transparent, #000 70%); pointer-events: none; }
+.hero h1 { margin: 0; font-size: 28px; letter-spacing: -.03em; font-weight: 750; }
+.hero p { margin: 6px 0 0; color: #C9CCF0; font-size: 14px; }
+.hero .hero-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.hero .hero-meta span { background: rgba(255, 255, 255, .1); border: 1px solid rgba(255, 255, 255, .12); border-radius: 99px; padding: 4px 12px; font-size: 12.5px; color: #E6E8FF; backdrop-filter: blur(6px); }
+.hero .hero-stats { display: flex; gap: 12px; position: relative; z-index: 1; }
+.hero .hstat { background: rgba(255, 255, 255, .08); border: 1px solid rgba(255, 255, 255, .12); border-radius: 14px; padding: 12px 16px; min-width: 120px; backdrop-filter: blur(8px); }
+.hero .hstat b { display: block; font-size: 26px; letter-spacing: -.03em; line-height: 1.1; }
+.hero .hstat span { font-size: 12px; color: #C9CCF0; }
+
+/* task cards */
+.tlist { list-style: none; margin: 0; padding: 6px; display: flex; flex-direction: column; gap: 2px; }
+.tlist li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 12px; transition: background .12s; position: relative; }
+.tlist li:hover { background: var(--surface-2); }
+.tlist a { color: var(--ink); text-decoration: none; font-weight: 600; font-size: 14px; }
+.tlist a:hover { color: var(--accent); }
+.tlist .prio { width: 4px; align-self: stretch; border-radius: 4px; background: var(--line-2); }
+.tlist .prio.p-bad { background: var(--bad); } .tlist .prio.p-warn { background: var(--amber); } .tlist .prio.p-info { background: var(--info); } .tlist .prio.p-ok { background: var(--accent); }
+.tlist .meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 2px; }
+.appdot { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; color: var(--muted); }
+.appdot::before { content: ""; width: 7px; height: 7px; border-radius: 3px; background: var(--c, var(--accent)); }
+.filterbar { display: flex; gap: 6px; flex-wrap: wrap; }
+.fchip { border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 4px 12px; font-size: 12.5px; font-weight: 600; color: var(--ink-2); cursor: pointer; transition: all .15s; }
+.fchip:hover { border-color: var(--line-2); } .fchip.on { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.fchip b { opacity: .6; font-weight: 600; margin-left: 4px; }
+
+/* calendar strip */
+.cal { list-style: none; margin: 0; padding: 6px 12px 12px; display: flex; flex-direction: column; }
+.cal li { display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: 12px; padding: 8px 0; align-items: center; border-bottom: 1px dashed var(--line); }
+.cal li:last-child { border-bottom: 0; }
+.cal .d { border-radius: 10px; background: var(--surface-2); text-align: center; padding: 4px 0; line-height: 1.1; }
+.cal .d b { display: block; font-size: 18px; letter-spacing: -.02em; }
+.cal .d span { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.cal li.mine .d { background: var(--accent-soft); color: var(--accent-ink); }
+
+/* app tiles */
+.apptiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.apptile { border-radius: var(--r); border: 1px solid var(--line); background: var(--surface); padding: 16px; display: flex; gap: 12px; align-items: center; cursor: pointer; box-shadow: var(--sh-1); transition: transform .18s var(--ease), box-shadow .18s var(--ease), border-color .18s; text-align: left; width: 100%; }
+.apptile:hover { transform: translateY(-2px); box-shadow: var(--sh-2); border-color: color-mix(in srgb, var(--c) 40%, var(--line)); }
+.apptile .am { width: 40px; height: 40px; border-radius: 12px; background: var(--c); color: #fff; display: grid; place-items: center; font-weight: 800; box-shadow: 0 6px 16px color-mix(in srgb, var(--c) 40%, transparent); }
+.apptile b { display: block; font-size: 14.5px; }
+.apptile .sub { font-size: 12.5px; }
+.apptile .cnt { margin-left: auto; background: var(--surface-2); border-radius: 99px; padding: 2px 10px; font-weight: 700; font-size: 12.5px; }
+
+/* procurement: case board */
+.viewtoggle { display: inline-flex; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+.viewtoggle button { border: 0; background: transparent; border-radius: 7px; padding: 4px 12px; font-size: 12.5px; font-weight: 600; color: var(--muted); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.viewtoggle button.on { background: var(--surface); color: var(--ink); box-shadow: var(--sh-1); }
+.viewtoggle svg { width: 14px; height: 14px; }
+.board { display: grid; grid-template-columns: repeat(4, minmax(240px, 1fr)); gap: 14px; align-items: start; overflow-x: auto; padding-bottom: 4px; }
+.col { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r); padding: 10px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.col-h { display: flex; align-items: center; gap: 8px; padding: 4px 6px; font-weight: 650; font-size: 13px; }
+.col-h .n { margin-left: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 99px; padding: 0 9px; font-size: 12px; color: var(--muted); }
+.col-h::before { content: ""; width: 8px; height: 8px; border-radius: 3px; background: var(--c); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; box-shadow: var(--sh-1); cursor: pointer; transition: transform .15s var(--ease), box-shadow .15s var(--ease), border-color .15s; }
+.card:hover { transform: translateY(-2px); box-shadow: var(--sh-2); border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
+.card .ct { font-weight: 650; font-size: 13.5px; line-height: 1.35; }
+.card .cm { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--muted); }
+.card .amt { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.card .next { font-size: 12px; color: var(--ink-2); background: var(--surface-2); border-radius: 8px; padding: 6px 8px; display: flex; gap: 6px; align-items: flex-start; }
+.card .next svg { width: 14px; height: 14px; flex: none; margin-top: 2px; color: var(--accent); }
+.empty { text-align: center; color: var(--faint); font-size: 12.5px; padding: 16px 8px; border: 1px dashed var(--line-2); border-radius: 10px; }
+
+/* funnel strip */
+.funnel { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 4px; align-items: end; height: 64px; }
+.funnel > div { border-radius: 6px 6px 3px 3px; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 70%, var(--info)), var(--accent)); min-height: 4px; position: relative; opacity: .9; transition: opacity .15s; }
+.funnel > div:hover { opacity: 1; }
+.funnel > div.zero { background: var(--surface-3); }
+.funnel-l { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 4px; font-size: 10.5px; color: var(--faint); text-align: center; margin-top: 6px; }
+
+/* case page layout */
+.case-hero { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 20px 22px; }
+.case-hero h2 { margin: 0; font-size: 21px; font-weight: 700; letter-spacing: -.02em; }
+.case-hero .facts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.fact { display: inline-flex; align-items: center; gap: 6px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 3px 9px; font-size: 12.5px; color: var(--ink-2); }
+.fact svg { width: 13px; height: 13px; color: var(--muted); }
+.case-grid { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 18px; align-items: start; }
+.case-main, .case-side { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.case-side { position: sticky; top: 76px; }
+.case-side .panel > header { background: transparent; }
+.nextcard { background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, var(--surface)), var(--surface)); border-color: color-mix(in srgb, var(--accent) 30%, var(--line)); }
+
+/* contract phase track */
+.ptrack { display: flex; gap: 4px; padding: 14px 18px 4px; }
+.ptrack .ph { flex: 1; min-width: 0; }
+.ptrack .ph .bar2 { height: 8px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
+.ptrack .ph .bar2 i { display: block; height: 100%; }
+.ptrack .ph span { display: block; font-size: 11px; color: var(--muted); margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* agents trace */
+.case-side .timeline li, .timeline li { font-size: 13px; }
+
+@media (max-width: 1180px) {
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .case-grid { grid-template-columns: minmax(0, 1fr); }
+  .case-side { position: static; }
+  .apptiles { grid-template-columns: minmax(0, 1fr); }
+  .hero { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 860px) {
+  .rail { background: var(--rail); padding: 10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px)); }
+  .nav a.on::before { display: none; }
+  .gsearch input { width: 100%; }
+  .gsearch { flex: 1 1 100%; order: 10; }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat-card .sv { font-size: 24px; }
+  .hero { padding: 20px; } .hero h1 { font-size: 22px; } .hero .hero-stats { flex-wrap: wrap; } .hero .hstat { min-width: 0; flex: 1 1 120px; }
+  .board { grid-template-columns: repeat(4, minmax(230px, 82%)); }
+  .stepper { grid-template-columns: repeat(12, minmax(18px, 1fr)); }
+  .stepper .nm { display: none; }
+  .stepper li.now .nm { display: block; position: absolute; top: 32px; white-space: nowrap; font-size: 11px; }
+  .stepper { padding-bottom: 18px; }
+  .case-hero { grid-template-columns: auto minmax(0, 1fr); } .case-hero > :last-child { grid-column: 1 / -1; }
+  .funnel-l { font-size: 9px; }
+}
+.iconbtn { display: inline-grid; place-items: center; padding: 0 8px; position: relative; color: var(--ink-2); }
+.iconbtn .cnt { position: absolute; top: -4px; right: -4px; min-width: 17px; height: 17px; border-radius: 99px; font-size: 10.5px; font-weight: 700; color: #fff; display: grid; place-items: center; padding: 0 4px; }
+.userchip .avatar { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, var(--info), var(--violet)); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+.apptile:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+@media (min-width: 861px) {
+  .top { flex-wrap: nowrap; }
+  .crumb { flex: 0 1 auto; min-width: 0; }
+  .gsearch { flex: 0 1 240px; min-width: 120px; }
+  .gsearch input { width: 100%; }
+  .orgsel, #role { max-width: 190px; text-overflow: ellipsis; }
+}
+@media (min-width: 861px) and (max-width: 1240px) { .sample { display: none; } .orgsel { max-width: 150px; } #role { max-width: 150px; } }
+.case-side .timeline { max-height: 520px; overflow: auto; padding-right: 4px; }
+.case-side .row .btn, .case-side input { flex: 1 1 auto; }
+.nextcard > header h2 { font-size: 14.5px; }
+.card .pill { font-size: 11px; padding: 1px 8px; }
+/* callouts inside panels were dark in v1 (dark text on navy); v2 keeps them light and readable */
+.panel > .body .callout { background: var(--surface-2); color: var(--ink); }
+.panel > .body .callout b { color: var(--ink); }
+@media (max-width: 860px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .rail { position: static; height: auto; overflow: visible; gap: 8px; }
+  .nav { flex-direction: row; overflow-x: auto; gap: 4px; padding-bottom: 2px; }
+  .nav a { white-space: nowrap; }
+  .nav-h, .rail-foot { display: none; }
+  .top { flex-wrap: wrap; }
+}
 </style>
 <div class="app">
   <aside class="rail">
@@ -659,7 +1024,8 @@ function route() {
   const n = NAV.find(x => x.id === v) || (v === "request" ? NAV.find(x => x.id === "requests") : null);
   appSync(n);
   const extra = { demo: ["คู่มือการสาธิต", "Demo guide"], delegation: ["การมอบอำนาจ", "Delegation of authority"] };
-  $("#crumb").innerHTML = `${esc(tx(S.org))} · <b>${n ? tx(n.label) : extra[v] ? tx(extra[v]) : ""}</b>`;
+  const tabL = n && n.tabs ? (n.tabs.find(t => t[0] === n.tabGet()) || [])[1] : null;
+  $("#crumb").innerHTML = `${esc(tx(S.org))} · ${n ? (tabL ? `${esc(tx(APPS[n.app] ? APPS[n.app].name : n.label))} · <b>${tx(tabL)}</b>` : `<b>${tx(n.label)}</b>`) : `<b>${extra[v] ? tx(extra[v]) : ""}</b>`}`;
   const view = $("#view");
   if (n && !n.roles.includes(ROLE)) {
     view.innerHTML = `<div class="panel"><div class="body"><h2 style="margin:0 0 6px">${L("ไม่มีสิทธิ์เข้าถึง", "No access")}</h2>
@@ -670,6 +1036,7 @@ function route() {
   } else {
     view.innerHTML = VIEWS[v]();
     (BIND[v] || (() => {}))();
+    if (typeof bindLinks === "function") bindLinks(view);
   }
   window.scrollTo(0, 0);
 }
@@ -770,6 +1137,90 @@ function sharedSeed() {
 
 // Status of an integration as a pill
 const IF_STATUS = { ok: [["ปกติ", "Healthy"], "p-ok"], warn: [["ต้องตรวจสอบ", "Needs review"], "p-warn"], error: [["ล้มเหลว", "Failed"], "p-bad"], pending: [["รออนุญาต", "Awaiting approval"], "p-mute"] };
+
+/* ---- 05b-ui.js ---- */
+// UI kit (round 24, design system v2): inline stroke icons, sparklines, progress rings, avatars and stat cards.
+// Everything returns HTML strings, like the rest of the prototype, and takes its colours from CSS variables.
+const ICONS = {
+  home: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/>',
+  folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  clipboard: '<rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 10h6M9 14h6M9 18h3"/>',
+  file: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/><path d="M8 13h8M8 17h5"/>',
+  book: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19a2 2 0 0 1 2-2h13v4H6a2 2 0 0 1-2-2"/>',
+  pen: '<path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6"/><path d="M14 3v6h6v2"/><path d="m15 21 6-6-2-2-6 6v2z"/>',
+  scan: '<path d="M4 8V6a2 2 0 0 1 2-2h2M16 4h2a2 2 0 0 1 2 2v2M20 16v2a2 2 0 0 1-2 2h-2M8 20H6a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.5a6 6 0 0 1 3.5 5.5"/>',
+  gantt: '<path d="M4 4v16h16"/><path d="M8 8h6M10 12h8M7 16h5"/>',
+  download: '<path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/>',
+  chart: '<path d="M4 20V10M10 20V4M16 20v-7M2 20h20"/>',
+  trend: '<path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+  sliders: '<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
+  cal: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  flag: '<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>',
+  share: '<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 10.8 7.6-3.6M8.2 13.2l7.6 3.6"/>',
+  sparkle: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>',
+  bot: '<rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 4v4"/><circle cx="12" cy="3" r="1"/><circle cx="9" cy="14" r="1.2"/><circle cx="15" cy="14" r="1.2"/><path d="M2 13v3M22 13v3"/>',
+  wallet: '<path d="M4 7a2 2 0 0 1 2-2h12v4"/><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M16 13.5h2"/>',
+  link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
+  card: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h3"/>',
+  scale: '<path d="M12 4v16M7 20h10M5 8h14"/><path d="m5 8-3 6a3 3 0 0 0 6 0zM19 8l-3 6a3 3 0 0 0 6 0z"/>',
+  shield: '<path d="M12 3 4 6v6c0 5 3.5 8 8 9 4.5-1 8-4 8-9V6z"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+  inbox: '<path d="M3 13h5l2 3h4l2-3h5"/><path d="M5 5h14l2 8v6a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-6z"/>',
+  layers: '<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>',
+  checksq: '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="m8 12 3 3 5-6"/>',
+  send: '<path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/>',
+  pie: '<path d="M21 12A9 9 0 1 1 12 3v9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/>',
+  activity: '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
+  award: '<circle cx="12" cy="9" r="6"/><path d="m8.5 14-1.5 7 5-3 5 3-1.5-7"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+  arrow: '<path d="M5 12h14M13 6l6 6-6 6"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  alert: '<path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17.5v.5"/>',
+  check: '<path d="m5 12 5 5 9-10"/>',
+  list: '<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+  kanban: '<rect x="3" y="3" width="5" height="14" rx="1.5"/><rect x="10" y="3" width="5" height="9" rx="1.5"/><rect x="17" y="3" width="4" height="18" rx="1.5"/>',
+  building: '<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 7h1M14 7h1M9 11h1M14 11h1M9 15h1M14 15h1M10 21v-3h4v3"/>',
+  coins: '<ellipse cx="9" cy="7" rx="6" ry="3"/><path d="M3 7v5c0 1.7 2.7 3 6 3s6-1.3 6-3V7"/><path d="M15 11c3.3 0 6 1.3 6 3v4c0 1.7-2.7 3-6 3-2 0-3.8-.5-4.9-1.3"/>',
+  tag: '<path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z"/><circle cx="8" cy="8" r="1.5"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  bell: '<path d="M6 16V11a6 6 0 1 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',
+  dot: '<circle cx="12" cy="12" r="3"/>',
+};
+const svgI = (name, sw = 1.8) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ICONS.dot}</svg>`;
+const icon = (name, size = 16) => `<span class="ico" style="width:${size}px;height:${size}px">${svgI(name)}</span>`;
+const chipIco = (name, tone = "") => `<span class="chipico ${tone}">${svgI(name)}</span>`;
+// Menu icons for pages and for the tabs that act as pages in Procurement and Finance.
+const NAV_ICON = { home: "home", strategy: "target", requests: "inbox", consolidation: "layers", review: "checksq", submission: "send", allocation: "pie", dashboard: "activity", performance: "award", assistant: "sparkle", admin: "settings",
+  cases: "folder", plan: "clipboard", reqn: "file", tor: "book", contracts: "pen", docs: "scan", suppliers: "users", gantt: "gantt", egp: "download", analytics: "chart", forecast: "trend", whatif: "sliders", reports: "cal", flags: "flag", ocds: "share", ai: "sparkle", agents: "bot",
+  chain: "link", pay: "card", recon: "scale" };
+// sparkline: values → a smooth line with a soft area under it
+function spark(vals, o = {}) {
+  const w = o.w || 120, h = o.h || 34, c = o.color || "var(--accent)", v = vals.length > 1 ? vals : [0, ...(vals.length ? vals : [0])], mn = Math.min(...v), mx = Math.max(...v), rg = mx - mn || 1;
+  const pts = v.map((y, i) => [i / (v.length - 1) * (w - 4) + 2, h - 3 - (y - mn) / rg * (h - 8)]), id = "sg" + Math.random().toString(36).slice(2, 8);
+  const d = pts.map((p, i) => (i ? `L${p[0].toFixed(1)} ${p[1].toFixed(1)}` : `M${p[0].toFixed(1)} ${p[1].toFixed(1)}`)).join(" ");
+  return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c}" stop-opacity=".28"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></linearGradient></defs>
+    <path d="${d} L${pts[pts.length - 1][0].toFixed(1)} ${h} L${pts[0][0].toFixed(1)} ${h} Z" fill="url(#${id})"/><path d="${d}" fill="none" stroke="${c}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${pts[pts.length - 1][0].toFixed(1)}" cy="${pts[pts.length - 1][1].toFixed(1)}" r="2.6" fill="${c}"/></svg>`;
+}
+// progress ring: share 0..1 with the label in the middle
+function ring(share, o = {}) {
+  const s = o.size || 56, sw = o.stroke || 6, r = (s - sw) / 2, cf = 2 * Math.PI * r, p = Math.max(0, Math.min(1, share || 0)), c = o.color || "var(--accent)";
+  return `<svg class="ring" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}" role="img" aria-label="${o.aria || Math.round(p * 100) + "%"}"><circle cx="${s / 2}" cy="${s / 2}" r="${r}" fill="none" stroke="var(--surface-3)" stroke-width="${sw}"/>
+    <circle cx="${s / 2}" cy="${s / 2}" r="${r}" fill="none" stroke="${c}" stroke-width="${sw}" stroke-linecap="round" stroke-dasharray="${(cf * p).toFixed(1)} ${cf.toFixed(1)}" transform="rotate(-90 ${s / 2} ${s / 2})"/>
+    <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="${o.fs || s * 0.26}" font-weight="700" fill="var(--ink)">${o.label != null ? o.label : Math.round(p * 100) + "%"}</text></svg>`;
+}
+// avatar with initials and a colour from the user id
+const AV_COLORS = ["#4F46E5", "#16A34A", "#0EA5E9", "#F59E0B", "#EC4899", "#7C3AED", "#14B8A6", "#EF4444"];
+function av(uid) { const n = typeof userName === "function" ? userName(uid) : String(uid), h = [...String(uid)].reduce((a, c) => a + c.charCodeAt(0), 0); return `<span class="av" title="${esc(n)}" style="background:${AV_COLORS[h % AV_COLORS.length]}">${esc(n.replace(/^(นาย|นาง|นางสาว|Mr\.?|Ms\.?|Mrs\.?)\s*/, "").slice(0, 1))}</span>`; }
+const avs = ids => `<span class="avs">${[...new Set(ids.filter(Boolean))].slice(0, 4).map(av).join("")}</span>`;
+// stat card: label, value, optional icon, trend, sparkline or ring, and a link
+function statCard(o) {
+  return `<div class="stat-card" ${o.link ? `data-link="${o.link}" role="link" tabindex="0"` : ""}><span class="sl">${o.label}</span>${o.ring != null ? `<span style="grid-row:1 / span 2;grid-column:2">${ring(o.ring, { size: 52, stroke: 6, color: o.color })}</span>` : o.icon ? chipIco(o.icon, o.tone || "") : ""}
+    <span class="sv">${o.value}${o.unit ? `<small>${o.unit}</small>` : ""}</span>
+    <span class="sx">${o.trend ? `<span class="trend ${o.trend.dir}">${o.trend.dir === "up" ? "▲" : o.trend.dir === "down" ? "▼" : "●"} ${o.trend.text}</span>` : `<span>${o.sub || ""}</span>`}${o.spark ? spark(o.spark, { w: 96, h: 28, color: o.color }) : ""}</span></div>`;
+}
+// keyboard and click handling for stat cards and tiles with data-link (bound globally after each render)
+function bindLinks(root = document) { root.querySelectorAll(".stat-card[data-link], .apptile[data-link], .card[data-link]").forEach(el => { el.onclick = () => jump(el.dataset.link); el.onkeydown = e => { if (e.key === "Enter") jump(el.dataset.link); }; }); }
 
 /* ---- 06-seedhelp.js ---- */
 // Builds an organization's starting state from its config, adding the notifications
@@ -1365,8 +1816,8 @@ function renderShell() {
   org.hidden = orgs.length < 2;
   $("#role").innerHTML = Object.keys(ROLES).map(r => `<option value="${r}" ${r === ROLE ? "selected" : ""}>${tx(ROLES[r])}</option>`).join("");
   $$("#top .seg button").forEach(b => b.classList.toggle("on", b.dataset.lang === LANG));
-  $("#bell-label").textContent = L("แจ้งเตือน", "Alerts");
-  $("#theme").textContent = L("ธีม", "Theme");
+  $("#bell-label").innerHTML = icon("bell", 18); $("#bell").setAttribute("aria-label", L("แจ้งเตือน", "Alerts")); $("#bell").title = L("แจ้งเตือน", "Alerts");
+  $("#theme").innerHTML = `<span class="ico" style="width:18px;height:18px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/></svg></span>`; $("#theme").setAttribute("aria-label", L("สลับธีม", "Switch theme")); $("#theme").title = L("สลับธีม", "Switch theme");
   $("#gsearch").placeholder = L("ค้นหา (Ctrl+K)", "Search (Ctrl+K)");
   renderUserChip();
   updateBell();
@@ -1603,6 +2054,69 @@ BIND.home = () => {
     if (n.link) jump(n.link); else route();
   });
 };
+
+/* ---- 30b-home-v2.js ---- */
+// My Workspace, design system v2 (round 24): hero, stat cards across the three apps, tasks with filters,
+// the budget calendar as a date strip, notifications and app tiles. Replaces VIEWS.home from 30-home.js;
+// the task and notification links keep the same data attributes, so the old binder logic is reused.
+let HOME_F = "all";
+const MONTH_S = { th: ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."], en: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"] };
+const dayBox = iso => { const [, m, d] = iso.split("-").map(Number); return `<div class="d"><b>${d}</b><span>${MONTH_S[LANG === "en" ? "en" : "th"][m - 1]}</span></div>`; };
+function homeStats() {
+  const out = [], tasks = myTasks(), can = id => typeof allowed === "function" ? allowed(id) : true;
+  const over = tasks.filter(t => t.due && daysUntil(t.due) < 0).length;
+  out.push(statCard({ label: L("งานของฉัน", "My tasks"), value: tasks.length, icon: "checksq", tone: over ? "bad" : "info", trend: over ? { dir: "down", text: `${over} ${L("เลยกำหนด", "overdue")}` } : { dir: "flat", text: L("ไม่มีงานเลยกำหนด", "nothing overdue") } }));
+  if (S.allocs && S.allocs[FAM_FY]) {
+    const lines = famLines(), tot = sumv(lines.map(l => l.amount)), com = sumv(lines.map(l => famCommitted(l.id) + famReserved(l.id)));
+    out.push(statCard({ label: L("งบปี", "FY") + ` ${FAM_FY} ` + L("ผูกพันและจองแล้ว", "committed or reserved"), value: mb(com), unit: L("ลบ.", "M"), ring: tot ? com / tot : 0, link: can("allocation") ? "allocation" : null, sub: `${L("จาก", "of")} ${mb(tot)} ${L("ลบ.", "M")}` }));
+  }
+  if (S.cases) {
+    const open = S.cases.filter(c => !c.cancelled && caseState(c) < 12), byStep = Array.from({ length: 12 }, (_, i) => S.cases.filter(c => !c.cancelled && caseState(c) === i + 1).length);
+    out.push(statCard({ label: L("แฟ้มจัดซื้อที่เปิดอยู่", "Open procurement cases"), value: open.length, icon: "folder", tone: "ok", spark: byStep, link: can("procurement") ? "prc-cases" : null, sub: "" }));
+  }
+  if (S.payreqs && typeof monthly === "function") {
+    const m = monthly().rows, paid = sumv(S.payreqs.filter(p => p.status === "approved").map(p => p.amount));
+    out.push(statCard({ label: L("เบิกจ่ายแล้ว ปีนี้", "Paid this year"), value: mb(paid), unit: L("ลบ.", "M"), color: "var(--info)", spark: m.map(r => r.payAct + r.payFc), link: can("finance") ? "fnc-pay" : null, sub: "" }));
+  }
+  return out.join("");
+}
+VIEWS.home = () => {
+  const u = me(), tasks = myTasks(), story = S.requests.find(r => r.id === S.story), next = S.calendar.filter(c => c.date >= TODAY).sort((a, b) => (a.date < b.date ? -1 : 1));
+  const appOf = t => appOfLink(t.link), counts = { all: tasks.length }; tasks.forEach(t => (counts[appOf(t)] = (counts[appOf(t)] || 0) + 1));
+  const shown = tasks.filter(t => HOME_F === "all" || appOf(t) === HOME_F), over = tasks.filter(t => t.due && daysUntil(t.due) < 0).length;
+  const appName = a => (APPS[a] ? tx(APPS[a].name) : L("ทั่วไป", "General")), appColor = a => (APPS[a] ? APPS[a].color : "var(--muted)");
+  const hour = new Date().getHours(), greet = hour < 12 ? L("สวัสดีตอนเช้า", "Good morning") : hour < 17 ? L("สวัสดีตอนบ่าย", "Good afternoon") : L("สวัสดีตอนเย็น", "Good evening");
+  return `
+  <section class="hero">
+    <div style="position:relative;z-index:1"><h1>${greet}, ${esc(tx(u.name).split(" ")[0])}</h1><p>${tx(ROLES[ROLE])} · ${unitName(u.unit)} · ${fdate(TODAY)}</p>
+      <div class="hero-meta"><span>${esc(tx(S.org))}</span><span>${L("ปีงบประมาณ", "Fiscal year")} ${FAM_FY}</span>${next[0] ? `<span>${L("กำหนดถัดไป", "Next deadline")}: ${esc(tx(next[0].name))}</span>` : ""}</div></div>
+    <div class="hero-stats"><div class="hstat"><b>${tasks.length}</b><span>${L("งานที่ต้องทำ", "tasks to do")}</span></div><div class="hstat"><b>${over}</b><span>${L("เลยกำหนด", "overdue")}</span></div><div class="hstat"><b>${next.length ? daysUntil(next[0].date) : "–"}</b><span>${L("วันถึงกำหนดถัดไป", "days to next deadline")}</span></div></div>
+  </section>
+  <section class="stats">${homeStats()}</section>
+  <div class="grid2">
+    <section class="panel"><header><h2>${L("งานของฉัน", "My tasks")}</h2><span class="sp"></span>
+      <div class="filterbar">${["all", "budget", "procurement", "finance", "all2"].filter(a => a !== "all2" && (a === "all" || counts[a])).map(a => `<button type="button" class="fchip ${HOME_F === a ? "on" : ""}" data-hf="${a}">${a === "all" ? L("ทั้งหมด", "All") : appName(a).replace("Fisko ", "")}<b>${counts[a] || 0}</b></button>`).join("")}</div></header>
+      <ul class="tlist">${shown.map(k => { const a = appOf(k); return `<li><span class="prio ${k.cls}"></span><div style="min-width:0"><a href="#" data-link="${k.link}">${esc(k.title)}</a><div class="meta"><span class="appdot" style="--c:${appColor(a)}">${a === "all" ? L("ทั่วไป", "General") : appName(a)}</span>${k.sub ? `<span class="sub">${esc(k.sub)}</span>` : ""}</div></div>${dueText(k.due)}</li>`; }).join("") || `<li><span></span><div class="empty" style="grid-column:2 / -1">${L("ไม่มีงานค้างในกลุ่มนี้", "Nothing waiting in this group")}</div></li>`}</ul></section>
+    <div style="display:flex;flex-direction:column;gap:20px;min-width:0">
+      <section class="panel"><header><h2>${L("ปฏิทินงบประมาณ ปี 2571", "FY2571 budget calendar")}</h2><span class="sp"></span><span class="pill p-warn">${L("ตัวอย่าง", "Sample")}</span></header>
+        <ul class="cal">${next.slice(0, 5).map(c => `<li class="${c.role === ROLE ? "mine" : ""}">${dayBox(c.date)}<div style="min-width:0"><b style="font-weight:600;font-size:13.5px">${tx(c.name)}</b><div class="sub">${tx(ROLES[c.role])} · ${dueText(c.date)}</div></div></li>`).join("")}</ul></section>
+      <section class="panel"><header><h2>${L("การแจ้งเตือนล่าสุด", "Latest notifications")}</h2><span class="sp"></span><button class="btn ghost" type="button" onclick="event.stopPropagation();toggleNotes(true)">${L("ดูทั้งหมด", "See all")}</button></header>
+        <ul class="tlist">${myNotes().slice(0, 4).map(n => `<li><span class="prio ${n.read.includes(ROLE) ? "" : "p-ok"}"></span><div style="min-width:0"><a href="#" data-note="${n.id}" style="font-weight:${n.read.includes(ROLE) ? 500 : 650}">${esc(tx(n.text))}</a></div><span class="sub">${fdate(n.t)}</span></li>`).join("") || `<li><span></span><div class="empty" style="grid-column:2 / -1">${L("ไม่มีการแจ้งเตือน", "No notifications")}</div></li>`}</ul></section>
+    </div>
+  </div>
+  <section><div class="sub" style="margin:0 0 8px;font-weight:600">${L("แอปในตระกูล Fisko", "Fisko apps")}</div><div class="apptiles">${APP_IDS.map(a => { const A = APPS[a], ok = appAllowed(a); return `<button type="button" class="apptile" data-app="${a}" style="--c:${A.color}" ${ok ? "" : "disabled"}><span class="am">${A.mark}</span><div style="min-width:0"><b>${tx(A.name)}</b><span class="sub">${tx(A.desc)}</span></div><span class="cnt">${counts[a] || 0}</span></button>`; }).join("")}</div></section>
+  ${story ? `<section class="panel"><header>${chipIco("target", "info")}<h2>${L("โครงการตัวอย่างตลอดวงจร", "Storyline project")}</h2><span class="sp"></span>${pill(story.status)}</header>
+    <div class="body" style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center"><div><b style="font-size:16px">${tx(story.name)}</b><div class="sub"><span class="mono">${story.id}</span> · ${unitName(story.unit)} · ${L("วงเงินที่ขอ", "Requested")} <b class="num">${mb(story.amount)}</b> ${L("ลบ.", "M")} · ${tx(story.kpi)}</div></div>
+      <button class="btn primary" type="button" onclick="openReq('${story.id}')">${L("เปิดคำขอ", "Open request")} ${icon("arrow", 14)}</button></div></section>` : ""}`;
+};
+{
+  const base = BIND.home;
+  BIND.home = () => {
+    base();
+    $$("[data-hf]").forEach(b => (b.onclick = () => { HOME_F = b.dataset.hf; route(); }));
+    $$("[data-app]").forEach(b => (b.onclick = () => { if (typeof switchApp === "function") switchApp(b.dataset.app); }));
+  };
+}
 
 /* ---- 40-dashboard.js ---- */
 // M07 Execution Monitoring: KPIs, plan vs actual curve, alerts and unit table, all derived from S.dash.
@@ -5293,8 +5807,8 @@ VIEWS.procurement = () => {
   if (!PROC[PROC_TAB]) PROC_TAB = "cases";
   const tabs = [["cases", L("แฟ้มจัดซื้อ", "Case files")], ["plan", L("แผนจัดซื้อ", "Procurement plan")], ["reqn", `${L("ใบขอซื้อขอจ้าง", "Requisitions")}${S.reqn.filter(r => r.status === "pending").length ? ` (${S.reqn.filter(r => r.status === "pending").length})` : ""}`], ["tor", L("คลัง TOR", "TOR library")], ["contracts", L("สัญญาและงวดงาน", "Contracts and phases")], ["docs", L("รับเอกสาร (OCR)", "Document intake (OCR)")], ["suppliers", L("ผู้ขาย", "Suppliers")], ["gantt", L("ไทม์ไลน์แฟ้ม", "Case timeline")], ["reports", L("รายงานประจำเดือน", "Monthly report")], ["egp", L("ไฟล์จาก e-GP", "e-GP file")], ["analytics", L("วิเคราะห์", "Analytics")], ["forecast", L("พยากรณ์", "Forecast")], ["whatif", L("จำลองสถานการณ์", "What-if")], ["flags", L("สัญญาณเตือน", "Red flags")], ["ocds", L("ส่งออก OCDS", "OCDS export")], ["ai", L("ผู้ช่วย AI", "AI assistant")], ["agents", L("Agent อัตโนมัติ", "Agents")]];
   return `
-  <div class="head"><div><div class="eyebrow">Fisko Procurement · ${L("จัดซื้อจัดจ้าง", "Procurement")}</div><h1>${(tabs.find(t => t[0] === PROC_TAB) || tabs[0])[1]}</h1>
-    <p>${L("เตรียมและติดตามการจัดซื้อที่ผูกกับรายการจัดสรร ขั้นตอนทางการยังทำใน e-GP", "Prepare and track procurement tied to allocation lines. The official steps stay in e-GP.")} · ${fyLabel(FAM_FY)}</p></div></div>
+  ${PROC_TAB === "cases" && CASE_OPEN && caseOf(CASE_OPEN) ? "" : `<div class="head"><div><div class="eyebrow">Fisko Procurement · ${L("จัดซื้อจัดจ้าง", "Procurement")}</div><h1>${(tabs.find(t => t[0] === PROC_TAB) || tabs[0])[1]}</h1>
+    <p>${L("เตรียมและติดตามการจัดซื้อที่ผูกกับรายการจัดสรร ขั้นตอนทางการยังทำใน e-GP", "Prepare and track procurement tied to allocation lines. The official steps stay in e-GP.")} · ${fyLabel(FAM_FY)}</p></div></div>`}
   ${PROC[PROC_TAB]()}`;
 };
 
@@ -5592,19 +6106,15 @@ function caseDetail(c) {
         <div style="flex:1 1 100%"><span class="sub">${L("กรรมการ (อย่างน้อย", "Members (at least")} ${S.pcfg.minMembers - 1}${L(" คน และควรมีผู้ชำนาญการหรือผู้ทรงคุณวุฒิ)", ", ideally including an expert)")}</span><div class="row">${memberPick("cm-" + key, [])}</div></div>
         <button class="btn primary" type="submit">${L("บันทึกคำสั่งแต่งตั้ง", "Save the order")}</button></form>` : ""}</div>`; };
   return `
-  <section class="panel"><header><button class="btn ghost" type="button" id="case-back">← ${L("กลับรายการ", "Back to list")}</button><h2 style="margin-left:8px"><span class="mono">${c.id}</span> · ${esc(caseName(c))}</h2><span class="sp"></span>${historyBtn(c.id, c.id)}${caseStTag(c)}</header>
-    <div class="body row"><span class="sub">${esc(lineLabel(famLine(c.line)))}</span><span class="sub">·</span><span>${tx(KINDS[c.kind])}</span><span class="sub">·</span><span>${mb(rq ? rq.amount : p.est)} ${L("ลบ.", "M")}</span>${rq ? `<span class="sub">·</span><span class="mono sub">${rq.id}</span>` : ""}${con ? `<span class="sub">·</span><span class="mono sub">${con.id}</span>` : ""}
-      ${rq && rq.splitWhy ? tag(L("มีคำชี้แจงการแตกซื้อ", "Split explained"), "p-warn") : ""}${c.egp && c.egp.bidders === 1 ? tag(L("ผู้ยื่นรายเดียว", "Single bidder"), "p-warn") : ""}</div>
-    <div class="body" style="padding-top:0">${stepper(c)}</div></section>
+  <section class="panel"><div class="case-hero">${ring(n === 0 ? 0 : n / 12, { size: 76, stroke: 7, label: n === 0 ? "–" : `${n}/12`, fs: 17, color: n === 0 ? "var(--muted)" : n >= 9 ? "var(--accent)" : "var(--info)" })}
+      <div style="min-width:0"><div class="row" style="gap:8px"><button class="btn ghost" type="button" id="case-back" style="height:28px;padding:0 10px">← ${L("กลับ", "Back")}</button><span class="mono sub">${c.id}</span>${caseStTag(c)}</div>
+        <h2 style="margin-top:6px">${esc(caseName(c))}</h2>
+        <div class="facts"><span class="fact">${svgI("building")}${esc(lineLabel(famLine(c.line)))}</span><span class="fact">${svgI("tag")}${tx(KINDS[c.kind])}${c.method ? " · " + tx(PMETHOD[c.method]) : ""}</span><span class="fact">${svgI("coins")}<b>${mb(rq ? rq.amount : p.est)}</b> ${L("ลบ.", "M")}</span>${rq ? `<span class="fact">${svgI("file")}<span class="mono">${rq.id}</span></span>` : ""}${con ? `<span class="fact">${svgI("pen")}<span class="mono">${con.id}</span></span>` : ""}
+          ${rq && rq.splitWhy ? tag(L("มีคำชี้แจงการแตกซื้อ", "Split explained"), "p-warn") : ""}${c.egp && c.egp.bidders === 1 ? tag(L("ผู้ยื่นรายเดียว", "Single bidder"), "p-warn") : ""}</div></div>
+      <div class="row">${historyBtn(c.id, c.id)}</div></div>
+    <div class="body" style="padding-top:2px">${stepper(c)}</div></section>
   ${c.cancelled ? `<div class="alert"><div class="ic" style="background:var(--bad-soft);color:var(--bad)">!</div><div><b>${L("แฟ้มนี้ถูกยกเลิก", "This case was cancelled")}</b><p>${esc(c.cancelled.why)} · ${esc(userName(c.cancelled.by))} · ${fdate(c.cancelled.t, true)}</p></div></div>` : ""}
-  ${n >= 1 && n <= 8 && !c.cancelled ? `<section class="panel"><header><h2>${L("ขั้นตอนนี้", "This step")}: ${tx([CASE_STATES[n].th, CASE_STATES[n].en])}</h2><span class="sp"></span>${whoTag(nx.who)}</header>
-    <div class="body"><ul class="check">${chk.length ? chk.map(x => `<li><span class="m ${x.ok ? "ok" : "no"}">${x.ok ? "✓" : "×"}</span><div>${esc(x.label)}</div></li>`).join("") : `<li class="sub">${esc(L(nx.th, nx.en))}</li>`}</ul>
-      <div class="row" style="margin-top:10px">${edit && [3, 4, 5].includes(n) ? `<button class="btn primary" type="button" id="case-move" ${allOk ? "" : "disabled"}>${n === 3 ? L("ไปขั้นจัดทำ TOR และราคากลาง", "Move to TOR and reference price") : n === 4 ? (comp ? L("เข้าสู่การดำเนินการใน e-GP", "Move to e-GP sourcing") : L("ประกาศผู้เสนอราคาที่เลือก", "Award to the chosen supplier")) : L("เข้าสู่การพิจารณาผล", "Move to evaluation")}</button>` : ""}
-        ${edit && n === 7 && !(c.appeal && c.appeal.status === "open") ? `<button class="btn primary" type="button" id="case-move" ${allOk ? "" : "disabled"}>${L("ไปขั้นทำสัญญา", "Move to contracting")}</button>` : ""}
-        ${n === 8 && isProcRole() ? `<button class="btn primary" type="button" id="case-tocon">${L("สร้างสัญญา", "Create the contract")}</button>` : ""}
-        ${(edit && n >= 4 && n <= 7) || (isProcRole() && n >= 2 && n <= 8) ? `<input type="text" id="case-reason" placeholder="${L("เหตุผล (สำหรับล้มเหลวหรือยกเลิก)", "Reason (for failed or cancel)")}" style="min-width:220px" aria-label="${L("เหตุผล", "Reason")}">` : ""}
-        ${edit && n >= 4 && n <= 7 ? `<button class="btn" type="button" id="case-fail">${L("ล้มเหลว ดำเนินการใหม่", "Failed, rerun")}</button>` : ""}
-        ${isProcRole() && n >= 2 && n <= 8 ? `<button class="btn danger" type="button" id="case-cancel">${L("ยกเลิกการจัดซื้อ", "Cancel procurement")}</button>` : ""}</div></div></section>` : ""}
+  <div class="case-grid"><div class="case-main">
   ${sec(3, L("วิธีจัดซื้อ", "Procurement method"), `
     <div class="row"><span class="sub">${L("ชนิดงาน", "Kind")}</span><b>${tx(KINDS[c.kind])}</b><span class="sub">·</span><span class="sub">${L("ระบบแนะนำ", "Advice")}</span><b>${rec.method ? tx(PMETHOD[rec.method]) : "—"}</b>${rec.rule ? tag(`${L("กฎ", "Rule")} ${rec.rule.id} · ${rec.rule.conf}`, rec.rule.conf === "A" ? "p-ok" : rec.rule.conf === "B" ? "p-info" : "p-mute") : ""}</div>
     <div class="sub">${esc(tx(rec.why))}</div>
@@ -5652,8 +6162,17 @@ function caseDetail(c) {
     : `<span class="sub">${L("วิธีนี้ไม่มีช่วงอุทธรณ์ตามค่าตั้งใน M10", "This method has no appeal period in the M10 settings")}</span>`)}
   ${sec(8, L("สัญญา", "Contract"), con ? `<div><span class="mono">${con.id}</span> · ${esc(tx(con.vendor))} · ${mb(con.amount)} ${L("ลบ.", "M")} <button class="btn" type="button" id="case-gocon">${L("เปิดสัญญา", "Open the contract")}</button></div>${closePanel(c, con)}` : `<span class="sub">${n === 8 ? L("พร้อมสร้างสัญญา วงเงินสัญญาต้องไม่เกินราคาที่ประกาศ", "Ready for the contract. Its amount can't exceed the announced price.") : ""}</span>`)}
   ${CASE_PANELS.map(f => f(c)).join("")}
+  </div><aside class="case-side">
+  ${n >= 1 && n <= 8 && !c.cancelled ? `<section class="panel nextcard"><header>${chipIco("arrow", "ok")}<h2>${L("ขั้นตอนนี้", "This step")}: ${tx([CASE_STATES[n].th, CASE_STATES[n].en])}</h2><span class="sp"></span>${whoTag(nx.who)}</header>
+    <div class="body"><ul class="check">${chk.length ? chk.map(x => `<li><span class="m ${x.ok ? "ok" : "no"}">${x.ok ? "✓" : "×"}</span><div>${esc(x.label)}</div></li>`).join("") : `<li class="sub">${esc(L(nx.th, nx.en))}</li>`}</ul>
+      <div class="row" style="margin-top:10px">${edit && [3, 4, 5].includes(n) ? `<button class="btn primary" type="button" id="case-move" ${allOk ? "" : "disabled"}>${n === 3 ? L("ไปขั้นจัดทำ TOR และราคากลาง", "Move to TOR and reference price") : n === 4 ? (comp ? L("เข้าสู่การดำเนินการใน e-GP", "Move to e-GP sourcing") : L("ประกาศผู้เสนอราคาที่เลือก", "Award to the chosen supplier")) : L("เข้าสู่การพิจารณาผล", "Move to evaluation")}</button>` : ""}
+        ${edit && n === 7 && !(c.appeal && c.appeal.status === "open") ? `<button class="btn primary" type="button" id="case-move" ${allOk ? "" : "disabled"}>${L("ไปขั้นทำสัญญา", "Move to contracting")}</button>` : ""}
+        ${n === 8 && isProcRole() ? `<button class="btn primary" type="button" id="case-tocon">${L("สร้างสัญญา", "Create the contract")}</button>` : ""}
+        ${(edit && n >= 4 && n <= 7) || (isProcRole() && n >= 2 && n <= 8) ? `<input type="text" id="case-reason" placeholder="${L("เหตุผล (สำหรับล้มเหลวหรือยกเลิก)", "Reason (for failed or cancel)")}" style="min-width:220px" aria-label="${L("เหตุผล", "Reason")}">` : ""}
+        ${edit && n >= 4 && n <= 7 ? `<button class="btn" type="button" id="case-fail">${L("ล้มเหลว ดำเนินการใหม่", "Failed, rerun")}</button>` : ""}
+        ${isProcRole() && n >= 2 && n <= 8 ? `<button class="btn danger" type="button" id="case-cancel">${L("ยกเลิกการจัดซื้อ", "Cancel procurement")}</button>` : ""}</div></div></section>` : ""}
   <section class="panel"><header><h2>${L("ไทม์ไลน์ของแฟ้ม", "Case timeline")}</h2><span class="sp"></span><span class="sub">${ev.length} ${L("เหตุการณ์", "events")}</span></header>
-    <div class="body"><ol class="timeline">${ev.map(e => `<li class="done"><span class="dot"></span><div><b style="font-weight:600">${tx(CASE_EV[e.type] || [e.type, e.type])}</b><small>${esc(userName(e.by))} · ${fdate(e.t, true)}</small>${e.detail ? `<div class="sub">${esc(e.detail)}</div>` : ""}</div></li>`).join("") || `<li class="sub">—</li>`}</ol></div></section>`;
+    <div class="body"><ol class="timeline">${ev.map(e => `<li class="done"><span class="dot"></span><div><b style="font-weight:600">${tx(CASE_EV[e.type] || [e.type, e.type])}</b><small>${esc(userName(e.by))} · ${fdate(e.t, true)}</small>${e.detail ? `<div class="sub">${esc(e.detail)}</div>` : ""}</div></li>`).join("") || `<li class="sub">—</li>`}</ol></div></section></aside></div>`;
 }
 
 // ---------- actions ----------
@@ -6363,6 +6882,63 @@ function seedPlanReports(s, K) {
   s.monthly = [];
 }
 
+/* ---- 61d-ui-board.js ---- */
+// Design system v2 (round 24): the procurement case list becomes a pipeline board with a funnel strip,
+// with the previous table one click away; contracts get a phase track. Works on the same data and binders.
+let CASE_VIEW = "board";
+const BOARD_COLS = [
+  ["prep", ["เตรียมการ", "Preparing"], "var(--info)", n => n >= 1 && n <= 4],
+  ["src", ["ดำเนินการใน e-GP", "Sourcing in e-GP"], "var(--amber)", n => n >= 5 && n <= 7],
+  ["con", ["สัญญาและส่งมอบ", "Contract and delivery"], "var(--accent)", n => n >= 8 && n <= 11],
+  ["end", ["ปิดและยกเลิก", "Closed or cancelled"], "var(--faint)", n => n === 12 || n === 0],
+];
+const WHO_ICON = { proc: "user", head: "shield", exec: "checksq", req: "inbox", wait: "clock", con: "pen", none: "dot" };
+function caseCard(c) {
+  const n = caseState(c), p = famPlan(c.plan), rq = caseReq(c), nx = caseNext(c), people = [rq ? rq.by : null, c.methodApproval ? c.methodApproval.by : null, (caseCon(c) || {}).by].filter(Boolean);
+  return `<div class="card" data-copen="${c.id}" role="button" tabindex="0" aria-label="${c.id} ${esc(caseName(c))}">
+    <div class="cm"><span class="mono">${c.id}</span>${c.method ? `<span class="pill p-mute">${tx(PMETHOD[c.method])}</span>` : `<span class="pill p-mute">${tx(KINDS[c.kind])}</span>`}</div>
+    <div class="ct">${esc(caseName(c))}</div>
+    <div class="cm"><span class="amt">${mb(rq ? rq.amount : p.est)} <span class="sub">${L("ลบ.", "M")}</span></span><span>${n === 0 ? L("ยกเลิก", "Cancelled") : `${L("ขั้น", "Step")} ${n}/12`}</span></div>
+    <div class="segbar">${Array.from({ length: 12 }, (_, i) => `<i class="${n === 0 ? "" : i + 1 < n ? "ok" : i + 1 === n ? "now" : ""}"></i>`).join("")}</div>
+    ${n !== 0 && n < 12 ? `<div class="next">${svgI(WHO_ICON[nx.who] || "arrow")}<span>${esc(nx.raw ? nx.th : L(nx.th, nx.en))}</span></div>` : ""}
+    <div class="cm"><span class="sub">${esc(lineLabel(famLine(c.line))).split(" · ")[0]}</span>${people.length ? avs(people) : ""}</div></div>`;
+}
+{
+  const tableList = caseList;
+  caseList = () => {
+    const all = S.cases, byStep = Array.from({ length: 12 }, (_, i) => all.filter(c => caseState(c) === i + 1).length), mx = Math.max(1, ...byStep);
+    const value = sumv(all.filter(c => !c.cancelled).map(c => (caseReq(c) ? caseReq(c).amount : famPlan(c.plan).est))), waiting = all.filter(c => !c.cancelled && ["proc", "head", "exec"].includes(caseNext(c).who) && caseState(c) < 9).length;
+    const toggle = `<div class="viewtoggle" role="group" aria-label="${L("มุมมอง", "View")}"><button type="button" data-cview="board" class="${CASE_VIEW === "board" ? "on" : ""}">${svgI("kanban")}${L("บอร์ด", "Board")}</button><button type="button" data-cview="table" class="${CASE_VIEW === "table" ? "on" : ""}">${svgI("list")}${L("ตาราง", "Table")}</button></div>`;
+    const top = `<section class="stats">
+      ${statCard({ label: L("แฟ้มทั้งหมด", "All cases"), value: all.length, icon: "folder", tone: "info", sub: `${all.filter(c => c.cancelled).length} ${L("ยกเลิก", "cancelled")}` })}
+      ${statCard({ label: L("มูลค่าในแฟ้มที่เปิดอยู่", "Value in open cases"), value: mb(value), unit: L("ลบ.", "M"), icon: "coins", tone: "ok", sub: "" })}
+      ${statCard({ label: L("รอการดำเนินการจากคน", "Waiting for a person"), value: waiting, icon: "clock", tone: waiting ? "warn" : "", sub: L("เจ้าหน้าที่ หัวหน้า หรือผู้บริหาร", "officer, head or executive") })}
+      ${statCard({ label: L("ลงนามสัญญาแล้ว", "Contracts signed"), value: all.filter(c => caseState(c) >= 9).length, ring: all.length ? all.filter(c => caseState(c) >= 9).length / all.length : 0, sub: "" })}</section>
+      <section class="panel"><header>${chipIco("chart", "info")}<h2>${L("กรวยของแฟ้มตามขั้นตอน", "Cases by step")}</h2><span class="sp"></span>${toggle}</header>
+        <div class="body"><div class="funnel">${byStep.map((k, i) => `<div class="${k ? "" : "zero"}" style="height:${k ? 12 + (k / mx) * 52 : 4}px" title="${i + 1}. ${tx([CASE_STATES[i + 1].th, CASE_STATES[i + 1].en])}: ${k}"></div>`).join("")}</div>
+          <div class="funnel-l">${byStep.map((k, i) => `<span title="${tx([CASE_STATES[i + 1].th, CASE_STATES[i + 1].en])}">${i + 1}${k ? ` · <b style="color:var(--ink)">${k}</b>` : ""}</span>`).join("")}</div></div></section>`;
+    if (CASE_VIEW === "table") return top + tableList().replace(/<section class="kpis"[\s\S]*?<\/section>/, "");
+    return `${top}<div class="board">${BOARD_COLS.map(([k, nm, color, f]) => { const cs = all.filter(c => f(caseState(c)));
+      return `<div class="col" style="--c:${color}"><div class="col-h">${tx(nm)}<span class="n">${cs.length}</span></div>${cs.map(caseCard).join("") || `<div class="empty">${L("ไม่มีแฟ้ม", "No cases")}</div>`}</div>`; }).join("")}</div>`;
+  };
+}
+{
+  const base = BIND.procurement;
+  BIND.procurement = () => {
+    base();
+    if (PROC_TAB !== "cases" || CASE_OPEN) return;
+    $$("[data-cview]").forEach(b => (b.onclick = () => { CASE_VIEW = b.dataset.cview; route(); }));
+    $$(".card[data-copen]").forEach(el => (el.onkeydown = e => { if (e.key === "Enter") el.click(); }));
+  };
+}
+
+// ---------- contracts: a phase track under the header ----------
+function phaseTrack(c) {
+  return `<div class="ptrack">${c.phases.map(ph => { const paid = phPaid(c, ph), acc = phaseAccepted(ph), late = !acc && !ph.cancelled && phDue(ph) < TODAY;
+    const st = ph.cancelled ? ["var(--faint)", 100, L("ยกเลิก", "cancelled")] : paid ? ["var(--accent)", 100, L("จ่ายแล้ว", "paid")] : acc ? ["var(--accent-2)", 75, L("ตรวจรับแล้ว", "accepted")] : ph.delivered ? ["var(--info)", 50, L("ส่งมอบแล้ว", "delivered")] : late ? ["var(--bad)", 25, L("เลยกำหนด", "overdue")] : ["var(--line-2)", 10, fdate(phDue(ph))];
+    return `<div class="ph" title="${tx(ph.name)} · ${st[2]}"><div class="bar2"><i style="width:${st[1]}%;background:${st[0]}"></i></div><span>${tx(ph.name)} · ${st[2]} · ${mb(ph.amount)}</span></div>`; }).join("")}</div>`;
+}
+
 /* ---- 62-finance.js ---- */
 // Fisko Finance (round 11, light version): commitments and the chain from allocation to payment,
 // payment requests with approval, and GFMIS reconciliation by file import (files only, per D-F05).
@@ -6584,6 +7160,7 @@ function conPanel(c) {
   const gs = guarSt(c), pen = conPenalty(c), vars = c.vars || [], head = ROLE === "prochead" || canSpend();
   const prevOk = ph => ph.n === 1 || phaseAccepted(c.phases[ph.n - 2]);
   return `<section class="panel"><header><h2><span class="mono">${c.id}</span> · ${esc(tx(famPlan(c.plan).name))}</h2><span class="sp"></span>${historyBtn(c.id, c.id)}${(c.ver || 1) > 1 ? tag(`${L("ฉบับที่", "Version")} ${c.ver}`, "p-info") : ""}${pen ? tag(`${L("ค่าปรับสะสม", "Penalty")} ${fmt(pen)}`, penaltyWarn(c) ? "p-bad" : "p-warn") : ""}${tag(`${L("วงเงินสัญญา", "Contract")} ${mb(c.amount)} ${L("ลบ.", "M")}`, "p-info")}</header>
+    ${phaseTrack(c)}
     <div class="body row"><span>${esc(tx(c.vendor))}</span><span class="sub">·</span><span class="mono sub">${esc(c.no)}</span><span class="sub">·</span><span class="sub">${L("ลงนาม", "Signed")} ${fdate(c.signed)}</span><span class="sub">·</span><span class="sub">${esc(lineLabel(l))}</span>
       ${famPlan(c.plan).egp ? `<span class="sub">·</span><span class="sub mono">${famPlan(c.plan).egp.no}</span>` : ""}${cs ? `<span class="sub">·</span><button class="btn ghost" type="button" data-copen2="${cs.id}">${cs.id}</button>` : ""}</div>
     <div class="body" style="padding-top:0"><span class="sub">${L("คณะกรรมการตรวจรับ", "Acceptance committee")}:</span> ${c.inspectors.map(id => esc(userName(id))).join(", ")}
@@ -7567,17 +8144,24 @@ function fcChart(mon) {
   const W = 720, H = 220, pad = 34, rows = mon.rows, mx = Math.max(1, ...rows.map(r => Math.max(r.comAct + r.hi, r.payAct + r.payFc))), bw = (W - pad * 2) / 12, y = v => H - 24 - (v / mx) * (H - 44);
   return `<div class="tbl-wrap"><svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:560px;height:auto" role="img" aria-label="${L("กราฟภาระผูกพันและการเบิกจ่ายรายเดือน", "Monthly commitments and payments chart")}">
     ${rows.map((r, i) => { const x = pad + i * bw, ca = r.comAct, cf = r.comFc;
-      return `<rect x="${x + 4}" y="${y(ca)}" width="${bw / 2 - 6}" height="${H - 24 - y(ca)}" fill="var(--accent)"><title>${monthLabel(r.m)} · ${L("ผูกพันแล้ว", "committed")} ${mb(ca)}</title></rect>
-        <rect x="${x + 4}" y="${y(ca + cf)}" width="${bw / 2 - 6}" height="${Math.max(0, y(ca) - y(ca + cf))}" fill="var(--accent)" opacity=".35"><title>${L("คาดว่าจะผูกพัน", "expected")} ${mb(cf)} (P10 ${mb(r.lo)} – P90 ${mb(r.hi)})</title></rect>
+      return `<rect rx="3" x="${x + 4}" y="${y(ca)}" width="${bw / 2 - 6}" height="${H - 24 - y(ca)}" fill="var(--accent)"><title>${monthLabel(r.m)} · ${L("ผูกพันแล้ว", "committed")} ${mb(ca)}</title></rect>
+        <rect rx="3" x="${x + 4}" y="${y(ca + cf)}" width="${bw / 2 - 6}" height="${Math.max(0, y(ca) - y(ca + cf))}" fill="var(--accent)" opacity=".35"><title>${L("คาดว่าจะผูกพัน", "expected")} ${mb(cf)} (P10 ${mb(r.lo)} – P90 ${mb(r.hi)})</title></rect>
         ${r.hi > 0 ? `<line x1="${x + bw / 4}" x2="${x + bw / 4}" y1="${y(ca + r.lo)}" y2="${y(ca + r.hi)}" stroke="var(--ink-2)" stroke-width="1.5"/>` : ""}
-        <rect x="${x + bw / 2}" y="${y(r.payAct + r.payFc)}" width="${bw / 2 - 6}" height="${H - 24 - y(r.payAct + r.payFc)}" fill="var(--info)" opacity=".75"><title>${L("เบิกจ่าย", "payments")} ${mb(r.payAct)} + ${L("คาด", "expected")} ${mb(r.payFc)}</title></rect>
+        <rect rx="3" x="${x + bw / 2}" y="${y(r.payAct + r.payFc)}" width="${bw / 2 - 6}" height="${H - 24 - y(r.payAct + r.payFc)}" fill="var(--info)" opacity=".75"><title>${L("เบิกจ่าย", "payments")} ${mb(r.payAct)} + ${L("คาด", "expected")} ${mb(r.payFc)}</title></rect>
         <text x="${x + bw / 2}" y="${H - 8}" font-size="10" text-anchor="middle" fill="var(--muted)">${monthLabel(r.m).split(" ")[0].slice(0, LANG === "en" ? 3 : 4)}</text>`; }).join("")}
+    ${[0.25, 0.5, 0.75, 1].map(f => `<line x1="${pad}" x2="${W - pad}" y1="${y(mx * f)}" y2="${y(mx * f)}" stroke="var(--line)" stroke-dasharray="3 4"/><text x="${pad - 6}" y="${y(mx * f) + 3}" font-size="9.5" text-anchor="end" fill="var(--faint)">${mb(mx * f).replace(/\.\d+$/, "")}</text>`).join("")}
     <line x1="${pad}" x2="${W - pad}" y1="${H - 24}" y2="${H - 24}" stroke="var(--line)"/></svg></div>
   <div class="row sub" style="gap:14px"><span><span style="display:inline-block;width:12px;height:10px;background:var(--accent)"></span> ${L("ผูกพันแล้ว", "Committed")}</span><span><span style="display:inline-block;width:12px;height:10px;background:var(--accent);opacity:.35"></span> ${L("คาดว่าจะผูกพัน (เส้น = P10 ถึง P90)", "Expected commitment (line = P10 to P90)")}</span><span><span style="display:inline-block;width:12px;height:10px;background:var(--info);opacity:.75"></span> ${L("เบิกจ่ายและคาดการณ์", "Payments and expected")}</span></div>`;
 }
 PROC.forecast = () => {
   const sims = simAll(), mon = monthly({}, sims), risk = carryRisk(sims), pt = priceTrend(), wl = workload(), def = usesDefaults();
   return `
+  <section class="stats">
+    ${statCard({ label: L("ผูกพันทั้งปี (คาด)", "Full-year commitment (expected)"), value: mb(sumv(mon.rows.map(r => r.comAct + r.comFc))), unit: L("ลบ.", "M"), spark: mon.rows.map(r => r.comAct + r.comFc), sub: "" })}
+    ${statCard({ label: L("เบิกจ่ายทั้งปี (คาด)", "Full-year payments (expected)"), value: mb(sumv(mon.rows.map(r => r.payAct + r.payFc))), unit: L("ลบ.", "M"), color: "var(--info)", spark: mon.rows.map(r => r.payAct + r.payFc), sub: "" })}
+    ${statCard({ label: L("แฟ้มเสี่ยงไม่ทันวันตัด", "Cases at risk by the cut-off"), value: risk.length, icon: "alert", tone: risk.length ? "bad" : "ok", sub: `${mb(sumv(risk.map(s => s.amount)))} ${L("ลบ.", "M")}` })}
+    ${statCard({ label: L("ภาระงานสูงสุดต่อกำลัง", "Peak workload vs capacity"), value: pc(wl.load), ring: Math.min(1, wl.load), color: wl.load > 1 ? "var(--bad)" : "var(--accent)", sub: `${fmt(wl.peak, 1)} / ${wl.cap} ${L("ชม.", "h")}` })}
+  </section>
   <div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("พยากรณ์จากข้อมูลน้อย อ่านเป็นช่วง ไม่ใช่ตัวเลขแน่นอน", "Forecasts from little data: read the range, not a single number")}</b><p>${L("จำลอง", "Simulated")} ${S.pcfg.fcRuns} ${L("รอบต่อแฟ้ม จากเวลาจริงของแฟ้มที่ผ่านมา", "runs per case from past case durations")}${def.length ? ` · ${L("ขั้นที่ข้อมูลไม่ถึง", "stages with fewer than")} ${S.pcfg.fcMinN} ${L("แฟ้มใช้ค่าตั้งต้น SLA ใน M10", "cases use the SLA defaults in M10")}: ${def.map(k => tx(STAGE_NM[k])).join(", ")}` : ""} </p><div class="row" style="margin-top:6px"><span class="sub">${L("วันตัดลงนาม", "Signing cut-off")}</span>${cutSel("fc-cut", cutNow())}<span class="sub">${L("เป้าลงนามตามมาตรการเร่งรัดเบิกจ่ายเปลี่ยนทุกปี ระดับ C ต้องยืนยัน", "Signing targets under spending measures change each year; level C, to confirm")}</span></div></div></div>
   <section class="panel"><header><h2>F-01 ${L("ภาระผูกพันและการเบิกจ่ายรายเดือน", "Monthly commitments and payments")} · ${fyLabel(FAM_FY)}</h2><span class="sp"></span><span class="sub">${L("เวลาตรวจรับถึงจ่าย", "Acceptance to payment")} ${mon.lag} ${L("วัน", "days")} (${mon.lagN >= S.pcfg.fcMinN ? `n=${mon.lagN}` : L("ค่าตั้งต้น", "default")})</span></header>
     <div class="body">${fcChart(mon)}</div>
@@ -7740,8 +8324,8 @@ function renderNav() {
     if (!items.length) return;
     html += `<div class="nav-h">${tx(GROUPS[g])}</div>`;
     items.forEach(n => {
-      if (n.tabs) n.tabs.forEach(([id, label, code]) => (html += `<a href="#${n.id}" data-v="${n.id}" data-tab="${id}"><span class="code">${code}</span>${tx(label)}${tabBadge(n.id, id)}</a>`));
-      else html += `<a href="#${n.id}" data-v="${n.id}"><span class="code">${n.code}</span>${tx(n.label)}${n.soon ? `<span class="soon">${L("รอบ", "R")} ${n.soon}</span>` : navBadge(n.id)}</a>`;
+      if (n.tabs) n.tabs.forEach(([id, label, code]) => (html += `<a href="#${n.id}" data-v="${n.id}" data-tab="${id}" title="${code}"><span class="ni">${svgI(NAV_ICON[id] || "dot")}</span><span class="code">${code}</span><span class="nl">${tx(label)}</span>${tabBadge(n.id, id)}</a>`));
+      else html += `<a href="#${n.id}" data-v="${n.id}" title="${n.code}"><span class="ni">${svgI(NAV_ICON[n.id] || "dot")}</span><span class="code">${n.code}</span><span class="nl">${tx(n.label)}</span>${n.soon ? `<span class="soon">${L("รอบ", "R")} ${n.soon}</span>` : navBadge(n.id)}</a>`;
     });
   });
   $("#nav").innerHTML = html;
