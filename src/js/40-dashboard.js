@@ -25,12 +25,12 @@ function chartSVG(T) {
   FY_MONTHS[LANG].forEach((m, i) => (g += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${m}</text>`));
   const li = 6;
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${L("แผนและผลการเบิกจ่ายสะสม ล้านบาท", "Cumulative plan and disbursement, million baht")}">${g}
-    <path d="${line(actS)}L${x(li)},${y(0)}L${x(0)},${y(0)}Z" fill="var(--accent)" fill-opacity=".12"/>
+    <path d="${line(actS)}L${x(li)},${y(0)}L${x(0)},${y(0)}Z" fill="var(--ch-1)" fill-opacity=".12"/>
     <path d="${line(planS)}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="5 4"/>
-    <path d="${line(actS)}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
-    <circle cx="${x(li)}" cy="${y(actS[li])}" r="5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>
+    <path d="${line(actS)}" fill="none" stroke="var(--ch-1)" stroke-width="2.5"/>
+    <circle cx="${x(li)}" cy="${y(actS[li])}" r="5" fill="var(--ch-1)" stroke="var(--surface)" stroke-width="2"/>
     <circle cx="${x(li)}" cy="${y(planS[li])}" r="4" fill="var(--surface)" stroke="var(--muted)" stroke-width="2"/>
-    <text x="${x(li) + 10}" y="${y(actS[li]) + 16}" style="fill:var(--accent);font-weight:600;font-size:12px">${L("ผล", "Actual")} ${fmt(actS[li])}</text>
+    <text x="${x(li) + 10}" y="${y(actS[li]) + 16}" style="fill:var(--ch-1);font-weight:600;font-size:12px">${L("ผล", "Actual")} ${fmt(actS[li])}</text>
     <text x="${x(li) - 10}" y="${y(planS[li]) - 9}" text-anchor="end" style="fill:var(--ink-2);font-weight:600;font-size:12px">${L("แผน", "Plan")} ${fmt(planS[li])}</text></svg>`;
 }
 
@@ -52,7 +52,7 @@ VIEWS.dashboard = () => {
   </section>
   <div class="grid2">
     <section class="panel chart"><header><h2>${L("แผนและผลการเบิกจ่ายสะสม", "Cumulative plan vs disbursement")}</h2><span class="sp"></span>
-      <div class="legend"><span><i style="background:var(--accent)"></i>${L("ผลการเบิกจ่าย", "Disbursed")}</span><span><i style="background:var(--muted)"></i>${L("แผนการใช้จ่าย", "Plan")}</span></div></header>
+      <div class="legend"><span><i style="background:var(--ch-1)"></i>${L("ผลการเบิกจ่าย", "Disbursed")}</span><span><i style="background:var(--muted)"></i>${L("แผนการใช้จ่าย", "Plan")}</span></div></header>
       <div class="body">${chartSVG(T)}<div class="sub">${L("หน่วย: ล้านบาท", "Unit: million baht")}</div></div></section>
     <section class="panel"><header><h2>${L("สิ่งที่ต้องติดตาม", "Needs attention")}</h2><span class="sp"></span><span class="pill p-info">${L("จาก AI Monitoring Agent", "From the AI Monitoring Agent")}</span></header>
       <div class="body">${alerts.map(({ x, s }) => `<div class="alert"><div class="ic" style="background:var(--${s[1] === "p-ok" ? "accent" : s[1] === "p-bad" ? "bad" : "warn"}-soft);color:var(--${s[1] === "p-ok" ? "accent" : s[1] === "p-bad" ? "bad" : "warn"})">${s[1] === "p-ok" ? "✓" : "!"}</div>

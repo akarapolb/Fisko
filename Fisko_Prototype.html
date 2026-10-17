@@ -987,7 +987,8 @@ details.strat > summary:hover { background: var(--surface-2); }
   --accent: #2B3A67; --accent-2: #3B4C80; --accent-soft: #EEF1F7; --accent-ink: #2B3A67;
   --info: #3B4C80; --info-soft: #EEF1F7; --violet: #5B6380; --sky: #4B6A88; --amber: #B7791F;
   --ok: #15803D; --ok-dot: #16A34A; --warn: #A16207; --warn-soft: #FBF6EA; --bad: #B91C1C; --bad-soft: #FBEFEF;
-  --c-1: #2B3A67; --c-2: #6B7A99; --c-3: #9AA6BF; --c-4: #B7791F; --c-5: #5B6380; --c-6: #C5CBD8;
+  --ch-1: #16A34A; --ch-2: #2B3A67; --ch-3: #86CFA0; --ch-4: #D99A2B; --ch-5: #0F766E; --ch-6: #A3AAB8;
+  --c-1: var(--ch-1); --c-2: var(--ch-2); --c-3: var(--ch-3); --c-4: var(--ch-4); --c-5: var(--ch-5); --c-6: var(--ch-6);
   --app-b: #2B3A67; --app-p: #4A5D8A; --app-f: #5C6B7D;
   --side: #FFFFFF; --side-ink: #374151; --side-muted: #9CA3AF; --side-hover: #F3F4F6; --side-on: #EEF1F7; --side-on-ink: #1F2A50; --side-line: #E5E7EB;
   --r: 10px; --r-sm: 8px; --r-xs: 7px;
@@ -999,7 +1000,7 @@ details.strat > summary:hover { background: var(--surface-2); }
   --ink: #E8EAEE; --ink-2: #C3C8D2; --muted: #8F96A3; --faint: #6B7280;
   --accent: #9DB0E3; --accent-2: #B5C4EC; --accent-soft: #1E2534; --accent-ink: #B5C4EC; --info: #9DB0E3; --info-soft: #1E2534;
   --ok: #4ADE80; --ok-dot: #22C55E; --warn: #E0B65C; --warn-soft: #2A2416; --bad: #F08A8A; --bad-soft: #2E1B1B;
-  --c-1: #9DB0E3; --c-2: #6F7FA3; --c-3: #4E5A75; --c-4: #E0B65C; --c-5: #8C93AC; --c-6: #3A4256;
+  --ch-1: #34D36B; --ch-2: #9DB0E3; --ch-3: #1F7A45; --ch-4: #E0B65C; --ch-5: #2DD4BF; --ch-6: #6B7280;
   --app-b: #6F84C2; --app-p: #7E8FB8; --app-f: #8592A6;
   --side: #12151B; --side-ink: #C3C8D2; --side-muted: #6B7280; --side-hover: #1B1F27; --side-on: #1E2534; --side-on-ink: #DCE3F5; --side-line: #222630;
   --sh-2: none; --sh-3: 0 10px 30px rgba(0, 0, 0, .5); color-scheme: dark; } }
@@ -1008,7 +1009,7 @@ details.strat > summary:hover { background: var(--surface-2); }
   --ink: #E8EAEE; --ink-2: #C3C8D2; --muted: #8F96A3; --faint: #6B7280;
   --accent: #9DB0E3; --accent-2: #B5C4EC; --accent-soft: #1E2534; --accent-ink: #B5C4EC; --info: #9DB0E3; --info-soft: #1E2534;
   --ok: #4ADE80; --ok-dot: #22C55E; --warn: #E0B65C; --warn-soft: #2A2416; --bad: #F08A8A; --bad-soft: #2E1B1B;
-  --c-1: #9DB0E3; --c-2: #6F7FA3; --c-3: #4E5A75; --c-4: #E0B65C; --c-5: #8C93AC; --c-6: #3A4256;
+  --ch-1: #34D36B; --ch-2: #9DB0E3; --ch-3: #1F7A45; --ch-4: #E0B65C; --ch-5: #2DD4BF; --ch-6: #6B7280;
   --app-b: #6F84C2; --app-p: #7E8FB8; --app-f: #8592A6;
   --side: #12151B; --side-ink: #C3C8D2; --side-muted: #6B7280; --side-hover: #1B1F27; --side-on: #1E2534; --side-on-ink: #DCE3F5; --side-line: #222630;
   --sh-2: none; --sh-3: 0 10px 30px rgba(0, 0, 0, .5); color-scheme: dark; }
@@ -1117,6 +1118,15 @@ th { color: var(--muted); font-weight: 600; }
 :root[data-theme="dark"] .msg.u { color: #0E1015; }
 .toast { background: #1F2937; }
 .c1 { background: var(--c-1); } .c2 { background: var(--c-2); } .c3 { background: var(--c-3); } .c4 { background: var(--c-4); } .c5 { background: var(--c-6); }
+
+/* ---------- charts: the one place with brand colour (round 26b) ----------
+   Series 1 is the Fisko green, series 2 the navy, then light green, amber,
+   teal and grey. Status colours still mean status only. */
+.bar i, .prog > i, .rbar i { background: var(--ch-1); }
+.funnel > div { background: var(--ch-1); } .funnel > div:hover { background: color-mix(in srgb, var(--ch-1) 80%, #000); }
+.c1, .sw.c1 { background: var(--ch-1); } .c2, .sw.c2 { background: var(--ch-2); } .c3, .sw.c3 { background: var(--ch-3); } .c4, .sw.c4 { background: var(--ch-4); } .c5, .sw.c5 { background: var(--ch-5); }
+:root[data-theme="dark"] .c1 { background: var(--ch-1); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .c1 { background: var(--ch-1); } }
 </style>
 </head>
 <body>
@@ -1440,7 +1450,7 @@ const NAV_ICON = { home: "home", strategy: "target", requests: "inbox", consolid
   chain: "link", pay: "card", recon: "scale" };
 // sparkline: values → a smooth line with a soft area under it
 function spark(vals, o = {}) {
-  const w = o.w || 120, h = o.h || 34, c = o.color || "var(--accent)", v = vals.length > 1 ? vals : [0, ...(vals.length ? vals : [0])], mn = Math.min(...v), mx = Math.max(...v), rg = mx - mn || 1;
+  const w = o.w || 120, h = o.h || 34, c = o.color || "var(--ch-1)", v = vals.length > 1 ? vals : [0, ...(vals.length ? vals : [0])], mn = Math.min(...v), mx = Math.max(...v), rg = mx - mn || 1;
   const pts = v.map((y, i) => [i / (v.length - 1) * (w - 4) + 2, h - 3 - (y - mn) / rg * (h - 8)]), id = "sg" + Math.random().toString(36).slice(2, 8);
   const d = pts.map((p, i) => (i ? `L${p[0].toFixed(1)} ${p[1].toFixed(1)}` : `M${p[0].toFixed(1)} ${p[1].toFixed(1)}`)).join(" ");
   return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c}" stop-opacity=".28"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></linearGradient></defs>
@@ -1448,7 +1458,7 @@ function spark(vals, o = {}) {
 }
 // progress ring: share 0..1 with the label in the middle
 function ring(share, o = {}) {
-  const s = o.size || 56, sw = o.stroke || 6, r = (s - sw) / 2, cf = 2 * Math.PI * r, p = Math.max(0, Math.min(1, share || 0)), c = o.color || "var(--accent)";
+  const s = o.size || 56, sw = o.stroke || 6, r = (s - sw) / 2, cf = 2 * Math.PI * r, p = Math.max(0, Math.min(1, share || 0)), c = o.color || "var(--ch-1)";
   return `<svg class="ring" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}" role="img" aria-label="${o.aria || Math.round(p * 100) + "%"}"><circle cx="${s / 2}" cy="${s / 2}" r="${r}" fill="none" stroke="var(--surface-3)" stroke-width="${sw}"/>
     <circle cx="${s / 2}" cy="${s / 2}" r="${r}" fill="none" stroke="${c}" stroke-width="${sw}" stroke-linecap="round" stroke-dasharray="${(cf * p).toFixed(1)} ${cf.toFixed(1)}" transform="rotate(-90 ${s / 2} ${s / 2})"/>
     <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="${o.fs || s * 0.26}" font-weight="700" fill="var(--ink)">${o.label != null ? o.label : Math.round(p * 100) + "%"}</text></svg>`;
@@ -2573,7 +2583,7 @@ function homeStats() {
   }
   if (S.payreqs && typeof monthly === "function") {
     const m = monthly().rows, paid = sumv(S.payreqs.filter(p => p.status === "approved").map(p => p.amount));
-    out.push(statCard({ label: L("เบิกจ่ายแล้ว ปีนี้", "Paid this year"), value: mb(paid), unit: L("ลบ.", "M"), color: "var(--info)", spark: m.map(r => r.payAct + r.payFc), link: can("finance") ? "fnc-pay" : null, sub: "" }));
+    out.push(statCard({ label: L("เบิกจ่ายแล้ว ปีนี้", "Paid this year"), value: mb(paid), unit: L("ลบ.", "M"), color: "var(--ch-2)", spark: m.map(r => r.payAct + r.payFc), link: can("finance") ? "fnc-pay" : null, sub: "" }));
   }
   return out.join("");
 }
@@ -2643,12 +2653,12 @@ function chartSVG(T) {
   FY_MONTHS[LANG].forEach((m, i) => (g += `<text x="${x(i)}" y="${H - 8}" text-anchor="middle">${m}</text>`));
   const li = 6;
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${L("แผนและผลการเบิกจ่ายสะสม ล้านบาท", "Cumulative plan and disbursement, million baht")}">${g}
-    <path d="${line(actS)}L${x(li)},${y(0)}L${x(0)},${y(0)}Z" fill="var(--accent)" fill-opacity=".12"/>
+    <path d="${line(actS)}L${x(li)},${y(0)}L${x(0)},${y(0)}Z" fill="var(--ch-1)" fill-opacity=".12"/>
     <path d="${line(planS)}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="5 4"/>
-    <path d="${line(actS)}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
-    <circle cx="${x(li)}" cy="${y(actS[li])}" r="5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>
+    <path d="${line(actS)}" fill="none" stroke="var(--ch-1)" stroke-width="2.5"/>
+    <circle cx="${x(li)}" cy="${y(actS[li])}" r="5" fill="var(--ch-1)" stroke="var(--surface)" stroke-width="2"/>
     <circle cx="${x(li)}" cy="${y(planS[li])}" r="4" fill="var(--surface)" stroke="var(--muted)" stroke-width="2"/>
-    <text x="${x(li) + 10}" y="${y(actS[li]) + 16}" style="fill:var(--accent);font-weight:600;font-size:12px">${L("ผล", "Actual")} ${fmt(actS[li])}</text>
+    <text x="${x(li) + 10}" y="${y(actS[li]) + 16}" style="fill:var(--ch-1);font-weight:600;font-size:12px">${L("ผล", "Actual")} ${fmt(actS[li])}</text>
     <text x="${x(li) - 10}" y="${y(planS[li]) - 9}" text-anchor="end" style="fill:var(--ink-2);font-weight:600;font-size:12px">${L("แผน", "Plan")} ${fmt(planS[li])}</text></svg>`;
 }
 
@@ -2670,7 +2680,7 @@ VIEWS.dashboard = () => {
   </section>
   <div class="grid2">
     <section class="panel chart"><header><h2>${L("แผนและผลการเบิกจ่ายสะสม", "Cumulative plan vs disbursement")}</h2><span class="sp"></span>
-      <div class="legend"><span><i style="background:var(--accent)"></i>${L("ผลการเบิกจ่าย", "Disbursed")}</span><span><i style="background:var(--muted)"></i>${L("แผนการใช้จ่าย", "Plan")}</span></div></header>
+      <div class="legend"><span><i style="background:var(--ch-1)"></i>${L("ผลการเบิกจ่าย", "Disbursed")}</span><span><i style="background:var(--muted)"></i>${L("แผนการใช้จ่าย", "Plan")}</span></div></header>
       <div class="body">${chartSVG(T)}<div class="sub">${L("หน่วย: ล้านบาท", "Unit: million baht")}</div></div></section>
     <section class="panel"><header><h2>${L("สิ่งที่ต้องติดตาม", "Needs attention")}</h2><span class="sp"></span><span class="pill p-info">${L("จาก AI Monitoring Agent", "From the AI Monitoring Agent")}</span></header>
       <div class="body">${alerts.map(({ x, s }) => `<div class="alert"><div class="ic" style="background:var(--${s[1] === "p-ok" ? "accent" : s[1] === "p-bad" ? "bad" : "warn"}-soft);color:var(--${s[1] === "p-ok" ? "accent" : s[1] === "p-bad" ? "bad" : "warn"})">${s[1] === "p-ok" ? "✓" : "!"}</div>
@@ -2712,7 +2722,7 @@ function miniCurve(alloc, plan, actual) {
   const ps = PLAN_F.map(f => f * alloc * (plan / (0.6 * alloc))), as = ACT_F.map(f => f / ACT_F[6] * actual);
   const line = a => a.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(Math.min(v, alloc)).toFixed(1)}`).join("");
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${L("แผนและผลสะสม", "Cumulative plan and actual")}"><line x1="${P}" x2="${W - P}" y1="${y(0)}" y2="${y(0)}" stroke="var(--line)"/>
-    <path d="${line(ps)}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="4 4"/><path d="${line(as)}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+    <path d="${line(ps)}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="4 4"/><path d="${line(as)}" fill="none" stroke="var(--ch-1)" stroke-width="2.5"/>
     <text x="${P}" y="${H - 2}">${FY_MONTHS[LANG][0]}</text><text x="${W - P}" y="${H - 2}" text-anchor="end">${FY_MONTHS[LANG][11]}</text></svg>`;
 }
 MON_PANELS.drill = () => {
@@ -2736,7 +2746,7 @@ MON_PANELS.drill = () => {
         <tbody>${sp.map((s, i) => { const a = p.actual * k[i] / ks; return `<tr><td>${tx(s[0])}</td><td class="n">${fmt(p.alloc * s[1], 2)}</td><td class="n">${fmt(p.plan * s[1], 2)}</td><td class="n">${fmt(a, 2)}</td><td class="n">${stateCell(a, p.plan * s[1])}</td></tr>`; }).join("")}</tbody>
         <tfoot><tr><td>${L("รวม", "Total")}</td><td class="n">${fmt(p.alloc, 2)}</td><td class="n">${fmt(p.plan, 2)}</td><td class="n">${fmt(p.actual, 2)}</td><td class="n">${stateCell(p.actual, p.plan)}</td></tr></tfoot></table></div>
         <div style="display:flex;flex-direction:column;gap:10px;min-width:0"><div class="chart">${miniCurve(p.alloc, p.plan, p.actual)}</div>
-          <div class="legend"><span><i style="background:var(--accent)"></i>${L("ผลสะสม", "Actual")}</span><span><i style="background:var(--muted)"></i>${L("แผนสะสม", "Plan")}</span></div>
+          <div class="legend"><span><i style="background:var(--ch-1)"></i>${L("ผลสะสม", "Actual")}</span><span><i style="background:var(--muted)"></i>${L("แผนสะสม", "Plan")}</span></div>
           ${pr ? `<div class="alert"><div class="ic" style="background:var(--${pr.status === "risk" ? "bad" : pr.status === "delay" ? "warn" : "accent"}-soft);color:var(--${pr.status === "risk" ? "bad" : pr.status === "delay" ? "warn" : "accent"})">!</div><div><b>${tx(PSTAT[pr.status][0])} · ${L("ความก้าวหน้า", "progress")} ${pr.pct}%</b><p>${esc(tx(pr.issue))}</p></div></div>` : `<span class="sub">${L("ยังไม่มีรายงานความก้าวหน้า", "No progress report yet")}</span>`}</div></div>`;
     }
   }
@@ -4162,7 +4172,7 @@ function trendChart(rows) {
     g += `<text x="${x(i)}" y="${H - 16}" text-anchor="middle">${r.fy}</text>${r.req ? `<text x="${x(i)}" y="${H - 3}" text-anchor="middle">${L("คำขอ", "request")}</text>` : ""}<text x="${x(i)}" y="${y(r.total) - 6}" text-anchor="middle" style="font-weight:600;fill:var(--ink-2)">${fmt(r.total)}</text>`;
   });
   const pts = rows.map((r, i) => (r.rate == null ? null : [x(i), yr(r.rate)])).filter(Boolean);
-  g += `<path d="${pts.map((p, i) => `${i ? "L" : "M"}${p[0]},${p[1]}`).join("")}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>` + pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>`).join("");
+  g += `<path d="${pts.map((p, i) => `${i ? "L" : "M"}${p[0]},${p[1]}`).join("")}" fill="none" stroke="var(--ch-1)" stroke-width="2.5"/>` + pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="var(--ch-1)" stroke="var(--surface)" stroke-width="2"/>`).join("");
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${L("งบประมาณรายปีตามงบรายจ่ายและอัตราเบิกจ่าย", "Budget by year and type, with disbursement rate")}">${g}</svg>`;
 }
 INTEL.trends = () => {
@@ -4176,7 +4186,7 @@ INTEL.trends = () => {
     <div class="kpi hl"><span class="l">${L("คำขอปี 2571 เทียบปี 2570", "FY2571 request vs FY2570")}</span><span class="v">${fmt((rows[rows.length - 1].total / last.total - 1) * 100, 1)}%</span></div>
   </section>
   <section class="panel chart"><header><h2>${L("งบประมาณรายปีแยกตามงบรายจ่าย", "Budget by year and budget type")}</h2><span class="sp"></span>
-    <div class="legend">${BUDGET_TYPES.map((t, i) => `<span><span class="sw c${i + 1}"></span>${tx(t.name)}</span>`).join("")}<span><i style="background:var(--accent)"></i>${L("อัตราเบิกจ่ายทั้งปี (แกนขวา)", "Full-year disbursement (right axis)")}</span></div></header>
+    <div class="legend">${BUDGET_TYPES.map((t, i) => `<span><span class="sw c${i + 1}"></span>${tx(t.name)}</span>`).join("")}<span><i style="background:var(--ch-1)"></i>${L("อัตราเบิกจ่ายทั้งปี (แกนขวา)", "Full-year disbursement (right axis)")}</span></div></header>
     <div class="body">${trendChart(rows)}<div class="sub">${L("ล้านบาท · ปี 2566–2569 ข้อมูลตัวอย่าง · ปี 2570 ตามพระราชบัญญัติ (M06) · ปี 2571 ตามคำขอ (M03)", "Million baht · 2566–2569 sample data · 2570 appropriation (M06) · 2571 requests (M03)")}</div></div></section>
   <section class="panel"><div class="tbl-wrap"><table><thead><tr><th>${L("ปีงบประมาณ", "Fiscal year")}</th><th class="n">${L("วงเงิน (ลบ.)", "Budget (M)")}</th><th class="n">${L("เปลี่ยนแปลง", "Change")}</th><th class="n">${L("งบลงทุน", "Investment")}</th><th class="n">${L("เบิกจ่ายทั้งปี", "Full-year disbursement")}</th></tr></thead>
     <tbody>${rows.map((r, i) => `<tr><td>${r.fy}${r.req ? ` <span class="sub">(${L("คำขอ", "request")})</span>` : ""}</td><td class="n">${fmt(r.total, 1)}</td><td class="n">${i ? `${r.total >= rows[i - 1].total ? "+" : ""}${fmt((r.total / rows[i - 1].total - 1) * 100, 1)}%` : "—"}</td><td class="n">${fmt(r.sh.inv * 100, 1)}%</td><td class="n">${r.rate == null ? "—" : fmt(r.rate, 1) + "%"}</td></tr>`).join("")}</tbody></table></div></section>`;
@@ -4957,10 +4967,10 @@ function planChart(lines) {
   const x = i => Lp + iw / 12 * (i + 0.5), bw = iw / 12 * 0.6;
   let g = "";
   [0, 50, 100].forEach(v => (g += `<line x1="${Lp}" x2="${W - R}" y1="${T + ih - v / 100 * ih}" y2="${T + ih - v / 100 * ih}" stroke="var(--line)"/><text x="${Lp - 6}" y="${T + ih - v / 100 * ih + 4}" text-anchor="end">${v}%</text>`));
-  m.forEach((v, i) => (g += `<rect x="${x(i) - bw / 2}" y="${T + ih - v / maxM * ih * 0.5}" width="${bw}" height="${v / maxM * ih * 0.5}" fill="var(--info)" fill-opacity=".35" rx="2"/><text x="${x(i)}" y="${H - 6}" text-anchor="middle">${FY_MONTHS[LANG][i]}</text>`));
+  m.forEach((v, i) => (g += `<rect x="${x(i) - bw / 2}" y="${T + ih - v / maxM * ih * 0.5}" width="${bw}" height="${v / maxM * ih * 0.5}" fill="var(--ch-2)" fill-opacity=".35" rx="2"/><text x="${x(i)}" y="${H - 6}" text-anchor="middle">${FY_MONTHS[LANG][i]}</text>`));
   const path = cum.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${(T + ih - v / 100 * ih).toFixed(1)}`).join("");
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${L("แผนการใช้จ่ายรายเดือนและสะสม", "Monthly and cumulative spending plan")}">${g}<path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
-    <circle cx="${x(5)}" cy="${T + ih - cum[5] / 100 * ih}" r="4" fill="var(--accent)"/><text x="${x(5) + 8}" y="${T + ih - cum[5] / 100 * ih + 14}" style="fill:var(--accent);font-weight:600;font-size:12px">${L("ครึ่งปี", "Half year")} ${fmt(cum[5], 0)}%</text></svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${L("แผนการใช้จ่ายรายเดือนและสะสม", "Monthly and cumulative spending plan")}">${g}<path d="${path}" fill="none" stroke="var(--ch-1)" stroke-width="2.5"/>
+    <circle cx="${x(5)}" cy="${T + ih - cum[5] / 100 * ih}" r="4" fill="var(--ch-1)"/><text x="${x(5) + 8}" y="${T + ih - cum[5] / 100 * ih + 14}" style="fill:var(--ch-1);font-weight:600;font-size:12px">${L("ครึ่งปี", "Half year")} ${fmt(cum[5], 0)}%</text></svg>`;
 }
 ALLOC.plan = () => {
   const A = AL(), ed = canAlloc(), lines = A.lines.filter(l => !PLAN_UNIT || l.unit === PLAN_UNIT);
@@ -4968,7 +4978,7 @@ ALLOC.plan = () => {
   return `
   <section class="panel chart"><header><h2>${L("แผนการใช้จ่าย", "Spending plan")}</h2><span class="sp"></span>
     <label class="field-inline" for="pu">${L("หน่วยงาน", "Unit")} <select id="pu"><option value="">${L("ทั้งหมด", "All")}</option>${units.map(u => `<option value="${u}" ${u === PLAN_UNIT ? "selected" : ""}>${esc(unitName(u))}</option>`).join("")}</select></label>
-    <div class="legend"><span><i style="background:var(--info)"></i>${L("รายเดือน", "Monthly")}</span><span><i style="background:var(--accent)"></i>${L("สะสม %", "Cumulative %")}</span></div></header>
+    <div class="legend"><span><i style="background:var(--ch-2)"></i>${L("รายเดือน", "Monthly")}</span><span><i style="background:var(--ch-1)"></i>${L("สะสม %", "Cumulative %")}</span></div></header>
     <div class="body">${planChart(lines)}</div></section>
   <section class="panel"><header><h2>${L("แผนรายเดือนรายรายการ (ล้านบาท)", "Monthly plan by line (million baht)")}</h2><span class="sp"></span>
     ${ed ? `<button class="btn" type="button" id="plan-auto">${L("กระจายอัตโนมัติตามประเภทงบ", "Spread automatically by budget type")}</button>` : ""}</header>
@@ -5310,7 +5320,7 @@ function scatter(rows) {
     g += `<line x1="${x(0)}" x2="${x(max)}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" ${v === 100 ? 'stroke-dasharray="4 4"' : ""}/><text x="${P - 6}" y="${y(v) + 4}" text-anchor="end">${v}%</text>`; });
   g += `<text x="${P + iw / 2}" y="${H - 4}" text-anchor="middle" style="font-weight:600">${L("ผลเบิกจ่ายเทียบแผน", "Disbursed vs plan")}</text>`;
   g += `<text x="12" y="${16 + ih / 2}" text-anchor="middle" transform="rotate(-90 12 ${16 + ih / 2})" style="font-weight:600">${L("ผลผลิตเทียบเป้า", "Output vs target")}</text>`;
-  const col = { A: "var(--accent)", B: "var(--info)", C: "var(--warn)", D: "var(--bad)" };
+  const col = { A: "var(--ch-1)", B: "var(--ch-2)", C: "var(--warn)", D: "var(--bad)" };
   rows.forEach(r => { g += `<circle cx="${x(r.s.spend)}" cy="${y(r.s.out || 0)}" r="7" fill="${col[r.s.grade]}" stroke="var(--surface)" stroke-width="2"><title>${esc(tx(r.p.name))} · ${r.s.grade}</title></circle>`; });
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${L("เทียบผลเบิกจ่ายกับผลผลิตรายโครงการ", "Disbursement versus output by project")}">${g}</svg>`;
 }
@@ -5560,7 +5570,7 @@ function reqCard(r) {
     const col = (lbl, v, prev, color, hl) => `<div class="rcol ${hl ? "hl" : ""}"><div class="rv">${fmt(v, 1)}<small>${L("ลบ.", "M")}</small></div>${prev != null ? `<span class="trend ${v < prev ? "down" : v > prev ? "up" : "flat"}">${v < prev ? "▼" : v > prev ? "▲" : "●"} ${fmt(Math.abs(v - prev), 1)} (${fmt(prev ? Math.abs(v / prev - 1) * 100 : 0, 1)}%)</span>` : `<span class="trend flat">${L("ตั้งต้น", "baseline")}</span>`}
       <div class="rbar"><i style="height:${(v / mx) * 100}%;background:${color}"></i></div><div class="rl">${lbl}</div></div>`;
     const vis = `<section class="panel"><header>${chipIco("layers", "info")}<h2>${L("วงเงินแต่ละรอบ", "Amount per round")}</h2><span class="sp"></span><span class="sub">${S.review.length} ${L("โครงการ", "projects")}</span></header>
-      <div class="body rounds3">${col(L("รอบ 1 · คำขอเริ่มต้น", "Round 1 · Requested"), r0, null, "var(--c-1)")}${col(L("รอบ 2 · กองแผนเสนอ", "Round 2 · Planning"), r1, r0, "var(--c-3)")}${col(L("รอบ 3 · ผู้บริหารเห็นชอบ", "Round 3 · Executive"), r2, r1, "var(--accent)", true)}</div></section>`;
+      <div class="body rounds3">${col(L("รอบ 1 · คำขอเริ่มต้น", "Round 1 · Requested"), r0, null, "var(--ch-2)")}${col(L("รอบ 2 · กองแผนเสนอ", "Round 2 · Planning"), r1, r0, "var(--ch-3)")}${col(L("รอบ 3 · ผู้บริหารเห็นชอบ", "Round 3 · Executive"), r2, r1, "var(--ch-1)", true)}</div></section>`;
     return html.replace(/<section class="kpis"[\s\S]*?<\/section>/, vis);
   };
 }
@@ -7418,12 +7428,12 @@ PROC.gantt = () => {
     return `<div style="display:grid;grid-template-columns:200px 1fr;gap:10px;align-items:center;border-top:1px solid var(--line);padding:4px 0">
       <div style="min-width:0"><button class="btn ghost" type="button" data-gopen="${c.id}" style="padding:2px 6px"><span class="mono">${c.id}</span></button><div class="sub" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(tx(p.name))}</div></div>
       <div style="position:relative;height:30px;background:var(--surface-2);border-radius:6px">
-        ${live ? bar(created, prepEnd, "var(--info)", L("เตรียมการ", "Preparation")) + bar(srcStart, awd || TODAY, "var(--warn)", L("ดำเนินการใน e-GP และพิจารณาผล", "Sourcing and evaluation")) + (con ? bar(con.signed, conEnd(con), "var(--accent)", L("ช่วงสัญญา", "Contract period")) : "") : bar(created, TODAY, "var(--muted)", L("ยกเลิก", "Cancelled"))}
+        ${live ? bar(created, prepEnd, "var(--ch-2)", L("เตรียมการ", "Preparation")) + bar(srcStart, awd || TODAY, "var(--warn)", L("ดำเนินการใน e-GP และพิจารณาผล", "Sourcing and evaluation")) + (con ? bar(con.signed, conEnd(con), "var(--accent)", L("ช่วงสัญญา", "Contract period")) : "") : bar(created, TODAY, "var(--muted)", L("ยกเลิก", "Cancelled"))}
         ${live ? fcMarker(c, x) : ""}
         <span title="${L("เดือนที่กำหนดในแผน", "Planned month")}" style="position:absolute;top:2px;bottom:2px;left:${x(p.month)}%;width:2px;background:var(--ink)"></span></div></div>`;
   }).join("");
   return `<section class="panel"><header><h2>${L("ไทม์ไลน์แฟ้มทั้งหมด", "All cases on a timeline")}</h2><span class="sp"></span><span class="sub">FR-PR-55</span></header>
-    <div class="body row" style="gap:14px"><span class="row" style="gap:6px"><span style="width:14px;height:10px;background:var(--info);border-radius:3px;display:inline-block"></span>${L("เตรียมการ", "Preparation")}</span><span class="row" style="gap:6px"><span style="width:14px;height:10px;background:var(--warn);border-radius:3px;display:inline-block"></span>${L("e-GP และพิจารณาผล", "Sourcing and evaluation")}</span><span class="row" style="gap:6px"><span style="width:14px;height:10px;background:var(--accent);border-radius:3px;display:inline-block"></span>${L("ช่วงสัญญา", "Contract period")}</span><span class="row" style="gap:6px"><span style="width:2px;height:12px;background:var(--ink);display:inline-block"></span>${L("เดือนในแผน", "Planned month")}</span><span class="row" style="gap:6px"><span style="width:2px;height:12px;background:var(--bad);display:inline-block"></span>${L("วันนี้", "Today")}</span></div>
+    <div class="body row" style="gap:14px"><span class="row" style="gap:6px"><span style="width:14px;height:10px;background:var(--ch-2);border-radius:3px;display:inline-block"></span>${L("เตรียมการ", "Preparation")}</span><span class="row" style="gap:6px"><span style="width:14px;height:10px;background:var(--warn);border-radius:3px;display:inline-block"></span>${L("e-GP และพิจารณาผล", "Sourcing and evaluation")}</span><span class="row" style="gap:6px"><span style="width:14px;height:10px;background:var(--accent);border-radius:3px;display:inline-block"></span>${L("ช่วงสัญญา", "Contract period")}</span><span class="row" style="gap:6px"><span style="width:2px;height:12px;background:var(--ink);display:inline-block"></span>${L("เดือนในแผน", "Planned month")}</span><span class="row" style="gap:6px"><span style="width:2px;height:12px;background:var(--bad);display:inline-block"></span>${L("วันนี้", "Today")}</span></div>
     <div class="tbl-wrap"><div style="min-width:760px;padding:0 16px 12px">
       <div style="display:grid;grid-template-columns:200px 1fr;gap:10px"><div></div><div style="position:relative;height:22px">${months.map(m => `<span class="sub" style="position:absolute;left:${x(m)}%;font-size:11px">${monthLabel(m.slice(0, 7)).split(" ")[0].slice(0, LANG === "en" ? 3 : 4)}</span>`).join("")}</div></div>
       <div style="position:relative">${rows}
@@ -8606,7 +8616,7 @@ PROC.analytics = () => {
   return `
   <div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("ตัวชี้วัดนิยามไว้ที่เดียว", "Each KPI is defined once")}</b><p>${L("ทุกแดชบอร์ดและผู้ช่วย AI ใช้ตัวเลขชุดเดียวกัน ไม่คำนวณใหม่เอง แสดงขนาดตัวอย่าง (n) เสมอ ข้อมูลตัวอย่างนี้เล็ก จึงอ่านเป็นตัวอย่างวิธีคิด ไม่ใช่ข้อสรุป เป้าหมายตัวเลขหน่วยงานกำหนดเอง", "Every dashboard and the AI assistant use these same numbers and don't recompute them. The sample size (n) is always shown. This sample is small, so read it as an illustration of the method, not as a finding. Targets are set by the agency.")}</p></div></div>
   <section class="panel"><header><h2>${L("กรวยสถานะของแฟ้ม", "Case funnel by step")}</h2><span class="sp"></span><span class="sub">${S.cases.length} ${L("แฟ้ม", "cases")} · ${S.cases.filter(c => c.cancelled).length} ${L("ยกเลิก", "cancelled")}</span></header>
-    <div class="body" style="display:flex;flex-direction:column;gap:6px">${funnel.map(f => `<div style="display:grid;grid-template-columns:150px 1fr 28px;gap:8px;align-items:center;font-size:13px"><span>${f.n}. ${tx([CASE_STATES[f.n].th, CASE_STATES[f.n].en])}</span><span style="background:var(--surface-2);border-radius:6px;height:14px;display:block"><span style="display:block;height:100%;width:${f.k / mx * 100}%;background:var(--accent);border-radius:6px"></span></span><b>${f.k}</b></div>`).join("")}</div></section>
+    <div class="body" style="display:flex;flex-direction:column;gap:6px">${funnel.map(f => `<div style="display:grid;grid-template-columns:150px 1fr 28px;gap:8px;align-items:center;font-size:13px"><span>${f.n}. ${tx([CASE_STATES[f.n].th, CASE_STATES[f.n].en])}</span><span style="background:var(--surface-2);border-radius:6px;height:14px;display:block"><span style="display:block;height:100%;width:${f.k / mx * 100}%;background:var(--ch-1);border-radius:6px"></span></span><b>${f.k}</b></div>`).join("")}</div></section>
   <section class="panel"><header><h2>${L("ตัวชี้วัด KPI-01 ถึง KPI-14", "KPI-01 to KPI-14")}</h2></header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("รหัส", "ID")}</th><th>${L("ตัวชี้วัด", "KPI")}</th><th>${L("ค่า", "Value")}</th><th class="n">n</th><th>${L("หมายเหตุ", "Note")}</th></tr></thead>
       <tbody>${KPIS.map(([id, name, f]) => { const r = f(); return `<tr><td class="mono">${id}</td><td>${tx(name)}</td><td><b style="font-weight:600">${esc(r.v)}</b></td><td class="n">${r.n}</td><td class="sub">${esc(tx(r.note))}</td></tr>`; }).join("")}</tbody></table></div></section>
@@ -8809,23 +8819,23 @@ function fcChart(mon) {
   const W = 720, H = 220, pad = 34, rows = mon.rows, mx = Math.max(1, ...rows.map(r => Math.max(r.comAct + r.hi, r.payAct + r.payFc))), bw = (W - pad * 2) / 12, y = v => H - 24 - (v / mx) * (H - 44);
   return `<div class="tbl-wrap"><svg viewBox="0 0 ${W} ${H}" style="width:100%;min-width:560px;height:auto" role="img" aria-label="${L("กราฟภาระผูกพันและการเบิกจ่ายรายเดือน", "Monthly commitments and payments chart")}">
     ${rows.map((r, i) => { const x = pad + i * bw, ca = r.comAct, cf = r.comFc;
-      return `<rect rx="3" x="${x + 4}" y="${y(ca)}" width="${bw / 2 - 6}" height="${H - 24 - y(ca)}" fill="var(--accent)"><title>${monthLabel(r.m)} · ${L("ผูกพันแล้ว", "committed")} ${mb(ca)}</title></rect>
-        <rect rx="3" x="${x + 4}" y="${y(ca + cf)}" width="${bw / 2 - 6}" height="${Math.max(0, y(ca) - y(ca + cf))}" fill="var(--accent)" opacity=".35"><title>${L("คาดว่าจะผูกพัน", "expected")} ${mb(cf)} (P10 ${mb(r.lo)} – P90 ${mb(r.hi)})</title></rect>
+      return `<rect rx="3" x="${x + 4}" y="${y(ca)}" width="${bw / 2 - 6}" height="${H - 24 - y(ca)}" fill="var(--ch-1)"><title>${monthLabel(r.m)} · ${L("ผูกพันแล้ว", "committed")} ${mb(ca)}</title></rect>
+        <rect rx="3" x="${x + 4}" y="${y(ca + cf)}" width="${bw / 2 - 6}" height="${Math.max(0, y(ca) - y(ca + cf))}" fill="var(--ch-1)" opacity=".35"><title>${L("คาดว่าจะผูกพัน", "expected")} ${mb(cf)} (P10 ${mb(r.lo)} – P90 ${mb(r.hi)})</title></rect>
         ${r.hi > 0 ? `<line x1="${x + bw / 4}" x2="${x + bw / 4}" y1="${y(ca + r.lo)}" y2="${y(ca + r.hi)}" stroke="var(--ink-2)" stroke-width="1.5"/>` : ""}
-        <rect rx="3" x="${x + bw / 2}" y="${y(r.payAct + r.payFc)}" width="${bw / 2 - 6}" height="${H - 24 - y(r.payAct + r.payFc)}" fill="var(--info)" opacity=".75"><title>${L("เบิกจ่าย", "payments")} ${mb(r.payAct)} + ${L("คาด", "expected")} ${mb(r.payFc)}</title></rect>
+        <rect rx="3" x="${x + bw / 2}" y="${y(r.payAct + r.payFc)}" width="${bw / 2 - 6}" height="${H - 24 - y(r.payAct + r.payFc)}" fill="var(--ch-2)" opacity=".75"><title>${L("เบิกจ่าย", "payments")} ${mb(r.payAct)} + ${L("คาด", "expected")} ${mb(r.payFc)}</title></rect>
         <text x="${x + bw / 2}" y="${H - 8}" font-size="10" text-anchor="middle" fill="var(--muted)">${monthLabel(r.m).split(" ")[0].slice(0, LANG === "en" ? 3 : 4)}</text>`; }).join("")}
     ${[0.25, 0.5, 0.75, 1].map(f => `<line x1="${pad}" x2="${W - pad}" y1="${y(mx * f)}" y2="${y(mx * f)}" stroke="var(--line)" stroke-dasharray="3 4"/><text x="${pad - 6}" y="${y(mx * f) + 3}" font-size="9.5" text-anchor="end" fill="var(--faint)">${mb(mx * f).replace(/\.\d+$/, "")}</text>`).join("")}
     <line x1="${pad}" x2="${W - pad}" y1="${H - 24}" y2="${H - 24}" stroke="var(--line)"/></svg></div>
-  <div class="row sub" style="gap:14px"><span><span style="display:inline-block;width:12px;height:10px;background:var(--accent)"></span> ${L("ผูกพันแล้ว", "Committed")}</span><span><span style="display:inline-block;width:12px;height:10px;background:var(--accent);opacity:.35"></span> ${L("คาดว่าจะผูกพัน (เส้น = P10 ถึง P90)", "Expected commitment (line = P10 to P90)")}</span><span><span style="display:inline-block;width:12px;height:10px;background:var(--info);opacity:.75"></span> ${L("เบิกจ่ายและคาดการณ์", "Payments and expected")}</span></div>`;
+  <div class="row sub" style="gap:14px"><span><span style="display:inline-block;width:12px;height:10px;background:var(--ch-1)"></span> ${L("ผูกพันแล้ว", "Committed")}</span><span><span style="display:inline-block;width:12px;height:10px;background:var(--ch-1);opacity:.35"></span> ${L("คาดว่าจะผูกพัน (เส้น = P10 ถึง P90)", "Expected commitment (line = P10 to P90)")}</span><span><span style="display:inline-block;width:12px;height:10px;background:var(--ch-2);opacity:.75"></span> ${L("เบิกจ่ายและคาดการณ์", "Payments and expected")}</span></div>`;
 }
 PROC.forecast = () => {
   const sims = simAll(), mon = monthly({}, sims), risk = carryRisk(sims), pt = priceTrend(), wl = workload(), def = usesDefaults();
   return `
   <section class="stats">
     ${statCard({ label: L("ผูกพันทั้งปี (คาด)", "Full-year commitment (expected)"), value: mb(sumv(mon.rows.map(r => r.comAct + r.comFc))), unit: L("ลบ.", "M"), spark: mon.rows.map(r => r.comAct + r.comFc), sub: "" })}
-    ${statCard({ label: L("เบิกจ่ายทั้งปี (คาด)", "Full-year payments (expected)"), value: mb(sumv(mon.rows.map(r => r.payAct + r.payFc))), unit: L("ลบ.", "M"), color: "var(--info)", spark: mon.rows.map(r => r.payAct + r.payFc), sub: "" })}
+    ${statCard({ label: L("เบิกจ่ายทั้งปี (คาด)", "Full-year payments (expected)"), value: mb(sumv(mon.rows.map(r => r.payAct + r.payFc))), unit: L("ลบ.", "M"), color: "var(--ch-2)", spark: mon.rows.map(r => r.payAct + r.payFc), sub: "" })}
     ${statCard({ label: L("แฟ้มเสี่ยงไม่ทันวันตัด", "Cases at risk by the cut-off"), value: risk.length, icon: "alert", tone: risk.length ? "bad" : "ok", sub: `${mb(sumv(risk.map(s => s.amount)))} ${L("ลบ.", "M")}` })}
-    ${statCard({ label: L("ภาระงานสูงสุดต่อกำลัง", "Peak workload vs capacity"), value: pc(wl.load), ring: Math.min(1, wl.load), color: wl.load > 1 ? "var(--bad)" : "var(--accent)", sub: `${fmt(wl.peak, 1)} / ${wl.cap} ${L("ชม.", "h")}` })}
+    ${statCard({ label: L("ภาระงานสูงสุดต่อกำลัง", "Peak workload vs capacity"), value: pc(wl.load), ring: Math.min(1, wl.load), color: wl.load > 1 ? "var(--bad)" : "var(--ch-1)", sub: `${fmt(wl.peak, 1)} / ${wl.cap} ${L("ชม.", "h")}` })}
   </section>
   <div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("พยากรณ์จากข้อมูลน้อย อ่านเป็นช่วง ไม่ใช่ตัวเลขแน่นอน", "Forecasts from little data: read the range, not a single number")}</b><p>${L("จำลอง", "Simulated")} ${S.pcfg.fcRuns} ${L("รอบต่อแฟ้ม จากเวลาจริงของแฟ้มที่ผ่านมา", "runs per case from past case durations")}${def.length ? ` · ${L("ขั้นที่ข้อมูลไม่ถึง", "stages with fewer than")} ${S.pcfg.fcMinN} ${L("แฟ้มใช้ค่าตั้งต้น SLA ใน M10", "cases use the SLA defaults in M10")}: ${def.map(k => tx(STAGE_NM[k])).join(", ")}` : ""} </p><div class="row" style="margin-top:6px"><span class="sub">${L("วันตัดลงนาม", "Signing cut-off")}</span>${cutSel("fc-cut", cutNow())}<span class="sub">${L("เป้าลงนามตามมาตรการเร่งรัดเบิกจ่ายเปลี่ยนทุกปี ระดับ C ต้องยืนยัน", "Signing targets under spending measures change each year; level C, to confirm")}</span></div></div></div>
   <section class="panel"><header><h2>F-01 ${L("ภาระผูกพันและการเบิกจ่ายรายเดือน", "Monthly commitments and payments")} · ${fyLabel(FAM_FY)}</h2><span class="sp"></span><span class="sub">${L("เวลาตรวจรับถึงจ่าย", "Acceptance to payment")} ${mon.lag} ${L("วัน", "days")} (${mon.lagN >= S.pcfg.fcMinN ? `n=${mon.lagN}` : L("ค่าตั้งต้น", "default")})</span></header>
@@ -8841,7 +8851,7 @@ PROC.forecast = () => {
       <tbody>${pt.map(x => `<tr><td>${tx(x.cat.name)}</td><td class="n">${x.n}</td><td class="n">${x.n ? pc(x.med, 1) : "—"}</td><td class="sub">${S.pplan.filter(p => p.cat === x.cat.id && caseByPlan(p.id) && caseState(caseByPlan(p.id)) <= 4).map(p => `${p.id}: ${x.n ? `${fmt(p.est * x.lo * (1 + x.idx))} – ${fmt(p.est * x.hi * (1 + x.idx))}` : L("ไม่มีสัญญาเดิม ใช้ราคามาตรฐาน", "no past contract; use the standard price list")}`).join("<br>") || "—"}</td></tr>`).join("")}</tbody></table></div>
     <div class="body sub">${L("เป็นหลักฐานประกอบ ไม่ใช่ราคากลาง (R-04)", "Supporting evidence, not the reference price (R-04)")}</div></section>
   <section class="panel"><header><h2>F-05 ${L("ภาระงานเจ้าหน้าที่พัสดุ 12 สัปดาห์", "Procurement officer workload, 12 weeks")}</h2><span class="sp"></span><span class="sub">${wl.officers} ${L("คน ×", "officers ×")} ${S.pcfg.weekHours} ${L("ชม./สัปดาห์", "h/week")}</span></header>
-    <div class="body" style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:4px;align-items:end;height:120px">${wl.weeks.map(w => `<div title="${fdate(w.w)} · ${fmt(w.h, 1)} ${L("ชม.", "h")}" style="height:${Math.min(100, w.h / Math.max(wl.cap, wl.peak) * 100)}%;background:${w.h > wl.cap ? "var(--bad)" : "var(--info)"};border-radius:4px 4px 0 0;min-height:2px"></div>`).join("")}</div>
+    <div class="body" style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:4px;align-items:end;height:120px">${wl.weeks.map(w => `<div title="${fdate(w.w)} · ${fmt(w.h, 1)} ${L("ชม.", "h")}" style="height:${Math.min(100, w.h / Math.max(wl.cap, wl.peak) * 100)}%;background:${w.h > wl.cap ? "var(--bad)" : "var(--ch-2)"};border-radius:4px 4px 0 0;min-height:2px"></div>`).join("")}</div>
     <div class="body sub" style="padding-top:0">${L("สูงสุด", "Peak")} ${fmt(wl.peak, 1)} ${L("ชม. เทียบกำลัง", "h against capacity")} ${wl.cap} ${L("ชม.", "h")} · ${L("ชั่วโมงต่อขั้นเป็นค่าตั้ง ระดับ C", "hours per step are settings, level C")}</div></section>`;
 };
 const SCN_KEYS = [["atRisk", ["แฟ้มเสี่ยงไม่ทันปี", "Cases at risk"], v => v], ["carry", ["วงเงินเสี่ยงกันเงิน (ลบ.)", "Carry-over risk (M)"], v => mb(v)], ["comFY", ["ผูกพันทั้งปี (ลบ.)", "Full-year commitment (M)"], v => mb(v)], ["payFY", ["เบิกจ่ายทั้งปี (ลบ.)", "Full-year payments (M)"], v => mb(v)],

@@ -18,7 +18,7 @@ function homeStats() {
   }
   if (S.payreqs && typeof monthly === "function") {
     const m = monthly().rows, paid = sumv(S.payreqs.filter(p => p.status === "approved").map(p => p.amount));
-    out.push(statCard({ label: L("เบิกจ่ายแล้ว ปีนี้", "Paid this year"), value: mb(paid), unit: L("ลบ.", "M"), color: "var(--info)", spark: m.map(r => r.payAct + r.payFc), link: can("finance") ? "fnc-pay" : null, sub: "" }));
+    out.push(statCard({ label: L("เบิกจ่ายแล้ว ปีนี้", "Paid this year"), value: mb(paid), unit: L("ลบ.", "M"), color: "var(--ch-2)", spark: m.map(r => r.payAct + r.payFc), link: can("finance") ? "fnc-pay" : null, sub: "" }));
   }
   return out.join("");
 }

@@ -71,10 +71,10 @@ function planChart(lines) {
   const x = i => Lp + iw / 12 * (i + 0.5), bw = iw / 12 * 0.6;
   let g = "";
   [0, 50, 100].forEach(v => (g += `<line x1="${Lp}" x2="${W - R}" y1="${T + ih - v / 100 * ih}" y2="${T + ih - v / 100 * ih}" stroke="var(--line)"/><text x="${Lp - 6}" y="${T + ih - v / 100 * ih + 4}" text-anchor="end">${v}%</text>`));
-  m.forEach((v, i) => (g += `<rect x="${x(i) - bw / 2}" y="${T + ih - v / maxM * ih * 0.5}" width="${bw}" height="${v / maxM * ih * 0.5}" fill="var(--info)" fill-opacity=".35" rx="2"/><text x="${x(i)}" y="${H - 6}" text-anchor="middle">${FY_MONTHS[LANG][i]}</text>`));
+  m.forEach((v, i) => (g += `<rect x="${x(i) - bw / 2}" y="${T + ih - v / maxM * ih * 0.5}" width="${bw}" height="${v / maxM * ih * 0.5}" fill="var(--ch-2)" fill-opacity=".35" rx="2"/><text x="${x(i)}" y="${H - 6}" text-anchor="middle">${FY_MONTHS[LANG][i]}</text>`));
   const path = cum.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${(T + ih - v / 100 * ih).toFixed(1)}`).join("");
-  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${L("แผนการใช้จ่ายรายเดือนและสะสม", "Monthly and cumulative spending plan")}">${g}<path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
-    <circle cx="${x(5)}" cy="${T + ih - cum[5] / 100 * ih}" r="4" fill="var(--accent)"/><text x="${x(5) + 8}" y="${T + ih - cum[5] / 100 * ih + 14}" style="fill:var(--accent);font-weight:600;font-size:12px">${L("ครึ่งปี", "Half year")} ${fmt(cum[5], 0)}%</text></svg>`;
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${L("แผนการใช้จ่ายรายเดือนและสะสม", "Monthly and cumulative spending plan")}">${g}<path d="${path}" fill="none" stroke="var(--ch-1)" stroke-width="2.5"/>
+    <circle cx="${x(5)}" cy="${T + ih - cum[5] / 100 * ih}" r="4" fill="var(--ch-1)"/><text x="${x(5) + 8}" y="${T + ih - cum[5] / 100 * ih + 14}" style="fill:var(--ch-1);font-weight:600;font-size:12px">${L("ครึ่งปี", "Half year")} ${fmt(cum[5], 0)}%</text></svg>`;
 }
 ALLOC.plan = () => {
   const A = AL(), ed = canAlloc(), lines = A.lines.filter(l => !PLAN_UNIT || l.unit === PLAN_UNIT);
@@ -82,7 +82,7 @@ ALLOC.plan = () => {
   return `
   <section class="panel chart"><header><h2>${L("แผนการใช้จ่าย", "Spending plan")}</h2><span class="sp"></span>
     <label class="field-inline" for="pu">${L("หน่วยงาน", "Unit")} <select id="pu"><option value="">${L("ทั้งหมด", "All")}</option>${units.map(u => `<option value="${u}" ${u === PLAN_UNIT ? "selected" : ""}>${esc(unitName(u))}</option>`).join("")}</select></label>
-    <div class="legend"><span><i style="background:var(--info)"></i>${L("รายเดือน", "Monthly")}</span><span><i style="background:var(--accent)"></i>${L("สะสม %", "Cumulative %")}</span></div></header>
+    <div class="legend"><span><i style="background:var(--ch-2)"></i>${L("รายเดือน", "Monthly")}</span><span><i style="background:var(--ch-1)"></i>${L("สะสม %", "Cumulative %")}</span></div></header>
     <div class="body">${planChart(lines)}</div></section>
   <section class="panel"><header><h2>${L("แผนรายเดือนรายรายการ (ล้านบาท)", "Monthly plan by line (million baht)")}</h2><span class="sp"></span>
     ${ed ? `<button class="btn" type="button" id="plan-auto">${L("กระจายอัตโนมัติตามประเภทงบ", "Spread automatically by budget type")}</button>` : ""}</header>

@@ -74,7 +74,7 @@ function reqCard(r) {
     const col = (lbl, v, prev, color, hl) => `<div class="rcol ${hl ? "hl" : ""}"><div class="rv">${fmt(v, 1)}<small>${L("ลบ.", "M")}</small></div>${prev != null ? `<span class="trend ${v < prev ? "down" : v > prev ? "up" : "flat"}">${v < prev ? "▼" : v > prev ? "▲" : "●"} ${fmt(Math.abs(v - prev), 1)} (${fmt(prev ? Math.abs(v / prev - 1) * 100 : 0, 1)}%)</span>` : `<span class="trend flat">${L("ตั้งต้น", "baseline")}</span>`}
       <div class="rbar"><i style="height:${(v / mx) * 100}%;background:${color}"></i></div><div class="rl">${lbl}</div></div>`;
     const vis = `<section class="panel"><header>${chipIco("layers", "info")}<h2>${L("วงเงินแต่ละรอบ", "Amount per round")}</h2><span class="sp"></span><span class="sub">${S.review.length} ${L("โครงการ", "projects")}</span></header>
-      <div class="body rounds3">${col(L("รอบ 1 · คำขอเริ่มต้น", "Round 1 · Requested"), r0, null, "var(--c-1)")}${col(L("รอบ 2 · กองแผนเสนอ", "Round 2 · Planning"), r1, r0, "var(--c-3)")}${col(L("รอบ 3 · ผู้บริหารเห็นชอบ", "Round 3 · Executive"), r2, r1, "var(--accent)", true)}</div></section>`;
+      <div class="body rounds3">${col(L("รอบ 1 · คำขอเริ่มต้น", "Round 1 · Requested"), r0, null, "var(--ch-2)")}${col(L("รอบ 2 · กองแผนเสนอ", "Round 2 · Planning"), r1, r0, "var(--ch-3)")}${col(L("รอบ 3 · ผู้บริหารเห็นชอบ", "Round 3 · Executive"), r2, r1, "var(--ch-1)", true)}</div></section>`;
     return html.replace(/<section class="kpis"[\s\S]*?<\/section>/, vis);
   };
 }

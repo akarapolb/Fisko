@@ -31,7 +31,7 @@ function trendChart(rows) {
     g += `<text x="${x(i)}" y="${H - 16}" text-anchor="middle">${r.fy}</text>${r.req ? `<text x="${x(i)}" y="${H - 3}" text-anchor="middle">${L("คำขอ", "request")}</text>` : ""}<text x="${x(i)}" y="${y(r.total) - 6}" text-anchor="middle" style="font-weight:600;fill:var(--ink-2)">${fmt(r.total)}</text>`;
   });
   const pts = rows.map((r, i) => (r.rate == null ? null : [x(i), yr(r.rate)])).filter(Boolean);
-  g += `<path d="${pts.map((p, i) => `${i ? "L" : "M"}${p[0]},${p[1]}`).join("")}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>` + pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>`).join("");
+  g += `<path d="${pts.map((p, i) => `${i ? "L" : "M"}${p[0]},${p[1]}`).join("")}" fill="none" stroke="var(--ch-1)" stroke-width="2.5"/>` + pts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="var(--ch-1)" stroke="var(--surface)" stroke-width="2"/>`).join("");
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${L("งบประมาณรายปีตามงบรายจ่ายและอัตราเบิกจ่าย", "Budget by year and type, with disbursement rate")}">${g}</svg>`;
 }
 INTEL.trends = () => {
@@ -45,7 +45,7 @@ INTEL.trends = () => {
     <div class="kpi hl"><span class="l">${L("คำขอปี 2571 เทียบปี 2570", "FY2571 request vs FY2570")}</span><span class="v">${fmt((rows[rows.length - 1].total / last.total - 1) * 100, 1)}%</span></div>
   </section>
   <section class="panel chart"><header><h2>${L("งบประมาณรายปีแยกตามงบรายจ่าย", "Budget by year and budget type")}</h2><span class="sp"></span>
-    <div class="legend">${BUDGET_TYPES.map((t, i) => `<span><span class="sw c${i + 1}"></span>${tx(t.name)}</span>`).join("")}<span><i style="background:var(--accent)"></i>${L("อัตราเบิกจ่ายทั้งปี (แกนขวา)", "Full-year disbursement (right axis)")}</span></div></header>
+    <div class="legend">${BUDGET_TYPES.map((t, i) => `<span><span class="sw c${i + 1}"></span>${tx(t.name)}</span>`).join("")}<span><i style="background:var(--ch-1)"></i>${L("อัตราเบิกจ่ายทั้งปี (แกนขวา)", "Full-year disbursement (right axis)")}</span></div></header>
     <div class="body">${trendChart(rows)}<div class="sub">${L("ล้านบาท · ปี 2566–2569 ข้อมูลตัวอย่าง · ปี 2570 ตามพระราชบัญญัติ (M06) · ปี 2571 ตามคำขอ (M03)", "Million baht · 2566–2569 sample data · 2570 appropriation (M06) · 2571 requests (M03)")}</div></div></section>
   <section class="panel"><div class="tbl-wrap"><table><thead><tr><th>${L("ปีงบประมาณ", "Fiscal year")}</th><th class="n">${L("วงเงิน (ลบ.)", "Budget (M)")}</th><th class="n">${L("เปลี่ยนแปลง", "Change")}</th><th class="n">${L("งบลงทุน", "Investment")}</th><th class="n">${L("เบิกจ่ายทั้งปี", "Full-year disbursement")}</th></tr></thead>
     <tbody>${rows.map((r, i) => `<tr><td>${r.fy}${r.req ? ` <span class="sub">(${L("คำขอ", "request")})</span>` : ""}</td><td class="n">${fmt(r.total, 1)}</td><td class="n">${i ? `${r.total >= rows[i - 1].total ? "+" : ""}${fmt((r.total / rows[i - 1].total - 1) * 100, 1)}%` : "—"}</td><td class="n">${fmt(r.sh.inv * 100, 1)}%</td><td class="n">${r.rate == null ? "—" : fmt(r.rate, 1) + "%"}</td></tr>`).join("")}</tbody></table></div></section>`;

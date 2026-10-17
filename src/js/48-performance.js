@@ -72,7 +72,7 @@ function scatter(rows) {
     g += `<line x1="${x(0)}" x2="${x(max)}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" ${v === 100 ? 'stroke-dasharray="4 4"' : ""}/><text x="${P - 6}" y="${y(v) + 4}" text-anchor="end">${v}%</text>`; });
   g += `<text x="${P + iw / 2}" y="${H - 4}" text-anchor="middle" style="font-weight:600">${L("ผลเบิกจ่ายเทียบแผน", "Disbursed vs plan")}</text>`;
   g += `<text x="12" y="${16 + ih / 2}" text-anchor="middle" transform="rotate(-90 12 ${16 + ih / 2})" style="font-weight:600">${L("ผลผลิตเทียบเป้า", "Output vs target")}</text>`;
-  const col = { A: "var(--accent)", B: "var(--info)", C: "var(--warn)", D: "var(--bad)" };
+  const col = { A: "var(--ch-1)", B: "var(--ch-2)", C: "var(--warn)", D: "var(--bad)" };
   rows.forEach(r => { g += `<circle cx="${x(r.s.spend)}" cy="${y(r.s.out || 0)}" r="7" fill="${col[r.s.grade]}" stroke="var(--surface)" stroke-width="2"><title>${esc(tx(r.p.name))} · ${r.s.grade}</title></circle>`; });
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${L("เทียบผลเบิกจ่ายกับผลผลิตรายโครงการ", "Disbursement versus output by project")}">${g}</svg>`;
 }

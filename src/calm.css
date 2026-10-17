@@ -10,7 +10,8 @@
   --accent: #2B3A67; --accent-2: #3B4C80; --accent-soft: #EEF1F7; --accent-ink: #2B3A67;
   --info: #3B4C80; --info-soft: #EEF1F7; --violet: #5B6380; --sky: #4B6A88; --amber: #B7791F;
   --ok: #15803D; --ok-dot: #16A34A; --warn: #A16207; --warn-soft: #FBF6EA; --bad: #B91C1C; --bad-soft: #FBEFEF;
-  --c-1: #2B3A67; --c-2: #6B7A99; --c-3: #9AA6BF; --c-4: #B7791F; --c-5: #5B6380; --c-6: #C5CBD8;
+  --ch-1: #16A34A; --ch-2: #2B3A67; --ch-3: #86CFA0; --ch-4: #D99A2B; --ch-5: #0F766E; --ch-6: #A3AAB8;
+  --c-1: var(--ch-1); --c-2: var(--ch-2); --c-3: var(--ch-3); --c-4: var(--ch-4); --c-5: var(--ch-5); --c-6: var(--ch-6);
   --app-b: #2B3A67; --app-p: #4A5D8A; --app-f: #5C6B7D;
   --side: #FFFFFF; --side-ink: #374151; --side-muted: #9CA3AF; --side-hover: #F3F4F6; --side-on: #EEF1F7; --side-on-ink: #1F2A50; --side-line: #E5E7EB;
   --r: 10px; --r-sm: 8px; --r-xs: 7px;
@@ -22,7 +23,7 @@
   --ink: #E8EAEE; --ink-2: #C3C8D2; --muted: #8F96A3; --faint: #6B7280;
   --accent: #9DB0E3; --accent-2: #B5C4EC; --accent-soft: #1E2534; --accent-ink: #B5C4EC; --info: #9DB0E3; --info-soft: #1E2534;
   --ok: #4ADE80; --ok-dot: #22C55E; --warn: #E0B65C; --warn-soft: #2A2416; --bad: #F08A8A; --bad-soft: #2E1B1B;
-  --c-1: #9DB0E3; --c-2: #6F7FA3; --c-3: #4E5A75; --c-4: #E0B65C; --c-5: #8C93AC; --c-6: #3A4256;
+  --ch-1: #34D36B; --ch-2: #9DB0E3; --ch-3: #1F7A45; --ch-4: #E0B65C; --ch-5: #2DD4BF; --ch-6: #6B7280;
   --app-b: #6F84C2; --app-p: #7E8FB8; --app-f: #8592A6;
   --side: #12151B; --side-ink: #C3C8D2; --side-muted: #6B7280; --side-hover: #1B1F27; --side-on: #1E2534; --side-on-ink: #DCE3F5; --side-line: #222630;
   --sh-2: none; --sh-3: 0 10px 30px rgba(0, 0, 0, .5); color-scheme: dark; } }
@@ -31,7 +32,7 @@
   --ink: #E8EAEE; --ink-2: #C3C8D2; --muted: #8F96A3; --faint: #6B7280;
   --accent: #9DB0E3; --accent-2: #B5C4EC; --accent-soft: #1E2534; --accent-ink: #B5C4EC; --info: #9DB0E3; --info-soft: #1E2534;
   --ok: #4ADE80; --ok-dot: #22C55E; --warn: #E0B65C; --warn-soft: #2A2416; --bad: #F08A8A; --bad-soft: #2E1B1B;
-  --c-1: #9DB0E3; --c-2: #6F7FA3; --c-3: #4E5A75; --c-4: #E0B65C; --c-5: #8C93AC; --c-6: #3A4256;
+  --ch-1: #34D36B; --ch-2: #9DB0E3; --ch-3: #1F7A45; --ch-4: #E0B65C; --ch-5: #2DD4BF; --ch-6: #6B7280;
   --app-b: #6F84C2; --app-p: #7E8FB8; --app-f: #8592A6;
   --side: #12151B; --side-ink: #C3C8D2; --side-muted: #6B7280; --side-hover: #1B1F27; --side-on: #1E2534; --side-on-ink: #DCE3F5; --side-line: #222630;
   --sh-2: none; --sh-3: 0 10px 30px rgba(0, 0, 0, .5); color-scheme: dark; }
@@ -140,3 +141,12 @@ th { color: var(--muted); font-weight: 600; }
 :root[data-theme="dark"] .msg.u { color: #0E1015; }
 .toast { background: #1F2937; }
 .c1 { background: var(--c-1); } .c2 { background: var(--c-2); } .c3 { background: var(--c-3); } .c4 { background: var(--c-4); } .c5 { background: var(--c-6); }
+
+/* ---------- charts: the one place with brand colour (round 26b) ----------
+   Series 1 is the Fisko green, series 2 the navy, then light green, amber,
+   teal and grey. Status colours still mean status only. */
+.bar i, .prog > i, .rbar i { background: var(--ch-1); }
+.funnel > div { background: var(--ch-1); } .funnel > div:hover { background: color-mix(in srgb, var(--ch-1) 80%, #000); }
+.c1, .sw.c1 { background: var(--ch-1); } .c2, .sw.c2 { background: var(--ch-2); } .c3, .sw.c3 { background: var(--ch-3); } .c4, .sw.c4 { background: var(--ch-4); } .c5, .sw.c5 { background: var(--ch-5); }
+:root[data-theme="dark"] .c1 { background: var(--ch-1); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .c1 { background: var(--ch-1); } }

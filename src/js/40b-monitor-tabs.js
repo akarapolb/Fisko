@@ -21,7 +21,7 @@ function miniCurve(alloc, plan, actual) {
   const ps = PLAN_F.map(f => f * alloc * (plan / (0.6 * alloc))), as = ACT_F.map(f => f / ACT_F[6] * actual);
   const line = a => a.map((v, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(Math.min(v, alloc)).toFixed(1)}`).join("");
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${L("แผนและผลสะสม", "Cumulative plan and actual")}"><line x1="${P}" x2="${W - P}" y1="${y(0)}" y2="${y(0)}" stroke="var(--line)"/>
-    <path d="${line(ps)}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="4 4"/><path d="${line(as)}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>
+    <path d="${line(ps)}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="4 4"/><path d="${line(as)}" fill="none" stroke="var(--ch-1)" stroke-width="2.5"/>
     <text x="${P}" y="${H - 2}">${FY_MONTHS[LANG][0]}</text><text x="${W - P}" y="${H - 2}" text-anchor="end">${FY_MONTHS[LANG][11]}</text></svg>`;
 }
 MON_PANELS.drill = () => {
@@ -45,7 +45,7 @@ MON_PANELS.drill = () => {
         <tbody>${sp.map((s, i) => { const a = p.actual * k[i] / ks; return `<tr><td>${tx(s[0])}</td><td class="n">${fmt(p.alloc * s[1], 2)}</td><td class="n">${fmt(p.plan * s[1], 2)}</td><td class="n">${fmt(a, 2)}</td><td class="n">${stateCell(a, p.plan * s[1])}</td></tr>`; }).join("")}</tbody>
         <tfoot><tr><td>${L("รวม", "Total")}</td><td class="n">${fmt(p.alloc, 2)}</td><td class="n">${fmt(p.plan, 2)}</td><td class="n">${fmt(p.actual, 2)}</td><td class="n">${stateCell(p.actual, p.plan)}</td></tr></tfoot></table></div>
         <div style="display:flex;flex-direction:column;gap:10px;min-width:0"><div class="chart">${miniCurve(p.alloc, p.plan, p.actual)}</div>
-          <div class="legend"><span><i style="background:var(--accent)"></i>${L("ผลสะสม", "Actual")}</span><span><i style="background:var(--muted)"></i>${L("แผนสะสม", "Plan")}</span></div>
+          <div class="legend"><span><i style="background:var(--ch-1)"></i>${L("ผลสะสม", "Actual")}</span><span><i style="background:var(--muted)"></i>${L("แผนสะสม", "Plan")}</span></div>
           ${pr ? `<div class="alert"><div class="ic" style="background:var(--${pr.status === "risk" ? "bad" : pr.status === "delay" ? "warn" : "accent"}-soft);color:var(--${pr.status === "risk" ? "bad" : pr.status === "delay" ? "warn" : "accent"})">!</div><div><b>${tx(PSTAT[pr.status][0])} · ${L("ความก้าวหน้า", "progress")} ${pr.pct}%</b><p>${esc(tx(pr.issue))}</p></div></div>` : `<span class="sub">${L("ยังไม่มีรายงานความก้าวหน้า", "No progress report yet")}</span>`}</div></div>`;
     }
   }

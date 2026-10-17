@@ -55,7 +55,7 @@ const NAV_ICON = { home: "home", strategy: "target", requests: "inbox", consolid
   chain: "link", pay: "card", recon: "scale" };
 // sparkline: values → a smooth line with a soft area under it
 function spark(vals, o = {}) {
-  const w = o.w || 120, h = o.h || 34, c = o.color || "var(--accent)", v = vals.length > 1 ? vals : [0, ...(vals.length ? vals : [0])], mn = Math.min(...v), mx = Math.max(...v), rg = mx - mn || 1;
+  const w = o.w || 120, h = o.h || 34, c = o.color || "var(--ch-1)", v = vals.length > 1 ? vals : [0, ...(vals.length ? vals : [0])], mn = Math.min(...v), mx = Math.max(...v), rg = mx - mn || 1;
   const pts = v.map((y, i) => [i / (v.length - 1) * (w - 4) + 2, h - 3 - (y - mn) / rg * (h - 8)]), id = "sg" + Math.random().toString(36).slice(2, 8);
   const d = pts.map((p, i) => (i ? `L${p[0].toFixed(1)} ${p[1].toFixed(1)}` : `M${p[0].toFixed(1)} ${p[1].toFixed(1)}`)).join(" ");
   return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c}" stop-opacity=".28"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></linearGradient></defs>
@@ -63,7 +63,7 @@ function spark(vals, o = {}) {
 }
 // progress ring: share 0..1 with the label in the middle
 function ring(share, o = {}) {
-  const s = o.size || 56, sw = o.stroke || 6, r = (s - sw) / 2, cf = 2 * Math.PI * r, p = Math.max(0, Math.min(1, share || 0)), c = o.color || "var(--accent)";
+  const s = o.size || 56, sw = o.stroke || 6, r = (s - sw) / 2, cf = 2 * Math.PI * r, p = Math.max(0, Math.min(1, share || 0)), c = o.color || "var(--ch-1)";
   return `<svg class="ring" width="${s}" height="${s}" viewBox="0 0 ${s} ${s}" role="img" aria-label="${o.aria || Math.round(p * 100) + "%"}"><circle cx="${s / 2}" cy="${s / 2}" r="${r}" fill="none" stroke="var(--surface-3)" stroke-width="${sw}"/>
     <circle cx="${s / 2}" cy="${s / 2}" r="${r}" fill="none" stroke="${c}" stroke-width="${sw}" stroke-linecap="round" stroke-dasharray="${(cf * p).toFixed(1)} ${cf.toFixed(1)}" transform="rotate(-90 ${s / 2} ${s / 2})"/>
     <text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="${o.fs || s * 0.26}" font-weight="700" fill="var(--ink)">${o.label != null ? o.label : Math.round(p * 100) + "%"}</text></svg>`;
