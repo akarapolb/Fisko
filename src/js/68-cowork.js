@@ -20,6 +20,8 @@ const CW_META = {
   "AG-04": ["budget", "sliders", "L1", [["จำลองการลดกรอบวงเงิน", "Model a cut to the ceiling"], ["เสนอทางเลือกจัดสรร", "Propose allocation options"]]],
   "AG-05": ["budget", "activity", "L2", [["หน่วยงานที่เบิกจ่ายช้ากว่าแผน", "Units behind their spending plan"], ["ความผิดปกติในการใช้จ่าย", "Spending anomalies"]]],
   "AG-06": ["budget", "user", "L0", [["ตอบคำถามผู้บริหาร", "Answer executive questions"], ["สรุปภาพรวมงบประมาณ", "Budget overview"]]],
+  "AG-15": ["budget", "scale", "L1", [["หาแหล่งเงินและร่างคำขอโอน", "Find money and draft a transfer"]]],
+  "AG-17": ["budget", "list", "L1", [["ติดตามรายงานรายไตรมาส", "Chase quarterly reports"]]],
   "AG-16": ["budget", "book", "L1", [["เตรียมชุดชี้แจงและคำตอบร่าง", "Prepare the briefing pack and draft answers"]]],
   "AG-07": ["procurement", "file", "L1", [["ร่าง TOR คำสั่ง และหนังสือ", "Draft TORs, orders and letters"]]],
   "AG-08": ["procurement", "clock", "L2", [["สัญญาและงวดงานที่ล่าช้า", "Late contracts and phases"], ["หลักประกันใกล้หมดอายุ", "Guarantees near expiry"]]],

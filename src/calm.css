@@ -231,3 +231,13 @@ ul.plain { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-di
 .pubstats span { font-size: 12.5px; color: var(--muted); }
 .pubcard ul { margin: 0; padding-left: 18px; }
 @media (max-width: 560px) { .pubstats { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- Budget B6: agents and forecast ---------- */
+.agsteps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; }
+.agsteps li { padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; }
+.agsteps li.now { border-color: var(--amber); background: var(--warn-soft); }
+.agchange { margin-top: 6px; border-left: 3px solid var(--amber); background: var(--surface-2); padding: 6px 10px; border-radius: 0 8px 8px 0; font-size: 13px; }
+.fcband { position: relative; height: 18px; background: var(--surface-3); border-radius: 99px; margin: 8px 0; }
+.fcband .band { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--ch-1) 35%, transparent); border-radius: 99px; }
+.fcband .mid { position: absolute; top: -4px; bottom: -4px; width: 3px; background: var(--ch-1); }
+.fcband .tgt { position: absolute; top: -6px; bottom: -6px; width: 2px; background: var(--bad); }
