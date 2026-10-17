@@ -92,7 +92,7 @@ Conventions worth knowing before you edit:
 ## 5. State and data
 
 - State is kept per organisation in `localStorage` under `fisko-v1-<org>` (`sample` or `dpt`). Other keys: `fisko-session`, `fisko-lang`, `fisko-role`, `fisko-org`, `fisko-app`.
-- `DATA_V` in `00-core.js` (now **18**) is the seed version. **Bump it whenever you change the shape of seeded data**, or browsers that already hold old saved state will keep the old shape and break. Bumping resets everyone's saved demo data once.
+- `DATA_V` in `00-core.js` (now **19**) is the seed version. **Bump it whenever you change the shape of seeded data**, or browsers that already hold old saved state will keep the old shape and break. Bumping resets everyone's saved demo data once.
 - Seed data is built by `buildOrg()` in `06-seedhelp.js`. Rounds 7 to 10 add their data at the end of that function, in clearly commented blocks.
 - All dates are anchored to a constant, `TODAY = "2026-10-16"` in `00-core.js`, **not the computer's clock**. So deadlines, "days left" and delegation periods behave the same on any day. Only the time of day comes from the real clock.
 - Two organisations: a fictional department (`sample`), and กรมโยธาธิการและผังเมือง (`dpt`) with fictional figures and an indicative unit structure. Keep real-agency data out of the published build. The filename pattern `*data-dpt*` is what does that.
@@ -290,3 +290,14 @@ Builds round Q3 of the design v0.2 (FR-PR-03, 36 to 38, 53 to 55; rule R-18). Ne
 - **Audit dossier:** a compiled text record per case (requisition and approval, method, reference price, committees with declarations, e-GP and Q&A, bids and totals, award, contract and versions, phases, payments, letters, red flags, timeline), for Audit and procurement roles, with copy.
 - **Timeline:** one row per case from creation, with bars for preparation, sourcing and evaluation, and the contract period, plus the planned month, today and the fiscal-year start. Clicking a case opens it. Forecast signing dates are left for Q5.
 - **Tested:** about 870 renders, a click-through of the Q3 flows (19 checks), Gantt bar positions, the 9 demo extension steps, and 375 px width.
+
+## 21. Document intake and simulated OCR, Q4 (round 21)
+
+Builds round Q4 of the design v0.2 (FR-PR-56, 57; chapter 12; decision D-P10). New file `63c-docs.js` (after `63b`). New Procurement page `docs` (P6); the menu now has P1 to P14.
+
+- **Nothing is actually read.** `sampleDocs()` builds four sample documents from the seed data (invoice for CT-2570-002 phase 1, delivery note for CT-2570-001 phase 2, bank guarantee for CT-2570-001, quotation), each with a fixed value and confidence per field. The invoice total is misread by 6,000 baht on purpose, the delivery date and the quotation tax ID have low confidence. `docSvg()` draws a paper-like image with low-confidence fields highlighted. An uploaded file is not stored or read; it opens as an empty form typed by hand.
+- **Checks:** V-01 tax ID (Thai check digit), V-02 subtotal + VAT = total, V-03 plausible dates, V-04 supplier matches the contract party, V-05 contract and phase exist (or a case is chosen for a quotation), V-06 guarantee amount and expiry, V-07 duplicate. Every low-confidence field (under 80%) must be ticked as checked. Confirm stays disabled until everything passes and the target can take the data (for example, a phase that already has an invoice is refused).
+- **Applying:** invoice → `ph.invoice` (so the payment gate sees it), delivery note → `ph.delivered` (inspectors notified), bank guarantee → `c.guarantee` (replaces the current one), quotation → case quotations at step 4 on the small path, otherwise market research. Each record keeps `doc` with the document ID.
+- **Agent and quality:** registered as AG-14 Document Intake Agent in `S.agents`; switching it off in M09 blocks new reads. Each read is logged in the AI log. The page shows the share of fields confirmed without edits, the quality measure from design chapter 8.3.
+- **Name clash to remember:** `67-procai.js` already uses `DOC_T` for draft types, so this file uses `DOC_TYPE`. All files share one script scope; check `node --check` after adding constants.
+- **Tested:** about 880 renders including every sample in review, a click-through of all four document types plus upload, duplicate and agent-off cases (16 checks), the 9 demo extension steps, and 375 px width.
