@@ -101,10 +101,12 @@ PROC.contracts = () => {
     <div class="body"><form id="ct-form" style="display:flex;flex-direction:column;gap:12px">
       <div class="inline-form">
         <div class="f" style="flex:2 1 260px"><label for="ct-req">${L("แฟ้มจัดซื้อที่พร้อมทำสัญญา", "Case ready for a contract")}</label><select id="ct-req">${open.map(c => `<option value="${c.id}" ${sel && c.id === sel.id ? "selected" : ""}>${c.id} · ${esc(caseName(c))} · ${mb(c.award.price)}</option>`).join("")}</select></div>
-        <div class="f" style="flex:1 1 200px"><label for="ct-vendor">${L("คู่สัญญา", "Supplier")}</label><input type="text" id="ct-vendor" value="${sel ? esc(tx(sel.award.winner)) : ""}" required></div>
+        <div class="f" style="flex:1 1 200px"><label for="ct-vendor">${L("คู่สัญญา", "Supplier")}</label><input type="text" id="ct-vendor" list="vlist" value="${sel ? esc(tx(sel.award.winner)) : ""}" required></div>
         <div class="f" style="flex:0 1 150px"><label for="ct-no">${L("เลขที่สัญญา", "Contract no.")}</label><input type="text" id="ct-no" value="CT-70/${String(S.contracts.length + 1).padStart(3, "0")}" required></div>
         <div class="f" style="flex:0 1 160px"><label for="ct-date">${L("วันที่ลงนาม", "Signed on")}</label><input type="date" id="ct-date" value="${TODAY}" required></div>
         <div class="f" style="flex:0 1 150px"><label for="ct-amt">${L("วงเงินสัญญา (ลบ.)", "Amount (M)")}</label><input type="number" id="ct-amt" min="0.001" step="0.001" value="${sel ? (sel.award.price / 1e6).toFixed(3) : ""}" required></div>
+        <div class="f" style="flex:0 1 130px"><label for="ct-war">${L("รับประกัน (เดือน)", "Warranty (months)")}</label><input type="number" id="ct-war" min="0" step="1" value="${sel && caseOf(sel.id) && caseOf(sel.id).kind === "service" ? 0 : S.pcfg.warrantyMonths}"></div>
+        <datalist id="vlist">${(S.vendors || []).map(v => `<option value="${esc(v.name)}">`).join("")}</datalist>
         <div class="f" style="flex:0 1 100px"><label for="ct-ph">${L("จำนวนงวด", "Phases")}</label><select id="ct-ph">${[1, 2, 3, 4].map(n => `<option ${n === 3 ? "selected" : ""}>${n}</option>`).join("")}</select></div></div>
       <fieldset style="border:1px solid var(--line);border-radius:8px;padding:8px 12px"><legend class="sub">${L("คณะกรรมการตรวจรับ", "Acceptance committee")}</legend>
         <div class="row">${people.map(u => `<label class="field-inline"><input type="checkbox" name="ct-insp" value="${u.id}" ${defs.includes(u.id) ? "checked" : ""}> ${esc(tx(u.name))} <span class="sub">· ${tx(ROLES[u.role])}</span></label>`).join("")}</div></fieldset>
@@ -128,11 +130,10 @@ PROC.egp = () => {
 
 VIEWS.procurement = () => {
   if (!PROC[PROC_TAB]) PROC_TAB = "cases";
-  const tabs = [["cases", L("แฟ้มจัดซื้อ", "Case files")], ["plan", L("แผนจัดซื้อ", "Procurement plan")], ["reqn", `${L("ใบขอซื้อขอจ้าง", "Requisitions")}${S.reqn.filter(r => r.status === "pending").length ? ` (${S.reqn.filter(r => r.status === "pending").length})` : ""}`], ["tor", L("คลัง TOR", "TOR library")], ["contracts", L("สัญญาและงวดงาน", "Contracts and phases")], ["egp", L("ไฟล์จาก e-GP", "e-GP file")], ["analytics", L("วิเคราะห์", "Analytics")], ["flags", L("สัญญาณเตือน", "Red flags")], ["ocds", L("ส่งออก OCDS", "OCDS export")], ["ai", L("ผู้ช่วย AI", "AI assistant")]];
+  const tabs = [["cases", L("แฟ้มจัดซื้อ", "Case files")], ["plan", L("แผนจัดซื้อ", "Procurement plan")], ["reqn", `${L("ใบขอซื้อขอจ้าง", "Requisitions")}${S.reqn.filter(r => r.status === "pending").length ? ` (${S.reqn.filter(r => r.status === "pending").length})` : ""}`], ["tor", L("คลัง TOR", "TOR library")], ["contracts", L("สัญญาและงวดงาน", "Contracts and phases")], ["suppliers", L("ผู้ขาย", "Suppliers")], ["egp", L("ไฟล์จาก e-GP", "e-GP file")], ["analytics", L("วิเคราะห์", "Analytics")], ["flags", L("สัญญาณเตือน", "Red flags")], ["ocds", L("ส่งออก OCDS", "OCDS export")], ["ai", L("ผู้ช่วย AI", "AI assistant")]];
   return `
-  <div class="head"><div><div class="eyebrow">Fisko Procurement · ${L("เวอร์ชันเบา", "light version")}</div><h1>${L("จัดซื้อจัดจ้าง", "Procurement")}</h1>
+  <div class="head"><div><div class="eyebrow">Fisko Procurement · ${L("จัดซื้อจัดจ้าง", "Procurement")}</div><h1>${(tabs.find(t => t[0] === PROC_TAB) || tabs[0])[1]}</h1>
     <p>${L("เตรียมและติดตามการจัดซื้อที่ผูกกับรายการจัดสรร ขั้นตอนทางการยังทำใน e-GP", "Prepare and track procurement tied to allocation lines. The official steps stay in e-GP.")} · ${fyLabel(FAM_FY)}</p></div></div>
-  <div class="tabs" role="tablist">${tabs.map(([id, l]) => `<button class="tab ${id === PROC_TAB ? "on" : ""}" type="button" role="tab" aria-selected="${id === PROC_TAB}" data-prtab="${id}">${l}</button>`).join("")}</div>
   ${PROC[PROC_TAB]()}`;
 };
 
@@ -191,9 +192,12 @@ BIND.procurement = () => {
       if (insp.length < (amount <= S.pcfg.singleInspectorMax ? 1 : 2)) { toast(L("ต้องมีกรรมการตรวจรับอย่างน้อย 2 คน", "Choose at least 2 committee members")); return; }
       if (!sodCheck("SD-02", [me().id], insp, `${rq.id}`)) return;
       if (!sodCheck("SD-06", insp, caseJudges(cs), `${cs.id}`)) return;
+      if (blBlocked(cs, $("#ct-vendor").value.trim())) { toast(L("คู่สัญญาอยู่ในรายชื่อผู้ทิ้งงาน (R-17) ทำสัญญาไม่ได้", "The supplier is on the abandoned-work list (R-17); no contract")); return; }
       const p = famPlan(rq.plan), n = Number($("#ct-ph").value), signed = $("#ct-date").value, share = amount / n; let left = amount;
       const phases = Array.from({ length: n }, (_, i) => { const a = i < n - 1 ? Math.round(share / 1e3) * 1e3 : left; left -= a; return { n: i + 1, name: [`งวดที่ ${i + 1}`, `Phase ${i + 1}`], due: addDays(signed, 45 * (i + 1)), amount: a, signs: [] }; });
-      const c = { id: nextId("CT", S.contracts), reqn: rq.id, plan: p.id, line: p.line, vendor: [$("#ct-vendor").value.trim(), $("#ct-vendor").value.trim()], no: $("#ct-no").value.trim(), signed, amount, by: me().id, inspectors: insp, status: "active", phases };
+      const c = { id: nextId("CT", S.contracts), reqn: rq.id, plan: p.id, line: p.line, vendor: [$("#ct-vendor").value.trim(), $("#ct-vendor").value.trim()], no: $("#ct-no").value.trim(), signed, amount, by: me().id, inspectors: insp, status: "active", phases,
+        base: amount, ver: 1, versions: [{ v: 1, amount, t: nowIso(), by: me().id, why: "" }], vars: [], guarantee: null, warrantyMonths: Math.max(0, Math.round(Number($("#ct-war").value) || 0)),
+        supervision: cs.kind === "construction" ? { who: "", reports: [], assess: [] } : null, defects: [], letters: [] };
       S.contracts.push(c); rq.status = "contracted"; p.status = "contracted"; CT_FROM = null; caseOnContract(cs, c);
       audit(["สร้างสัญญา", "Created a contract"], `${c.id} ${rq.id}`);
       notify(["fin", "exec"], [`สัญญา ${c.id} ผูกพันวงเงิน ${mb(amount)} ล้านบาท`, `Contract ${c.id} commits ${mb(amount)} M`], "fnc-chain");

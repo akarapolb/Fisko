@@ -92,7 +92,7 @@ Conventions worth knowing before you edit:
 ## 5. State and data
 
 - State is kept per organisation in `localStorage` under `fisko-v1-<org>` (`sample` or `dpt`). Other keys: `fisko-session`, `fisko-lang`, `fisko-role`, `fisko-org`, `fisko-app`.
-- `DATA_V` in `00-core.js` (now **16**) is the seed version. **Bump it whenever you change the shape of seeded data**, or browsers that already hold old saved state will keep the old shape and break. Bumping resets everyone's saved demo data once.
+- `DATA_V` in `00-core.js` (now **17**) is the seed version. **Bump it whenever you change the shape of seeded data**, or browsers that already hold old saved state will keep the old shape and break. Bumping resets everyone's saved demo data once.
 - Seed data is built by `buildOrg()` in `06-seedhelp.js`. Rounds 7 to 10 add their data at the end of that function, in clearly commented blocks.
 - All dates are anchored to a constant, `TODAY = "2026-10-16"` in `00-core.js`, **not the computer's clock**. So deadlines, "days left" and delegation periods behave the same on any day. Only the time of day comes from the real clock.
 - Two organisations: a fictional department (`sample`), and กรมโยธาธิการและผังเมือง (`dpt`) with fictional figures and an indicative unit structure. Keep real-agency data out of the published build. The filename pattern `*data-dpt*` is what does that.
@@ -262,3 +262,18 @@ Builds round Q1 of `Fisko_Procurement_Design.html` v0.2 (FR-PR-39 to 45, rules R
 - **Status sync (R-19):** `egpMismatch(c)` compares the plan item's e-GP stage with the case step. The case page shows a warning, and after `S.pcfg.syncDays` (3) the officer gets a task.
 - **Seed changes:** contracted cases now have criteria, declarations, bidders and scores consistent with their award. Requisition and preparation dates were moved earlier (August and early September) so every case timeline runs in order; previously the requisitions were dated after the award. The demo step 20 now uses the demo button for declarations and scores.
 - **Tested:** about 950 renders, a click-through of the full Q1 flow (26 checks), the 9 demo extension steps, timeline order in both organisations, and 375 px width.
+
+## 19. Contract late stage and suppliers, Q2 (round 19)
+
+Builds round Q2 of the design v0.2 (FR-PR-19, 46 to 48, 50 to 52; rules R-15 to R-17). New file `63b-contract-late.js`, which loads after `63-contracts.js`. New Procurement page `suppliers` (P6); the later pages moved down one code (now P1 to P11).
+
+- **Hooks:** `63-contracts.js` now has `CON_PANELS` and `CON_BINDS`, the contract-panel twin of the case hooks. Each Q2 section (supervision, termination, warranty, letters) is one entry.
+- **Navigation change:** the in-page tab rows on the Procurement and Finance pages were removed, because the left menu already lists every page (user feedback). The page heading now shows the page name. `[data-prtab]` and `[data-fntab]` binders are left in place but have nothing to bind.
+- **Supplier register:** `S.vendors` (name, 13-digit tax ID checked with the Thai check digit, type, SME, local, contact, status). History is worked out from contracts by name (`vendorHist`); names are compared with `normName`, which strips company-type words and spaces.
+- **Abandoned-work list (R-17):** `S.blacklist.rows`, imported from a file (sample button) and replacing the list each time. `blHit(name)` matches by tax ID through the register or by normalised name. It blocks the award (wraps `awardGuard`), the small-path award (wraps `caseMove`) and contract creation. Only the head of procurement can release a match on a case, with evidence; Audit is notified.
+- **Supervision:** `c.supervision = { who, reports, assess }`, on by default for construction cases and switchable for others. Planned progress is linear between signing and the last due date. Checkpoints at 50%, 75% and the end; the end suggests termination when progress is below 85% or penalties pass the cap. A demo button stands in for reaching a checkpoint, because the prototype clock is fixed.
+- **Termination (R-15):** the officer proposes with grounds; the executive approves (SD-08 checks the proposer isn't the approver). Unaccepted phases get `cancelled`, the contract amount drops to the accepted work with a new version, the guarantee becomes `forfeited`, the supplier is marked `proposed`, and a termination letter is drafted. `caseState` and `closeChecks` ignore cancelled phases, and penalties stop at the termination date.
+- **Warranty and defects (R-16):** `c.warrantyMonths` (set on the contract form, default from `S.pcfg.warrantyMonths`). The period starts at the last acceptance. Defects have a due date and a drafted repair notice. The guarantee can be returned only when fully paid, the warranty has ended and no defect is open; a demo button ends the warranty.
+- **Letters:** `c.letters` from templates (reminder, penalty, rejection, defect, termination) with a sent date. A partial acceptance or dissent creates a task to send the rejection notice within 3 working days.
+- **Not done:** retention money held back from each payment (a setting is planned but no deduction is made), sending letters by e-mail, and the abandoned-work proposal workflow beyond marking the supplier.
+- **Tested:** about 780 renders, a click-through of the Q2 flows (24 checks), the 9 demo extension steps, and 375 px width.

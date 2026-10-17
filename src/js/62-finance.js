@@ -84,9 +84,8 @@ VIEWS.finance = () => {
   const pend = S.payreqs.filter(p => p.status === "pending").length;
   const tabs = [["chain", L("สายงบประมาณถึงการจ่าย", "Allocation to payment")], ["pay", `${L("ขออนุมัติเบิกจ่าย", "Payments")}${pend ? ` (${pend})` : ""}`], ["recon", L("กระทบยอด GFMIS", "GFMIS reconciliation")]];
   return `
-  <div class="head"><div><div class="eyebrow">Fisko Finance · ${L("เวอร์ชันเบา", "light version")}</div><h1>${L("วงเงินผูกพันและการเบิกจ่าย", "Commitments and payments")}</h1>
+  <div class="head"><div><div class="eyebrow">Fisko Finance · ${L("วงเงินผูกพันและการเบิกจ่าย", "Commitments and payments")}</div><h1>${(tabs.find(t => t[0] === FIN_TAB) || tabs[0])[1]}</h1>
     <p>${L("ควบคุมวงเงินผูกพันจากสัญญา และกระทบยอดกับ GFMIS การบันทึกบัญชีและการจ่ายเงินทางการยังทำใน GFMIS", "Control commitments from contracts and match results with GFMIS. Official recording and payment stay in GFMIS.")} · ${fyLabel(FAM_FY)}</p></div></div>
-  <div class="tabs" role="tablist">${tabs.map(([id, l]) => `<button class="tab ${id === FIN_TAB ? "on" : ""}" type="button" role="tab" aria-selected="${id === FIN_TAB}" data-fntab="${id}">${l}</button>`).join("")}</div>
   ${FIN[FIN_TAB]()}`;
 };
 

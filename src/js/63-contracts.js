@@ -4,6 +4,8 @@
 // All rates, ladders and day counts are settings in S.pcfg (M10 → Procurement rules), not fixed numbers.
 const utcDay = s => { const [y, m, d] = s.split("-").map(Number); return Date.UTC(y, m - 1, d); };
 const dayDiff = (a, b) => Math.round((utcDay(b) - utcDay(a)) / 864e5);
+// Extra sections and binders for the contract panel, added by later rounds (63b-contract-late.js).
+const CON_PANELS = [], CON_BINDS = [];
 const GUAR_TYPE = { bank: ["หนังสือค้ำประกันธนาคาร", "Bank guarantee"], cash: ["เงินสด", "Cash"], bond: ["พันธบัตรรัฐบาล", "Government bond"] };
 const EXT_CODE = { force: ["เหตุสุดวิสัย", "Force majeure"], owner: ["ผู้ว่าจ้างเป็นเหตุ", "Employer's fault"], vendor: ["ผู้ขายเป็นเหตุ", "Supplier's fault"] };
 const VAR_ST = { pending: [["รออนุมัติ", "Pending"], "p-warn"], approved: [["อนุมัติแล้ว", "Approved"], "p-ok"], rejected: [["ไม่อนุมัติ", "Rejected"], "p-bad"] };
@@ -11,7 +13,7 @@ const conCase = c => caseByPlan(c.plan);
 const phDue = ph => addDays(ph.due, (ph.ext || 0) + (ph.extV || 0));
 // Days late for penalty: from the due date plus forgiven extension days (employer's fault or force majeure) to delivery, or to today if not yet delivered.
 function phLate(ph) {
-  const from = addDays(ph.due, ph.ext || 0), to = ph.delivered || TODAY;
+  const from = addDays(ph.due, ph.ext || 0), to = ph.delivered || (ph.cancelled && ph.cancelled.date) || TODAY;
   return Math.max(0, dayDiff(from, to));
 }
 const phPenalty = (c, ph) => Math.round(S.pcfg.penaltyPct / 100 * ph.amount * phLate(ph));
@@ -69,18 +71,18 @@ function conPanel(c) {
         <div class="row" style="margin-top:6px">${people.map(u => `<label class="field-inline"><input type="checkbox" name="cc-${c.id}" value="${u.id}" ${c.inspectors.includes(u.id) ? "checked" : ""}> ${esc(tx(u.name))}</label>`).join("")}<button class="btn" type="button" data-ccsave="${c.id}">${L("บันทึก", "Save")}</button></div></details>`) : ""}</div>
     <div class="body" style="padding-top:0"><div class="row"><b style="font-weight:600">${L("หลักประกันสัญญา", "Guarantee")}</b> ${tag(tx(GUAR_TAG[gs][0]), GUAR_TAG[gs][1])}
       ${c.guarantee ? `<span class="sub">${tx(GUAR_TYPE[c.guarantee.type])} · ${fmt(c.guarantee.amount)} ${L("บาท", "baht")} · ${L("หมดอายุ", "expires")} ${fdate(c.guarantee.expires)}</span>` : ""}
-      ${isProc && c.guarantee && c.guarantee.status !== "returned" && c.phases.every(ph => phPaid(c, ph)) ? `<button class="btn" type="button" data-gret="${c.id}">${L("บันทึกการคืนหลักประกัน", "Record the return")}</button>` : ""}</div>
+      ${isProc && c.guarantee && c.guarantee.status === "held" && canReturnGuar(c) ? `<button class="btn" type="button" data-gret="${c.id}">${L("บันทึกการคืนหลักประกัน", "Record the return")}</button>` : ""}</div>
       ${isProc && !c.guarantee ? `<form class="inline-form" data-gform="${c.id}" style="margin-top:6px"><div class="f" style="flex:0 1 190px"><label>${L("ชนิด", "Type")}</label><select name="type">${Object.keys(GUAR_TYPE).map(k => `<option value="${k}">${tx(GUAR_TYPE[k])}</option>`).join("")}</select></div>
         <div class="f" style="flex:0 1 150px"><label>${L("วงเงิน (บาท)", "Amount (baht)")}</label><input type="number" name="amt" min="1" step="1" value="${Math.round(c.amount * S.pcfg.guaranteePct / 100)}" required></div>
         <div class="f" style="flex:0 1 170px"><label>${L("หมดอายุ", "Expires")}</label><input type="date" name="exp" value="${addDays(c.phases[c.phases.length - 1].due, 90)}" required></div><button class="btn" type="submit">${L("บันทึกหลักประกัน", "Record the guarantee")}</button></form>` : ""}</div>
     <div class="tbl-wrap"><table><thead><tr><th>${L("งวด", "Phase")}</th><th>${L("กำหนดส่งมอบ", "Due")}</th><th class="n">${L("วงเงิน (ลบ.)", "Amount (M)")}</th><th>${L("ส่งมอบและค่าปรับ", "Delivery and penalty")}</th><th>${L("ตรวจรับ", "Acceptance")}</th><th>${L("ใบแจ้งหนี้และเบิกจ่าย", "Invoice and payment")}</th></tr></thead>
       <tbody>${c.phases.map(ph => { const pay = S.payreqs.find(p => p.contract === c.id && p.phase === ph.n && p.status !== "rejected"), acc = phaseAccepted(ph), late = phLate(ph), pn = phPenalty(c, ph), ad = acceptDue(c, ph), od = openDissent(ph);
-        const mySign = c.inspectors.includes(me_) && !acc && prevOk(ph) && !ph.signs.some(s => s.by === me_) && ph.delivered && !od;
-        return `<tr><td>${tx(ph.name)}</td>
+        const mySign = c.inspectors.includes(me_) && !acc && prevOk(ph) && !ph.signs.some(s => s.by === me_) && ph.delivered && !od && !ph.cancelled;
+        return `<tr><td>${tx(ph.name)}${ph.cancelled ? ` ${tag(L("ยกเลิกจากการบอกเลิก", "Cancelled by termination"), "p-mute")}` : ""}</td>
           <td>${fdate(phDue(ph))}${(ph.ext || 0) + (ph.extV || 0) ? `<div class="sub">${L("เดิม", "was")} ${fdate(ph.due)} · +${(ph.ext || 0) + (ph.extV || 0)} ${L("วัน", "d")}</div>` : ""}${!ph.delivered && !acc && phDue(ph) < TODAY ? ` ${tag(L("เลยกำหนด", "Overdue"), "p-bad")}` : ""}</td><td class="n">${mb(ph.amount)}</td>
           <td>${ph.delivered ? `${L("ส่งมอบ", "Delivered")} ${fdate(ph.delivered)}` : `<span class="sub">${L("ยังไม่แจ้งส่งมอบ", "No delivery notice")}</span>`}
             ${late ? `<div>${tag(`${late} ${L("วันล่าช้า", "days late")} · ${L("ค่าปรับ", "penalty")} ${fmt(pn)}`, "p-warn")}</div>` : ""}
-            ${isProc && !ph.delivered && !acc && prevOk(ph) ? `<form class="inline-form" data-dlform="${c.id}|${ph.n}" style="margin-top:6px"><div class="f" style="flex:0 1 150px"><input type="date" name="d" value="${TODAY}" aria-label="${L("วันส่งมอบ", "Delivery date")}" required></div><button class="btn" type="submit">${L("บันทึกแจ้งส่งมอบ", "Record delivery")}</button></form>` : ""}</td>
+            ${isProc && !ph.delivered && !acc && prevOk(ph) && !ph.cancelled ? `<form class="inline-form" data-dlform="${c.id}|${ph.n}" style="margin-top:6px"><div class="f" style="flex:0 1 150px"><input type="date" name="d" value="${TODAY}" aria-label="${L("วันส่งมอบ", "Delivery date")}" required></div><button class="btn" type="submit">${L("บันทึกแจ้งส่งมอบ", "Record delivery")}</button></form>` : ""}</td>
           <td>${phaseSignText(c, ph)} ${acc ? tag(ph.result === "partial" ? L("รับบางส่วน", "Partly accepted") : L("ตรวจรับแล้ว", "Accepted"), ph.result === "partial" ? "p-warn" : "p-ok") : ""}
             ${ph.result === "partial" ? `<div class="sub">${L("รับ", "accepted")} ${fmt(ph.okAmount)} ${L("บาท", "baht")}</div>` : ""}${ad ? `<div class="sub">${L("ตรวจรับภายใน", "Accept by")} ${fdate(ad)}${!acc && ad < TODAY ? ` ${tag(L("เกินกำหนด", "Late"), "p-bad")}` : ""}</div>` : ""}${ph.cert ? `<div class="sub">${L("ใบตรวจรับ", "Certificates")} ${ph.cert.n} ${L("ฉบับ", "copies")}</div>` : ""}
             ${(ph.dissent || []).map((d, i) => `<div class="sub" style="color:var(--${d.resolved ? "muted" : "bad"})">${L("ความเห็นแย้ง", "Dissent")}: ${esc(userName(d.by))} · ${esc(d.note)}${d.resolved ? ` · ${L("สั่งการแล้ว", "resolved")}: ${esc(d.resolved.note)}` : ""}</div>${!d.resolved && head ? `<div class="row" style="flex-wrap:nowrap;margin-top:4px"><input type="text" id="dsn-${c.id}-${ph.n}-${i}" placeholder="${L("คำสั่งการ", "Instruction")}" style="min-width:140px"><button class="btn" type="button" data-dsres="${c.id}|${ph.n}|${i}">${L("สั่งการ", "Resolve")}</button></div>` : ""}`).join("")}
@@ -101,7 +103,7 @@ function conPanel(c) {
         <div class="f" style="flex:0 1 150px"><label>${L("งวด (ขยายเวลา)", "Phase (time)")}</label><select name="phase">${c.phases.filter(p => !phaseAccepted(p)).map(p => `<option value="${p.n}">${tx(p.name)}</option>`).join("")}</select></div>
         <div class="f" style="flex:0 1 100px"><label>${L("วัน", "Days")}</label><input type="number" name="days" min="1" step="1"></div>
         <div class="f" style="flex:0 1 170px"><label>${L("เหตุผลของการขยาย", "Cause (time)")}</label><select name="code">${Object.keys(EXT_CODE).map(k => `<option value="${k}">${tx(EXT_CODE[k])}</option>`).join("")}</select></div>
-        <div class="f" style="flex:2 1 220px"><label>${L("เหตุผล", "Reason")}</label><input type="text" name="why" required></div><button class="btn" type="submit">${L("เสนอแก้ไขสัญญา", "Propose a change")}</button></form>` : ""}</div></section>`;
+        <div class="f" style="flex:2 1 220px"><label>${L("เหตุผล", "Reason")}</label><input type="text" name="why" required></div><button class="btn" type="submit">${L("เสนอแก้ไขสัญญา", "Propose a change")}</button></form>` : ""}</div>${CON_PANELS.map(f => f(c)).join("")}</section>`;
 }
 
 // ---------- closing the case (R-12) ----------
@@ -200,6 +202,7 @@ function bindContracts() {
   };
   $$("[data-vok]").forEach(b => (b.onclick = () => vdec(...b.dataset.vok.split("|"), true)));
   $$("[data-vno]").forEach(b => (b.onclick = () => vdec(...b.dataset.vno.split("|"), false)));
+  CON_BINDS.forEach(f => f(done));
 }
 {
   const base = BIND.procurement;

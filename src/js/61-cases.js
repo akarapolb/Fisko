@@ -42,8 +42,9 @@ function caseState(c) {
   const con = caseCon(c);
   if (!con) return 9;
   const pays = S.payreqs.filter(p => p.contract === con.id && p.status !== "rejected");
-  if (!con.phases.every(phaseAccepted)) return 9;
-  if (con.phases.every(ph => pays.some(p => p.phase === ph.n && p.status === "approved"))) return c.close ? 12 : 11;
+  const live = con.phases.filter(ph => !ph.cancelled);
+  if (!live.every(phaseAccepted)) return 9;
+  if (live.every(ph => pays.some(p => p.phase === ph.n && p.status === "approved"))) return c.close ? 12 : 11;
   return pays.length ? 11 : 10;
 }
 const caseStTag = c => { const n = caseState(c); return n === 0 ? tag(L("ยกเลิก", "Cancelled"), "p-mute") : tag(`${n}/12 ${tx([CASE_STATES[n].th, CASE_STATES[n].en])}`, n >= 9 ? "p-ok" : n >= 5 ? "p-info" : "p-warn"); };
