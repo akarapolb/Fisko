@@ -39,6 +39,7 @@ function lastYearRate(unit) {
   return u && u.plan ? u.actual / u.plan : null;
 }
 function threeR() {
+  const G = typeof bcfg === "function" ? bcfg().r3 : { lowScore: 55, lowCut: 15, slowRate: 70, slowCut: 10, zbbCut: 10, highScore: 70, replaceMax: 50 };
   const live = S.requests.filter(r => r.status !== "rejected"), ranked = live.filter(r => !isPersonnel(r)).map(r => ({ r, s: scoreOf(r) })).sort((a, b) => b.s - a.s);
   let cum = 0; ranked.forEach(x => { cum += x.r.amount / 1e6; x.in = cum <= S.cons.projCeiling + 1e-9; });
   const rows = live.map(r => {
@@ -46,23 +47,23 @@ function threeR() {
     let kind = "keep", d = 0;
     if (isPersonnel(r)) why.push(L("ภาระผูกพันตามสิทธิ", "Entitlement obligation"));
     else {
-      if (s < 55) { kind = "redeploy"; d = -Math.round(r.amount * 0.15 / 1e5) * 1e5; why.push(`${L("คะแนนต่ำ", "Low score")} ${fmt(s, 0)}`); }
-      else if (rate != null && rate < 0.7 && r.prev > 0) { kind = "redeploy"; d = -Math.round(r.amount * 0.1 / 1e5) * 1e5; why.push(`${L("ปีก่อนเบิกจ่าย", "Last year spent")} ${fmt(rate * 100, 0)}% ${L("ของแผน", "of plan")}`); }
-      if (r.zbb) { kind = "redeploy"; d = Math.min(d, -Math.round(r.amount * 0.1 / 1e5) * 1e5); why.push(L("ยกยอดจากปีก่อน รอคำอธิบายใหม่", "Rolled over, awaiting a new explanation")); }
-      if (kind === "keep" && rk && !rk.in && s >= 70) { kind = "replace"; why.push(L("คะแนนสูงแต่อยู่ใต้เส้นกรอบ", "High score but below the ceiling line")); }
+      if (s < G.lowScore) { kind = "redeploy"; d = -Math.round(r.amount * G.lowCut / 100 / 1e5) * 1e5; why.push(`${L("คะแนนต่ำ", "Low score")} ${fmt(s, 0)}`); }
+      else if (rate != null && rate < G.slowRate / 100 && r.prev > 0) { kind = "redeploy"; d = -Math.round(r.amount * G.slowCut / 100 / 1e5) * 1e5; why.push(`${L("ปีก่อนเบิกจ่าย", "Last year spent")} ${fmt(rate * 100, 0)}% ${L("ของแผน", "of plan")}`); }
+      if (r.zbb) { kind = "redeploy"; d = Math.min(d, -Math.round(r.amount * G.zbbCut / 100 / 1e5) * 1e5); why.push(L("ยกยอดจากปีก่อน รอคำอธิบายใหม่", "Rolled over, awaiting a new explanation")); }
+      if (kind === "keep" && rk && !rk.in && s >= G.highScore) { kind = "replace"; why.push(L("คะแนนสูงแต่อยู่ใต้เส้นกรอบ", "High score but below the ceiling line")); }
     }
     return { r, s, rate, kind, d, why };
   });
   const pool = -sumv(rows.filter(x => x.kind === "redeploy").map(x => x.d)), need = rows.filter(x => x.kind === "replace");
-  let left = pool; need.sort((a, b) => b.s - a.s).forEach(x => { x.d = Math.min(left, Math.round(x.r.amount * 0.5 / 1e5) * 1e5); left -= x.d; });
+  let left = pool; need.sort((a, b) => b.s - a.s).forEach(x => { x.d = Math.min(left, Math.round(x.r.amount * (typeof bcfg === "function" ? bcfg().r3.replaceMax : 50) / 100 / 1e5) * 1e5); left -= x.d; });
   return { rows, pool, used: pool - left };
 }
 CONS_PANELS.r3 = () => {
-  const { rows, pool, used } = threeR(), slow = [...new Set(rows.filter(x => x.rate != null && x.rate < 0.7).map(x => x.r.unit))], ed = ROLE === "plan";
+  const { rows, pool, used } = threeR(), G = bcfg().r3, slow = [...new Set(rows.filter(x => x.rate != null && x.rate < G.slowRate / 100).map(x => x.r.unit))], ed = ROLE === "plan";
   const carry = (S.carry && S.carry.prev || []).filter(c => c.status !== "closed").length;
   const K = { keep: [L("คงไว้", "Keep"), "p-mute"], redeploy: [L("ลด / ยกเลิก", "Redeploy"), "p-warn"], replace: [L("เพิ่ม", "Replace"), "p-ok"] };
   return `<section class="stats">
-      ${statCard({ label: L("Review · กองที่ปีก่อนเบิกจ่ายต่ำกว่า 70% ของแผน", "Review · units below 70% of plan last year"), value: slow.length, icon: "activity", sub: slow.map(unitName).join(", ") || L("ไม่มี", "None") })}
+      ${statCard({ label: L(`Review · กองที่ปีก่อนเบิกจ่ายต่ำกว่า ${G.slowRate}% ของแผน`, `Review · units below ${G.slowRate}% of plan last year`), value: slow.length, icon: "activity", sub: slow.map(unitName).join(", ") || L("ไม่มี", "None") })}
       ${statCard({ label: L("Review · เงินกันเหลื่อมปีที่ยังเปิด", "Review · open carry-overs"), value: carry, icon: "clock", sub: L("จาก M06", "From M06") })}
       ${statCard({ label: L("Redeploy · วงเงินที่ลดได้", "Redeploy · amount freed"), value: mb(pool), unit: L("ลบ.", "M"), icon: "sliders", sub: `${rows.filter(x => x.kind === "redeploy").length} ${L("คำขอ", "requests")}` })}
       ${statCard({ label: L("Replace · นำไปใช้กับงานจำเป็น", "Replace · moved to priority work"), value: mb(used), unit: L("ลบ.", "M"), icon: "target", ring: pool ? used / pool : 0, sub: `${rows.filter(x => x.kind === "replace").length} ${L("คำขอ", "requests")}` })}</section>
@@ -70,7 +71,7 @@ CONS_PANELS.r3 = () => {
       <div class="tbl-wrap"><table><thead><tr><th>${L("คำขอ", "Request")}</th><th class="n">${L("คะแนน", "Score")}</th><th class="n">${L("ปีก่อนเบิกจ่าย", "Last year spent")}</th><th>${L("ข้อเสนอ", "Proposal")}</th><th class="n">${L("ปรับ (ลบ.)", "Change (M)")}</th><th>${L("เหตุผล", "Why")}</th></tr></thead>
         <tbody>${rows.sort((a, b) => ({ redeploy: 0, replace: 1, keep: 2 }[a.kind] - { redeploy: 0, replace: 1, keep: 2 }[b.kind]) || b.s - a.s).map(x => `<tr><td><a href="#" data-link="req:${x.r.id}">${esc(tx(x.r.name))}</a><div class="sub"><span class="mono">${x.r.id}</span> · ${unitName(x.r.unit)} · ${mb(x.r.amount)} ${L("ลบ.", "M")}</div></td>
           <td class="n">${fmt(x.s, 0)}</td><td class="n">${x.rate == null ? "–" : fmt(x.rate * 100, 0) + "%"}</td><td>${tag(K[x.kind][0], K[x.kind][1])}</td><td class="n">${x.d ? (x.d > 0 ? "+" : "−") + mb(Math.abs(x.d)) : "–"}</td><td class="sub">${x.why.join(" · ") || "–"}</td></tr>`).join("")}</tbody></table></div>
-      <div class="body row" style="justify-content:space-between;flex-wrap:wrap;gap:10px"><span class="sub">${L("เกณฑ์ตั้งต้น: คะแนนต่ำกว่า 55 ลด 15% · ปีก่อนเบิกจ่ายต่ำกว่า 70% ลด 10% · คะแนน 70 ขึ้นไปที่อยู่ใต้เส้นกรอบได้เพิ่มไม่เกินครึ่งของวงเงินที่ขอ", "Defaults: score below 55 cut 15% · last year under 70% of plan cut 10% · score 70+ below the line gets up to half its request")}</span>
+      <div class="body row" style="justify-content:space-between;flex-wrap:wrap;gap:10px"><span class="sub">${L(`เกณฑ์: คะแนนต่ำกว่า ${G.lowScore} ลด ${G.lowCut}% · ปีก่อนเบิกจ่ายต่ำกว่า ${G.slowRate}% ลด ${G.slowCut}% · ยกยอดรอคำอธิบายลด ${G.zbbCut}% · คะแนน ${G.highScore} ขึ้นไปที่อยู่ใต้เส้นกรอบได้เพิ่มไม่เกิน ${G.replaceMax}% ของวงเงินที่ขอ · ตั้งค่าได้ที่ M10`, `Rules: score below ${G.lowScore} cut ${G.lowCut}% · last year under ${G.slowRate}% of plan cut ${G.slowCut}% · rolled over awaiting an answer cut ${G.zbbCut}% · score ${G.highScore}+ below the line gets up to ${G.replaceMax}% of its request · set in M10`)}</span>
         ${ed ? `<button class="btn primary" type="button" id="r3-apply">${L("ใช้เป็นข้อเสนอรอบ 2 ของกองแผน", "Use as Planning's round-2 proposal")}</button>` : ""}</div></section>`;
 };
 CONS_BIND.r3 = () => {

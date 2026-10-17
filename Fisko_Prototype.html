@@ -4794,6 +4794,7 @@ function lastYearRate(unit) {
   return u && u.plan ? u.actual / u.plan : null;
 }
 function threeR() {
+  const G = typeof bcfg === "function" ? bcfg().r3 : { lowScore: 55, lowCut: 15, slowRate: 70, slowCut: 10, zbbCut: 10, highScore: 70, replaceMax: 50 };
   const live = S.requests.filter(r => r.status !== "rejected"), ranked = live.filter(r => !isPersonnel(r)).map(r => ({ r, s: scoreOf(r) })).sort((a, b) => b.s - a.s);
   let cum = 0; ranked.forEach(x => { cum += x.r.amount / 1e6; x.in = cum <= S.cons.projCeiling + 1e-9; });
   const rows = live.map(r => {
@@ -4801,23 +4802,23 @@ function threeR() {
     let kind = "keep", d = 0;
     if (isPersonnel(r)) why.push(L("ภาระผูกพันตามสิทธิ", "Entitlement obligation"));
     else {
-      if (s < 55) { kind = "redeploy"; d = -Math.round(r.amount * 0.15 / 1e5) * 1e5; why.push(`${L("คะแนนต่ำ", "Low score")} ${fmt(s, 0)}`); }
-      else if (rate != null && rate < 0.7 && r.prev > 0) { kind = "redeploy"; d = -Math.round(r.amount * 0.1 / 1e5) * 1e5; why.push(`${L("ปีก่อนเบิกจ่าย", "Last year spent")} ${fmt(rate * 100, 0)}% ${L("ของแผน", "of plan")}`); }
-      if (r.zbb) { kind = "redeploy"; d = Math.min(d, -Math.round(r.amount * 0.1 / 1e5) * 1e5); why.push(L("ยกยอดจากปีก่อน รอคำอธิบายใหม่", "Rolled over, awaiting a new explanation")); }
-      if (kind === "keep" && rk && !rk.in && s >= 70) { kind = "replace"; why.push(L("คะแนนสูงแต่อยู่ใต้เส้นกรอบ", "High score but below the ceiling line")); }
+      if (s < G.lowScore) { kind = "redeploy"; d = -Math.round(r.amount * G.lowCut / 100 / 1e5) * 1e5; why.push(`${L("คะแนนต่ำ", "Low score")} ${fmt(s, 0)}`); }
+      else if (rate != null && rate < G.slowRate / 100 && r.prev > 0) { kind = "redeploy"; d = -Math.round(r.amount * G.slowCut / 100 / 1e5) * 1e5; why.push(`${L("ปีก่อนเบิกจ่าย", "Last year spent")} ${fmt(rate * 100, 0)}% ${L("ของแผน", "of plan")}`); }
+      if (r.zbb) { kind = "redeploy"; d = Math.min(d, -Math.round(r.amount * G.zbbCut / 100 / 1e5) * 1e5); why.push(L("ยกยอดจากปีก่อน รอคำอธิบายใหม่", "Rolled over, awaiting a new explanation")); }
+      if (kind === "keep" && rk && !rk.in && s >= G.highScore) { kind = "replace"; why.push(L("คะแนนสูงแต่อยู่ใต้เส้นกรอบ", "High score but below the ceiling line")); }
     }
     return { r, s, rate, kind, d, why };
   });
   const pool = -sumv(rows.filter(x => x.kind === "redeploy").map(x => x.d)), need = rows.filter(x => x.kind === "replace");
-  let left = pool; need.sort((a, b) => b.s - a.s).forEach(x => { x.d = Math.min(left, Math.round(x.r.amount * 0.5 / 1e5) * 1e5); left -= x.d; });
+  let left = pool; need.sort((a, b) => b.s - a.s).forEach(x => { x.d = Math.min(left, Math.round(x.r.amount * (typeof bcfg === "function" ? bcfg().r3.replaceMax : 50) / 100 / 1e5) * 1e5); left -= x.d; });
   return { rows, pool, used: pool - left };
 }
 CONS_PANELS.r3 = () => {
-  const { rows, pool, used } = threeR(), slow = [...new Set(rows.filter(x => x.rate != null && x.rate < 0.7).map(x => x.r.unit))], ed = ROLE === "plan";
+  const { rows, pool, used } = threeR(), G = bcfg().r3, slow = [...new Set(rows.filter(x => x.rate != null && x.rate < G.slowRate / 100).map(x => x.r.unit))], ed = ROLE === "plan";
   const carry = (S.carry && S.carry.prev || []).filter(c => c.status !== "closed").length;
   const K = { keep: [L("คงไว้", "Keep"), "p-mute"], redeploy: [L("ลด / ยกเลิก", "Redeploy"), "p-warn"], replace: [L("เพิ่ม", "Replace"), "p-ok"] };
   return `<section class="stats">
-      ${statCard({ label: L("Review · กองที่ปีก่อนเบิกจ่ายต่ำกว่า 70% ของแผน", "Review · units below 70% of plan last year"), value: slow.length, icon: "activity", sub: slow.map(unitName).join(", ") || L("ไม่มี", "None") })}
+      ${statCard({ label: L(`Review · กองที่ปีก่อนเบิกจ่ายต่ำกว่า ${G.slowRate}% ของแผน`, `Review · units below ${G.slowRate}% of plan last year`), value: slow.length, icon: "activity", sub: slow.map(unitName).join(", ") || L("ไม่มี", "None") })}
       ${statCard({ label: L("Review · เงินกันเหลื่อมปีที่ยังเปิด", "Review · open carry-overs"), value: carry, icon: "clock", sub: L("จาก M06", "From M06") })}
       ${statCard({ label: L("Redeploy · วงเงินที่ลดได้", "Redeploy · amount freed"), value: mb(pool), unit: L("ลบ.", "M"), icon: "sliders", sub: `${rows.filter(x => x.kind === "redeploy").length} ${L("คำขอ", "requests")}` })}
       ${statCard({ label: L("Replace · นำไปใช้กับงานจำเป็น", "Replace · moved to priority work"), value: mb(used), unit: L("ลบ.", "M"), icon: "target", ring: pool ? used / pool : 0, sub: `${rows.filter(x => x.kind === "replace").length} ${L("คำขอ", "requests")}` })}</section>
@@ -4825,7 +4826,7 @@ CONS_PANELS.r3 = () => {
       <div class="tbl-wrap"><table><thead><tr><th>${L("คำขอ", "Request")}</th><th class="n">${L("คะแนน", "Score")}</th><th class="n">${L("ปีก่อนเบิกจ่าย", "Last year spent")}</th><th>${L("ข้อเสนอ", "Proposal")}</th><th class="n">${L("ปรับ (ลบ.)", "Change (M)")}</th><th>${L("เหตุผล", "Why")}</th></tr></thead>
         <tbody>${rows.sort((a, b) => ({ redeploy: 0, replace: 1, keep: 2 }[a.kind] - { redeploy: 0, replace: 1, keep: 2 }[b.kind]) || b.s - a.s).map(x => `<tr><td><a href="#" data-link="req:${x.r.id}">${esc(tx(x.r.name))}</a><div class="sub"><span class="mono">${x.r.id}</span> · ${unitName(x.r.unit)} · ${mb(x.r.amount)} ${L("ลบ.", "M")}</div></td>
           <td class="n">${fmt(x.s, 0)}</td><td class="n">${x.rate == null ? "–" : fmt(x.rate * 100, 0) + "%"}</td><td>${tag(K[x.kind][0], K[x.kind][1])}</td><td class="n">${x.d ? (x.d > 0 ? "+" : "−") + mb(Math.abs(x.d)) : "–"}</td><td class="sub">${x.why.join(" · ") || "–"}</td></tr>`).join("")}</tbody></table></div>
-      <div class="body row" style="justify-content:space-between;flex-wrap:wrap;gap:10px"><span class="sub">${L("เกณฑ์ตั้งต้น: คะแนนต่ำกว่า 55 ลด 15% · ปีก่อนเบิกจ่ายต่ำกว่า 70% ลด 10% · คะแนน 70 ขึ้นไปที่อยู่ใต้เส้นกรอบได้เพิ่มไม่เกินครึ่งของวงเงินที่ขอ", "Defaults: score below 55 cut 15% · last year under 70% of plan cut 10% · score 70+ below the line gets up to half its request")}</span>
+      <div class="body row" style="justify-content:space-between;flex-wrap:wrap;gap:10px"><span class="sub">${L(`เกณฑ์: คะแนนต่ำกว่า ${G.lowScore} ลด ${G.lowCut}% · ปีก่อนเบิกจ่ายต่ำกว่า ${G.slowRate}% ลด ${G.slowCut}% · ยกยอดรอคำอธิบายลด ${G.zbbCut}% · คะแนน ${G.highScore} ขึ้นไปที่อยู่ใต้เส้นกรอบได้เพิ่มไม่เกิน ${G.replaceMax}% ของวงเงินที่ขอ · ตั้งค่าได้ที่ M10`, `Rules: score below ${G.lowScore} cut ${G.lowCut}% · last year under ${G.slowRate}% of plan cut ${G.slowCut}% · rolled over awaiting an answer cut ${G.zbbCut}% · score ${G.highScore}+ below the line gets up to ${G.replaceMax}% of its request · set in M10`)}</span>
         ${ed ? `<button class="btn primary" type="button" id="r3-apply">${L("ใช้เป็นข้อเสนอรอบ 2 ของกองแผน", "Use as Planning's round-2 proposal")}</button>` : ""}</div></section>`;
 };
 CONS_BIND.r3 = () => {
@@ -11637,17 +11638,18 @@ function seedBudgetB6(s) {
 
 /* ---- 69b-budget-settings.js ---- */
 // M10 · Budget AI and signals: the settings that rounds B4 to B6 used to keep in code. Spending targets
-// (per year, from the Cabinet resolution), the forecast assumptions (FC-B1, FC-B2) and the warning-signal
-// thresholds (BF-01 to BF-06, and the zero-based "rolled over" band). The administrator edits; finance and the
+// (per year, from the Cabinet resolution), the forecast assumptions (FC-B1, FC-B2), the warning-signal
+// thresholds (BF-01 to BF-06, and the zero-based "rolled over" band) and the 3R rules (M03, AG-03). The administrator edits; finance and the
 // auditor read. Every change is in the audit log. Values carry their confidence level (B or C).
 const BCFG_DEFAULT = () => ({
   targets: { q: [32, 54, 77, 100], end: { all: 94, inv: 80, ope: 98 } },
   fc: { p: { per: 100, ope: 90, inv: 62, sub: 95, oth: 85 }, res: 80, invCarry: 25 },
   sig: { sept: 25, rollBand: 5, lyRate: 70, spend: 80, out: 50, eqMin: 3 },
+  r3: { lowScore: 55, lowCut: 15, slowRate: 70, slowCut: 10, zbbCut: 10, highScore: 70, replaceMax: 50 },
 });
 function bcfg() {
   const d = BCFG_DEFAULT(), c = (S && S.bcfg) || {};
-  return { targets: Object.assign({}, d.targets, S && S.spendTargets, c.targets), fc: { p: Object.assign({}, d.fc.p, (c.fc || {}).p), res: (c.fc || {}).res != null ? c.fc.res : d.fc.res, invCarry: (c.fc || {}).invCarry != null ? c.fc.invCarry : d.fc.invCarry }, sig: Object.assign({}, d.sig, c.sig) };
+  return { targets: Object.assign({}, d.targets, S && S.spendTargets, c.targets), fc: { p: Object.assign({}, d.fc.p, (c.fc || {}).p), res: (c.fc || {}).res != null ? c.fc.res : d.fc.res, invCarry: (c.fc || {}).invCarry != null ? c.fc.invCarry : d.fc.invCarry }, sig: Object.assign({}, d.sig, c.sig), r3: Object.assign({}, d.r3, c.r3) };
 }
 ADMIN_TABS.push({ id: "bcfg", label: ["ตั้งค่างบประมาณ (AI และสัญญาณ)", "Budget AI and signals"], roles: ["admin", "fin", "audit"] });
 ADMIN.bcfg = () => {
@@ -11673,6 +11675,14 @@ ADMIN.bcfg = () => {
       row(`BF-05 · ${L("ใช้เงินเกิน", "Spent more than")}`, num("sig.spend", c.sig.spend), "%", "C") +
       row(`BF-05 · ${L("แต่ผลผลิตต่ำกว่า", "but output below")}`, num("sig.out", c.sig.out), "%", "C") +
       row(`BF-06 · ${L("จำนวนคำขอขั้นต่ำที่ตัดเท่ากัน", "Minimum requests cut equally")}`, num("sig.eqMin", c.sig.eqMin, { min: 2, max: 20 }), L("คำขอ", "requests"), "C"))}
+    ${sec(L("เกณฑ์วิเคราะห์ 3R (M03 และ Agent AG-03)", "3R analysis rules (M03 and agent AG-03)"), L("Review Redeploy Replace ตามคู่มือสำนักงบประมาณ", "Review, Redeploy, Replace per the Budget Bureau manual"),
+      row(`Redeploy · ${L("คะแนนความสำคัญต่ำกว่า", "Priority score below")}`, num("r3.lowScore", c.r3.lowScore), L("คะแนน", "points"), "C") +
+      row(`Redeploy · ${L("ลดวงเงินคำขอคะแนนต่ำ", "Cut for a low score")}`, num("r3.lowCut", c.r3.lowCut, { max: 50 }), "%", "C") +
+      row(`Review · ${L("ปีก่อนกองเบิกจ่ายต่ำกว่า", "Unit spent under, last year")}`, num("r3.slowRate", c.r3.slowRate), L("% ของแผน", "% of plan"), "C") +
+      row(`Redeploy · ${L("ลดวงเงินคำขอของกองที่เบิกจ่ายช้า", "Cut for a slow-spending unit")}`, num("r3.slowCut", c.r3.slowCut, { max: 50 }), "%", "C") +
+      row(`Redeploy · ${L("ลดวงเงินคำขอยกยอดที่รอคำอธิบาย", "Cut for a rolled-over request awaiting an answer")}`, num("r3.zbbCut", c.r3.zbbCut, { max: 50 }), "%", "C") +
+      row(`Replace · ${L("คะแนนขั้นต่ำของคำขอใต้เส้นกรอบ", "Minimum score below the ceiling line")}`, num("r3.highScore", c.r3.highScore), L("คะแนน", "points"), "C") +
+      row(`Replace · ${L("เพิ่มได้ไม่เกิน", "Add at most")}`, num("r3.replaceMax", c.r3.replaceMax), L("% ของวงเงินที่ขอ", "% of the request"), "C"))}
     ${ed ? `<div class="row"><button class="btn ghost" type="button" id="bc-reset">${L("คืนค่าตั้งต้น", "Restore defaults")}</button><span class="sub">${L("ระดับ B มาจากข่าวหรือแหล่งรอง ต้องยืนยันกับมติ ครม. · ระดับ C เป็นข้อเสนอการออกแบบ", "Level B comes from news or secondary sources and needs the Cabinet resolution · level C is a design proposal")}</span></div>` : ""}`;
 };
 BIND_ADMIN.bcfg = () => {

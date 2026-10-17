@@ -1,15 +1,16 @@
 // M10 · Budget AI and signals: the settings that rounds B4 to B6 used to keep in code. Spending targets
-// (per year, from the Cabinet resolution), the forecast assumptions (FC-B1, FC-B2) and the warning-signal
-// thresholds (BF-01 to BF-06, and the zero-based "rolled over" band). The administrator edits; finance and the
+// (per year, from the Cabinet resolution), the forecast assumptions (FC-B1, FC-B2), the warning-signal
+// thresholds (BF-01 to BF-06, and the zero-based "rolled over" band) and the 3R rules (M03, AG-03). The administrator edits; finance and the
 // auditor read. Every change is in the audit log. Values carry their confidence level (B or C).
 const BCFG_DEFAULT = () => ({
   targets: { q: [32, 54, 77, 100], end: { all: 94, inv: 80, ope: 98 } },
   fc: { p: { per: 100, ope: 90, inv: 62, sub: 95, oth: 85 }, res: 80, invCarry: 25 },
   sig: { sept: 25, rollBand: 5, lyRate: 70, spend: 80, out: 50, eqMin: 3 },
+  r3: { lowScore: 55, lowCut: 15, slowRate: 70, slowCut: 10, zbbCut: 10, highScore: 70, replaceMax: 50 },
 });
 function bcfg() {
   const d = BCFG_DEFAULT(), c = (S && S.bcfg) || {};
-  return { targets: Object.assign({}, d.targets, S && S.spendTargets, c.targets), fc: { p: Object.assign({}, d.fc.p, (c.fc || {}).p), res: (c.fc || {}).res != null ? c.fc.res : d.fc.res, invCarry: (c.fc || {}).invCarry != null ? c.fc.invCarry : d.fc.invCarry }, sig: Object.assign({}, d.sig, c.sig) };
+  return { targets: Object.assign({}, d.targets, S && S.spendTargets, c.targets), fc: { p: Object.assign({}, d.fc.p, (c.fc || {}).p), res: (c.fc || {}).res != null ? c.fc.res : d.fc.res, invCarry: (c.fc || {}).invCarry != null ? c.fc.invCarry : d.fc.invCarry }, sig: Object.assign({}, d.sig, c.sig), r3: Object.assign({}, d.r3, c.r3) };
 }
 ADMIN_TABS.push({ id: "bcfg", label: ["ตั้งค่างบประมาณ (AI และสัญญาณ)", "Budget AI and signals"], roles: ["admin", "fin", "audit"] });
 ADMIN.bcfg = () => {
@@ -35,6 +36,14 @@ ADMIN.bcfg = () => {
       row(`BF-05 · ${L("ใช้เงินเกิน", "Spent more than")}`, num("sig.spend", c.sig.spend), "%", "C") +
       row(`BF-05 · ${L("แต่ผลผลิตต่ำกว่า", "but output below")}`, num("sig.out", c.sig.out), "%", "C") +
       row(`BF-06 · ${L("จำนวนคำขอขั้นต่ำที่ตัดเท่ากัน", "Minimum requests cut equally")}`, num("sig.eqMin", c.sig.eqMin, { min: 2, max: 20 }), L("คำขอ", "requests"), "C"))}
+    ${sec(L("เกณฑ์วิเคราะห์ 3R (M03 และ Agent AG-03)", "3R analysis rules (M03 and agent AG-03)"), L("Review Redeploy Replace ตามคู่มือสำนักงบประมาณ", "Review, Redeploy, Replace per the Budget Bureau manual"),
+      row(`Redeploy · ${L("คะแนนความสำคัญต่ำกว่า", "Priority score below")}`, num("r3.lowScore", c.r3.lowScore), L("คะแนน", "points"), "C") +
+      row(`Redeploy · ${L("ลดวงเงินคำขอคะแนนต่ำ", "Cut for a low score")}`, num("r3.lowCut", c.r3.lowCut, { max: 50 }), "%", "C") +
+      row(`Review · ${L("ปีก่อนกองเบิกจ่ายต่ำกว่า", "Unit spent under, last year")}`, num("r3.slowRate", c.r3.slowRate), L("% ของแผน", "% of plan"), "C") +
+      row(`Redeploy · ${L("ลดวงเงินคำขอของกองที่เบิกจ่ายช้า", "Cut for a slow-spending unit")}`, num("r3.slowCut", c.r3.slowCut, { max: 50 }), "%", "C") +
+      row(`Redeploy · ${L("ลดวงเงินคำขอยกยอดที่รอคำอธิบาย", "Cut for a rolled-over request awaiting an answer")}`, num("r3.zbbCut", c.r3.zbbCut, { max: 50 }), "%", "C") +
+      row(`Replace · ${L("คะแนนขั้นต่ำของคำขอใต้เส้นกรอบ", "Minimum score below the ceiling line")}`, num("r3.highScore", c.r3.highScore), L("คะแนน", "points"), "C") +
+      row(`Replace · ${L("เพิ่มได้ไม่เกิน", "Add at most")}`, num("r3.replaceMax", c.r3.replaceMax), L("% ของวงเงินที่ขอ", "% of the request"), "C"))}
     ${ed ? `<div class="row"><button class="btn ghost" type="button" id="bc-reset">${L("คืนค่าตั้งต้น", "Restore defaults")}</button><span class="sub">${L("ระดับ B มาจากข่าวหรือแหล่งรอง ต้องยืนยันกับมติ ครม. · ระดับ C เป็นข้อเสนอการออกแบบ", "Level B comes from news or secondary sources and needs the Cabinet resolution · level C is a design proposal")}</span></div>` : ""}`;
 };
 BIND_ADMIN.bcfg = () => {
