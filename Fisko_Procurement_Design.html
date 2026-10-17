@@ -1,0 +1,863 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fisko Procurement Detailed Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: sticky chapter index on the left, one reading column (~72ch prose, full-width tables and diagrams) on the right */
+:root {
+  --bg: #FFFFFF; --paper: #FFFFFF; --tint: #F4F5FA; --tint-2: #EEF0F7; --line: #DDDEE9;
+  --ink: #1C1D3F; --ink-2: #45465C; --muted: #7A7B92;
+  --navy: #1A1B50; --navy-2: #232366; --navy-ink: #C9CADF;
+  --accent: #1B9E29; --accent-2: #2AD03D; --accent-soft: #E4FBE7;
+  --warn: #A86A0C; --warn-soft: #FCF1DB; --bad: #B9381D; --bad-soft: #FBE3DA; --info: #3A3B9A; --info-soft: #E6E7F7;
+  --font: "IBM Plex Sans Thai", "Leelawadee UI", Tahoma, system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0F1029; --paper: #13153A; --tint: #1A1C44; --tint-2: #20224D; --line: #2D2F5E;
+  --ink: #ECEDF7; --ink-2: #C3C4D8; --muted: #8E90AE;
+  --navy: #0A0B22; --navy-2: #232366; --navy-ink: #B6B8D3;
+  --accent: #3DD552; --accent-2: #2AD03D; --accent-soft: #163A24;
+  --warn: #E7AA45; --warn-soft: #3A2C12; --bad: #F2805F; --bad-soft: #42201A; --info: #A9ABF5; --info-soft: #262862; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0F1029; --paper: #13153A; --tint: #1A1C44; --tint-2: #20224D; --line: #2D2F5E;
+  --ink: #ECEDF7; --ink-2: #C3C4D8; --muted: #8E90AE;
+  --navy: #0A0B22; --navy-2: #232366; --navy-ink: #B6B8D3;
+  --accent: #3DD552; --accent-2: #2AD03D; --accent-soft: #163A24;
+  --warn: #E7AA45; --warn-soft: #3A2C12; --bad: #F2805F; --bad-soft: #42201A; --info: #A9ABF5; --info-soft: #262862; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 20px; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.75 var(--font); }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.mono, code { font-family: var(--mono); font-size: .85em; }
+code { background: var(--tint-2); padding: 1px 5px; border-radius: 4px; }
+
+.layout { display: grid; grid-template-columns: 290px minmax(0, 1fr); }
+.toc { position: sticky; top: 0; height: 100vh; overflow: auto; background: var(--navy); color: var(--navy-ink); padding: 28px 18px 40px; font-size: 14px; }
+.toc .brand { color: #fff; font-weight: 700; font-size: 17px; line-height: 1.3; }
+.toc .brand small { display: block; color: var(--navy-ink); font-weight: 400; font-size: 12.5px; margin-top: 2px; }
+.toc ol { list-style: none; margin: 22px 0 0; padding: 0; counter-reset: c; }
+.toc li { margin: 1px 0; }
+.toc a { display: grid; grid-template-columns: 28px 1fr; gap: 6px; color: var(--navy-ink); text-decoration: none; padding: 6px 8px; border-radius: 7px; line-height: 1.4; }
+.toc a:hover { background: var(--navy-2); color: #fff; }
+.toc a.on { background: var(--navy-2); color: #fff; }
+.toc a .n { font-family: var(--mono); font-size: 11.5px; color: #8A8CB5; padding-top: 2px; }
+.toc a.on .n { color: var(--accent-2); }
+.toc .tools { margin-top: 22px; display: flex; gap: 8px; }
+.toc button { background: var(--navy-2); color: #fff; border: 1px solid #3A3B77; border-radius: 7px; padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+
+main { min-width: 0; padding-block: 0 80px; padding-left: max(28px, env(safe-area-inset-left, 0px)); padding-right: max(28px, env(safe-area-inset-right, 0px)); }
+.doc { max-width: 1080px; margin: 0 auto; }
+.prose { max-width: 74ch; }
+
+.cover { padding: 64px 0 40px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.eyebrow { font-size: 12.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+.cover h1 { font-size: clamp(30px, 4.2vw, 46px); line-height: 1.2; margin: 10px 0 8px; text-wrap: balance; }
+.cover .th { font-size: 20px; color: var(--ink-2); margin: 0; }
+.meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: 30px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.meta div { padding: 12px 16px; border-right: 1px solid var(--line); }
+.meta div:last-child { border-right: 0; }
+.meta span { display: block; font-size: 12px; color: var(--muted); letter-spacing: .04em; }
+.meta b { font-weight: 600; font-size: 15px; }
+.notice { margin-top: 18px; background: var(--warn-soft); color: var(--ink); border-radius: 10px; padding: 12px 16px; font-size: 14.5px; }
+.notice b { color: var(--warn); }
+
+section.ch { padding-top: 56px; }
+h2 { font-size: 28px; line-height: 1.3; margin: 0 0 6px; display: flex; gap: 14px; align-items: baseline; text-wrap: balance; }
+h2 .num { font-family: var(--mono); font-size: 15px; color: var(--accent); font-weight: 600; }
+.lede { color: var(--ink-2); margin: 0 0 22px; max-width: 74ch; }
+h3 { font-size: 19px; margin: 34px 0 10px; line-height: 1.4; }
+h3 .num { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-right: 8px; font-weight: 500; }
+h4 { font-size: 16px; margin: 22px 0 6px; }
+p { margin: 0 0 14px; }
+ul, ol { margin: 0 0 14px; padding-left: 22px; }
+li { margin: 3px 0; }
+.small { font-size: 13.5px; color: var(--muted); }
+
+.tbl { overflow-x: auto; margin: 10px 0 18px; border: 1px solid var(--line); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.55; }
+th { background: var(--tint); text-align: left; font-size: 12.5px; letter-spacing: .03em; color: var(--ink-2); font-weight: 600; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: bottom; }
+td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.id, th.id { white-space: nowrap; font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); }
+td.c, th.c { text-align: center; }
+td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.tag { display: inline-block; border-radius: 99px; padding: 1px 9px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.t-must { background: var(--accent-soft); color: var(--accent); }
+.t-should { background: var(--info-soft); color: var(--info); }
+.t-could { background: var(--tint-2); color: var(--muted); }
+.t-new { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+.t-warn { background: var(--warn-soft); color: var(--warn); }
+.t-bad { background: var(--bad-soft); color: var(--bad); }
+
+.callout { border-radius: 10px; padding: 14px 18px; margin: 14px 0 18px; background: var(--tint); }
+.callout.dark { background: var(--navy); color: #fff; }
+.callout.dark b { color: var(--accent-2); }
+.callout b:first-child { display: block; margin-bottom: 2px; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 12px 0 20px; }
+.card { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; background: var(--paper); }
+.card b { display: block; font-size: 15px; margin-bottom: 2px; }
+.card span { font-size: 13.5px; color: var(--ink-2); line-height: 1.6; display: block; }
+.card .k { font-family: var(--mono); font-size: 12px; color: var(--accent); margin-bottom: 4px; }
+
+/* layered architecture diagram */
+.arch { display: grid; grid-template-columns: minmax(0, 1fr) 210px; gap: 10px; margin: 14px 0 20px; }
+.layers { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.layer { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 10px; align-items: stretch; }
+.layer .lb { background: var(--navy-2); color: #fff; border-radius: 8px; padding: 10px 12px; font-weight: 600; font-size: 14px; line-height: 1.35; }
+.layer .lb small { display: block; color: var(--navy-ink); font-weight: 400; font-size: 12px; }
+.layer.top .lb { background: var(--accent); }
+.layer .chips { display: flex; flex-wrap: wrap; gap: 6px; align-content: center; background: var(--tint); border-radius: 8px; padding: 8px; }
+.chip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; font-size: 13px; }
+.chip.g { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.gov { background: var(--navy); color: #fff; border-radius: 8px; padding: 12px 14px; font-size: 13px; }
+.gov b { color: var(--accent-2); display: block; margin-bottom: 6px; font-size: 14px; }
+.gov ul { padding-left: 16px; margin: 0; }
+.gov li { color: var(--navy-ink); }
+
+/* flow */
+.flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0 20px; }
+.flow .st { background: var(--tint); border-radius: 8px; padding: 8px 12px; font-size: 13.5px; line-height: 1.4; }
+.flow .st b { display: block; font-family: var(--mono); font-size: 11.5px; color: var(--accent); }
+.flow .ar { color: var(--muted); }
+
+/* integration hub */
+.hub { display: grid; grid-template-columns: 1fr minmax(180px, 240px) 1fr; gap: 14px; align-items: center; margin: 14px 0 20px; }
+.hub .side { display: flex; flex-direction: column; gap: 8px; }
+.hub .ext { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 13.5px; background: var(--paper); }
+.hub .ext b { display: block; font-size: 14px; }
+.hub .core { background: var(--navy); color: #fff; border-radius: 12px; padding: 18px; text-align: center; }
+.hub .core b { color: var(--accent-2); font-size: 18px; display: block; }
+.hub .core span { font-size: 12.5px; color: var(--navy-ink); display: block; margin-top: 6px; }
+
+.matrix td.c { font-family: var(--mono); font-size: 12.5px; font-weight: 600; }
+.mx-a { color: var(--accent); } .mx-r { color: var(--muted); } .mx-u { color: var(--info); }
+
+footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+
+@media (max-width: 980px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .toc { position: static; height: auto; padding: 16px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px)); }
+  .toc ol { display: none; }
+  .toc.open ol { display: block; }
+  main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .meta div:nth-child(2) { border-right: 0; }
+  .meta div:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+  .arch { grid-template-columns: minmax(0, 1fr); }
+  .layer { grid-template-columns: minmax(0, 1fr); }
+  .hub { grid-template-columns: minmax(0, 1fr); }
+}
+@media (min-width: 981px) { #toc-toggle { display: none; } }
+@media print {
+  .toc { display: none; }
+  .layout { display: block; }
+  main { padding: 0; }
+  section.ch { break-before: page; padding-top: 0; }
+  .tbl { overflow: visible; }
+  tr, .card, .callout { break-inside: avoid; }
+}
+</style>
+<style>pre.logic { background: var(--tint); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-family: var(--mono); font-size: 12.5px; line-height: 1.65; margin: 12px 0 18px; white-space: pre; }</style>
+</head>
+<body>
+<div class="layout">
+<nav class="toc" id="toc" aria-label="สารบัญ">
+  <div class="brand">Fisko Procurement<small>Detailed Workflow Design · v0.1</small></div>
+  <div class="tools"><button type="button" id="toc-toggle" aria-expanded="false">สารบัญ</button><button type="button" id="theme">ธีม</button></div>
+  <ol>
+    <li><a href="#s1"><span class="n">01</span>วัตถุประสงค์และวิธีค้นคว้า</a></li>
+    <li><a href="#s2"><span class="n">02</span>ผลการค้นคว้าและสิ่งที่นำไปออกแบบ</a></li>
+    <li><a href="#s3"><span class="n">03</span>หลักการออกแบบ</a></li>
+    <li><a href="#s4"><span class="n">04</span>วงจรและสถานะของแฟ้มจัดซื้อ</a></li>
+    <li><a href="#s5"><span class="n">05</span>ฟังก์ชันรายขั้นตอน</a></li>
+    <li><a href="#s6"><span class="n">06</span>กฎและตรรกะ</a></li>
+    <li><a href="#s7"><span class="n">07</span>ข้อมูล บทบาท และการเชื่อมต่อ</a></li>
+    <li><a href="#s8"><span class="n">08</span>AI ในงานจัดซื้อ</a></li>
+    <li><a href="#s9"><span class="n">09</span>การวิเคราะห์ข้อมูล (Analytics)</a></li>
+    <li><a href="#s10"><span class="n">10</span>ผลต่อต้นแบบและลำดับการสร้าง</a></li>
+    <li><a href="#s11"><span class="n">11</span>ความเสี่ยงและประเด็นที่ต้องตัดสินใจ</a></li>
+    <li><a href="#s12"><span class="n">12</span>แหล่งอ้างอิง</a></li>
+  </ol>
+</nav>
+
+<main>
+<div class="doc">
+
+<header class="cover">
+  <div class="eyebrow">Fisko Procurement · Detailed Workflow Design</div>
+  <h1>Fisko Procurement<br><span style="font-size:.55em;color:var(--accent)">ออกแบบเชิงลึก: ขั้นตอน ฟังก์ชัน ตรรกะ AI และ Analytics</span></h1>
+  <p class="th">ต่อยอดจากแนวคิดตระกูลผลิตภัณฑ์ (Product Family Concept v0.2) และต้นแบบ Fisko Procurement แบบเบา</p>
+  <div class="meta">
+    <div><span>เวอร์ชัน</span><b>0.1 ฉบับร่างเพื่อการหารือ</b></div>
+    <div><span>วันที่</span><b>17 ตุลาคม 2569</b></div>
+    <div><span>จัดทำโดย</span><b>Avalant</b></div>
+    <div><span>ต่อยอดจาก</span><b>Product Family Concept v0.2</b></div>
+  </div>
+  <div class="notice"><b>สถานะเอกสาร:</b> เป็นร่างเพื่อตัดสินใจ ไม่ใช่ความเห็นทางกฎหมาย ข้อมูลเกี่ยวกับกฎหมายและระเบียบมาจากการค้นคว้าบนเว็บ ณ วันที่ในเอกสาร ส่วนใหญ่ยังไม่ได้ตรวจกับตัวบทฉบับราชกิจจานุเบกษา ระเบียบและหนังสือเวียนของกรมบัญชีกลางแก้ไขบ่อย (เช่น ระเบียบฉบับที่ 3 พ.ศ. 2569) จึงออกแบบให้เกณฑ์ทั้งหมดเป็นค่าตั้งใน M10 และทุกข้อมีระดับความมั่นใจกำกับตามบท 1 ต้องให้ฝ่ายกฎหมายหรือพัสดุของหน่วยงานตรวจก่อนใช้จริง</div>
+</header>
+
+<!-- ============================== 01 ============================== -->
+<section class="ch" id="s1">
+<h2><span class="num">01</span>วัตถุประสงค์และวิธีค้นคว้า</h2>
+<p class="lede">ขยายต้นแบบ Fisko Procurement จาก “แผน ใบขอซื้อ สัญญา ตรวจรับ” ให้เป็นวงจรจัดซื้อจัดจ้างที่ควบคุมได้ตลอดสาย พร้อม AI และการวิเคราะห์</p>
+<div class="prose">
+<p>ต้นแบบปัจจุบันมีแผนจัดซื้อ ใบขอซื้อ สัญญาและงวดงาน การลงนามตรวจรับ และการนำเข้าสถานะจาก e-GP เป็นไฟล์ เอกสารนี้ออกแบบสิ่งที่ยังขาด ได้แก่ สถานะตลอดวงจร ตัวช่วยเลือกวิธี คณะกรรมการ ราคากลาง การบริหารสัญญาเชิงลึก ประตูเบิกจ่าย AI และ Analytics</p>
+<p>การค้นคว้าใช้แหล่งจากกรมบัญชีกลาง คู่มือของหน่วยงานรัฐ บทความกฎหมาย มาตรฐานข้อมูลเปิด (OCDS) งานของ OECD และแนวปฏิบัติด้านการตรวจจับความเสี่ยงและการควบคุมภายใน แหล่งทั้งหมดอยู่ในบท 12</p>
+</div>
+<h3><span class="num">1.1</span>ระดับความมั่นใจของข้อมูล</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ระดับ</th><th>ความหมาย</th><th>วิธีใช้ในการออกแบบ</th></tr></thead>
+  <tbody>
+    <tr><td><span class="tag t-must">A</span></td><td>เปิดอ่านจากเอกสารต้นทางโดยตรง (สไลด์กรมบัญชีกลาง คู่มือคณะกรรมการตรวจรับ มาตรฐาน OCDS)</td><td>ใช้เป็นค่าเริ่มต้นในระบบได้ แต่ยังต้องตรวจกับฉบับปัจจุบัน</td></tr>
+    <tr><td><span class="tag t-should">B</span></td><td>มาจากผลค้นหาหรือเว็บรอง (บทความ สำนักกฎหมาย เว็บให้ความรู้ที่อ้างหนังสือเวียน) ยังไม่ได้ตรวจกับตัวบท</td><td>ใช้เป็นค่าตั้งที่ปรับได้ ระบุว่า “ต้องยืนยัน”</td></tr>
+    <tr><td><span class="tag t-could">C</span></td><td>ข้อเสนอการออกแบบหรือแนวปฏิบัติทั่วไป ไม่ใช่ข้อกำหนดทางกฎหมาย</td><td>ตัดสินใจร่วมกับหน่วยงาน</td></tr>
+  </tbody>
+</table></div>
+<div class="callout"><b>สิ่งที่การค้นคว้ายังไม่ยืนยัน</b> เกณฑ์วงเงินของวิธีคัดเลือกและวิธีประกวดราคาอิเล็กทรอนิกส์ อัตราหลักประกันสัญญาและค่าปรับ เนื้อหาที่ต้องมีในประกาศแผนตามมาตรา 11 และเงื่อนไขการลงนามสัญญาหลังพ้นกำหนดอุทธรณ์ ทุกข้อนี้ออกแบบเป็นค่าตั้งที่ไม่มีตัวเลขตายตัวในโค้ด</div>
+</section>
+
+<!-- ============================== 02 ============================== -->
+<section class="ch" id="s2">
+<h2><span class="num">02</span>ผลการค้นคว้าและสิ่งที่นำไปออกแบบ</h2>
+<p class="lede">แต่ละข้อค้นพบผูกกับการตัดสินใจออกแบบที่เห็นได้ในบทถัดไป</p>
+
+<h3><span class="num">2.1</span>กฎหมายและระบบ e-GP ของไทย</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ข้อค้นพบ</th><th class="id">ระดับ</th><th>นำไปออกแบบอย่างไร</th></tr></thead>
+  <tbody>
+    <tr><td>กฎหมายหลักคือ พ.ร.บ.การจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐ พ.ศ. 2560 กับระเบียบกระทรวงการคลังฉบับเดียวกันปี 2560 [S1]</td><td class="id"><span class="tag t-must">A</span></td><td>ระบบเป็นชั้นเตรียมและติดตามของหน่วยงาน ตัวบทอยู่ในค่าตั้ง</td></tr>
+    <tr><td>วิธีจัดซื้อมี 4 แบบ: ประกวดราคาอิเล็กทรอนิกส์ (e-bidding), e-market, วิธีคัดเลือก, วิธีเฉพาะเจาะจง และทุกวิธีทำผ่าน e-GP โดยไม่มีข้อยกเว้น [S1]</td><td class="id"><span class="tag t-must">A</span></td><td>Fisko ไม่ทำแทน e-GP แต่ตรวจว่าแฟ้มมีรหัสโครงการ e-GP และเอกสารครบ</td></tr>
+    <tr><td>ขั้นตอนใน e-GP: แผนจัดซื้อ → ร่าง TOR และราคากลาง → เอกสารประกวดราคา → ประกาศ → ยื่นข้อเสนอ → พิจารณาผล → ประกาศผู้ชนะ → อุทธรณ์ → ทำสัญญา → บริหารสัญญา โดยสองขั้นหลังอยู่ระหว่างทำให้เป็นดิจิทัล [S1]</td><td class="id"><span class="tag t-must">A</span></td><td>สถานะของแฟ้มใน Fisko เรียงตามขั้นนี้ และมีส่วนบริหารสัญญาที่เติมช่องว่างได้ โดยวางแผนเปลี่ยนเจ้าของข้อมูลเมื่อ e-GP พร้อม</td></tr>
+    <tr><td>วิธีเฉพาะเจาะจงใช้กับการซื้อหรือจ้างวงเงินไม่เกิน 500,000 บาท (มาตรา 56(2)(ข)) และวงเงินไม่เกิน 100,000 บาท แต่งตั้งผู้ตรวจรับเพียงคนเดียวได้ [S3]</td><td class="id"><span class="tag t-must">A</span></td><td>ตัวช่วยเลือกวิธีและตัวช่วยแต่งตั้งผู้ตรวจรับใช้เกณฑ์นี้เป็นค่าเริ่มต้นที่ปรับได้</td></tr>
+    <tr><td>งานวงเงินสูงกว่า 500,000 บาทต้องใช้การประกวดราคาอิเล็กทรอนิกส์ตามงานศึกษาหนึ่ง และเกณฑ์ของวิธีคัดเลือกไม่พบในผลค้นหา [S12]</td><td class="id"><span class="tag t-should">B</span></td><td>ตารางเกณฑ์วิธีเป็นข้อมูลใน M10 มีวันที่มีผลและผู้รับรอง ไม่ฝังในโค้ด</td></tr>
+    <tr><td>กฎหมายและระเบียบแก้ไขต่อเนื่อง เช่น กฎกระทรวงฉบับที่ 6 พ.ศ. 2568 เพิ่มกรณีภัยคุกคามทางไซเบอร์ และระเบียบฉบับที่ 3 พ.ศ. 2569 เพิ่มการประเมินผลงานผู้รับจ้างก่อสร้าง [S2, S4, S12]</td><td class="id"><span class="tag t-should">B</span></td><td>ค่าตั้งทุกตัวมีประวัติ วันที่มีผล และผู้อนุมัติ เพื่อให้เปลี่ยนตามกฎหมายได้โดยไม่แก้โค้ด</td></tr>
+    <tr><td>ตั้งแต่ 1 ตุลาคม 2569 การอุทธรณ์ผลการประกวดราคาอิเล็กทรอนิกส์และวิธีคัดเลือกต้องทำผ่าน e-GP เท่านั้น ภายใน 7 วันทำการนับจากกรมบัญชีกลางประกาศผล [S2]</td><td class="id"><span class="tag t-should">B</span></td><td>Fisko คำนวณและแจ้งเตือนกำหนดอุทธรณ์ และกันการลงนามสัญญาก่อนพ้นกำหนด (ค่าตั้ง)</td></tr>
+    <tr><td>กรมบัญชีกลางมีแผนปี 2569 ให้เปิดข้อมูลผ่าน API ปรับให้สอดคล้อง OCDS เพิ่ม e-contract และระบบ Red Flag ส่วน e-GP เองมีโมดูลประเมินผลผู้รับจ้างและ Analytic อยู่ระหว่างพัฒนา [S1]</td><td class="id"><span class="tag t-must">A</span></td><td>โครงสร้างข้อมูลของ Fisko แมปกับ OCDS ตั้งแต่ต้น และออกแบบให้รับ API ของ e-GP ได้เมื่อเปิด</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">2.2</span>คณะกรรมการและการตรวจรับ</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ข้อค้นพบ</th><th class="id">ระดับ</th><th>นำไปออกแบบอย่างไร</th></tr></thead>
+  <tbody>
+    <tr><td>คณะกรรมการแต่ละชุด (พิจารณาผลประกวดราคาอิเล็กทรอนิกส์ พิจารณาผลสอบราคา ซื้อหรือจ้างโดยวิธีคัดเลือก เฉพาะเจาะจง และตรวจรับพัสดุ) ประกอบด้วยประธาน 1 คนและกรรมการอย่างน้อย 2 คน และควรมีผู้ชำนาญการหรือผู้ทรงคุณวุฒิ [S3]</td><td class="id"><span class="tag t-must">A</span></td><td>ตัวช่วยแต่งตั้งตรวจองค์ประกอบขั้นต่ำและแนะนำผู้ชำนาญการ</td></tr>
+    <tr><td>ห้ามแต่งตั้งกรรมการพิจารณาผลหรือกรรมการซื้อหรือจ้างโดยวิธีคัดเลือก เป็นกรรมการตรวจรับพัสดุ [S3]</td><td class="id"><span class="tag t-must">A</span></td><td>เป็นกฎความขัดแย้งในระบบ (SD-06 ในบท 6)</td></tr>
+    <tr><td>องค์ประชุมคือประธานและกรรมการไม่น้อยกว่ากึ่งหนึ่ง ลงมติด้วยเสียงข้างมาก ถ้ากรรมการไม่เห็นด้วยให้ทำความเห็นแย้งไว้ [S3]</td><td class="id"><span class="tag t-must">A</span></td><td>บันทึกการลงมติและความเห็นแย้งเป็นข้อมูลของการตรวจรับ</td></tr>
+    <tr><td>ตรวจรับในวันที่ส่งมอบและให้เสร็จโดยเร็ว ถ้าถูกต้องถือว่าส่งมอบ ณ วันที่ส่ง ทำใบตรวจรับอย่างน้อย 2 ฉบับ (ผู้ขาย 1 เจ้าหน้าที่ 1) และรายงานหัวหน้าหน่วยงานเพื่อทราบ ถ้าไม่ถูกต้องให้แจ้งผู้ขายภายใน 3 วันทำการนับแต่ตรวจพบ [S3]</td><td class="id"><span class="tag t-must">A</span></td><td>ขั้นตอนตรวจรับและตัวจับเวลาในบท 5 และ 6</td></tr>
+    <tr><td>งานก่อสร้าง: ตรวจภายใน 3 วันทำการนับแต่ประธานทราบการส่งมอบ ตรวจรายงานผู้ควบคุมงานรายสัปดาห์ และมีจุดประเมินที่เกินครึ่งและเกินสามในสี่ของระยะสัญญา [S3, S4]</td><td class="id"><span class="tag t-should">B</span></td><td>กฎเตือนอัตโนมัติสำหรับสัญญางานก่อสร้าง (ค่าตั้ง)</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">2.3</span>มาตรฐานข้อมูลและแนวปฏิบัติสากล</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ข้อค้นพบ</th><th class="id">ระดับ</th><th>นำไปออกแบบอย่างไร</th></tr></thead>
+  <tbody>
+    <tr><td>OCDS แบ่งกระบวนการเป็น tender, award, contract, implementation โดยมีข้อมูลการวางแผนเป็นส่วนหนึ่ง และใช้ OCID เดียวผูกข้อมูลทุกขั้น [S6, S7]</td><td class="id"><span class="tag t-must">A</span></td><td>แฟ้มจัดซื้อมีรหัสเดียวตลอดสาย และส่งออก OCDS ได้ (บท 7)</td></tr>
+    <tr><td>OECD แนะนำให้มองการจัดซื้อทั้งวงจรและเชื่อมกับงบประมาณและการเงิน และพบว่าความโปร่งใสก่อนประกวดและหลังทำสัญญายังจำกัดในหลายประเทศ [S8]</td><td class="id"><span class="tag t-should">B</span></td><td>เปิดเผยข้อมูลทั้งก่อนและหลังทำสัญญาในรายงาน (บท 9)</td></tr>
+    <tr><td>การตรวจสามทาง (สัญญาหรือใบสั่ง ใบตรวจรับ ใบแจ้งหนี้) เป็นกลไกแยกหน้าที่ แต่ต้องควบคุมผู้ปลดล็อกรายการที่ไม่ตรงและทบทวนการปลดล็อก [S11]</td><td class="id"><span class="tag t-should">B</span></td><td>ประตูเบิกจ่ายและรายงานการยกเว้น (บท 6)</td></tr>
+    <tr><td>สัญญาณเตือนที่พบบ่อย: แบ่งซื้อแบ่งจ้างให้ต่ำกว่าเกณฑ์ ผู้เสนอราคารายเดียว ผู้ชนะซ้ำ ข้อเสนอจับกลุ่มสูงกว่าราคากลาง และสัญญาณเดี่ยวไม่พิสูจน์ความผิด ต้องดูหลายตัวร่วมกัน [S9]</td><td class="id"><span class="tag t-should">B</span></td><td>ไลบรารี Red Flag (บท 9) โดยเรียกว่า “ควรตรวจ” ไม่ใช่ “ทุจริต”</td></tr>
+    <tr><td>ใช้ AI ในงานจัดซื้อพบมากที่สุดคือพยากรณ์ความต้องการและราคา ประเมินผู้ขาย และเพิ่มประสิทธิภาพงานปฏิบัติ ความเสี่ยงหลักคือขาดความโปร่งใสของอัลกอริทึม อคติ และความมั่นคงปลอดภัย แนวทางคือประเมินก่อนใช้ ใส่เงื่อนไขตรวจสอบอัลกอริทึม และอธิบายผลได้ [S10]</td><td class="id"><span class="tag t-should">B</span></td><td>ขอบเขตและแนวป้องกัน AI (บท 8)</td></tr>
+    <tr><td>งานสำรวจ OECD พบว่า AI ภาครัฐส่วนใหญ่ใช้กฎหรือ machine learning แบบดั้งเดิม generative AI ยังพบน้อย และหลายโครงการไม่พ้นขั้นนำร่อง [S10]</td><td class="id"><span class="tag t-should">B</span></td><td>ลำดับพัฒนา AI เริ่มจากกฎและสถิติ แล้วจึงใช้ generative AI ในงานร่างเอกสาร</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 03 ============================== -->
+<section class="ch" id="s3">
+<h2><span class="num">03</span>หลักการออกแบบ</h2>
+<p class="lede">แปดหลักที่ใช้ตัดสินทุกรายละเอียดในบทถัดไป</p>
+<div class="cards">
+  <div class="card"><div class="k">P1</div><b>เตรียมและติดตาม ไม่แทน e-GP</b><span>ขั้นตอนทางการทำใน e-GP Fisko ตรวจความพร้อม เก็บหลักฐาน และติดตามสถานะ</span></div>
+  <div class="card"><div class="k">P2</div><b>แฟ้มเดียวต่อการจัดซื้อ</b><span>เอกสาร เหตุการณ์ คณะกรรมการ สัญญา และการเบิกจ่ายอยู่ในแฟ้มเดียว ใช้รหัสเดียวตลอดสาย</span></div>
+  <div class="card"><div class="k">P3</div><b>กฎเป็นข้อมูล ไม่ใช่โค้ด</b><span>เกณฑ์วงเงิน วิธี เวลา และอัตราอยู่ในตารางที่มีวันที่มีผล ผู้อนุมัติ และประวัติ</span></div>
+  <div class="card"><div class="k">P4</div><b>หลักฐานก่อนการตัดสินใจ</b><span>ทุกขั้นต้องมีเอกสารและเหตุผล ระบบกันข้ามขั้นและแสดงสิ่งที่ยังขาด</span></div>
+  <div class="card"><div class="k">P5</div><b>แยกหน้าที่ฝังในระบบ</b><span>ตรวจที่ตัวผู้ทำและผู้มอบอำนาจ รวมถึงความขัดแย้งของกรรมการ</span></div>
+  <div class="card"><div class="k">P6</div><b>มนุษย์ตัดสิน AI ช่วย</b><span>AI ไม่ให้คะแนนข้อเสนอ ไม่ประกาศผู้ชนะ ไม่เลือกผู้ขาย ไม่อนุมัติ</span></div>
+  <div class="card"><div class="k">P7</div><b>ข้อมูลพร้อมเปิดเผย</b><span>โครงสร้างแมปกับ OCDS เพื่อส่งออกและรับ API ของ e-GP ได้ในอนาคต</span></div>
+  <div class="card"><div class="k">P8</div><b>ชี้ความเสี่ยงอย่างเป็นธรรม</b><span>สัญญาณเตือนเป็น “ควรตรวจ” พร้อมหลักฐานและช่องทางชี้แจง ไม่ตัดสินเจตนา</span></div>
+</div>
+</section>
+
+<!-- ============================== 04 ============================== -->
+<section class="ch" id="s4">
+<h2><span class="num">04</span>วงจรและสถานะของแฟ้มจัดซื้อ</h2>
+<p class="lede">แฟ้มจัดซื้อ (Procurement Case) เป็นหน่วยกลาง แต่ละแฟ้มผูกกับรายการในแผนและรายการจัดสรรของ M06</p>
+
+<div class="flow">
+  <div class="st"><b>1 PLANNED</b>อยู่ในแผน</div><span class="ar">→</span>
+  <div class="st"><b>2 REQUESTED</b>ขอซื้อขอจ้าง</div><span class="ar">→</span>
+  <div class="st"><b>3 APPROVED</b>อนุมัติหลักการ</div><span class="ar">→</span>
+  <div class="st"><b>4 SPECIFYING</b>TOR และราคากลาง</div><span class="ar">→</span>
+  <div class="st"><b>5 SOURCING</b>ดำเนินการใน e-GP</div><span class="ar">→</span>
+  <div class="st"><b>6 EVALUATING</b>พิจารณาผล</div>
+</div>
+<div class="flow">
+  <div class="st"><b>7 AWARDED</b>ประกาศผู้ชนะ · รอพ้นอุทธรณ์</div><span class="ar">→</span>
+  <div class="st"><b>8 CONTRACTING</b>สัญญา หลักประกัน</div><span class="ar">→</span>
+  <div class="st"><b>9 IN DELIVERY</b>บริหารสัญญาและงวดงาน</div><span class="ar">→</span>
+  <div class="st"><b>10 ACCEPTED</b>ตรวจรับครบ</div><span class="ar">→</span>
+  <div class="st"><b>11 PAYMENT</b>ส่งต่อ Fisko Finance</div><span class="ar">→</span>
+  <div class="st"><b>12 CLOSED</b>ปิดและประเมินผู้ขาย</div>
+</div>
+<p class="small">สถานะนอกเส้นหลัก: CANCELLED (ยกเลิกการจัดซื้อ) · FAILED (ไม่มีผู้ยื่นหรือไม่ผ่าน ต้องดำเนินการใหม่) · APPEAL (ระงับระหว่างอุทธรณ์) · SUSPENDED (ระงับงาน) · TERMINATED (บอกเลิกสัญญา) · PLAN_CHANGED (แก้แผน มีเหตุผลและผู้อนุมัติ)</p>
+
+<h3><span class="num">4.1</span>ตารางสถานะ</h3>
+<div class="tbl"><table>
+  <thead><tr><th>สถานะ</th><th>ผู้ทำ</th><th>เงื่อนไขเข้าสถานะ (ระบบตรวจ)</th><th>ผลที่ได้</th><th>เวลาเป้าหมาย (ค่าตั้ง)</th></tr></thead>
+  <tbody>
+    <tr><td>2 REQUESTED</td><td>ผู้ขอ (สำนัก / กอง)</td><td>รายการอยู่ในแผน · วงเงินไม่เกินคงเหลือของรายการจัดสรร · ไม่เข้าข่ายแตกซื้อ (ดูกฎ R-02)</td><td>รายงานขอซื้อขอจ้าง</td><td>ส่งตามเดือนในแผน</td></tr>
+    <tr><td>3 APPROVED</td><td>ผู้มีอำนาจ (ผู้บริหารหรือผู้รับมอบ)</td><td>ผู้ขอไม่ใช่ผู้อนุมัติ (SD-01) · วงเงินจองบนรายการจัดสรรสำเร็จ</td><td>วงเงินถูกจอง · ระบบเสนอวิธีจัดซื้อ</td><td>SLA ของ Workflow</td></tr>
+    <tr><td>4 SPECIFYING</td><td>เจ้าหน้าที่พัสดุ · คณะกรรมการจัดทำ TOR และราคากลาง</td><td>แต่งตั้งคณะกรรมการแล้ว (ถ้าวิธีและวงเงินต้องมี) · บันทึกวิธีจัดซื้อพร้อมเหตุผล</td><td>TOR · ราคากลางพร้อมแหล่งอ้างอิง · ร่างเอกสารจัดซื้อ</td><td>ตามชนิดงาน</td></tr>
+    <tr><td>5 SOURCING</td><td>เจ้าหน้าที่พัสดุ (ทำใน e-GP)</td><td>TOR และราคากลางเสร็จ · มีรหัสโครงการ e-GP · วันที่ประกาศและวันสุดท้ายยื่นข้อเสนอ</td><td>สถานะจาก e-GP (ไฟล์หรือบันทึกมือ)</td><td>ตามระยะประกาศที่ e-GP กำหนด</td></tr>
+    <tr><td>6 EVALUATING</td><td>คณะกรรมการพิจารณาผล</td><td>มีรายชื่อกรรมการพิจารณาผลที่ผ่านกฎความขัดแย้ง · สรุปจำนวนผู้ยื่น</td><td>บันทึกผลและมติ รวมความเห็นแย้ง</td><td>ตามที่คณะกรรมการกำหนด</td></tr>
+    <tr><td>7 AWARDED</td><td>เจ้าหน้าที่พัสดุ (ประกาศใน e-GP)</td><td>มีผู้ชนะ ราคา และวันที่ประกาศ · คำนวณวันสิ้นสุดอุทธรณ์</td><td>แถบนับถอยหลังอุทธรณ์ · ราคาเทียบราคากลาง</td><td>7 วันทำการ (ค่าตั้ง)</td></tr>
+    <tr><td>8 CONTRACTING</td><td>เจ้าหน้าที่พัสดุ</td><td>พ้นกำหนดอุทธรณ์และไม่มีอุทธรณ์ค้าง · วงเงินสัญญาไม่เกินวงเงินที่จอง · มีหลักประกันตามกำหนด · แต่งตั้งกรรมการตรวจรับที่ผ่านกฎ SD-02 และ SD-06</td><td>สัญญาหรือใบสั่ง · ภาระผูกพันส่งให้ Fisko Finance</td><td>ตามระยะที่ระเบียบกำหนด</td></tr>
+    <tr><td>9 IN DELIVERY</td><td>ผู้ขาย (ภายนอก) · ผู้ควบคุมงาน · คณะกรรมการตรวจรับ</td><td>งวดงานและกำหนดส่งมอบครบ · ผู้ควบคุมงานระบุ (งานก่อสร้าง)</td><td>ความก้าวหน้า การเตือนล่าช้า การแก้ไขและขยายสัญญา ค่าปรับ</td><td>ตามสัญญา</td></tr>
+    <tr><td>10 ACCEPTED</td><td>คณะกรรมการตรวจรับ</td><td>ถึงองค์ประชุมและลงมติ · งวดก่อนหน้าตรวจรับแล้ว</td><td>ใบตรวจรับอย่างน้อย 2 ฉบับ · รายงานหัวหน้าหน่วยงาน</td><td>วันที่ส่งมอบ หรือ 3 วันทำการ (งานก่อสร้าง งวดสุดท้าย 5)</td></tr>
+    <tr><td>11 PAYMENT</td><td>การเงิน</td><td>ผ่านประตูเบิกจ่าย (กฎ R-09): สัญญา + ตรวจรับ + ใบแจ้งหนี้ + หลักประกันยังมีผล + หักค่าปรับแล้ว</td><td>คำขอเบิกจ่ายใน Fisko Finance</td><td>—</td></tr>
+    <tr><td>12 CLOSED</td><td>เจ้าหน้าที่พัสดุ</td><td>งวดทั้งหมดตรวจรับและเบิกจ่ายครบ · คืนหลักประกัน · บันทึกบทเรียน</td><td>คะแนนประเมินผู้ขาย · ส่งข้อมูลเข้า Analytics</td><td>—</td></tr>
+  </tbody>
+</table></div>
+
+<p class="small">คู่มือของหน่วยงานหนึ่งระบุลำดับว่า หลังจัดทำใบเสนอซื้อหรือจ้าง หน่วยงานประกาศแผนตามมาตรา 11 และตั้งคณะกรรมการจัดทำร่างขอบเขตของงานและกำหนดราคากลางไปพร้อมกัน [S5] <span class="tag t-should">B</span> สถานะ 3 และ 4 จึงตั้งให้ดำเนินคู่ขนานได้เป็นค่าตั้งของเส้นทาง เนื้อหาและกำหนดเวลาของประกาศแผนยังไม่ยืนยัน</p>
+
+<h3><span class="num">4.2</span>สองเส้นทางตามวิธีจัดซื้อ</h3>
+<div class="tbl"><table>
+  <thead><tr><th></th><th>เส้นทางเล็ก (วิธีเฉพาะเจาะจง)</th><th>เส้นทางแข่งขัน (e-bidding, วิธีคัดเลือก, e-market)</th></tr></thead>
+  <tbody>
+    <tr><td><b>เกณฑ์เริ่มต้น</b></td><td>วงเงินไม่เกิน 500,000 บาท <span class="tag t-must">A</span> หรือกรณีเฉพาะที่กฎหมายกำหนด (เช่น ฉุกเฉิน ผู้ผลิตรายเดียว) <span class="tag t-should">B</span></td><td>วงเงินสูงกว่าเกณฑ์เฉพาะเจาะจง <span class="tag t-should">B</span> หรือเหตุผลของวิธีคัดเลือก</td></tr>
+    <tr><td><b>คณะกรรมการ</b></td><td>คณะกรรมการซื้อหรือจ้าง (หรือผู้พิจารณาที่หน่วยงานกำหนด) · ผู้ตรวจรับคนเดียวเมื่อไม่เกิน 100,000 บาท <span class="tag t-must">A</span></td><td>คณะกรรมการจัดทำ TOR และราคากลาง · คณะกรรมการพิจารณาผล · คณะกรรมการตรวจรับ</td></tr>
+    <tr><td><b>ขั้นในแฟ้ม</b></td><td>2 → 3 → 4 (แบบย่อ) → 7 → 8 → 9 → 10 → 11 → 12</td><td>ครบ 1 ถึง 12</td></tr>
+    <tr><td><b>หลักฐานขั้นต่ำ</b></td><td>รายงานขอซื้อ · ราคากลางหรือราคาอ้างอิง · เหตุผลเลือกวิธี · ใบเสนอราคา · ใบสั่งซื้อหรือสัญญา · ใบตรวจรับ</td><td>เพิ่ม TOR · คำสั่งแต่งตั้งทุกชุด · ประกาศและรหัส e-GP · สรุปผู้ยื่นและมติ · ประกาศผู้ชนะ · บันทึกอุทธรณ์</td></tr>
+    <tr><td><b>จุดควบคุมที่ต้องเข้มขึ้น</b></td><td>แตกซื้อแบ่งจ้าง ผู้ขายรายเดียวซ้ำ (บท 9)</td><td>ความขัดแย้งของกรรมการ ผู้ยื่นรายเดียว ระยะประกาศ ราคาใกล้ราคากลางผิดปกติ</td></tr>
+  </tbody>
+</table></div>
+<div class="callout dark"><b>ใน Fisko สถานะของแฟ้มเดินได้ทางเดียว</b> ระบบไม่ให้ข้ามขั้นหรือย้อนหลังโดยไม่มีเหตุผล การย้อนสถานะ การยกเลิก และการดำเนินการใหม่ต้องมีเหตุผล ผู้อนุมัติ และบันทึกใน Audit Log เสมอ</div>
+</section>
+
+<!-- ============================== 05 ============================== -->
+<section class="ch" id="s5">
+<h2><span class="num">05</span>ฟังก์ชันรายขั้นตอน</h2>
+<p class="lede">ข้อกำหนดเชิงฟังก์ชันของ Fisko Procurement (รหัส FR-PR) ลำดับความสำคัญเป็นข้อเสนอ คอลัมน์ “ต้นแบบ” บอกว่าทำแล้วหรือยัง</p>
+
+<h3><span class="num">5.1</span>แฟ้ม แผน และใบขอซื้อ</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อกำหนด</th><th>ความสำคัญ</th><th>ต้นแบบ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-PR-01</td><td>แฟ้มจัดซื้อต่อรายการ รวมเอกสาร เหตุการณ์ คณะกรรมการ สัญญา และสถานะตามบท 4 พร้อมรายการตรวจความพร้อมของแต่ละขั้น</td><td><span class="tag t-must">Must</span></td><td>ยังไม่มี</td></tr>
+    <tr><td class="id">FR-PR-02</td><td>แผนจัดซื้อประจำปีผูกรายการจัดสรร M06 ตรวจการแตกซื้อและรวมความต้องการ (กฎ R-02)</td><td><span class="tag t-must">Must</span></td><td>มีแผน ไม่มีการตรวจแตกซื้อ</td></tr>
+    <tr><td class="id">FR-PR-03</td><td>แก้ไขแผนพร้อมเหตุผลและผู้อนุมัติ เก็บประวัติเวอร์ชัน</td><td><span class="tag t-should">Should</span></td><td>ยังไม่มี</td></tr>
+    <tr><td class="id">FR-PR-04</td><td>ใบขอซื้อขอจ้าง มีหัวข้อที่หน่วยงานกำหนด (เหตุผล รายการและจำนวน วงเงิน กำหนดเวลาใช้ วิธี เกณฑ์พิจารณา ข้อเสนอรายชื่อคณะกรรมการ) <span class="tag t-should">B</span></td><td><span class="tag t-must">Must</span></td><td>มีบางส่วน (เหตุผล วงเงิน)</td></tr>
+    <tr><td class="id">FR-PR-05</td><td>จองและควบคุมวงเงินกับรายการจัดสรร</td><td><span class="tag t-must">Must</span></td><td>มีแล้ว</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">5.2</span>วิธีจัดซื้อ TOR ราคากลาง และคณะกรรมการ</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อกำหนด</th><th>ความสำคัญ</th><th>ต้นแบบ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-PR-06</td><td>ตัวช่วยเลือกวิธีจัดซื้อจากตารางเกณฑ์ใน M10 แสดงวิธีที่แนะนำ เหตุผล ชุดเอกสารและคณะกรรมการที่ต้องมี (กฎ R-01)</td><td><span class="tag t-must">Must</span></td><td>ยังไม่มี (มีเพียงฟิลด์วิธีในแผน)</td></tr>
+    <tr><td class="id">FR-PR-07</td><td>จัดทำ TOR จากแบบฟอร์มและ TOR เดิมของหน่วยงาน มีเวอร์ชันและการตรวจข้อความล็อกยี่ห้อหรือผู้ขายเฉพาะราย</td><td><span class="tag t-should">Should</span></td><td>ยังไม่มี</td></tr>
+    <tr><td class="id">FR-PR-08</td><td>ราคากลาง: แหล่งอ้างอิง หลักฐานแนบ คณะกรรมการ ผลต่างเทียบราคาเสนอและราคาสัญญา (กฎ R-04)</td><td><span class="tag t-must">Must</span></td><td>มีบัญชีราคามาตรฐานใน M10 ยังไม่มีแฟ้มราคากลาง</td></tr>
+    <tr><td class="id">FR-PR-09</td><td>คณะกรรมการทุกประเภท: องค์ประกอบ เลขที่และวันที่คำสั่งแต่งตั้ง องค์ประชุม มติ และความเห็นแย้ง (กฎ R-05)</td><td><span class="tag t-must">Must</span></td><td>มีเฉพาะกรรมการตรวจรับ</td></tr>
+    <tr><td class="id">FR-PR-10</td><td>กฎความขัดแย้งของกรรมการ SD-06 ถึง SD-08 และแบบแจ้งผลประโยชน์ทับซ้อน</td><td><span class="tag t-must">Must</span></td><td>ยังไม่มี</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">5.3</span>การดำเนินการใน e-GP และการประกาศผล</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อกำหนด</th><th>ความสำคัญ</th><th>ต้นแบบ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-PR-11</td><td>บันทึกรหัสโครงการ e-GP วันที่ประกาศ วันสุดท้ายยื่นข้อเสนอ และสถานะ นำเข้าเป็นไฟล์หรือบันทึกมือ พร้อมแจ้งเตือนเมื่อสถานะไม่ตรงกัน</td><td><span class="tag t-must">Must</span></td><td>มีนำเข้าไฟล์ ไม่มีการเทียบสถานะ</td></tr>
+    <tr><td class="id">FR-PR-12</td><td>สรุปผู้ยื่นข้อเสนอ ผลพิจารณา ผู้ชนะ และราคา (เก็บเฉพาะข้อมูลสรุปและข้อมูลที่ประกาศแล้ว)</td><td><span class="tag t-should">Should</span></td><td>ยังไม่มี</td></tr>
+    <tr><td class="id">FR-PR-13</td><td>ติดตามกำหนดอุทธรณ์และกันการลงนามสัญญาก่อนพ้นกำหนด (กฎ R-06)</td><td><span class="tag t-should">Should</span></td><td>ยังไม่มี</td></tr>
+    <tr><td class="id">FR-PR-14</td><td>ยกเลิก ล้มเหลว หรือดำเนินการใหม่ พร้อมเหตุผล ผู้อนุมัติ และการคืนวงเงินที่จอง</td><td><span class="tag t-should">Should</span></td><td>ยังไม่มี</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">5.4</span>สัญญา การตรวจรับ และประตูเบิกจ่าย</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อกำหนด</th><th>ความสำคัญ</th><th>ต้นแบบ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-PR-15</td><td>ทะเบียนสัญญาหรือใบสั่ง งวดงาน ผู้ควบคุมงาน (งานก่อสร้าง) และผู้ติดต่อของคู่สัญญา</td><td><span class="tag t-must">Must</span></td><td>มีสัญญาและงวดงาน</td></tr>
+    <tr><td class="id">FR-PR-16</td><td>หลักประกันสัญญา: ชนิด วงเงิน วันหมดอายุ เตือนก่อนหมดอายุ และขั้นตอนคืนหลักประกัน (อัตราเป็นค่าตั้ง)</td><td><span class="tag t-should">Should</span></td><td>ยังไม่มี</td></tr>
+    <tr><td class="id">FR-PR-17</td><td>แก้ไขสัญญา ขยายเวลา เปลี่ยนแปลงงาน พร้อมเหตุผล ระดับอนุมัติตามสัดส่วนที่เปลี่ยน และผลต่อภาระผูกพันและกำหนดส่งมอบ (กฎ R-08)</td><td><span class="tag t-must">Must</span></td><td>ยังไม่มี</td></tr>
+    <tr><td class="id">FR-PR-18</td><td>คำนวณค่าปรับ เตือนเมื่อถึงเกณฑ์ประเมินหรือพิจารณาบอกเลิกสัญญา (กฎ R-09)</td><td><span class="tag t-should">Should</span></td><td>ยังไม่มี</td></tr>
+    <tr><td class="id">FR-PR-19</td><td>รายงานความก้าวหน้าของผู้ควบคุมงานรายสัปดาห์ และจุดประเมินตามระยะเวลาสัญญา (งานก่อสร้าง)</td><td><span class="tag t-should">Should</span></td><td>ยังไม่มี</td></tr>
+    <tr><td class="id">FR-PR-20</td><td>ตรวจรับ: องค์ประชุม ลงนามรายคน ความเห็นแย้ง ใบตรวจรับอย่างน้อย 2 ฉบับ รายงานหัวหน้าหน่วยงาน และจับเวลาตามกฎ R-10</td><td><span class="tag t-must">Must</span></td><td>มีการลงนามสองคน ไม่มีเอกสารและจับเวลา</td></tr>
+    <tr><td class="id">FR-PR-21</td><td>ตรวจรับบางส่วนหรือไม่ถูกต้อง: บันทึกส่วนที่รับ แจ้งผู้ขายภายในกำหนด และผลต่อค่าปรับ</td><td><span class="tag t-should">Should</span></td><td>ยังไม่มี</td></tr>
+    <tr><td class="id">FR-PR-22</td><td>ประตูเบิกจ่ายแบบตรวจสามทาง (สัญญา ตรวจรับ ใบแจ้งหนี้) ก่อนส่ง Fisko Finance (กฎ R-09)</td><td><span class="tag t-must">Must</span></td><td>ตรวจเฉพาะงวดที่ตรวจรับแล้ว</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">5.5</span>ผู้ขาย ข้อมูล Analytics และ AI</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อกำหนด</th><th>ความสำคัญ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-PR-23</td><td>ทะเบียนผู้ขาย (ข้อมูลหลัก) เชื่อมการตรวจสถานะนิติบุคคลเมื่อได้ช่องทาง</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-PR-24</td><td>ประเมินผลผู้ขายหลังปิดงาน และแสดงประกอบการจัดซื้อครั้งถัดไป</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-PR-25</td><td>บันทึกเหตุการณ์ของทุกขั้น (event log) พร้อมเวลา ใช้คำนวณเวลาแต่ละขั้น</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-PR-26</td><td>แดชบอร์ดตามบทบาท: เจ้าหน้าที่พัสดุ หัวหน้าพัสดุ ผู้บริหาร ผู้ตรวจสอบ การเงิน (บท 9)</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-PR-27</td><td>ดัชนีชี้วัด KPI-01 ถึง KPI-14 ตามนิยามในบท 9</td><td><span class="tag t-must">Must</span></td></tr>
+    <tr><td class="id">FR-PR-28</td><td>ไลบรารี Red Flag RF-01 ถึง RF-10 พร้อมเกณฑ์ตั้งค่า ระดับความเสี่ยง และขั้นตอนชี้แจง</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-PR-29</td><td>ส่งออกข้อมูลตามมาตรฐาน OCDS (บท 7.2)</td><td><span class="tag t-could">Could</span></td></tr>
+    <tr><td class="id">FR-PR-30</td><td>AI ช่วยร่าง TOR เอกสาร คำสั่งแต่งตั้ง และหนังสือแจ้ง (AI-02, AI-11)</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-PR-31</td><td>AI เสนอราคากลางพร้อมหลักฐานอ้างอิง (AI-03)</td><td><span class="tag t-could">Could</span></td></tr>
+    <tr><td class="id">FR-PR-32</td><td>AI ตรวจความครบถ้วนของเอกสารและข้อความล็อกสเปก (AI-04)</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-PR-33</td><td>AI เตือนความเสี่ยงงานล่าช้า (AI-07)</td><td><span class="tag t-should">Should</span></td></tr>
+    <tr><td class="id">FR-PR-34</td><td>AI สรุปและตอบคำถามข้อมูลจัดซื้อ (AI-09)</td><td><span class="tag t-could">Could</span></td></tr>
+    <tr><td class="id">FR-PR-35</td><td>ข้อห้าม AI: ไม่ให้คะแนนหรือจัดอันดับข้อเสนอ ไม่ประกาศผู้ชนะ ไม่เลือกผู้ขาย ไม่อนุมัติ ไม่ลงนาม</td><td><span class="tag t-must">Must</span></td></tr>
+  </tbody>
+</table></div>
+<p class="small">ข้อกำหนดนี้ขยายความจาก FR-M07-07 (ติดตามขั้นตอนจัดซื้อจัดจ้างใน Fisko Budget) เมื่อเปิดใช้ Fisko Procurement ส่วนเบาใน M07 จะอ่านข้อมูลจากแฟ้มจัดซื้อแทนการกรอกซ้ำ</p>
+</section>
+
+<!-- ============================== 06 ============================== -->
+<section class="ch" id="s6">
+<h2><span class="num">06</span>กฎและตรรกะ</h2>
+<p class="lede">กฎทุกข้อเขียนเป็นเงื่อนไขที่ตั้งค่าได้ มีวันที่มีผลและผู้รับรอง เกณฑ์ตัวเลขที่ไม่ได้ยืนยันไว้เป็นค่าตั้ง ไม่ใช่ค่าคงที่ในโค้ด</p>
+
+<h3><span class="num">6.1</span>R-01 ตัวช่วยเลือกวิธีจัดซื้อ (Decision Table)</h3>
+<p>ข้อมูลเข้า: ชนิดงาน (ซื้อ จ้าง จ้างก่อสร้าง ที่ปรึกษา ออกแบบ) วงเงินราคากลาง เหตุผลพิเศษ (เร่งด่วน ผู้ผลิตรายเดียว ซื้อซ้ำ ความมั่นคง) และมีในแคตตาล็อกหรือไม่</p>
+<div class="tbl"><table>
+  <thead><tr><th>ลำดับ</th><th>เงื่อนไข</th><th>วิธีที่แนะนำ</th><th>คณะกรรมการและเอกสารที่ระบบบังคับ</th><th class="id">ระดับ</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>ซื้อหรือจ้างวงเงินไม่เกิน 500,000 บาท</td><td>เฉพาะเจาะจง</td><td>รายงานขอซื้อ ราคาอ้างอิง ใบเสนอราคา · ผู้ตรวจรับคนเดียวถ้าไม่เกิน 100,000 บาท มิฉะนั้นเป็นคณะกรรมการ</td><td class="id"><span class="tag t-must">A</span></td></tr>
+    <tr><td>2</td><td>มีเหตุพิเศษที่กฎหมายกำหนด (เช่น ฉุกเฉิน ผู้ผลิตรายเดียว) และผู้ขอแนบเหตุผล</td><td>เฉพาะเจาะจง (กรณีเหตุพิเศษ) เสนอหัวหน้าพัสดุตรวจ</td><td>รายงานเหตุผล · หลักฐานเหตุพิเศษ · ผู้อนุมัติระดับสูงขึ้น</td><td class="id"><span class="tag t-should">B</span></td></tr>
+    <tr><td>3</td><td>วงเงินสูงกว่าเกณฑ์ข้อ 1 และไม่มีเหตุพิเศษ</td><td>ประกวดราคาอิเล็กทรอนิกส์ (e-bidding)</td><td>คณะกรรมการ TOR และราคากลาง · คณะกรรมการพิจารณาผล · ประกาศและรหัส e-GP</td><td class="id"><span class="tag t-should">B</span></td></tr>
+    <tr><td>4</td><td>พัสดุอยู่ในแคตตาล็อกที่รองรับ</td><td>e-market (ตัวเลือก)</td><td>ตามเงื่อนไขของแคตตาล็อก</td><td class="id"><span class="tag t-should">B</span></td></tr>
+    <tr><td>5</td><td>ผู้ขอระบุเหตุผลที่เข้าเงื่อนไขวิธีคัดเลือก</td><td>วิธีคัดเลือก (เกณฑ์ไม่ได้ยืนยัน ตั้งใน M10)</td><td>คณะกรรมการซื้อหรือจ้างโดยวิธีคัดเลือก · เอกสารเชิญชวน</td><td class="id"><span class="tag t-could">C</span></td></tr>
+    <tr><td>6</td><td>จ้างที่ปรึกษาหรือจ้างออกแบบ</td><td>ตามวิธีเฉพาะของงานประเภทนี้ (ออกแบบหลังยืนยัน)</td><td>ตามประเภทงาน</td><td class="id"><span class="tag t-could">C</span></td></tr>
+  </tbody>
+</table></div>
+<pre class="logic">function recommendMethod(case, cfg) {          // cfg = ตารางเกณฑ์ใน M10 ที่มีผล ณ วันที่ขอซื้อ
+  rows = cfg.methodRules.filter(r =&gt; r.kind == case.kind &amp;&amp; r.effective &lt;= case.requestDate)
+  hit  = rows.filter(r =&gt; r.maxValue == null || case.refPrice &lt;= r.maxValue)
+  if (case.specialReason &amp;&amp; case.evidence.length)  hit.push(cfg.specialRule(case.specialReason))
+  return hit.sortBy(priority)[0] + { why: explain(hit), docs: cfg.docSet(hit), committees: cfg.committees(hit) }
+}                                                // ผู้ใช้ยังเลือกวิธีอื่นได้ แต่ต้องบันทึกเหตุผลและผู้อนุมัติ</pre>
+
+<h3><span class="num">6.2</span>R-02 ตรวจแตกซื้อแตกจ้างและรวมความต้องการ</h3>
+<pre class="logic">กลุ่ม  = (หน่วยงาน, หมวดพัสดุ หรือรหัสรายการ, ปีงบประมาณ)
+ยอดกลุ่ม = Σ วงเงินของใบขอซื้อและสัญญาในกลุ่ม ที่ลงวันที่อยู่ในช่วง W วัน (ค่าตั้ง เริ่มต้น 90)
+T = เกณฑ์สูงสุดของวิธีเฉพาะเจาะจง จาก R-01
+
+ถ้า ยอดกลุ่ม &gt; T  และ มีอย่างน้อย 2 รายการที่แต่ละรายการ ≤ T
+   → ผู้ขอต้องชี้แจง หรือรวมเป็นรายการเดียว (สถานะ "ต้องชี้แจง" ห้ามอนุมัติจนมีเหตุผล)
+ถ้า มีรายการเดียวกันซ้ำข้ามสำนักในปีเดียว
+   → เสนอรวมความต้องการ (รวมซื้อ) ให้เจ้าหน้าที่พัสดุพิจารณา</pre>
+<p class="small">เป็นการป้องกันเชิงระบบ ไม่ตัดสินว่าผิด ต้นฉบับแนวคิดมาจากสัญญาณเตือนที่พบบ่อยในงานตรวจสอบ [S9] ระดับความมั่นใจ <span class="tag t-could">C</span> (ข้อเสนอการออกแบบ)</p>
+
+<h3><span class="num">6.3</span>R-03 ถึง R-05 วงเงิน ราคากลาง และคณะกรรมการ</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">กฎ</th><th>ตรรกะ</th><th class="id">ระดับ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">R-03</td><td>วงเงินที่ขอไม่เกิน: คงเหลือของรายการจัดสรร − ภาระผูกพัน − วงเงินที่จองแล้วแต่ยังไม่ทำสัญญา (มีในต้นแบบ) · ถ้ายกเลิกหรือล้มเหลวให้คืนวงเงินจอง</td><td class="id"><span class="tag t-must">A</span></td></tr>
+    <tr><td class="id">R-04</td><td>ราคากลางต้องมีแหล่งอ้างอิงอย่างน้อยหนึ่งแหล่ง เรียงตามลำดับ: ราคากลางอิเล็กทรอนิกส์ของ e-GP หรือราคามาตรฐานของหน่วยงานใน M10 → ราคาในสัญญาเดิม → ใบเสนอราคาหลายราย · เก็บหลักฐาน คณะกรรมการ และวันที่ · เตือนเมื่อราคาผู้ชนะหรือราคาสัญญาสูงกว่าราคากลางเกินค่าตั้ง · งานแข่งขันบังคับให้มีราคากลางก่อนประกาศ</td><td class="id"><span class="tag t-should">B</span></td></tr>
+    <tr><td class="id">R-05</td><td>คณะกรรมการแต่ละชุดต้องมีประธาน 1 คนและกรรมการอย่างน้อย 2 คน · แนะนำให้มีผู้ชำนาญการหรือผู้ทรงคุณวุฒิ · บันทึกเลขที่และวันที่คำสั่งแต่งตั้ง · องค์ประชุมคือประธานและกรรมการไม่น้อยกว่ากึ่งหนึ่ง · มติเสียงข้างมาก · ความเห็นแย้งต้องบันทึก</td><td class="id"><span class="tag t-must">A</span></td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.4</span>ชุดกฎแยกหน้าที่ (ต่อจาก SD-01 ถึง SD-05)</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>กฎ</th><th class="id">ระดับ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">SD-06</td><td>กรรมการพิจารณาผลการประกวดราคา กรรมการซื้อหรือจ้างโดยวิธีคัดเลือก และกรรมการพิจารณาผลสอบราคา เป็นกรรมการตรวจรับพัสดุของสัญญาเดียวกันไม่ได้ [S3]</td><td class="id"><span class="tag t-must">A</span></td></tr>
+    <tr><td class="id">SD-07</td><td>กรรมการที่ประกาศผลประโยชน์ทับซ้อนกับผู้ยื่นข้อเสนอรายใด ห้ามร่วมพิจารณาข้อเสนอของแฟ้มนั้น และการประกาศต้องบันทึกก่อนเปิดข้อเสนอ</td><td class="id"><span class="tag t-could">C</span></td></tr>
+    <tr><td class="id">SD-08</td><td>ผู้ขอแก้ไขสัญญาที่เพิ่มวงเงินหรือขยายเวลา ห้ามเป็นผู้อนุมัติการแก้ไขนั้น</td><td class="id"><span class="tag t-could">C</span></td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.5</span>R-06 ถึง R-08 อุทธรณ์ สัญญา และการแก้ไขสัญญา</h3>
+<pre class="logic">// R-06 กำหนดอุทธรณ์
+appealEnd = addWorkdays(announceDate, cfg.appealDays /* 7 ตามแหล่ง [S2] */, calendar = ปฏิทินวันหยุดใน M10)
+ห้ามลงนามสัญญา (สถานะ 8) ถ้า วันนี้ ≤ appealEnd  หรือ  มีอุทธรณ์ค้าง
+// เงื่อนไขการกันลงนามเป็นค่าตั้ง ต้องยืนยันกับระเบียบ
+
+// R-07 สัญญา
+สัญญาต้อง: วงเงิน ≤ ราคาผู้ชนะ ≤ วงเงินจอง · ผลรวมงวด = วงเงินสัญญา · ผู้ตรวจรับผ่าน SD-02 และ SD-06
+         · มีหลักประกันครบตามค่าตั้งของชนิดงาน · กำหนดส่งมอบของแต่ละงวดไม่ก่อนวันลงนาม
+
+// R-08 แก้ไขสัญญา (variation / extension)
+สัดส่วน = (วงเงินใหม่ − วงเงินเดิมของสัญญา) / วงเงินเดิม
+ระดับอนุมัติ = cfg.variationLadder.find(สัดส่วน)       // เช่น ไม่เกิน x% หัวหน้าพัสดุ · เกิน x% ผู้บริหาร
+ถ้า สัดส่วน &gt; 0 → ต้องมีวงเงินคงเหลือบนรายการจัดสรร (R-03) และผ่าน SD-08
+ถ้า ขยายเวลา → ต้องมีรหัสเหตุผล (ผู้ขายผิด · เหตุสุดวิสัย · ผู้ว่าจ้างผิด) ซึ่งกำหนดผลต่อค่าปรับ
+ทุกการแก้ไขสร้าง "ฉบับสัญญา" ใหม่ ฉบับเดิมยังเรียกดูได้ และแจ้ง Fisko Finance ปรับภาระผูกพัน</pre>
+
+<h3><span class="num">6.6</span>R-09 ถึง R-12 ค่าปรับ ตรวจรับ ประตูเบิกจ่าย และการปิดแฟ้ม</h3>
+<pre class="logic">// R-09 ค่าปรับ (อัตราและฐานเป็นค่าตั้งตามชนิดสัญญา ไม่ฝังตัวเลข)
+วันล่าช้า   = max(0, วันส่งมอบจริง − กำหนดส่งมอบของงวด − วันที่ได้รับการขยาย)
+ค่าปรับ     = อัตราต่อวัน × ฐานค่าปรับ × วันล่าช้า      // ฐาน = วงเงินสัญญา หรือส่วนที่ยังไม่ส่งมอบ ตามสัญญา
+สะสมเกินเพดานที่ตั้ง (เช่น y% ของสัญญา) → เตือนผู้บริหารให้พิจารณาบอกเลิกสัญญา
+// ค่าตั้งเริ่มต้นสำหรับงานก่อสร้าง (ตามหนังสือเวียน [S4], ระดับ B):
+//   ประเมินเมื่อครบกำหนด ถ้าความก้าวหน้าสะสม &lt; 85% หรือค่าปรับ &gt; 10% ของวงเงินสัญญา
+//   จุดประเมินระหว่างงานที่เกินครึ่งและเกินสามในสี่ของระยะสัญญา
+
+// R-10 ตรวจรับ
+เปิดการตรวจรับเมื่อผู้ควบคุมงานหรือผู้ขายแจ้งส่งมอบ แล้วตั้งเวลา:
+   ซื้อหรือจ้างทั่วไป       → ตรวจในวันที่ส่งมอบ ให้เสร็จโดยเร็ว            [S3]
+   จ้างก่อสร้าง งวดทั่วไป   → 3 วันทำการนับแต่ประธานทราบ  งวดสุดท้าย 5 วันทำการ  [S4]
+ถึงองค์ประชุม + มติถูกต้อง → ถือว่าส่งมอบ ณ วันที่ส่ง · ออกใบตรวจรับ ≥ 2 ฉบับ · รายงานหัวหน้าหน่วยงาน
+ไม่ถูกต้องหรือไม่ครบ     → รับเฉพาะส่วนที่ถูก (ถ้าสัญญาไม่ห้าม) · แจ้งผู้ขายภายใน 3 วันทำการนับแต่ตรวจพบ [S3]
+กรรมการบางคนไม่รับ        → บันทึกความเห็นแย้ง เสนอหัวหน้าหน่วยงานสั่งการ
+
+// R-11 ประตูเบิกจ่าย (three-way match [S11])
+ส่งให้ Fisko Finance ได้เมื่อ:
+   งวดมีผลตรวจรับ "ถูกต้อง" และมีใบตรวจรับครบ
+   ∧ ใบแจ้งหนี้ตรงกับสัญญาและงวด (ยอด ผู้ขาย เลขที่สัญญา) ภายในค่าเผื่อที่ตั้ง (เริ่มต้น 0)
+   ∧ ยอดที่ขอ = วงเงินงวด − ค่าปรับ − ส่วนที่ไม่ผ่านตรวจรับ
+   ∧ หลักประกันสัญญายังมีผลหรือพ้นข้อกำหนดแล้ว
+รายการที่ไม่ตรงถูกพักเป็นข้อยกเว้น: ผู้ปลดต้องเป็นผู้มีสิทธิ์ ระบุเหตุผล และรายงานให้ผู้ตรวจสอบเห็น
+
+// R-12 ปิดแฟ้ม
+ทุกงวดตรวจรับและเบิกจ่ายครบ ∧ คืนหลักประกัน ∧ ไม่มีค่าปรับหรือข้อพิพาทค้าง ∧ บันทึกบทเรียน → CLOSED และให้คะแนนผู้ขาย</pre>
+<p class="small">ตัวเลขทุกตัวในกฎ R-02 ถึง R-12 ที่ไม่ได้มีระดับ A เป็นค่าตั้งเริ่มต้นเพื่อสาธิต ต้องให้ฝ่ายกฎหมายและพัสดุของหน่วยงานยืนยันก่อนใช้จริง</p>
+</section>
+
+<!-- ============================== 07 ============================== -->
+<section class="ch" id="s7">
+<h2><span class="num">07</span>ข้อมูล บทบาท และการเชื่อมต่อ</h2>
+<p class="lede">โครงสร้างข้อมูลแมปกับ OCDS เพื่อให้ส่งออกและเทียบกับข้อมูลของ e-GP ได้</p>
+
+<h3><span class="num">7.1</span>ข้อมูลหลัก (Entity)</h3>
+<div class="tbl"><table>
+  <thead><tr><th>Entity</th><th>คำอธิบาย</th><th>ข้อมูลสำคัญ</th><th>ในต้นแบบ</th></tr></thead>
+  <tbody>
+    <tr><td>ProcurementCase</td><td>แฟ้มจัดซื้อ หน่วยกลางของวงจร</td><td>รหัสแฟ้ม (ใช้เป็น OCID), รายการแผน, รายการจัดสรร, วิธี, สถานะ, เส้นทาง</td><td>ยังไม่มี (มีแผน ใบขอซื้อ สัญญาแยกกัน)</td></tr>
+    <tr><td>PlanItem / Requisition</td><td>รายการในแผนและใบขอซื้อขอจ้าง</td><td>รายการจัดสรร, วงเงิน, เดือนที่ต้องการ, เหตุผล, ผู้ขอ</td><td>มี</td></tr>
+    <tr><td>MethodDecision</td><td>การเลือกวิธีจัดซื้อ</td><td>วิธีที่แนะนำ, วิธีที่เลือก, เหตุผล, ผู้อนุมัติ, เวอร์ชันตารางเกณฑ์ที่ใช้</td><td>ยังไม่มี</td></tr>
+    <tr><td>SpecAndPrice</td><td>TOR และราคากลาง</td><td>เวอร์ชัน TOR, แหล่งราคา, หลักฐาน, ราคากลาง, วันที่, คณะกรรมการ</td><td>ยังไม่มี</td></tr>
+    <tr><td>Committee / Member</td><td>คณะกรรมการและสมาชิก</td><td>ประเภท, เลขที่และวันที่คำสั่ง, ประธาน, กรรมการ, ผลประโยชน์ทับซ้อนที่แจ้ง, องค์ประชุม, มติ</td><td>มีเฉพาะรายชื่อกรรมการตรวจรับ</td></tr>
+    <tr><td>Solicitation</td><td>การประกาศใน e-GP (สรุป)</td><td>รหัสโครงการ e-GP, วันที่ประกาศ, วันสุดท้ายยื่น, จำนวนผู้ยื่น, สถานะ</td><td>มีรหัสและขั้นตอนจากไฟล์</td></tr>
+    <tr><td>Award / Appeal</td><td>ผลการพิจารณา ผู้ชนะ และอุทธรณ์</td><td>ผู้ชนะ, ราคา, วันที่ประกาศ, วันสิ้นสุดอุทธรณ์, อุทธรณ์ (วันที่ ผล)</td><td>ยังไม่มี</td></tr>
+    <tr><td>Contract / ContractVersion</td><td>สัญญาและฉบับแก้ไข</td><td>เลขที่, วันที่ลงนาม, วงเงิน, ระยะเวลา, ผู้ควบคุมงาน, ฉบับที่, เหตุผลการแก้ไข</td><td>มีสัญญา ไม่มีฉบับแก้ไข</td></tr>
+    <tr><td>Guarantee</td><td>หลักประกันสัญญา</td><td>ชนิด, วงเงิน, ผู้ออก, วันหมดอายุ, วันคืน</td><td>ยังไม่มี</td></tr>
+    <tr><td>Phase / Acceptance</td><td>งวดงานและการตรวจรับ</td><td>กำหนดส่ง, วงเงิน, วันส่งจริง, ผลตรวจรับ, ลายเซ็นรายคน, ความเห็นแย้ง, เลขที่ใบตรวจรับ</td><td>มีงวดและลายเซ็น</td></tr>
+    <tr><td>Penalty / Variation</td><td>ค่าปรับและการเปลี่ยนแปลง</td><td>วันล่าช้า, อัตรา, ยอด, เหตุผล, ผู้อนุมัติ</td><td>ยังไม่มี</td></tr>
+    <tr><td>SupplierProfile / Performance</td><td>ผู้ขายและคะแนน</td><td>เลขนิติบุคคล, ประเภท, คะแนนรายงาน, เหตุการณ์ (ล่าช้า ค่าปรับ)</td><td>ยังไม่มี</td></tr>
+    <tr><td>CaseEvent</td><td>เหตุการณ์ของแฟ้ม (event log)</td><td>ประเภท, เวลา, ผู้ทำ, ก่อน/หลัง, เอกสาร</td><td>มีใน Audit Log ระดับรวม</td></tr>
+    <tr><td>MethodRule / ThresholdConfig</td><td>ตารางเกณฑ์ใน M10</td><td>ชนิดงาน, ช่วงวงเงิน, วิธี, เอกสาร, คณะกรรมการ, วันที่มีผล, ผู้รับรอง, แหล่งอ้างอิง</td><td>ยังไม่มี</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">7.2</span>การแมปกับ OCDS</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ช่วงของ OCDS [S6]</th><th>ข้อมูลใน Fisko</th><th>หมายเหตุ</th></tr></thead>
+  <tbody>
+    <tr><td>planning (เป้าหมาย งบประมาณ โครงการ)</td><td>PlanItem, รายการจัดสรร M06, ตัวชี้วัด M01</td><td>OCDS ถือเป็นส่วนข้อมูลที่กระบวนการอ้างถึง</td></tr>
+    <tr><td>tender (ประกาศ รายการ มูลค่า คำถาม)</td><td>Solicitation, SpecAndPrice, MethodDecision</td><td>เปิดเผยหลังประกาศเท่านั้น</td></tr>
+    <tr><td>award (ผู้ชนะ ผู้ยื่น การประเมิน)</td><td>Award, สรุปผู้ยื่น</td><td>ข้อเสนอของผู้ยื่นที่ไม่ชนะไม่ส่งออกโดยปริยาย</td></tr>
+    <tr><td>contract (สัญญา ฉบับแก้ไข)</td><td>Contract, ContractVersion, Guarantee</td><td>ฉบับแก้ไขตรงกับ amendments</td></tr>
+    <tr><td>implementation (การจ่าย ความก้าวหน้า ขยายเวลา สิ้นสุด)</td><td>Phase, Acceptance, Penalty, คำขอเบิกจ่ายใน Fisko Finance</td><td>เชื่อมกับข้อมูลเบิกจ่ายด้วยรหัสสัญญา</td></tr>
+  </tbody>
+</table></div>
+<p class="small">รหัสแฟ้มของ Fisko ใช้เป็น OCID (คำนำหน้าที่จดทะเบียนกับ Open Contracting Partnership + รหัสเฉพาะของหน่วยงาน) ซึ่งผูกข้อมูลทุกขั้นเข้าด้วยกัน [S6] กรมบัญชีกลางมีแผนปรับข้อมูลให้สอดคล้อง OCDS ในปี 2569 [S1] จึงต้องตรวจรูปแบบที่ใช้จริงก่อนส่งออก</p>
+
+<h3><span class="num">7.3</span>บทบาทและความรับผิดชอบ</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ขั้น</th><th>ผู้ขอ</th><th>เจ้าหน้าที่พัสดุ</th><th>หัวหน้าพัสดุ</th><th>คณะกรรมการ</th><th>ผู้มีอำนาจ / ผู้บริหาร</th><th>การเงิน</th><th>ผู้ตรวจสอบ</th></tr></thead>
+  <tbody>
+    <tr><td>ขอซื้อขอจ้าง</td><td>ทำ</td><td>ช่วย</td><td>—</td><td>—</td><td>—</td><td>—</td><td>อ่าน</td></tr>
+    <tr><td>อนุมัติหลักการ</td><td>—</td><td>เสนอ</td><td>ตรวจ</td><td>—</td><td>อนุมัติ</td><td>ยืนยันวงเงิน (ระบบ)</td><td>อ่าน</td></tr>
+    <tr><td>TOR และราคากลาง</td><td>ให้ข้อมูล</td><td>ประสาน</td><td>ตรวจ</td><td>จัดทำ</td><td>แต่งตั้ง</td><td>—</td><td>อ่าน</td></tr>
+    <tr><td>ดำเนินการและพิจารณาผล</td><td>—</td><td>ทำใน e-GP</td><td>กำกับ</td><td>พิจารณา</td><td>เห็นชอบผล</td><td>—</td><td>อ่าน</td></tr>
+    <tr><td>สัญญาและหลักประกัน</td><td>—</td><td>ทำ</td><td>ตรวจ</td><td>—</td><td>ลงนาม</td><td>รับภาระผูกพัน</td><td>อ่าน</td></tr>
+    <tr><td>บริหารสัญญา</td><td>ติดตาม</td><td>ทำ</td><td>กำกับ</td><td>ตรวจรับ</td><td>อนุมัติแก้ไข</td><td>—</td><td>อ่าน</td></tr>
+    <tr><td>เบิกจ่าย</td><td>—</td><td>ส่งประตูเบิกจ่าย</td><td>—</td><td>—</td><td>อนุมัติ</td><td>ขอและกระทบยอด</td><td>อ่าน</td></tr>
+  </tbody>
+</table></div>
+<p class="small">ผู้ขายเป็นผู้ใช้ภายนอก ไม่มีสิทธิ์ใน Fisko ในเวอร์ชันแรก การแจ้งผู้ขายออกเป็นเอกสารหรืออีเมลจากเจ้าหน้าที่ บทบาทใหม่ที่ต้องเพิ่มในระบบ: หัวหน้าเจ้าหน้าที่พัสดุ และผู้ควบคุมงาน</p>
+
+<h3><span class="num">7.4</span>การเชื่อมต่อ e-GP (ไฟล์เท่านั้นตามประเด็น D-F05)</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ทิศทาง</th><th>ข้อมูล</th><th>ใช้ทำอะไร</th><th>กติกา</th></tr></thead>
+  <tbody>
+    <tr><td>เข้า Fisko</td><td>ไฟล์สถานะโครงการ: รหัสโครงการ e-GP, ขั้นตอน, วันที่, ผู้ชนะและราคาที่ประกาศแล้ว</td><td>อัปเดตสถานะแฟ้ม เทียบกับสถานะที่บันทึกไว้</td><td>ตรวจรหัสแฟ้มก่อนนำเข้า แถวไม่ตรงถูกข้ามและรายงาน · นำเข้าซ้ำได้โดยไม่เกิดซ้ำ</td></tr>
+    <tr><td>ออกจาก Fisko</td><td>ชุดข้อมูลสำหรับเจ้าหน้าที่คีย์ใน e-GP: รายการ วงเงิน ราคากลางและแหล่ง ร่าง TOR คำสั่งแต่งตั้ง</td><td>ลดการพิมพ์ซ้ำและความผิดพลาด</td><td>เอกสารพิมพ์หรือไฟล์ตามแบบที่ e-GP ใช้ เมื่อทราบรูปแบบ</td></tr>
+    <tr><td>เทียบสถานะ</td><td>สถานะแฟ้มใน Fisko กับสถานะจากไฟล์</td><td>แจ้งเมื่อไม่ตรงกันเกินเวลาที่ตั้ง (เช่น e-GP ประกาศผู้ชนะแล้วแต่ Fisko ยังอยู่ขั้นพิจารณา)</td><td>แสดงเป็นงานของเจ้าหน้าที่พัสดุ</td></tr>
+    <tr><td>อนาคต</td><td>API และข้อมูลเปิดของ e-GP ตามแผนกรมบัญชีกลาง [S1]</td><td>แทนไฟล์ ลดงานนำเข้า</td><td>ออกแบบ Adapter ให้เปลี่ยนจากไฟล์เป็น API ได้ (Solution Design 8.2)</td></tr>
+  </tbody>
+</table></div>
+<div class="callout"><b>ขอบเขตการบริหารสัญญา</b> สไลด์ของกรมบัญชีกลางที่ค้นพบ (สร้างเมื่อพฤศจิกายน 2568) ระบุว่าการลงนามสัญญาและการบริหารสัญญาใน e-GP อยู่ระหว่างทำให้เป็นดิจิทัล [S1] สถานะอาจเปลี่ยนแล้ว ส่วนบริหารสัญญาของ Fisko Procurement จึงเติมช่องว่างได้ในตอนนี้ แต่ต้องมีแผนว่าเมื่อ e-GP พร้อม ข้อมูลฉบับใดเป็นข้อมูลหลัก (ประเด็น D-P03)</div>
+
+<h3><span class="num">7.5</span>ชั้นความลับและการเก็บรักษา</h3>
+<ul>
+  <li>ข้อเสนอราคาของผู้ยื่นเป็นข้อมูลลับจนกว่าประกาศผล Fisko เก็บเฉพาะข้อมูลสรุปและข้อมูลที่ประกาศแล้ว ไม่เก็บไฟล์ข้อเสนอฉบับเต็มในเวอร์ชันแรก (ประเด็น D-P04)</li>
+  <li>ข้อมูลผู้ขายที่เป็นบุคคลธรรมดาเป็นข้อมูลส่วนบุคคลตาม PDPA ต้องอยู่ในขอบเขต DPIA ของระบบ</li>
+  <li>ประวัติการเปลี่ยนแปลงสัญญาและเอกสารตรวจรับเก็บตามระยะที่กำหนดใน M10 (Solution Design 7.4)</li>
+</ul>
+</section>
+
+<!-- ============================== 08 ============================== -->
+<section class="ch" id="s8">
+<h2><span class="num">08</span>AI ในงานจัดซื้อ</h2>
+<p class="lede">AI ช่วยร่าง ตรวจ เตือน และสรุป ส่วนการให้คะแนนข้อเสนอ การเลือกผู้ขาย การประกาศผู้ชนะ และการอนุมัติ เป็นของมนุษย์เสมอ</p>
+
+<div class="callout dark"><b>ทำไมต้องจำกัดขอบเขต</b> งานของ OECD ที่ค้นพบชี้ว่าความเสี่ยงหลักของ AI ในงานจัดซื้อคือขาดความโปร่งใสของอัลกอริทึม อคติ และความมั่นคงปลอดภัย และแนะนำให้ประเมินก่อนใช้ ใส่เงื่อนไขตรวจสอบอัลกอริทึม และให้ผลอธิบายได้ [S10] ในงานเลือกผู้ขายซึ่งมีผลต่อสิทธิ์ของผู้ยื่นและต้องอุทธรณ์ได้ จึงไม่ให้ AI ตัดสินหรือจัดอันดับ</div>
+
+<h3><span class="num">8.1</span>กรณีใช้งาน AI (Use Case)</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>งาน</th><th>ข้อมูลเข้า</th><th>ผลลัพธ์</th><th>ระดับ</th><th>เทคนิคเริ่มต้น</th><th>ระยะ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">AI-01</td><td>เสนอรวมความต้องการและเตือนแตกซื้อ</td><td>แผน ใบขอซื้อ สัญญา ในปีเดียวกัน</td><td>กลุ่มรายการที่ควรรวม พร้อมเหตุผล</td><td>แจ้งเตือน</td><td>กฎ + จับคู่ชื่อรายการ (R-02)</td><td>1</td></tr>
+    <tr><td class="id">AI-02</td><td>ร่าง TOR และข้อกำหนด</td><td>TOR เดิมของหน่วยงาน แบบฟอร์มมาตรฐาน รายละเอียดพัสดุ</td><td>ร่าง TOR พร้อมแหล่งอ้างอิง</td><td>ร่างให้คนแก้</td><td>Generative AI + ค้นคืนเอกสารเดิม</td><td>3</td></tr>
+    <tr><td class="id">AI-03</td><td>เสนอราคากลางพร้อมหลักฐาน</td><td>บัญชีราคามาตรฐาน สัญญาเดิม แคตตาล็อก</td><td>ช่วงราคา รายการหลักฐาน ผลต่างจากราคาที่ขอ</td><td>อ่านอย่างเดียว</td><td>สถิติ (ค่ากลาง ช่วง)</td><td>2</td></tr>
+    <tr><td class="id">AI-04</td><td>ตรวจเอกสารครบถ้วนและข้อความล็อกสเปก</td><td>TOR เอกสารแนบ ชุดเอกสารตามวิธี</td><td>รายการที่ขาด ข้อความที่ระบุยี่ห้อหรือผู้ผลิตเฉพาะราย</td><td>แนะนำ</td><td>กฎ + OCR + ตรวจข้อความ</td><td>1</td></tr>
+    <tr><td class="id">AI-05</td><td>แนะนำวิธีจัดซื้อ</td><td>ชนิดงาน วงเงิน เหตุผล</td><td>วิธีที่แนะนำพร้อมเหตุผลและเอกสารที่ต้องมี</td><td>แนะนำ</td><td>กฎจากตารางเกณฑ์ (R-01) ไม่ใช้โมเดลเรียนรู้</td><td>1</td></tr>
+    <tr><td class="id">AI-06</td><td>ช่วยตรวจเอกสารของผู้ยื่น (ครบหรือไม่)</td><td>เอกสารที่ผู้ยื่นส่ง</td><td>รายการที่ขาดหรืออ่านไม่ออก</td><td>แนะนำ</td><td>OCR + รายการตรวจ</td><td>3</td></tr>
+    <tr><td class="id">AI-07</td><td>เตือนความเสี่ยงงานล่าช้า</td><td>ความก้าวหน้างวดงาน ประวัติผู้ขาย รายงานผู้ควบคุมงาน</td><td>คะแนนความเสี่ยงล่าช้าพร้อมเหตุผล ร่างหนังสือเร่งรัด</td><td>แจ้งเตือน</td><td>กฎ → สถิติ → ML เมื่อมีข้อมูลพอ</td><td>2</td></tr>
+    <tr><td class="id">AI-08</td><td>ตรวจความเสี่ยงและความผิดปกติ (Red Flag)</td><td>ข้อมูลแฟ้ม สัญญา ตรวจรับ การเบิกจ่าย</td><td>รายการ “ควรตรวจ” พร้อมคะแนนและหลักฐาน</td><td>แจ้งเตือน ผู้ตรวจสอบตัดสิน</td><td>กฎ + สถิติ (บท 9.3)</td><td>2</td></tr>
+    <tr><td class="id">AI-09</td><td>ตอบคำถามข้อมูลจัดซื้อ</td><td>ชั้นความหมายของ Analytics (บท 9)</td><td>คำตอบพร้อมตารางและแหล่งที่มา</td><td>อ่านอย่างเดียว</td><td>ภาษาธรรมชาติ → คำสั่งค้นข้อมูลที่ผ่านชั้นความหมาย</td><td>3</td></tr>
+    <tr><td class="id">AI-10</td><td>สรุปผลงานผู้ขาย</td><td>เหตุการณ์ ค่าปรับ ผลตรวจรับ คะแนนเดิม</td><td>ข้อความสรุปประกอบการประเมิน</td><td>ร่างให้คนแก้</td><td>Generative AI จากข้อมูลที่ยืนยันแล้ว</td><td>3</td></tr>
+    <tr><td class="id">AI-11</td><td>ร่างเอกสารปฏิบัติงาน</td><td>ข้อมูลแฟ้ม แม่แบบของหน่วยงาน</td><td>ร่างคำสั่งแต่งตั้ง ใบตรวจรับ หนังสือแจ้งผู้ขาย รายงานขอซื้อ</td><td>ร่างให้คนแก้</td><td>แม่แบบ + เติมข้อมูล (Generative AI เฉพาะข้อความอธิบาย)</td><td>1</td></tr>
+  </tbody>
+</table></div>
+<p class="small">“ระยะ” คือลำดับที่แนะนำ: 1 เริ่มได้ด้วยกฎ 2 ต้องมีข้อมูลสะสมหรือวิธีสถิติ 3 ใช้ Generative AI ซึ่งผลสำรวจ OECD พบว่ายังพบน้อยในภาครัฐและหลายโครงการไม่พ้นขั้นนำร่อง [S10] จึงให้เริ่มจากกฎก่อน</p>
+
+<h3><span class="num">8.2</span>สิ่งที่ AI ไม่ทำ</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ห้าม</th><th>เหตุผล</th><th>การบังคับในระบบ</th></tr></thead>
+  <tbody>
+    <tr><td>ให้คะแนน จัดอันดับ หรือตัดสิทธิ์ข้อเสนอของผู้ยื่น</td><td>มีผลต่อสิทธิ์ผู้ยื่นและต้องอธิบายและอุทธรณ์ได้ เป็นหน้าที่ของคณะกรรมการ</td><td>ไม่มีเครื่องมือ (tool) ที่รับข้อเสนอเพื่อให้คะแนน ไม่มีปุ่มหรือ API</td></tr>
+    <tr><td>ประกาศผู้ชนะ เลือกผู้ขาย หรือลงนาม</td><td>เป็นอำนาจของผู้มีอำนาจตามกฎหมาย</td><td>AI อ่านและร่างเท่านั้น ไม่มีสิทธิ์เขียนในสถานะ 6 ถึง 8</td></tr>
+    <tr><td>อนุมัติหรือเปลี่ยนวงเงิน</td><td>เหมือนหลักของ M09 ทั้งระบบ</td><td>ผ่าน Workflow ปกติเท่านั้น</td></tr>
+    <tr><td>ส่งข้อเสนอราคาหรือข้อมูลลับไปโมเดลภายนอกหน่วยงาน</td><td>ความลับของผู้ยื่นและข้อมูลที่ยังไม่ประกาศ</td><td>LLM Gateway อนุญาตเฉพาะปลายทางที่หน่วยงานกำหนด (ประเด็น D-03) และไม่ส่งข้อมูลระดับ “ลับ”</td></tr>
+    <tr><td>ระบุว่าบุคคลหรือผู้ขายทุจริต</td><td>สัญญาณเตือนเดี่ยวไม่พิสูจน์ความผิด [S9]</td><td>ใช้ถ้อยคำ “ควรตรวจ” พร้อมหลักฐานและช่องทางชี้แจง</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">8.3</span>แนวป้องกันและการประเมิน</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ความเสี่ยง</th><th>มาตรการ</th></tr></thead>
+  <tbody>
+    <tr><td>ร่าง TOR ลำเอียงไปทางยี่ห้อหรือผู้ขายเฉพาะราย</td><td>ตรวจข้อความระบุยี่ห้อ ผู้ผลิต หรือคุณลักษณะที่มีผู้ผลิตรายเดียว (AI-04) แจ้งคณะกรรมการก่อนส่ง · เก็บร่างของ AI และฉบับสุดท้ายเพื่อดูส่วนที่คนแก้</td></tr>
+    <tr><td>เอกสารจากผู้ขายมีคำสั่งแฝง (Prompt Injection)</td><td>ถือเนื้อหาเอกสารเป็นข้อมูล ไม่ใช่คำสั่ง · AI ที่อ่านเอกสารผู้ขายไม่มีสิทธิ์เขียน · ทดสอบเชิงรุกก่อนเปิดใช้</td></tr>
+    <tr><td>อธิบายผลไม่ได้</td><td>ทุกคะแนนและข้อเสนอแสดงเหตุผล ข้อมูลที่ใช้ และกฎที่เข้าเงื่อนไข · เรียกดูประวัติคำแนะนำของแต่ละแฟ้มได้</td></tr>
+    <tr><td>เชื่อ AI เกินไป (Automation Bias)</td><td>แสดงระดับความมั่นใจและแหล่งอ้างอิง · ผู้ใช้ต้องกดยืนยันก่อนใช้ร่าง · บันทึกว่าผู้ใช้รับหรือแก้ร่างอย่างไร</td></tr>
+    <tr><td>ข้อมูลฝึกหรือข้อมูลอ้างอิงมีอคติหรือไม่ครบ</td><td>ทบทวนข้อมูลที่ใช้ทุกไตรมาส · ติดตามผลบวกลวงตามประเภทผู้ขายและประเภทหน่วยงาน · ผู้ตรวจสอบกำหนดเกณฑ์</td></tr>
+    <tr><td>โมเดลเปลี่ยนพฤติกรรมตามเวลา</td><td>ชุดทดสอบคงที่รันซ้ำทุกครั้งที่ปรับ · ปิดเปิดแต่ละ Agent ใน M09 · บันทึกเวอร์ชันโมเดลในทุกคำแนะนำ</td></tr>
+    <tr><td>สัญญาจัดหา AI ของผู้ให้บริการไม่รับตรวจสอบ</td><td>ใส่ข้อกำหนดตรวจสอบอัลกอริทึม การประเมินผลกระทบข้อมูลส่วนบุคคล และมาตรการความมั่นคงปลอดภัยในสัญญา [S10]</td></tr>
+  </tbody>
+</table></div>
+<div class="tbl"><table>
+  <thead><tr><th>ตัวชี้วัดคุณภาพ AI</th><th>วิธีวัด</th><th>เป้าหมาย</th></tr></thead>
+  <tbody>
+    <tr><td>อัตราการใช้ร่าง TOR และเอกสารโดยไม่แก้มาก (AI-02, AI-11)</td><td>เทียบร่างกับฉบับสุดท้าย</td><td>หน่วยงานกำหนด</td></tr>
+    <tr><td>ความแม่นของ Red Flag: สัดส่วนที่ผู้ตรวจสอบเห็นว่าควรตรวจต่อ (AI-08)</td><td>บันทึกผลตรวจของผู้ตรวจสอบ</td><td>เริ่มต้น ≥ 50% และปรับตามผล</td></tr>
+    <tr><td>ความครอบคลุมบนกรณีที่รู้ผล (Recall) บนชุดกรณีทดสอบที่ผู้ตรวจสอบรับรอง</td><td>ชุดทดสอบคงที่</td><td>หน่วยงานกำหนด</td></tr>
+    <tr><td>การเตือนงานล่าช้าที่เกิดขึ้นจริง (AI-07)</td><td>เทียบการเตือนกับงวดที่ล่าช้าจริงภายหลัง</td><td>หน่วยงานกำหนด</td></tr>
+    <tr><td>คำตอบข้อมูลถูกต้องและมีแหล่งอ้างอิง (AI-09)</td><td>ชุดคำถามรับรอง (Solution Design 9.5)</td><td>ถูกต้อง ≥ 98% มีแหล่งอ้างอิง 100%</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">8.4</span>Agent ที่เกี่ยวข้อง</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>Agent</th><th>บทบาทใน Procurement</th></tr></thead>
+  <tbody>
+    <tr><td class="id">AG-02</td><td>Budget Validation (ขยาย)</td><td>ตรวจเอกสารครบถ้วน ข้อความล็อกสเปก และคุณภาพเหตุผลของใบขอซื้อ (AI-04, AI-05)</td></tr>
+    <tr><td class="id">AG-05</td><td>Budget Monitoring (ขยาย)</td><td>ตรวจความผิดปกติตลอดสายจากข้อมูลแฟ้ม (AI-01, AI-08)</td></tr>
+    <tr><td class="id">AG-07</td><td>Procurement Drafting (เสนอ)</td><td>ร่าง TOR คำสั่งแต่งตั้ง ใบตรวจรับ หนังสือ และเสนอราคากลางพร้อมหลักฐาน (AI-02, AI-03, AI-11)</td></tr>
+    <tr><td class="id">AG-08</td><td>Contract Monitoring (เสนอ)</td><td>เตือนงานล่าช้า สัญญาและหลักประกันใกล้ครบกำหนด และร่างหนังสือเร่งรัด (AI-07)</td></tr>
+    <tr><td class="id">AG-10</td><td>Procurement Insight (เสนอ)</td><td>ตอบคำถามและสรุปข้อมูลจัดซื้อจากชั้นความหมายของ Analytics และสรุปผลงานผู้ขาย (AI-09, AI-10)</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 09 ============================== -->
+<section class="ch" id="s9">
+<h2><span class="num">09</span>การวิเคราะห์ข้อมูล (Analytics)</h2>
+<p class="lede">เปลี่ยนเหตุการณ์ทุกขั้นของแฟ้มเป็นตัวชี้วัด แดชบอร์ดตามบทบาท และสัญญาณเตือนที่ตรวจสอบได้</p>
+
+<h3><span class="num">9.1</span>สี่ชั้นของ Analytics และแดชบอร์ด</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ชั้น</th><th>คำถามที่ตอบ</th><th>ผู้ใช้</th><th>ตัวอย่างหน้าจอ</th></tr></thead>
+  <tbody>
+    <tr><td>ปฏิบัติงาน</td><td>วันนี้ต้องทำอะไร อะไรใกล้ครบกำหนด</td><td>เจ้าหน้าที่พัสดุ กรรมการ ผู้ขอ</td><td>คิวงาน ตัวจับเวลาอุทธรณ์ ตรวจรับ หลักประกันหมดอายุ</td></tr>
+    <tr><td>บริหารจัดการ</td><td>แผนเดินตามกำหนดไหม ขั้นไหนช้า ใครรอใคร</td><td>หัวหน้าพัสดุ กองแผนงาน</td><td>กราฟกรวย (funnel) ตามสถานะ เวลาแต่ละขั้น เทียบแผน</td></tr>
+    <tr><td>ธรรมาภิบาลและความเสี่ยง</td><td>มีรูปแบบใดที่ควรตรวจ</td><td>ผู้ตรวจสอบ หัวหน้าพัสดุ</td><td>คิว Red Flag แฟ้มรายละเอียดพร้อมหลักฐาน</td></tr>
+    <tr><td>ยุทธศาสตร์</td><td>เงินไปที่ไหน ตลาดผู้ขายเป็นอย่างไร ได้คุ้มค่าไหม</td><td>ผู้บริหาร การเงิน</td><td>การแข่งขัน ราคาเทียบราคากลาง การกระจุกตัว คาดการณ์เบิกจ่ายร่วมกับ Fisko Finance</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">9.2</span>ตัวชี้วัด (KPI) พร้อมนิยาม</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ตัวชี้วัด</th><th>นิยาม</th><th>ข้อควรระวัง</th></tr></thead>
+  <tbody>
+    <tr><td class="id">KPI-01</td><td>อัตราดำเนินการตามแผน</td><td>รายการในแผนที่เข้าสถานะ 8 ขึ้นไป ÷ รายการที่ถึงเดือนกำหนดในแผน</td><td>แยกตามสำนักและงวดไตรมาส</td></tr>
+    <tr><td class="id">KPI-02</td><td>ความล่าช้าเทียบแผน</td><td>วันขอซื้อจริง − เดือนกำหนดในแผน (ค่ากลางและ P90)</td><td>แผนที่แก้ไขนับจากฉบับล่าสุดและแสดงจำนวนครั้งที่แก้</td></tr>
+    <tr><td class="id">KPI-03</td><td>เวลาแต่ละขั้น</td><td>ค่ากลางและ P90 ของเวลาระหว่างเหตุการณ์ในสถานะ 2 ถึง 10 เทียบ SLA ใน M10</td><td>นับวันทำการ ไม่นับช่วงรอผู้ขายหรือรอ e-GP แยกต่างหาก</td></tr>
+    <tr><td class="id">KPI-04</td><td>เวลาตั้งแต่อนุมัติถึงลงนามสัญญา</td><td>วันลงนาม − วันอนุมัติหลักการ แยกตามวิธี</td><td>เทียบเส้นทางเล็กกับเส้นทางแข่งขัน</td></tr>
+    <tr><td class="id">KPI-05</td><td>สัดส่วนการแข่งขัน</td><td>มูลค่าและจำนวนแฟ้มแยกตามวิธี (เฉพาะเจาะจงเทียบวิธีแข่งขัน)</td><td>ใช้ดูแนวโน้ม ไม่ใช่เป้าหมายตายตัว</td></tr>
+    <tr><td class="id">KPI-06</td><td>อัตราผู้ยื่นรายเดียว</td><td>แฟ้มแข่งขันที่มีผู้ยื่น 1 ราย ÷ แฟ้มแข่งขันที่ปิดรับแล้ว</td><td>เป็นตัวแทนความเสี่ยงที่ใช้แพร่หลาย [S9] ไม่ใช่ข้อพิสูจน์</td></tr>
+    <tr><td class="id">KPI-07</td><td>ผู้ยื่นเฉลี่ยต่อแฟ้ม</td><td>ค่าเฉลี่ยจำนวนผู้ยื่นในแฟ้มแข่งขัน</td><td>แยกตามหมวดพัสดุ</td></tr>
+    <tr><td class="id">KPI-08</td><td>ราคาผู้ชนะเทียบราคากลาง</td><td>ราคาผู้ชนะ ÷ ราคากลาง ส่วนที่ต่ำกว่า 1 คือส่วนประหยัด</td><td>ราคากลางต้องมีหลักฐาน มิฉะนั้นตัวชี้วัดไม่มีความหมาย</td></tr>
+    <tr><td class="id">KPI-09</td><td>การเติบโตของสัญญา</td><td>วงเงินสัญญาฉบับล่าสุด ÷ วงเงินตอนลงนาม − 1</td><td>แยกการแก้ไขที่เพิ่มงานกับการแก้ราคา</td></tr>
+    <tr><td class="id">KPI-10</td><td>การส่งมอบตรงเวลา</td><td>งวดที่ตรวจรับภายในกำหนด ÷ งวดที่ถึงกำหนด และวันล่าช้าเฉลี่ย</td><td>หักวันที่ได้รับการขยายโดยเหตุที่ไม่ใช่ความผิดผู้ขาย</td></tr>
+    <tr><td class="id">KPI-11</td><td>สัดส่วนค่าปรับ</td><td>ค่าปรับสะสม ÷ วงเงินสัญญา</td><td>เทียบเกณฑ์เตือนใน R-09</td></tr>
+    <tr><td class="id">KPI-12</td><td>เวลาตรวจรับ</td><td>วันแจ้งส่งมอบ → วันตรวจรับเสร็จ เทียบกฎ R-10</td><td>ต่ำกว่าปกติผิดปกติก็เป็นสัญญาณ (RF-07)</td></tr>
+    <tr><td class="id">KPI-13</td><td>การกระจุกตัวของผู้ขาย</td><td>ส่วนแบ่งมูลค่าของผู้ขาย 3 รายแรก และดัชนี HHI ต่อหมวดและต่อสำนัก</td><td>บางหมวดมีผู้ผลิตน้อยราย ต้องแยกจากความเสี่ยง</td></tr>
+    <tr><td class="id">KPI-14</td><td>ความครบถ้วนของแฟ้มและความทันสมัยของข้อมูล e-GP</td><td>แฟ้มที่ผ่านรายการตรวจครบ ÷ ทั้งหมด และเวลาล่าสุดที่ซิงก์สถานะ</td><td>ใช้วัดคุณภาพข้อมูลก่อนเชื่อถือ KPI อื่น</td></tr>
+  </tbody>
+</table></div>
+<p class="small">เป้าหมายตัวเลขให้หน่วยงานกำหนด เอกสารนี้กำหนดเฉพาะนิยามและวิธีคำนวณ ตัวชี้วัดร่วมกับ Fisko Finance ได้แก่ เวลาจากตรวจรับถึงเบิกจ่าย และคาดการณ์ภาระผูกพันรายเดือน</p>
+
+<h3><span class="num">9.3</span>ไลบรารี Red Flag</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>สัญญาณ</th><th>ตรรกะ (ค่าตั้งได้)</th><th>ข้อมูลที่ต้องมี</th><th>น้ำหนัก</th></tr></thead>
+  <tbody>
+    <tr><td class="id">RF-01</td><td>แบ่งซื้อแบ่งจ้างให้ต่ำกว่าเกณฑ์</td><td>หลายรายการกลุ่มเดียวกันในช่วง W วัน แต่ละรายการ ≤ T และผลรวม &gt; T (R-02)</td><td>ใบขอซื้อ สัญญา วันที่ ผู้ขาย</td><td>สูง</td></tr>
+    <tr><td class="id">RF-02</td><td>ผู้ขายรายเดียวได้งานเฉพาะเจาะจงซ้ำใกล้เกณฑ์</td><td>จำนวนหรือมูลค่าที่ผู้ขายรายเดียวได้จากสำนักเดียวเกินค่าตั้งในช่วงเวลา และหลายสัญญามีมูลค่า ≥ k% ของ T</td><td>สัญญาและผู้ขาย</td><td>สูง</td></tr>
+    <tr><td class="id">RF-03</td><td>ผู้ยื่นรายเดียวในงานแข่งขัน</td><td>อัตราผู้ยื่นรายเดียวของหมวดหรือสำนักสูงกว่าค่ากลางของกรมเกินค่าตั้ง</td><td>จำนวนผู้ยื่น</td><td>กลาง</td></tr>
+    <tr><td class="id">RF-04</td><td>ผู้ชนะซ้ำในหมวดเดียวกัน</td><td>ผู้ขายรายเดียวชนะ ≥ n ครั้งติดต่อกันหรือเกินส่วนแบ่งที่ตั้งในหมวดและสำนักเดียวกัน</td><td>ผลการประกาศ</td><td>กลาง</td></tr>
+    <tr><td class="id">RF-05</td><td>ราคาชนะใกล้หรือสูงกว่าราคากลางผิดปกติ</td><td>ราคาผู้ชนะ ÷ ราคากลาง ≥ r ซ้ำหลายแฟ้ม หรือสูงกว่า 1</td><td>ราคากลางพร้อมหลักฐาน ราคาผู้ชนะ</td><td>กลาง</td></tr>
+    <tr><td class="id">RF-06</td><td>สัญญาโตหลังลงนาม</td><td>การเติบโตสะสม (KPI-09) เกินค่าตั้ง หรือแก้ไขเกิน m ครั้ง</td><td>ฉบับสัญญา</td><td>สูง</td></tr>
+    <tr><td class="id">RF-07</td><td>ลำดับเวลาผิดปกติ</td><td>ตรวจรับก่อนวันส่งมอบ จ่ายก่อนตรวจรับ หรือตรวจรับเสร็จเร็วกว่าเกณฑ์ผิดปกติ (มีแล้วใน M09 เป็น AN-03)</td><td>วันที่ส่งมอบ ตรวจรับ จ่าย</td><td>สูง</td></tr>
+    <tr><td class="id">RF-08</td><td>ระยะประกาศหรือขั้นตอนสั้นผิดปกติ</td><td>ระยะระหว่างประกาศกับวันสุดท้ายยื่นสั้นกว่าค่าตั้งของวิธีนั้น (ต้องมีข้อมูลจาก e-GP)</td><td>วันที่จากไฟล์ e-GP</td><td>กลาง</td></tr>
+    <tr><td class="id">RF-09</td><td>กรรมการกลุ่มเดิมกับผู้ชนะกลุ่มเดิม</td><td>ชุดกรรมการซ้ำกับผู้ชนะซ้ำเกินค่าตั้ง</td><td>รายชื่อกรรมการ ผลประกาศ</td><td>กลาง</td></tr>
+    <tr><td class="id">RF-10</td><td>กระจุกปลายปี</td><td>สัดส่วนสัญญาหรือเบิกจ่ายใน 2 เดือนสุดท้ายสูงกว่าค่ากลางของกรมหลายเท่า (มีแล้วใน M09 เป็น AN-02)</td><td>วันที่ทำสัญญาและเบิกจ่าย</td><td>ต่ำ</td></tr>
+  </tbody>
+</table></div>
+<p class="small">สัญญาณเหล่านี้อิงรูปแบบที่พบในงานตรวจสอบและงานวิจัยด้านการจัดซื้อ [S9] สัญญาณเดี่ยวไม่พิสูจน์ความผิด ระบบจึงรวมหลายสัญญาณเป็นคะแนนต่อผู้ขาย สำนัก หรือแฟ้ม และแสดงเป็น “ควรตรวจ” กรมบัญชีกลางมีแผนระบบ Red Flag ของ e-GP [S1] จึงต้องกำหนดว่า Fisko ซ้ำหรือเสริม (ประเด็น D-P06)</p>
+
+<h3><span class="num">9.4</span>ขั้นตอนจัดการสัญญาณเตือน</h3>
+<div class="flow">
+  <div class="st"><b>1 ตรวจพบ</b>กฎหรือสถิติสร้างสัญญาณ พร้อมหลักฐาน</div><span class="ar">→</span>
+  <div class="st"><b>2 ให้คะแนน</b>รวมสัญญาณเป็นคะแนน 0 ถึง 100 อธิบายได้</div><span class="ar">→</span>
+  <div class="st"><b>3 คัดกรอง</b>ผู้ตรวจสอบจัดลำดับคิว</div><span class="ar">→</span>
+  <div class="st"><b>4 ชี้แจง</b>หน่วยงานตอบภายในเวลาที่ตั้ง</div><span class="ar">→</span>
+  <div class="st"><b>5 ตัดสิน</b>ปิดพร้อมคำชี้แจง · แก้ข้อมูล · ส่งตรวจต่อ</div><span class="ar">→</span>
+  <div class="st"><b>6 เรียนรู้</b>ทำเครื่องหมายผลบวกลวง ปรับเกณฑ์</div>
+</div>
+<ul>
+  <li>ผู้เห็นสัญญาณคือผู้ตรวจสอบและหัวหน้าพัสดุ หน่วยงานเจ้าของรายการเห็นสัญญาณของรายการตนเพื่อชี้แจง ไม่เผยแพร่ภายนอก</li>
+  <li>ระบบไม่ลงโทษหรือระงับรายการอัตโนมัติ มีเพียงข้อ RF-01 ที่บังคับให้ชี้แจงก่อนอนุมัติ (R-02)</li>
+  <li>ทุกการตัดสินและการปรับเกณฑ์อยู่ใน Audit Log และผลบวกลวงถูกนับเป็นตัวชี้วัดคุณภาพ (บท 8.3)</li>
+</ul>
+
+<h3><span class="num">9.5</span>ฐานข้อมูลและคุณภาพข้อมูล</h3>
+<div class="tbl"><table>
+  <thead><tr><th>องค์ประกอบ</th><th>แนวทาง</th></tr></thead>
+  <tbody>
+    <tr><td>บันทึกเหตุการณ์ (CaseEvent)</td><td>ทุกการเปลี่ยนสถานะและการลงนามบันทึกเวลาที่ระบบ ไม่ให้ผู้ใช้แก้ใช้คำนวณเวลาแต่ละขั้น</td></tr>
+    <tr><td>ชั้นความหมาย (Semantic Layer)</td><td>นิยาม KPI ไว้ที่เดียว ทุกแดชบอร์ดและ AI-09 ใช้ร่วมกัน ไม่ให้โมเดลคำนวณตัวเลขเอง</td></tr>
+    <tr><td>กฎคุณภาพข้อมูล</td><td>ตรวจรหัสโครงการ e-GP ซ้ำ วันที่ย้อนเวลา ผู้ขายซ้ำต่างชื่อ ยอดงวดไม่เท่าสัญญา และรายงานตาม KPI-14</td></tr>
+    <tr><td>การเปรียบเทียบ</td><td>เทียบสำนักกับสำนัก ปีกับปี และหมวดกับหมวด แสดงขนาดตัวอย่างเสมอเพื่อไม่อ่านค่าจากข้อมูลน้อย</td></tr>
+    <tr><td>การเปิดเผยข้อมูล</td><td>ส่งออก OCDS (FR-PR-29) เฉพาะข้อมูลที่ประกาศแล้ว เพื่อสอดคล้องแนวทางเปิดข้อมูลของกรมบัญชีกลาง [S1] OECD ชี้ว่าความโปร่งใสก่อนประกวดและหลังทำสัญญายังเป็นจุดอ่อนหลายประเทศ [S8]</td></tr>
+    <tr><td>ความเป็นส่วนตัว</td><td>ข้อมูลผู้ขายบุคคลธรรมดาอยู่ใต้ PDPA · สิทธิ์ดูตามบทบาทและขอบเขตหน่วยงาน · ข้อมูลระดับ “ลับ” ไม่ส่งให้ AI ภายนอก</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 10 ============================== -->
+<section class="ch" id="s10">
+<h2><span class="num">10</span>ผลต่อต้นแบบและลำดับการสร้าง</h2>
+<p class="lede">เสนอสร้างต่อทีละรอบ แต่ละรอบสาธิตได้และไม่พังรอบก่อน</p>
+<div class="tbl"><table>
+  <thead><tr><th>รอบ</th><th>ขอบเขต</th><th>สิ่งที่เห็นในการสาธิต</th><th>พึ่งพาการตัดสินใจ</th></tr></thead>
+  <tbody>
+    <tr><td><b>P0 · ฐาน</b></td><td>ตารางเกณฑ์วิธีและค่าตั้งใน M10 (มีวันที่มีผล ผู้รับรอง ประวัติ) · บทบาทหัวหน้าพัสดุและผู้ควบคุมงาน · event log</td><td>ผู้ดูแลแก้เกณฑ์วงเงินแล้วตัวช่วยเลือกวิธีเปลี่ยนตามทันที</td><td>D-P02</td></tr>
+    <tr><td><b>P1 · แฟ้มและการเลือกวิธี</b></td><td>แฟ้มจัดซื้อพร้อมสถานะ (FR-PR-01) · ตัวช่วยเลือกวิธี · ใบขอซื้อฉบับเต็ม · ราคากลาง · คณะกรรมการและกฎ SD-06 ถึง SD-08 · เทียบสถานะ e-GP · กำหนดอุทธรณ์</td><td>ใบขอซื้อวงเงินสูงถูกแนะนำให้ใช้วิธีแข่งขัน ระบบบังคับตั้งกรรมการ ตรวจความขัดแย้ง และกันการลงนามระหว่างรออุทธรณ์</td><td>D-P01, D-P02</td></tr>
+    <tr><td><b>P2 · สัญญาและการตรวจรับ</b></td><td>สัญญาฉบับแก้ไขและขยายเวลา · หลักประกัน · ค่าปรับ · รายงานผู้ควบคุมงาน · ตรวจรับพร้อมเอกสารและตัวจับเวลา · ประตูเบิกจ่ายสามทาง</td><td>แก้สัญญาเพิ่มวงเงินต้องผ่านระดับอนุมัติและผู้อนุมัติต่างคน ระบบคิดค่าปรับและเตือนเมื่อถึงเกณฑ์ ใบแจ้งหนี้ไม่ตรงถูกพัก</td><td>D-P03, D-P04</td></tr>
+    <tr><td><b>P3 · Analytics และ Red Flag</b></td><td>แดชบอร์ดตามบทบาท · KPI-01 ถึง KPI-14 · RF-01 ถึง RF-10 · คิวผู้ตรวจสอบและขั้นตอนชี้แจง · ส่งออก OCDS</td><td>ผู้บริหารเห็นกรวยและเวลาแต่ละขั้น ผู้ตรวจสอบเห็นแฟ้มที่มีสัญญาณหลายตัวพร้อมหลักฐาน</td><td>D-P06, D-P08</td></tr>
+    <tr><td><b>P4 · AI</b></td><td>AI-01, 04, 05, 11 (กฎ) แล้ว AI-03, 07 (สถิติ) แล้ว AI-02, 06, 09, 10 (Generative) · ทะเบียน AI และชุดทดสอบ</td><td>ร่าง TOR ที่ตรวจพบข้อความล็อกยี่ห้อ ผู้ช่วยตอบคำถามจากชั้นความหมายพร้อมแหล่งที่มา</td><td>D-P05</td></tr>
+  </tbody>
+</table></div>
+<p class="small">สิ่งที่มีอยู่ในต้นแบบแล้ว (แผน ใบขอซื้อ สัญญา งวดงาน ลงนามตรวจรับสองคน นำเข้าไฟล์ e-GP กฎ SD-01 ถึง SD-05) ถูกปรับให้อยู่ใต้แฟ้มจัดซื้อ ไม่ทิ้ง เอกสารนี้ไม่ประมาณเวลาและค่าใช้จ่าย</p>
+</section>
+
+<!-- ============================== 11 ============================== -->
+<section class="ch" id="s11">
+<h2><span class="num">11</span>ความเสี่ยงและประเด็นที่ต้องตัดสินใจ</h2>
+
+<h3><span class="num">11.1</span>ความเสี่ยง</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ความเสี่ยง</th><th>ผลกระทบ</th><th>มาตรการ</th></tr></thead>
+  <tbody>
+    <tr><td>ข้อกฎหมายและเกณฑ์ในระบบล้าสมัยหรือไม่ถูกต้อง เพราะระเบียบแก้ไขบ่อยและการค้นคว้านี้ยังไม่ได้ตรวจตัวบท</td><td><span class="tag t-bad">สูง</span></td><td>เกณฑ์เป็นค่าตั้งมีวันที่มีผล ผู้รับรองจากฝ่ายกฎหมาย รอบทบทวนประจำไตรมาส และป้ายระดับความมั่นใจในหน้าจอ</td></tr>
+    <tr><td>ข้อมูลซ้ำซ้อนกับ e-GP เมื่อโมดูลสัญญาและ e-contract ของ e-GP เปิดใช้</td><td><span class="tag t-warn">ปานกลาง</span></td><td>กำหนดเจ้าของข้อมูลแต่ละส่วนล่วงหน้า (D-P03) และออกแบบ Adapter เปลี่ยนจากไฟล์เป็น API</td></tr>
+    <tr><td>ผู้ใช้เข้าใจว่า AI หรือ Red Flag ตัดสินแทนหรือกล่าวหา</td><td><span class="tag t-bad">สูง</span></td><td>ข้อห้ามในบท 8.2 ถ้อยคำ “ควรตรวจ” ช่องทางชี้แจง และหน้าจอที่แสดงเหตุผลทุกสัญญาณ</td></tr>
+    <tr><td>ผลบวกลวงมากจนผู้ตรวจสอบเลิกใช้</td><td><span class="tag t-warn">ปานกลาง</span></td><td>เริ่มจากสัญญาณที่แม่นและอธิบายได้ ติดตามความแม่น ปรับเกณฑ์จากผลที่ผู้ตรวจสอบบันทึก</td></tr>
+    <tr><td>ข้อมูลผู้ขายและข้อเสนอราคารั่วไหล</td><td><span class="tag t-bad">สูง</span></td><td>เก็บเฉพาะข้อมูลสรุป จัดชั้นลับ ปกปิดในสภาพแวดล้อมทดสอบ ห้ามส่งไปโมเดลภายนอก</td></tr>
+    <tr><td>เจ้าหน้าที่ไม่ยอมกรอกซ้ำเพราะต้องทำใน e-GP อยู่แล้ว</td><td><span class="tag t-warn">ปานกลาง</span></td><td>นำเข้าไฟล์แทนการกรอก สร้างเอกสารสำหรับคีย์ใน e-GP จากข้อมูลที่มี และกรอกเฉพาะข้อมูลที่ e-GP ไม่เก็บ</td></tr>
+    <tr><td>ข้อมูลนำเข้าไม่ครบทำให้ KPI และ Red Flag เพี้ยน</td><td><span class="tag t-warn">ปานกลาง</span></td><td>KPI-14 แสดงคุณภาพข้อมูลคู่กับทุกแดชบอร์ด และไม่เตือนเมื่อข้อมูลไม่พอ</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">11.2</span>ประเด็นที่ต้องตัดสินใจ</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ประเด็น</th><th>ตัวเลือก</th><th>ผู้ตัดสินใจ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">D-P01</td><td>วิธีจัดซื้อที่ครอบคลุมในรุ่นแรก</td><td>เฉพาะเจาะจง + e-bidding / เพิ่มวิธีคัดเลือก / เพิ่ม e-market / เพิ่มที่ปรึกษาและออกแบบ</td><td>เจ้าหน้าที่พัสดุ ฝ่ายกฎหมาย</td></tr>
+    <tr><td class="id">D-P02</td><td>เจ้าของตารางเกณฑ์ใน M10 และรอบทบทวน</td><td>ฝ่ายกฎหมาย / หัวหน้าพัสดุ รับรองก่อนมีผล · ทบทวนทุกไตรมาสหรือเมื่อมีหนังสือเวียน</td><td>ผู้บริหาร ฝ่ายกฎหมาย</td></tr>
+    <tr><td class="id">D-P03</td><td>ข้อมูลหลักของสัญญาและการบริหารสัญญา เมื่อ e-GP ส่วนนี้เปิดใช้</td><td>Fisko เป็นพื้นที่ทำงานและซิงก์ไป e-GP / e-GP เป็นข้อมูลหลักและ Fisko อ่านอย่างเดียว</td><td>ฝ่าย IT กรมบัญชีกลาง</td></tr>
+    <tr><td class="id">D-P04</td><td>การเก็บข้อมูลข้อเสนอของผู้ยื่น</td><td>เก็บเฉพาะข้อมูลสรุปและที่ประกาศแล้ว (เสนอ) / เก็บข้อเสนอฉบับเต็ม</td><td>ฝ่ายกฎหมาย DPO</td></tr>
+    <tr><td class="id">D-P05</td><td>ขอบเขตการใช้ AI และการติดตั้งโมเดล</td><td>รับรายการ AI-01 ถึง AI-11 ทั้งหมด / เฉพาะระยะ 1 และ 2 · โมเดลภายในหรือบริการที่อนุญาต</td><td>ฝ่าย IT DPO ผู้ตรวจสอบ</td></tr>
+    <tr><td class="id">D-P06</td><td>นโยบาย Red Flag: ใครเห็น ใครตัดสิน เวลาชี้แจง และความสัมพันธ์กับ Red Flag ของ e-GP</td><td>ผู้ตรวจสอบและหัวหน้าพัสดุเห็น (เสนอ) / ผู้บริหารเห็นด้วย · เสริมหรือใช้ร่วมกับของกรมบัญชีกลาง</td><td>ผู้ตรวจสอบ ผู้บริหาร</td></tr>
+    <tr><td class="id">D-P07</td><td>ทะเบียนผู้ขาย</td><td>สร้างใน Fisko / ใช้ทะเบียนของ e-GP และ ERP ของหน่วยงาน / ตรวจสถานะนิติบุคคลผ่านช่องทางที่ได้รับอนุญาต</td><td>ฝ่าย IT เจ้าของระบบ</td></tr>
+    <tr><td class="id">D-P08</td><td>การเผยแพร่ข้อมูลตามมาตรฐาน OCDS</td><td>ส่งออกภายในเท่านั้น / เผยแพร่ข้อมูลที่ประกาศแล้วต่อสาธารณะ</td><td>ผู้บริหาร</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 12 ============================== -->
+<section class="ch" id="s12">
+<h2><span class="num">12</span>แหล่งอ้างอิง</h2>
+<p class="lede">ค้นเมื่อ 17 ตุลาคม 2569 ระดับความมั่นใจตามบท 1.1</p>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>แหล่ง</th><th>ใช้สนับสนุน</th><th class="id">ระดับ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">S1</td><td><a href="https://events.development.asia/system/files/04-adb-presentation-thailand.pdf">Thailand Electronic Government Procurement (สไลด์กรมบัญชีกลาง เวทีที่จัดโดย ADB)</a></td><td>กฎหมายหลัก วิธีจัดซื้อ 4 แบบ ขั้นตอนใน e-GP โมดูล e-GP แผนปี 2569 (open API, OCDS, e-contract, Red Flag)</td><td class="id"><span class="tag t-must">A</span></td></tr>
+    <tr><td class="id">S2</td><td><a href="https://www.tilleke.com/insights/thailand-expands-mandatory-electronic-appeals-in-public-procurement">Tilleke &amp; Gibbins: Thailand expands mandatory electronic appeals in public procurement</a></td><td>อุทธรณ์ผ่าน e-GP เท่านั้น ภายใน 7 วันทำการ เริ่ม 1 ตุลาคม 2569 (ผ่านผลค้นหา)</td><td class="id"><span class="tag t-should">B</span></td></tr>
+    <tr><td class="id">S3</td><td><a href="https://www.psu.ac.th/surat/finance/p/m2.pdf">คู่มือการดำเนินงานของคณะกรรมการตรวจรับพัสดุ (มหาวิทยาลัยสงขลานครินทร์ วิทยาเขตสุราษฎร์ธานี)</a></td><td>คณะกรรมการ ประธาน และกรรมการอย่างน้อย 2 คน เกณฑ์ 100,000 และ 500,000 บาท ข้อห้ามกรรมการ องค์ประชุม ขั้นตอนตรวจรับ ระเบียบ ข้อ 175 และ 176</td><td class="id"><span class="tag t-must">A</span></td></tr>
+    <tr><td class="id">S4</td><td><a href="https://www.yotathai.com/news/w124-inspection-committee">คลังความรู้โยธาไทย: คณะกรรมการตรวจรับพัสดุ งานจ้างก่อสร้าง (อ้างหนังสือเวียน ว 124, ว 681, ระเบียบฉบับที่ 3 พ.ศ. 2569)</a></td><td>เวลาตรวจรับ 3 และ 5 วันทำการ จุดประเมินระหว่างงาน เกณฑ์ประเมินความก้าวหน้า 85% และค่าปรับ 10% (ผ่านเว็บรอง)</td><td class="id"><span class="tag t-should">B</span></td></tr>
+    <tr><td class="id">S5</td><td><a href="https://old.narit.or.th/images/04_เกี่ยวกับ สดร./ITA/2567/ITA_2567_22_e-Bidding.pdf">คู่มือขั้นตอนประกวดราคาอิเล็กทรอนิกส์ (สดร.)</a></td><td>การประกาศแผนตามมาตรา 11 พร้อมแต่งตั้งคณะกรรมการ TOR และราคากลาง (ผ่านผลค้นหา)</td><td class="id"><span class="tag t-should">B</span></td></tr>
+    <tr><td class="id">S6</td><td><a href="https://standard.open-contracting.org/latest/en/primer/how/">Open Contracting Data Standard: How does the OCDS work?</a></td><td>ช่วงของกระบวนการ (tender, award, contract, implementation) OCID</td><td class="id"><span class="tag t-must">A</span></td></tr>
+    <tr><td class="id">S7</td><td><a href="https://documents1.worldbank.org/curated/en/744551614955316901/pdf/Open-Contracting-Data-Standard.pdf">ธนาคารโลก: Open Contracting Data Standard</a></td><td>OCDS ครอบคลุมตั้งแต่วางแผนและงบประมาณถึงการดำเนินงานและสิ้นสุด (ผ่านผลค้นหา)</td><td class="id"><span class="tag t-should">B</span></td></tr>
+    <tr><td class="id">S8</td><td><a href="https://search.oecd.org/governance/ethics/OECD-Recommendation-on-Public-Procurement.pdf">OECD Recommendation on Public Procurement</a> และ <a href="https://www.oecd.org/en/publications/2025/06/implementing-the-oecd-recommendation-on-public-procurement-in-oecd-and-partner-countries_dbc4aca7.html">รายงานการนำไปใช้ 2025</a></td><td>มองการจัดซื้อทั้งวงจรและเชื่อมกับงบประมาณ ความโปร่งใสก่อนประกวดและหลังทำสัญญา (ไม่ได้เปิดตัวบท ใช้ผลค้นหา)</td><td class="id"><span class="tag t-should">B</span></td></tr>
+    <tr><td class="id">S9</td><td><a href="https://guide.iacrc.org/proof/most-common-schemes/potential-scheme-split-purchases/">IACRC: แบ่งซื้อแบ่งจ้าง</a> · <a href="https://audit.scot/uploads/docs/um/fraud_red_flags_procurement.pdf">Audit Scotland: Fraud red flags in procurement</a> · <a href="https://giace.org/?p=293">GI-ACE: ตัวชี้วัดความเสี่ยงจากข้อมูลจัดซื้อ</a></td><td>สัญญาณเตือน ผู้ยื่นรายเดียว การแบ่งให้ต่ำกว่าเกณฑ์ และข้อควรระวังว่าสัญญาณเดี่ยวไม่พิสูจน์ความผิด</td><td class="id"><span class="tag t-should">B</span></td></tr>
+    <tr><td class="id">S10</td><td><a href="https://webfs.oecd.org/governmentataglance/Public%20procurement/2024%20OECD%20Survey%20on%20Public%20Procurement%20Glossary.pdf">OECD: Public procurement survey glossary</a> · <a href="https://oecd.ai/en/dashboards/policy-initiatives/public-procurement-directive-no-442026-for-data-science-and-artificial-intelligence-projects">OECD.AI Policy Navigator</a> · <a href="https://www.aoc.cat/en/blog/2025/linforme-governing-with-artificial-intelligence-de-locde-analitza-200-casos-reals-dus-de-la-ia-al-sector-public/">AOC: สรุปรายงาน OECD Governing with AI</a></td><td>กรณีใช้ AI ในงานจัดซื้อ ความเสี่ยง แนวทางกำกับ และสถานะการใช้ generative AI ในภาครัฐ (ผ่านผลค้นหา ไม่ได้เปิดรายงานต้นฉบับ)</td><td class="id"><span class="tag t-should">B</span></td></tr>
+    <tr><td class="id">S11</td><td><a href="https://sapinsider.org/articles/use-a-three-way-invoice-control-assessment-to-reduce-the-risk-of-fraud-and-money-loss/">SAPinsider: Three-way invoice control</a> · <a href="https://www.procuredesk.com/glossary/three-way-match/">ProcureDesk: Three-way match</a></td><td>การตรวจสามทางและการควบคุมผู้ปลดล็อก</td><td class="id"><span class="tag t-should">B</span></td></tr>
+    <tr><td class="id">S12</td><td><a href="https://thaidj.org/index.php/TJCP/article/view/12609">บทความวิชาการ TJCP เรื่องเกณฑ์ 500,000 บาท</a> · <a href="https://www.tilleke.com/insights/thailand-expands-fast-track-cybersecurity-and-defense-procurement/10/">Tilleke: กฎกระทรวงฉบับที่ 6 พ.ศ. 2568</a></td><td>เกณฑ์วงเงินและการแก้ไขกฎหมาย (ผ่านผลค้นหา ยังไม่ยืนยันตัวบท)</td><td class="id"><span class="tag t-should">B</span></td></tr>
+  </tbody>
+</table></div>
+<p class="small">แหล่งระดับ B และข้อความที่ไม่ได้มีรหัสแหล่ง ต้องตรวจกับตัวบทฉบับราชกิจจานุเบกษา และหนังสือเวียนของกรมบัญชีกลางฉบับล่าสุดก่อนใช้จริง</p>
+</section>
+
+<footer class="end">© 2026 Avalant. All rights reserved. · เอกสารฉบับร่างเพื่อการหารือ ไม่ใช่ความเห็นทางกฎหมาย ตัวเลขและเกณฑ์ที่ไม่ได้ยืนยันเป็นค่าเริ่มต้นสำหรับสาธิต</footer>
+</div>
+</main>
+</div>
+
+<script>
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc ol a'));
+  var secs = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+  function onScroll() {
+    var y = window.scrollY + 120, cur = 0;
+    secs.forEach(function (s, i) { if (s && s.offsetTop <= y) cur = i; });
+    links.forEach(function (a, i) { a.classList.toggle('on', i === cur); });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+  var toc = document.getElementById('toc'), tg = document.getElementById('toc-toggle');
+  tg.addEventListener('click', function () { var o = toc.classList.toggle('open'); tg.setAttribute('aria-expanded', o); });
+  links.forEach(function (a) { a.addEventListener('click', function () { toc.classList.remove('open'); tg.setAttribute('aria-expanded', 'false'); }); });
+  document.getElementById('theme').addEventListener('click', function () {
+    var r = document.documentElement, cur = r.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    r.dataset.theme = cur === 'dark' ? 'light' : 'dark';
+  });
+})();
+</script>
+</body>
+</html>
