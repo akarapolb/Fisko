@@ -220,3 +220,14 @@ pre.minutes { white-space: pre-wrap; font-family: var(--mono); font-size: 12.5px
 .bal4 .p, .lg.bal-p { background: var(--ch-1); } .bal4 .c, .lg.bal-c { background: var(--ch-3); } .bal4 .r, .lg.bal-r { background: var(--ch-4); }
 .lg.bal-p, .lg.bal-c, .lg.bal-r { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
 ul.plain { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+
+/* ---------- Budget B5: reports and public page ---------- */
+.qr-item { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+.pubcard { border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; background: var(--surface-2); display: flex; flex-direction: column; gap: 10px; max-width: 720px; }
+.pubcard h3 { margin: 0; font-size: 20px; font-weight: 600; }
+.pubstats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.pubstats div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; }
+.pubstats b { font-size: 22px; font-weight: 600; color: var(--ch-1, var(--accent)); }
+.pubstats span { font-size: 12.5px; color: var(--muted); }
+.pubcard ul { margin: 0; padding-left: 18px; }
+@media (max-width: 560px) { .pubstats { grid-template-columns: minmax(0, 1fr); } }
