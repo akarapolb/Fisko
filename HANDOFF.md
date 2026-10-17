@@ -92,7 +92,7 @@ Conventions worth knowing before you edit:
 ## 5. State and data
 
 - State is kept per organisation in `localStorage` under `fisko-v1-<org>` (`sample` or `dpt`). Other keys: `fisko-session`, `fisko-lang`, `fisko-role`, `fisko-org`, `fisko-app`.
-- `DATA_V` in `00-core.js` (now **15**) is the seed version. **Bump it whenever you change the shape of seeded data**, or browsers that already hold old saved state will keep the old shape and break. Bumping resets everyone's saved demo data once.
+- `DATA_V` in `00-core.js` (now **16**) is the seed version. **Bump it whenever you change the shape of seeded data**, or browsers that already hold old saved state will keep the old shape and break. Bumping resets everyone's saved demo data once.
 - Seed data is built by `buildOrg()` in `06-seedhelp.js`. Rounds 7 to 10 add their data at the end of that function, in clearly commented blocks.
 - All dates are anchored to a constant, `TODAY = "2026-10-16"` in `00-core.js`, **not the computer's clock**. So deadlines, "days left" and delegation periods behave the same on any day. Only the time of day comes from the real clock.
 - Two organisations: a fictional department (`sample`), and กรมโยธาธิการและผังเมือง (`dpt`) with fictional figures and an indicative unit structure. Keep real-agency data out of the published build. The filename pattern `*data-dpt*` is what does that.
@@ -247,3 +247,18 @@ The in-app demo guide (`52-demo.js`) and `Fisko_Demo_Script.html` now have steps
 - All nine steps were walked through the real UI with a script, and the demo guide lists 24 steps. If the seed data changes, rerun that walk: the steps depend on PP-2570-005 and 006 (the small items in the requester's unit), PC-2570-003 (at the e-GP step with a 30 October close), CT-2570-002 (a late phase 1) and the single-bidder case PC-2570-002.
 - The award price in step 20 must stay at or under the reference price (about 29.4 million), or the screen asks for a reason.
 - The Solution Design document is still not updated for the Procurement and Finance screens; the Procurement design document is the reference for them.
+
+## 18. Sourcing in depth, Q1 (round 18)
+
+Builds round Q1 of `Fisko_Procurement_Design.html` v0.2 (FR-PR-39 to 45, rules R-13, R-14, R-19, SD-07). New file `61b-sourcing.js`, which loads right after `61-cases.js`. One new Procurement tab, `tor` (TOR library); the tab codes are now P1 to P10.
+
+- **Hooks:** `61-cases.js` now has `CASE_PANELS` (functions that return extra HTML for the case page) and `CASE_BINDS` (functions that bind them, given the case and `done`). `61b` adds its panels through these and wraps `caseChecks`. Use the same hooks for later rounds rather than editing `caseDetail`.
+- **TOR library:** `S.torLib` with versions. An officer proposes a version (with a reason), and the head of procurement approves it; the proposer can't approve their own. A case's TOR is created from the latest approved version of a template, and `c.tor` records `tpl` and `tplV`.
+- **Market research:** `c.market` entries per case, shown with median and range, and a new reference-price basis `market`.
+- **Conflict of interest (SD-07, R-13):** `c.coi[committee][user]`. A member declares for themselves, or the officer records it from the paper form. A declared conflict blocks the step until the member is replaced (the officer picks a replacement, who must also declare). Step 4 needs the TOR committee declared; step 6 needs the evaluation committee declared. SD-07 can be switched off in M10, which removes the block.
+- **Criteria and scoring (R-14):** `c.criteria` (lowest price, or price-and-performance with weights adding to 100), editable only at step 4. At step 6 the officer records each bidder and price (count must match e-GP), and each member enters their own scores (or the officer records them from the signed sheet). `totals()` adds them up; price score is lowest price ÷ offer × 100. The award form becomes a list of bidders with the price filled in. Choosing a bidder that isn't the top total needs a reason. Nothing in the system or the AI scores bids. A demo button fills in sample declarations and scores, labelled as a demo.
+- **Q&A:** `c.qa` during step 5. An amendment can move the closing date later.
+- **e-GP pack:** a text block for keying into e-GP, with copy. The field layout is a placeholder.
+- **Status sync (R-19):** `egpMismatch(c)` compares the plan item's e-GP stage with the case step. The case page shows a warning, and after `S.pcfg.syncDays` (3) the officer gets a task.
+- **Seed changes:** contracted cases now have criteria, declarations, bidders and scores consistent with their award. Requisition and preparation dates were moved earlier (August and early September) so every case timeline runs in order; previously the requisitions were dated after the award. The demo step 20 now uses the demo button for declarations and scores.
+- **Tested:** about 950 renders, a click-through of the full Q1 flow (26 checks), the 9 demo extension steps, timeline order in both organisations, and 375 px width.

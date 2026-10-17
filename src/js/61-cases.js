@@ -2,6 +2,8 @@
 // the method advisor driven by rules in M10, committees, reference price, e-GP sourcing, award, the appeal
 // window, the contract gate and the split-purchase check. Rules and numbers come from S.mrules and S.pcfg.
 let CASE_OPEN = null, CASE_GROUP = "";
+// Extra panels and binders added by later rounds (61b-sourcing.js): each takes the case and returns HTML, or binds its controls.
+const CASE_PANELS = [], CASE_BINDS = [];
 const CASE_STATES = [null,
   { k: "PLANNED", th: "อยู่ในแผน", en: "Planned" }, { k: "REQUESTED", th: "ขอซื้อขอจ้าง", en: "Requested" }, { k: "APPROVED", th: "อนุมัติหลักการ", en: "Approved" },
   { k: "SPECIFYING", th: "TOR และราคากลาง", en: "Specifying" }, { k: "SOURCING", th: "ดำเนินการใน e-GP", en: "Sourcing" }, { k: "EVALUATING", th: "พิจารณาผล", en: "Evaluating" },
@@ -225,7 +227,7 @@ function caseDetail(c) {
       <div style="flex:2 1 320px"><span class="sub">${L("แหล่งอ้างอิง", "Basis")}</span><div class="row">${Object.keys(BASIS).map(k => `<label class="field-inline"><input type="checkbox" name="ref-b" value="${k}" ${c.ref && c.ref.basis.includes(k) ? "checked" : ""}> ${tx(BASIS[k])}</label>`).join("")}</div></div>
       <div class="f" style="flex:1 1 220px"><label for="ref-note">${L("หมายเหตุ", "Note")}</label><input type="text" id="ref-note" value="${esc(c.ref ? c.ref.note : "")}"></div>
       <button class="btn primary" type="submit">${L("บันทึกราคากลาง", "Save the reference price")}</button></form>` : ""}
-    ${comp ? `<div>${L("TOR", "TOR")}: ${c.tor ? `<b>${esc(c.tor.doc)}</b> <span class="sub">${fdate(c.tor.t)}</span>` : `<span class="sub">${L("ยังไม่ได้แนบ", "Not attached yet")}</span>`} ${edit && n === 4 && !c.tor ? `<button class="btn" type="button" id="tor-attach">+ ${L("แนบ TOR", "Attach TOR")}</button>` : ""}</div>` : ""}`)}
+    ${comp ? `<div>${L("TOR", "TOR")}: ${c.tor ? `<b>${esc(c.tor.doc)}</b> <span class="sub">${fdate(c.tor.t)}</span>` : `<span class="sub">${L("ยังไม่ได้แนบ", "Not attached yet")}</span>`} ${edit && n === 4 && !c.tor ? torPicker(c) : ""}</div>` : ""}`)}
   ${sec(3, L("คณะกรรมการ", "Committees"), (cm.length || c.committees.eval || c.committees.buy || c.committees.tor ? [...new Set([...cm, ...Object.keys(c.committees)])].map(cmBlock).join("") : `<span class="sub">${L("วิธีนี้ไม่ต้องมีคณะกรรมการจัดทำ TOR หรือพิจารณาผลตามค่าตั้ง (ผู้ตรวจรับตั้งตอนทำสัญญา)", "This method needs no TOR or evaluation committee under the settings (the acceptance committee is set with the contract)")}</span>`) + `<div class="sub">${L("กรรมการตรวจรับของสัญญาต้องไม่ซ้ำกรรมการพิจารณาผลหรือกรรมการซื้อจ้าง (SD-06)", "Acceptance committee members can't have sat on the evaluation or purchasing committee (SD-06)")}</div>`)}
   ${sec(4, comp ? L("การดำเนินการใน e-GP", "Sourcing in e-GP") : L("ใบเสนอราคา", "Quotations"), comp ? `
     <div class="sub">${L("ขั้นตอนทางการทำใน e-GP นำข้อมูลมาบันทึกที่นี่ (หรือนำเข้าไฟล์ในแท็บไฟล์จาก e-GP)", "The official steps run in e-GP. Record the details here (or import the e-GP file in the e-GP tab).")}</div>
@@ -240,10 +242,9 @@ function caseDetail(c) {
   ${sec(6, L("การพิจารณาผลและประกาศผู้ชนะ", "Evaluation and award"), `
     ${comp && cm.concat(["x"]) && c.method ? cmBlock(evalKey(c)) : ""}
     ${c.award ? `<div>${L("ผู้ชนะ", "Winner")}: <b>${esc(tx(c.award.winner))}</b> · ${fmt(c.award.price)} ${L("บาท", "baht")} · ${fdate(c.award.date)} ${c.ref ? `<span class="sub">· ${L("เทียบราคากลาง", "vs reference")} ${fmt(c.award.price / c.ref.amount * 100, 1)}%</span>` : ""}${c.award.minutes ? `<div class="sub">${L("มติ", "Resolution")}: ${esc(c.award.minutes)}</div>` : ""}${c.award.why ? `<div class="sub">${L("เหตุผลราคาสูงกว่าราคากลาง", "Why above the reference price")}: ${esc(c.award.why)}</div>` : ""}</div>` : ""}
-    ${edit && n === 6 ? `<form class="inline-form" id="award-form"><div class="f" style="flex:2 1 220px"><label for="aw-v">${L("ผู้ชนะ", "Winner")}</label><input type="text" id="aw-v" required></div>
-      <div class="f" style="flex:0 1 170px"><label for="aw-p">${L("ราคา (บาท)", "Price (baht)")}</label><input type="number" id="aw-p" min="1" step="1" required></div>
+    ${edit && n === 6 ? `<form class="inline-form" id="award-form">${awardInputs(c)}
       <div class="f" style="flex:2 1 260px"><label for="aw-m">${L("มติของคณะกรรมการ", "Committee resolution")}</label><input type="text" id="aw-m" required></div>
-      <div class="f" style="flex:2 1 240px"><label for="aw-w">${L("เหตุผล (ถ้าราคาสูงกว่าราคากลาง)", "Why (if above the reference price)")}</label><input type="text" id="aw-w"></div>
+      <div class="f" style="flex:2 1 240px"><label for="aw-w">${L("เหตุผล (ถ้าราคาสูงกว่าราคากลาง หรือผู้ชนะไม่ใช่คะแนนรวมสูงสุด)", "Why (if above the reference price, or not the top total score)")}</label><input type="text" id="aw-w"></div>
       <button class="btn primary" type="submit">${L("บันทึกผลและประกาศผู้ชนะ", "Record and announce")}</button></form>` : ""}`)}
   ${sec(7, L("อุทธรณ์", "Appeal"), ruleFor(c.method).appeal ? `
     <div>${L("กำหนดอุทธรณ์สิ้นสุด", "Appeal period ends")}: <b>${c.award && c.award.appealEnd ? fdate(c.award.appealEnd) : "—"}</b> <span class="sub">(${S.pcfg.appealDays} ${L("วันทำการ นับจากวันประกาศ ตามค่าตั้ง", "working days from the announcement, per the settings")})</span>
@@ -254,6 +255,7 @@ function caseDetail(c) {
     <div class="sub">${L("การอุทธรณ์ทำใน e-GP ภายใน 7 วันทำการ (ตามแหล่งที่ค้น ต้องยืนยัน) Fisko ติดตามกำหนดและกันการทำสัญญาก่อนพ้นกำหนด", "Appeals are filed in e-GP within 7 working days (per the sources found, to be confirmed). Fisko tracks the date and blocks the contract until it passes.")}</div>`
     : `<span class="sub">${L("วิธีนี้ไม่มีช่วงอุทธรณ์ตามค่าตั้งใน M10", "This method has no appeal period in the M10 settings")}</span>`)}
   ${sec(8, L("สัญญา", "Contract"), con ? `<div><span class="mono">${con.id}</span> · ${esc(tx(con.vendor))} · ${mb(con.amount)} ${L("ลบ.", "M")} <button class="btn" type="button" id="case-gocon">${L("เปิดสัญญา", "Open the contract")}</button></div>${closePanel(c, con)}` : `<span class="sub">${n === 8 ? L("พร้อมสร้างสัญญา วงเงินสัญญาต้องไม่เกินราคาที่ประกาศ", "Ready for the contract. Its amount can't exceed the announced price.") : ""}</span>`)}
+  ${CASE_PANELS.map(f => f(c)).join("")}
   <section class="panel"><header><h2>${L("ไทม์ไลน์ของแฟ้ม", "Case timeline")}</h2><span class="sp"></span><span class="sub">${ev.length} ${L("เหตุการณ์", "events")}</span></header>
     <div class="body"><ol class="timeline">${ev.map(e => `<li class="done"><span class="dot"></span><div><b style="font-weight:600">${tx(CASE_EV[e.type] || [e.type, e.type])}</b><small>${esc(userName(e.by))} · ${fdate(e.t, true)}</small>${e.detail ? `<div class="sub">${esc(e.detail)}</div>` : ""}</div></li>`).join("") || `<li class="sub">—</li>`}</ol></div></section>`;
 }
@@ -299,7 +301,7 @@ function bindCases() {
     c.ref = { amount, basis, note: $("#ref-note").value.trim(), by: me().id, t: nowIso() };
     audit(["บันทึกราคากลาง", "Recorded a reference price"], `${c.id} ${fmt(amount)}`); caseLog(c, "ref", `${fmt(amount)} ${L("บาท", "baht")}`); done(L("บันทึกราคากลางแล้ว", "Reference price saved"));
   };
-  const ta = $("#tor-attach"); if (ta) ta.onclick = () => { c.tor = { doc: `TOR_${c.id}_v1.pdf`, t: nowIso(), by: me().id }; audit(["แนบ TOR", "Attached a TOR"], c.id); caseLog(c, "tor", c.tor.doc); done(L("แนบ TOR แล้ว", "TOR attached")); };
+  const ta = $("#tor-attach"); if (ta) ta.onclick = () => { const tp = $("#tor-tpl") ? torTpl($("#tor-tpl").value) : null; c.tor = { doc: tp ? `TOR_${c.id}_${tp.id}-v${tp.v}.pdf` : `TOR_${c.id}_v1.pdf`, tpl: tp ? tp.id : null, tplV: tp ? tp.v : null, t: nowIso(), by: me().id }; audit(["แนบ TOR", "Attached a TOR"], c.id); caseLog(c, "tor", c.tor.doc); done(L("แนบ TOR แล้ว", "TOR attached")); };
   $$("[data-cmform]").forEach(f => (f.onsubmit = e => {
     e.preventDefault();
     const key = f.dataset.cmform, fd = new FormData(f), members = $$(`input[name="cm-${key}"]:checked`).map(x => x.value).filter(id => id !== fd.get("chair"));
@@ -335,6 +337,7 @@ function bindCases() {
     if (!committeeOk(c.committees[key])) { toast(L("แต่งตั้งคณะกรรมการพิจารณาผลก่อน", "Appoint the evaluation committee first")); return; }
     if (price > rq.amount) { toast(L("ราคาที่ประกาศสูงกว่าวงเงินที่อนุมัติ", "The announced price is above the approved amount")); return; }
     if (c.ref && price > c.ref.amount && !why) { toast(L("ราคาสูงกว่าราคากลาง ต้องระบุเหตุผล", "The price is above the reference price; give a reason")); return; }
+    const guard = awardGuard(c, $("#aw-v").value.trim(), price, why); if (guard) { toast(guard); return; }
     const v = $("#aw-v").value.trim(), date = TODAY, rule = ruleFor(c.method);
     c.award = { winner: [v, v], price, date, appealEnd: rule.appeal ? addWorkdays(date, S.pcfg.appealDays) : null, minutes: $("#aw-m").value.trim(), why };
     c.appealElapsed = false; c.appeal = null;
@@ -345,6 +348,7 @@ function bindCases() {
   const af2 = $("#ap-file"); if (af2) af2.onclick = () => { c.appeal = { status: "open", t: nowIso() }; audit(["มีการอุทธรณ์ผลการพิจารณา", "An appeal was filed"], c.id); caseLog(c, "appeal_filed"); notify(["exec"], [`แฟ้ม ${c.id} มีการอุทธรณ์`, `Case ${c.id} has an appeal`], `case:${c.id}`); done(L("บันทึกการอุทธรณ์แล้ว ห้ามทำสัญญาจนกว่าจะมีผล", "Appeal recorded; no contract until it is decided")); };
   const ad = $("#ap-dismiss"); if (ad) ad.onclick = () => { c.appeal.status = "dismissed"; c.appealElapsed = true; audit(["ยกอุทธรณ์", "Dismissed an appeal"], c.id); caseLog(c, "appeal_dismissed"); done(L("ยกอุทธรณ์แล้ว", "Appeal dismissed")); };
   const au = $("#ap-uphold"); if (au) au.onclick = () => { c.appeal.status = "upheld"; const aw = c.award; c.award = null; c.appealElapsed = false; setState(c, 6, "appeal_upheld", aw ? fmt(aw.price) : ""); audit(["รับอุทธรณ์", "Upheld an appeal"], c.id); done(L("รับอุทธรณ์ กลับไปพิจารณาผลใหม่", "Upheld; back to evaluation")); };
+  CASE_BINDS.forEach(f => f(c, done));
 }
 {
   const base = BIND.procurement;
@@ -454,17 +458,18 @@ function seedCases(s, K) {
   s.cases = s.pplan.map((p, i) => {
     const n = states[i] || 1, rq = s.reqn[i], ct = s.contracts[i];
     const c = { id: "PC-2570-" + String(i + 1).padStart(3, "0"), plan: p.id, reqn: rq ? rq.id : null, line: p.line, kind: p.kind, state: n, method: null, methodWhy: null, special: null, methodApproval: null, committees: {}, ref: null, tor: null, egp: null, quotes: [], award: null, appeal: null, appealElapsed: false, closeElapsed: false, contract: null, cancelled: null };
-    ev(c, "2026-09-01T09:00", "created", K.PO, p.id);
+    ev(c, "2026-07-15T09:00", "created", K.PO, p.id);
     if (n >= 2) ev(c, rq.t, "requested", rq.by, rq.id);
     if (n >= 3) ev(c, rq.decided.t, "approved", K.EX, rq.id);
     if (n >= 3) {
       c.method = p.est <= 5e5 ? "specific" : "ebid"; c.methodWhy = ["ตรงกับคำแนะนำของระบบ", "Matches the system advice"]; c.methodApproval = { status: "auto", t: rq.decided.t, by: K.PO };
-      ev(c, rq.decided.t, "method", K.PO, c.method);
+      ev(c, rq.decided.t.slice(0, 10) + "T16:30", "method", K.PO, c.method);
     }
     if (n >= 4 && c.method === "ebid") {
-      c.ref = { amount: Math.round(p.est * 0.98 / 1e3) * 1e3, basis: ["std", "quotes"], note: "", by: K.PO, t: "2026-09-10T10:00" };
-      c.tor = { doc: `TOR_${c.id}_v1.pdf`, t: "2026-09-12T10:00", by: K.PO }; c.committees.tor = cmt("ที่ 41/2569", "2026-09-11");
-      ev(c, "2026-09-10T10:00", "ref", K.PO, fmt(c.ref.amount)); ev(c, "2026-09-11T10:00", "committee", K.PO, "TOR"); ev(c, "2026-09-12T10:00", "tor", K.PO, c.tor.doc);
+      const mo = i < 2 ? "08" : "09";
+      c.ref = { amount: Math.round(p.est * 0.98 / 1e3) * 1e3, basis: ["std", "quotes"], note: "", by: K.PO, t: `2026-${mo}-10T10:00` };
+      c.tor = { doc: `TOR_${c.id}_v1.pdf`, t: `2026-${mo}-12T10:00`, by: K.PO }; c.committees.tor = cmt("ที่ 41/2569", `2026-${mo}-11`);
+      ev(c, `2026-${mo}-10T10:00`, "ref", K.PO, fmt(c.ref.amount)); ev(c, `2026-${mo}-11T10:00`, "committee", K.PO, "TOR"); ev(c, `2026-${mo}-12T10:00`, "tor", K.PO, c.tor.doc);
     }
     if (n >= 5) {
       const live = i === 2;
