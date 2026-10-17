@@ -57,13 +57,13 @@ function checks(r) {
 
 // ---------- list ----------
 VIEWS.requests = () => {
-  const list = ROLE === "div" ? S.requests.filter(r => r.unit === me().unit) : S.requests;
+  const list = unitRole() ? S.requests.filter(r => r.unit === me().unit) : S.requests;
   const tot = list.reduce((s, r) => s + r.amount, 0), c2 = cal("c2");
   return `
   <div class="head"><div><div class="eyebrow">M02 · Budget Preparation</div><h1>${L("คำของบประมาณ ปี 2571", "FY2571 budget requests")}</h1>
-    <p>${L("กำหนดส่งกองแผนงาน", "Due to Planning")} ${fdate(c2.date)} · ${L("เหลือ", "")} ${daysUntil(c2.date)} ${L("วัน", "days left")}${ROLE === "div" ? ` · ${unitName(me().unit)}` : ""}</p></div>
+    <p>${L("กำหนดส่งกองแผนงาน", "Due to Planning")} ${fdate(c2.date)} · ${L("เหลือ", "")} ${daysUntil(c2.date)} ${L("วัน", "days left")}${unitRole() ? ` · ${unitName(me().unit)}` : ""}</p></div>
     <div class="sp"></div>${ROLE === "div" ? `<button class="btn primary" type="button" id="new-req">+ ${L("สร้างคำขอใหม่", "New request")}</button>` : ""}</div>
-  ${ROLE === "div" ? ceilingBanner() + hearingBanner() : ""}
+  ${unitRole() ? ceilingBanner() + hearingBanner() : ""}
   <section class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
     <div class="kpi"><span class="l">${L("คำขอทั้งหมด", "Requests")}</span><span class="v">${list.length}</span></div>
     <div class="kpi"><span class="l">${L("วงเงินที่ขอรวม", "Total requested")}</span><span class="v">${mb(tot)}<small>${L("ล้านบาท", "M baht")}</small></span></div>
@@ -76,7 +76,7 @@ VIEWS.requests = () => {
       <tbody id="req-body"></tbody></table></div></section>`;
 };
 function reqRows(f) {
-  const list = (ROLE === "div" ? S.requests.filter(r => r.unit === me().unit) : S.requests).filter(r => !f || r.status === f);
+  const list = (unitRole() ? S.requests.filter(r => r.unit === me().unit) : S.requests).filter(r => !f || r.status === f);
   const lim = (rule("BR-04") || {}).param || 20;
   return list.map(r => {
     const d = r.prev ? (r.amount / r.prev - 1) * 100 : null;
@@ -176,11 +176,13 @@ function renderChecks() {
   const docs = $("#docs");
   if (docs) docs.innerHTML = r.docs.map(d => tag(esc(d), "p-mute")).join("") || `<span class="sub">${L("ยังไม่มีไฟล์", "No files")}</span>`;
 }
-function routeSteps(r) { return S.workflow.filter(w => w.cond === "always" || r.amount >= (w.amount || 0)); }
+function routeSteps(r) { return S.workflow.filter(w => w.cond === "always" || (w.id === "w3" ? needsCommittee(r) : r.amount >= (w.amount || 0))); }
 function renderTimeline() {
   const r = curReq(), steps = routeSteps(r);
   let idx = 0;
+  if (r.status === "unit") idx = Math.max(0, steps.findIndex(s => s.role === "divhead"));
   if (r.status === "plan") idx = Math.max(0, steps.findIndex(s => s.role === "plan"));
+  if (r.status === "exec") idx = Math.max(0, steps.findIndex(s => s.id === "w4"));
   if (r.status === "committee") idx = Math.max(0, steps.findIndex(s => s.cond === "amount"));
   if (r.status === "approved") idx = steps.length;
   $("#tl").innerHTML = steps.map((s, i) => `<li class="${i < idx ? "done" : i === idx ? "now" : ""}"><span class="dot"></span><div>${tx(s.name)}<small>${tx(ROLES[s.role])}${s.sla ? ` · ${L("ภายใน", "within")} ${s.sla} ${L("วัน", "days")}` : ""}${s.cond === "amount" ? ` · ${L("เมื่อวงเงิน ≥", "if amount ≥")} ${mb(s.amount)} ${L("ลบ.", "M")}` : ""}</small></div></li>`).join("");

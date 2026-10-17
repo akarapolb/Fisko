@@ -161,3 +161,30 @@ button.brand:hover, button.brand[aria-expanded="true"] { background: var(--side-
 .appcur { color: var(--accent); }
 :root[data-theme="dark"] .appico, :root[data-theme="dark"] .brand-mark { color: #0E1015; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .appico, :root:not([data-theme="light"]) .brand-mark { color: #0E1015; } }
+
+/* ---------- Budget B1: request steps, quarterly plan, documents ---------- */
+.rsteps { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+.rstep { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 5px 12px 5px 5px; font: inherit; font-size: 13.5px; color: var(--ink-2); cursor: pointer; }
+.rstep.x { padding: 5px 12px; border-style: dashed; }
+.rstep:hover { border-color: var(--line-2); }
+.rstep.on { border-color: var(--accent); color: var(--ink); font-weight: 600; background: var(--accent-soft); }
+.rstep .rn { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 600; background: var(--surface-3); color: var(--ink-2); }
+.rstep.s-ok .rn { background: var(--ch-1, var(--ok)); color: #fff; }
+.rstep.s-bad .rn { box-shadow: inset 0 0 0 2px var(--bad); background: var(--surface); color: var(--bad); }
+.rstep.s-warn .rn { box-shadow: inset 0 0 0 2px var(--amber); background: var(--surface); color: var(--warn); }
+.rstep.x.s-bad::after, .rstep.x.s-warn::after { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--bad); }
+.rstep.x.s-warn::after { background: var(--amber); }
+.rsep { width: 1px; height: 22px; background: var(--line); margin: 0 4px; }
+.nextstep { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); font-size: 13.5px; margin-top: 10px; }
+.nextstep .btn { margin-left: auto; padding: 4px 10px; font-size: 13px; }
+.qbars { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.qb { display: flex; flex-direction: column; gap: 4px; align-items: center; text-align: center; }
+.qbar { height: 110px; width: 100%; max-width: 90px; background: var(--surface-2); border-radius: 6px; display: flex; align-items: flex-end; overflow: hidden; }
+.qbar i { display: block; width: 100%; background: var(--ch-1, var(--accent)); border-radius: 6px 6px 0 0; }
+.docreq { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+.docreq.ok { background: var(--surface-2); }
+.radio { display: inline-flex; align-items: center; gap: 6px; font-size: 13.5px; margin-right: 14px; }
+.wfall { width: 100%; height: auto; display: block; }
+.capbar { position: relative; height: 12px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
+.capbar i { position: absolute; inset: 0 auto 0 0; background: var(--ch-1, var(--accent)); border-radius: 99px; }
+.capbar b { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--bad); }

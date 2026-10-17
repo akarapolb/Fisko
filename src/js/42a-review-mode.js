@@ -2,8 +2,8 @@
 // whole request, then send it back or forward. Requesters see the comments and mark them resolved.
 let CMT_OPEN = null; // index of the line whose comment box is open
 const lineKey = it => it.type + "|" + nameKey(it.name);
-const canReview = r => (r.status === "plan" && acting("plan", "review")) || (r.status === "committee" && acting("exec", "committee"));
-const reviewBy = r => (r.status === "plan" ? onBehalf("plan", "review") : onBehalf("exec", "committee"));
+const canReview = r => (r.status === "unit" && ROLE === "divhead" && r.unit === me().unit) || (r.status === "plan" && acting("plan", "review")) || ((r.status === "committee" || r.status === "exec") && acting("exec", "committee"));
+const reviewBy = r => (r.status === "unit" ? "" : r.status === "plan" ? onBehalf("plan", "review") : onBehalf("exec", "committee"));
 const openComments = r => (r.comments || []).filter(c => !c.resolved);
 
 function cmtHtml(r, c) {
@@ -29,7 +29,7 @@ function generalComments(r) {
 function reviewButtons(r) {
   if (!canReview(r)) return "";
   return `<button class="btn danger" type="button" id="rv-return">${L("ส่งกลับแก้ไข", "Return for revision")}</button>
-    <button class="btn primary" type="button" id="rv-pass">${r.status === "committee" ? L("เห็นชอบคำขอ", "Approve request") : L("ผ่านการกลั่นกรอง · เสนอต่อ", "Pass review · send on")}${reviewBy(r) ? ` (${L("แทน", "on behalf")})` : ""}</button>`;
+    <button class="btn primary" type="button" id="rv-pass">${r.status === "unit" ? L("เห็นชอบและส่งกองแผนงาน", "Approve and send to Planning") : r.status === "committee" || r.status === "exec" ? L("เห็นชอบคำขอ", "Approve request") : L("ผ่านการกลั่นกรอง · เสนอต่อ", "Pass review · send on")}${reviewBy(r) ? ` (${L("แทน", "on behalf")})` : ""}</button>`;
 }
 function addComment(r, line, text) {
   r.comments = r.comments || [];
@@ -72,10 +72,15 @@ function bindReviewMode(r) {
   };
   const pass = $("#rv-pass");
   if (pass) pass.onclick = () => {
-    const toCommittee = r.status === "plan", by = reviewBy(r);
-    r.status = toCommittee ? "committee" : "approved"; r.updated = TODAY;
-    audit(toCommittee ? ["ผ่านการกลั่นกรองและเสนอคณะกรรมการ", "Passed review and sent to the committee"] : ["เห็นชอบคำขอ", "Approved a request"], r.id + by);
-    notify(toCommittee ? ["exec"] : ["plan", "div"], toCommittee ? [`คำขอ ${r.id} เข้าวาระคณะกรรมการ`, `Request ${r.id} is on the committee agenda`] : [`ผู้บริหารเห็นชอบคำขอ ${r.id}`, `Request ${r.id} was approved`], toCommittee ? "review" : "requests");
-    commit(); renderShell(); route(); toast(toCommittee ? L("เสนอคณะกรรมการแล้ว", "Sent to the committee") : L("เห็นชอบแล้ว · พร้อมรวมในชุดส่งสำนักงบประมาณ", "Approved · ready for the Budget Bureau package"));
+    // B1 (FR-B-12, FR-B-20): division director → Planning → committee (only when w3 applies) or executive → approved
+    const from = r.status, by = reviewBy(r), next = from === "unit" ? "plan" : from === "plan" ? (needsCommittee(r) ? "committee" : "exec") : "approved";
+    r.status = next; r.updated = TODAY;
+    if (from === "unit") snapshot(r, ["ผู้อำนวยการกองเห็นชอบ", "Division director approved"], true);
+    const A = { plan: [["ผู้อำนวยการกองเห็นชอบและส่งกองแผนงาน", "Division director approved and sent to Planning"], ["plan"], [`คำขอ ${r.id} รอกองแผนกลั่นกรอง`, `Request ${r.id} is waiting for Planning review`], L("ส่งกองแผนงานแล้ว", "Sent to Planning")],
+      committee: [["ผ่านการกลั่นกรองและเสนอคณะกรรมการ", "Passed review and sent to the committee"], ["exec"], [`คำขอ ${r.id} เข้าวาระคณะกรรมการ`, `Request ${r.id} is on the committee agenda`], L("เสนอคณะกรรมการแล้ว", "Sent to the committee")],
+      exec: [["ผ่านการกลั่นกรองและเสนอผู้บริหาร", "Passed review and sent to the executive"], ["exec"], [`คำขอ ${r.id} รอผู้บริหารเห็นชอบ (ไม่เข้าเกณฑ์คณะกรรมการ)`, `Request ${r.id} awaits executive approval (below the committee threshold)`], L("เสนอผู้บริหารแล้ว · ไม่เข้าเกณฑ์คณะกรรมการ", "Sent to the executive · below the committee threshold")],
+      approved: [["เห็นชอบคำขอ", "Approved a request"], ["plan", "div"], [`ผู้บริหารเห็นชอบคำขอ ${r.id}`, `Request ${r.id} was approved`], L("เห็นชอบแล้ว · พร้อมรวมในชุดส่งสำนักงบประมาณ", "Approved · ready for the Budget Bureau package")] }[next];
+    audit(A[0], r.id + by); notify(A[1], A[2], "requests");
+    commit(); renderShell(); route(); toast(A[3]);
   };
 }

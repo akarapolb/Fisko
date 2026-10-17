@@ -28,10 +28,10 @@ function uiDecorate(view) {
 
 // ---------- M02: requests as a status board ----------
 let REQ_VIEW = "board";
-const REQ_COLS = [["work", ["จัดทำและแก้ไข", "Drafting and fixing"], "var(--faint)", ["draft", "returned"]], ["plan", ["กองแผนกลั่นกรอง", "Planning review"], "var(--info)", ["plan"]],
-  ["committee", ["คณะกรรมการ", "Committee"], "var(--amber)", ["committee"]], ["done", ["ผลการพิจารณา", "Decided"], "var(--accent)", ["approved", "rejected"]]];
+const REQ_COLS = [["work", ["จัดทำ แก้ไข และ ผอ.กอง", "Drafting, fixing, director"], "var(--faint)", ["draft", "returned", "unit"]], ["plan", ["กองแผนกลั่นกรอง", "Planning review"], "var(--info)", ["plan"]],
+  ["committee", ["คณะกรรมการ / ผู้บริหาร", "Committee / executive"], "var(--amber)", ["committee", "exec"]], ["done", ["ผลการพิจารณา", "Decided"], "var(--accent)", ["approved", "rejected"]]];
 function reqCard(r) {
-  const lim = (rule("BR-04") || {}).param || 20, d = r.prev ? (r.amount / r.prev - 1) * 100 : null, steps = ["draft", "plan", "committee", "approved"], si = Math.max(0, steps.indexOf(r.status === "returned" ? "draft" : r.status === "rejected" ? "approved" : r.status));
+  const lim = (rule("BR-04") || {}).param || 20, d = r.prev ? (r.amount / r.prev - 1) * 100 : null, steps = ["draft", "plan", "committee", "approved"], si = Math.max(0, steps.indexOf(r.status === "returned" || r.status === "unit" ? "draft" : r.status === "rejected" ? "approved" : r.status === "exec" ? "committee" : r.status));
   return `<div class="card" data-rq="${r.id}" role="button" tabindex="0" aria-label="${r.id} ${esc(tx(r.name))}">
     <div class="cm"><span class="mono">${r.id}${r.id === S.story ? " ★" : ""}</span>${pill(r.status)}</div>
     <div class="ct">${esc(tx(r.name))}</div>
@@ -43,7 +43,7 @@ function reqCard(r) {
   const base = VIEWS.requests;
   VIEWS.requests = () => {
     let html = base();
-    const list = ROLE === "div" ? S.requests.filter(r => r.unit === me().unit) : S.requests, tot = sumv(list.map(r => r.amount)), byS = s => list.filter(r => s.includes(r.status));
+    const list = unitRole() ? S.requests.filter(r => r.unit === me().unit) : S.requests, tot = sumv(list.map(r => r.amount)), byS = s => list.filter(r => s.includes(r.status));
     const stats = `<section class="stats">
       ${statCard({ label: L("คำขอทั้งหมด", "Requests"), value: list.length, icon: "inbox", tone: "info", sub: `${byS(["approved"]).length} ${L("เห็นชอบแล้ว", "approved")}` })}
       ${statCard({ label: L("วงเงินที่ขอรวม", "Total requested"), value: mb(tot), unit: L("ลบ.", "M"), icon: "coins", tone: "ok", spark: list.map(r => r.amount).sort((a, b) => a - b), sub: "" })}
