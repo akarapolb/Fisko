@@ -57,7 +57,7 @@ PROC.plan = () => {
   <section class="panel"><header><h2>${L("แผนจัดซื้อจัดจ้าง", "Procurement plan")} · ${fyLabel(FAM_FY)}</h2><span class="sp"></span><span class="sub">${L("ทุกรายการผูกกับรายการจัดสรรของ M06 · วิธีจัดซื้อตามวงเงินเป็นค่าตัวอย่าง", "Every item links to an M06 allocation line · the method by amount is a sample rule")}</span></header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("รายการ", "Item")}</th><th>${L("วิธี", "Method")}</th><th class="n">${L("ประมาณการ (ลบ.)", "Estimate (M)")}</th><th>${L("กำหนด", "Planned")}</th><th>${L("สถานะ", "Status")}</th><th>e-GP</th><th></th></tr></thead>
       <tbody>${P.map(p => { const l = famLine(p.line), mine = ROLE === "div" && l.unit === me().unit;
-        return `<tr><td class="mono">${p.id}</td><td><b style="font-weight:600">${esc(tx(p.name))}</b><div class="sub">${esc(lineLabel(l))} · <span class="mono">${l.id}</span></div></td><td class="sub">${tx(PMETHOD[p.method])}</td>
+        return `<tr><td class="mono">${p.id}</td><td><b style="font-weight:600">${esc(tx(p.name))}</b><div class="sub">${esc(lineLabel(l))} · <span class="mono">${l.id}</span> · ${catName(p.cat)}${planTag(p)}</div></td><td class="sub">${tx(PMETHOD[p.method])}</td>
           <td class="n">${mb(p.est)}</td><td class="sub">${fdate(p.month)}</td><td>${stTag(PLAN_ST, p.status)}</td>
           <td class="sub">${p.egp ? `<span class="mono">${p.egp.no}</span><div>${tx(p.egp.stage)} · ${fdate(p.egp.date)}</div>` : "—"}</td>
           <td><div class="row" style="flex-wrap:nowrap">${mine && p.status === "planned" ? `<button class="btn primary" type="button" data-preq="${p.id}">${L("ขอซื้อขอจ้าง", "Raise requisition")}</button>` : ""}${historyBtn(p.id, p.id)}</div></td></tr>
@@ -72,6 +72,7 @@ PROC.plan = () => {
       <div class="f" style="flex:2 1 220px"><label for="pp-name">${L("รายการจัดซื้อจัดจ้าง", "Item to buy")}</label><input type="text" id="pp-name" required></div>
       <div class="f" style="flex:0 1 130px"><label for="pp-est">${L("ประมาณการ (ลบ.)", "Estimate (M)")}</label><input type="number" id="pp-est" min="0.001" step="0.001" required></div>
       <div class="f" style="flex:0 1 160px"><label for="pp-month">${L("กำหนดดำเนินการ", "Planned date")}</label><input type="date" id="pp-month" value="${addDays(TODAY, 60)}" required></div>
+      <div class="f" style="flex:0 1 200px"><label for="pp-cat">${L("หมวดพัสดุ", "Category")}</label><select id="pp-cat">${(S.pcat || []).map(c => `<option value="${c.id}">${esc(tx(c.name))}</option>`).join("")}</select></div>
       <button class="btn primary" type="submit">+ ${L("เพิ่มในแผน", "Add to plan")}</button></form></div>` : ""}</section>`;
 };
 PROC.reqn = () => {
@@ -130,7 +131,7 @@ PROC.egp = () => {
 
 VIEWS.procurement = () => {
   if (!PROC[PROC_TAB]) PROC_TAB = "cases";
-  const tabs = [["cases", L("แฟ้มจัดซื้อ", "Case files")], ["plan", L("แผนจัดซื้อ", "Procurement plan")], ["reqn", `${L("ใบขอซื้อขอจ้าง", "Requisitions")}${S.reqn.filter(r => r.status === "pending").length ? ` (${S.reqn.filter(r => r.status === "pending").length})` : ""}`], ["tor", L("คลัง TOR", "TOR library")], ["contracts", L("สัญญาและงวดงาน", "Contracts and phases")], ["suppliers", L("ผู้ขาย", "Suppliers")], ["egp", L("ไฟล์จาก e-GP", "e-GP file")], ["analytics", L("วิเคราะห์", "Analytics")], ["flags", L("สัญญาณเตือน", "Red flags")], ["ocds", L("ส่งออก OCDS", "OCDS export")], ["ai", L("ผู้ช่วย AI", "AI assistant")]];
+  const tabs = [["cases", L("แฟ้มจัดซื้อ", "Case files")], ["plan", L("แผนจัดซื้อ", "Procurement plan")], ["reqn", `${L("ใบขอซื้อขอจ้าง", "Requisitions")}${S.reqn.filter(r => r.status === "pending").length ? ` (${S.reqn.filter(r => r.status === "pending").length})` : ""}`], ["tor", L("คลัง TOR", "TOR library")], ["contracts", L("สัญญาและงวดงาน", "Contracts and phases")], ["suppliers", L("ผู้ขาย", "Suppliers")], ["gantt", L("ไทม์ไลน์แฟ้ม", "Case timeline")], ["reports", L("รายงานประจำเดือน", "Monthly report")], ["egp", L("ไฟล์จาก e-GP", "e-GP file")], ["analytics", L("วิเคราะห์", "Analytics")], ["flags", L("สัญญาณเตือน", "Red flags")], ["ocds", L("ส่งออก OCDS", "OCDS export")], ["ai", L("ผู้ช่วย AI", "AI assistant")]];
   return `
   <div class="head"><div><div class="eyebrow">Fisko Procurement · ${L("จัดซื้อจัดจ้าง", "Procurement")}</div><h1>${(tabs.find(t => t[0] === PROC_TAB) || tabs[0])[1]}</h1>
     <p>${L("เตรียมและติดตามการจัดซื้อที่ผูกกับรายการจัดสรร ขั้นตอนทางการยังทำใน e-GP", "Prepare and track procurement tied to allocation lines. The official steps stay in e-GP.")} · ${fyLabel(FAM_FY)}</p></div></div>
@@ -145,6 +146,7 @@ BIND.procurement = () => {
   if (send) send.onclick = () => {
     const p = famPlan(PLAN_REQ), amount = Math.round(Number($("#pr-amt").value) * 1e6 / 1e3) * 1e3, why = $("#pr-why").value.trim();
     if (!(amount > 0)) { toast(L("ใส่วงเงินก่อน", "Enter an amount")); return; }
+    if (!inPublishedPlan(p)) { toast(L("รายการนี้ยังไม่อยู่ในแผนที่อนุมัติและประกาศแล้ว เสนอแผนฉบับใหม่ก่อน", "This item isn't in the approved, published plan yet; propose a new plan version first")); return; }
     if (amount > famHeadroom(p.line)) { toast(L(`เกินวงเงินคงเหลือของรายการจัดสรร (${mb(famHeadroom(p.line))} ลบ.)`, `More than the room left on the line (${mb(famHeadroom(p.line))} M)`)); return; }
     const sp = splitRisk(p, amount), splitWhy = ($("#pr-split") ? $("#pr-split").value.trim() : "");
     if (sp.risk && splitWhy.length < 10) { PLAN_SPLIT = true; route(); toast(L(`ระบบพบรายการประเภทเดียวกันในหน่วยเดียวกัน รวม ${fmt(sp.total)} บาท เกินเพดานวิธีเฉพาะเจาะจง ต้องชี้แจง`, `Similar requests in the same unit total ${fmt(sp.total)} baht, above the specific-method ceiling. An explanation is needed`)); return; }
@@ -162,7 +164,8 @@ BIND.procurement = () => {
     e.preventDefault();
     const est = Math.round(Number($("#pp-est").value) * 1e6 / 1e3) * 1e3, nm = $("#pp-name").value.trim();
     const p = { id: nextId("PP", S.pplan), line: $("#pp-line").value, name: [nm, nm], est, method: est <= 5e5 ? "specific" : "ebid", month: $("#pp-month").value, by: me().id, status: "planned", egp: null };
-    S.pplan.push(p);
+    p.cat = $("#pp-cat").value; p.kind = (S.pcat.find(c => c.id === p.cat) || {}).kind || guessKind(famLine(p.line), p.name);
+    S.pplan.push(p); caseNew(p);
     audit(["เพิ่มรายการในแผนจัดซื้อ", "Added a procurement plan item"], `${p.id} ${nm}`); commit(); route(); toast(L("เพิ่มในแผนแล้ว", "Added to the plan"));
   };
   const decide = (id, ok) => {

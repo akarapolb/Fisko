@@ -274,6 +274,7 @@ function buildOrg(cfg) {
   seedAI(s);
   seedSourcing(s, { PO, PH: U("prochead") });
   seedLate(s, { PO });
+  seedPlanReports(s, { PO, EX });
   s.audit.unshift(
     { t: "2026-10-15T10:00", user: EX, role: "exec", action: ["อนุมัติเบิกจ่าย", "Approved a payment"], target: "PY-2570-001 CT-2570-001" },
     { t: "2026-10-14T15:00", user: FN, role: "fin", action: ["ขออนุมัติเบิกจ่าย", "Requested a payment approval"], target: "PY-2570-001 CT-2570-001" },

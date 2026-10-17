@@ -92,7 +92,7 @@ Conventions worth knowing before you edit:
 ## 5. State and data
 
 - State is kept per organisation in `localStorage` under `fisko-v1-<org>` (`sample` or `dpt`). Other keys: `fisko-session`, `fisko-lang`, `fisko-role`, `fisko-org`, `fisko-app`.
-- `DATA_V` in `00-core.js` (now **17**) is the seed version. **Bump it whenever you change the shape of seeded data**, or browsers that already hold old saved state will keep the old shape and break. Bumping resets everyone's saved demo data once.
+- `DATA_V` in `00-core.js` (now **18**) is the seed version. **Bump it whenever you change the shape of seeded data**, or browsers that already hold old saved state will keep the old shape and break. Bumping resets everyone's saved demo data once.
 - Seed data is built by `buildOrg()` in `06-seedhelp.js`. Rounds 7 to 10 add their data at the end of that function, in clearly commented blocks.
 - All dates are anchored to a constant, `TODAY = "2026-10-16"` in `00-core.js`, **not the computer's clock**. So deadlines, "days left" and delegation periods behave the same on any day. Only the time of day comes from the real clock.
 - Two organisations: a fictional department (`sample`), and กรมโยธาธิการและผังเมือง (`dpt`) with fictional figures and an indicative unit structure. Keep real-agency data out of the published build. The filename pattern `*data-dpt*` is what does that.
@@ -277,3 +277,16 @@ Builds round Q2 of the design v0.2 (FR-PR-19, 46 to 48, 50 to 52; rules R-15 to 
 - **Letters:** `c.letters` from templates (reminder, penalty, rejection, defect, termination) with a sent date. A partial acceptance or dissent creates a task to send the rejection notice within 3 working days.
 - **Not done:** retention money held back from each payment (a setting is planned but no deduction is made), sending letters by e-mail, and the abandoned-work proposal workflow beyond marking the supplier.
 - **Tested:** about 780 renders, a click-through of the Q2 flows (24 checks), the 9 demo extension steps, and 375 px width.
+
+## 20. Plan and reports, Q3 (round 20)
+
+Builds round Q3 of the design v0.2 (FR-PR-03, 36 to 38, 53 to 55; rule R-18). New file `61c-planreports.js` (after `61b`). New Procurement pages `gantt` (P7) and `reports` (P10); the menu now has P1 to P13.
+
+- **Categories:** `S.pcat` (8 sample categories, each tied to a kind of work). Plan items carry `cat`; the add-item form asks for it; admins add categories in M10 → Procurement rules. `guessCat` sets categories for seeded and intake items.
+- **Plan versions:** `S.planDoc.versions` hold snapshots of the plan. The plan page shows what differs from the latest approved version. The officer proposes a new version with a reason; the executive approves or rejects; the officer records the e-GP notice number to mark it published. A requisition can only be raised for an item in the latest published version (level B; the rules have exceptions to confirm). Seed: v1 approved on 30 Sep and published on 1 Oct, holding all six seeded items, so the demo is unaffected.
+- **Fix:** plan items added through the form now get a kind, a category and a case file. Before this round they had none, so they could not move through the case steps.
+- **Demand intake:** allocation lines with no plan item can be drafted into the plan in one click. Approved or committee-stage M02 requests for next year are listed with suggestions to combine similar items (bigram similarity from the AI module).
+- **Monthly summary (R-18):** rows come from cases whose winner was announced that month, in the common สขร.1 columns. Gaps (no reference price, no offers, no reason) block publishing. The head of procurement publishes; the published rows are frozen in `S.monthly`. Copy gives tab-separated text for Excel. The head gets a task for last month's report. The September 2026 report is left unpublished in the seed so the task shows.
+- **Audit dossier:** a compiled text record per case (requisition and approval, method, reference price, committees with declarations, e-GP and Q&A, bids and totals, award, contract and versions, phases, payments, letters, red flags, timeline), for Audit and procurement roles, with copy.
+- **Timeline:** one row per case from creation, with bars for preparation, sourcing and evaluation, and the contract period, plus the planned month, today and the fiscal-year start. Clicking a case opens it. Forecast signing dates are left for Q5.
+- **Tested:** about 870 renders, a click-through of the Q3 flows (19 checks), Gantt bar positions, the 9 demo extension steps, and 375 px width.
