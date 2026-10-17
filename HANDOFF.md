@@ -21,7 +21,7 @@ Everything is labelled sample data. The name Fisko still needs a trademark check
 | Prototype (standalone) | `Fisko_Prototype.html` | Opens directly in a browser. Has both sample organisations. |
 | Prototype (published build) | `fisko-prototype.html` | Same code but **without** the กรมโยธา sample. Published as an artifact. |
 | Solution design (Thai) | `Fisko_Solution_Design.html` | v0.3. Functional, application, technical, data, integration, AI and security design. |
-| Demo script (Thai) | `Fisko_Demo_Script.html` | 15 steps, 15 minutes, matches the in-app demo guide. |
+| Demo script (Thai) | `Fisko_Demo_Script.html` | 24 steps: 15 minutes plus a 10-minute Procurement and Finance extension (steps 16 to 24). Matches the in-app demo guide. |
 | Customer deck | `Fisko_Conceptual_Architecture.pptx` / `.pdf` | Built on the customer's CPAxtra template. Not touched since round 1. |
 | Roadmap | `ROADMAP.md` | What each module's deeper feature was. All built. |
 | Product family concept (Thai) | `Fisko_Product_Family_Concept.html` | v0.2. Fisko Budget, Procurement and Finance on one shared core. Decisions D-F01 to D-F03 and D-F06 are recorded in it. |
@@ -239,3 +239,11 @@ New file `67-procai.js` (loads last of the procurement files). One new Procureme
 - **Limits enforced:** AI-09 refuses requests to rank or score bids, select a supplier, announce a winner or approve, and the refusal is logged as not ok. No AI action writes to case steps 6 to 8. AI-06 (checking bidders' documents) is not built because no bidder documents are held (design decision D-P04).
 - **Tested:** 788 renders across roles, languages and both organisations, the full set of use cases by clicking, the agent-off block, declines, and 375 px width.
 - **Not done:** the design's AI quality measures other than draft-edit share (red-flag precision exists in P3), prompt-injection tests (no documents are read by a model yet), and real model integration through an LLM gateway.
+
+## 17. Demo extension for Procurement and Finance (round 17)
+
+The in-app demo guide (`52-demo.js`) and `Fisko_Demo_Script.html` now have steps 16 to 24, about 10 minutes, run on the sample organisation straight after step 15 without a reset: raise two small requisitions and meet the split-purchase check; the executive approves; the officer chooses a method that differs from the advice; the head approves; case PC-2570-003 goes through bids, award, the (simulated) appeal window and to the contract step; invoice for CT-2570-002 phase 1 (one day late, so a penalty shows); Finance request through the payment gate; Audit red flags and analytics; AI assistant and OCDS export.
+
+- All nine steps were walked through the real UI with a script, and the demo guide lists 24 steps. If the seed data changes, rerun that walk: the steps depend on PP-2570-005 and 006 (the small items in the requester's unit), PC-2570-003 (at the e-GP step with a 30 October close), CT-2570-002 (a late phase 1) and the single-bidder case PC-2570-002.
+- The award price in step 20 must stay at or under the reference price (about 29.4 million), or the screen asks for a reason.
+- The Solution Design document is still not updated for the Procurement and Finance screens; the Procurement design document is the reference for them.

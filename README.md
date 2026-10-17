@@ -10,7 +10,7 @@ This repository holds the conceptual design material and a clickable prototype p
 |---|---|
 | `Fisko_Prototype.html` | Standalone clickable prototype. Open it directly in a browser. Includes both sample organizations. |
 | `fisko-prototype.html` | Build of the prototype for publishing as a claude.ai artifact (no document wrapper; excludes the real-agency sample). |
-| `Fisko_Demo_Script.html` | 15-minute presenter script (Thai, with English lines). |
+| `Fisko_Demo_Script.html` | Presenter script (Thai): 15 minutes plus a 10-minute Procurement and Finance extension (steps 16 to 24). |
 | `Fisko_Solution_Design.html` | Solution Design Document v0.3 (Thai): functional, application, technical, data, integration, AI and security design. |
 | `Fisko_Conceptual_Architecture.pptx` / `.pdf` | Customer deck: conceptual architecture and functional modules. |
 | `Fisko_Product_Family_Concept.html` | Concept v0.2 (Thai): Fisko Budget, Procurement and Finance as one product family on a shared core. Decisions D-F01 to D-F03 and D-F06 recorded; D-F04 and D-F05 open. |
