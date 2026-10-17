@@ -39,7 +39,8 @@ FIN.pay = () => {
   ${isFin ? `<section class="panel"><header><h2>${L("ขออนุมัติเบิกจ่าย", "Request a payment")}</h2><span class="sp"></span><span class="sub">${L("ขอได้เฉพาะงวดที่คณะกรรมการตรวจรับครบแล้ว", "Only for phases the committee has fully accepted")}</span></header>
     ${accepted.length ? `<div class="body"><form class="inline-form" id="py-form">
       <div class="f" style="flex:2 1 280px"><label for="py-ph">${L("งวดที่ตรวจรับแล้ว", "Accepted phase")}</label><select id="py-ph">${accepted.map(x => `<option value="${x.c.id}|${x.ph.n}" ${PAY_FORM === x.c.id + "|" + x.ph.n ? "selected" : ""}>${x.c.id} · ${esc(tx(x.c.vendor))} · ${tx(x.ph.name)} · ${mb(x.ph.amount)}</option>`).join("")}</select></div>
-      <div class="f" style="flex:0 1 170px"><label for="py-amt">${L("วงเงินที่ขอ (ลบ.)", "Amount (M)")}</label><input type="number" id="py-amt" min="0.001" step="0.001" required></div>
+      <div class="f" style="flex:0 1 170px"><label for="py-amt">${L("ยอดที่ขอ (บาท)", "Amount (baht)")}</label><input type="number" id="py-amt" min="1" step="1" required></div>
+      <div id="py-gate" style="flex:1 1 100%"></div>
       <button class="btn primary" type="submit">${L("ส่งขออนุมัติ", "Send for approval")}</button></form></div>`
       : `<div class="body sub">${L("ไม่มีงวดที่ตรวจรับแล้วและยังไม่ได้ขอเบิก", "No accepted phase is waiting for a payment request")}</div>`}</section>` : ""}
   <section class="panel"><header><h2>${L("คำขออนุมัติเบิกจ่าย", "Payment requests")}</h2></header>
@@ -93,13 +94,17 @@ BIND.finance = () => {
   $$("[data-fntab]").forEach(b => (b.onclick = () => { FIN_TAB = b.dataset.fntab; route(); }));
   const pf = $("#py-form");
   if (pf) {
-    const fill = () => { const [cid, n] = $("#py-ph").value.split("|"), ph = famCon(cid).phases.find(x => x.n === Number(n)); $("#py-amt").value = (ph.amount / 1e6).toFixed(3); };
+    const fill = () => { const [cid, n] = $("#py-ph").value.split("|"), c = famCon(cid), ph = c.phases.find(x => x.n === Number(n)); $("#py-amt").value = payGate(c, ph).net; $("#py-gate").innerHTML = gateBox(c, ph); };
     $("#py-ph").onchange = fill; fill();
     pf.onsubmit = e => {
       e.preventDefault();
-      const [cid, n] = $("#py-ph").value.split("|"), c = famCon(cid), ph = c.phases.find(x => x.n === Number(n)), amount = Math.round(Number($("#py-amt").value) * 1e6 / 1e3) * 1e3;
-      if (!(amount > 0) || amount > ph.amount) { toast(L("วงเงินที่ขอต้องไม่เกินวงเงินของงวด", "The amount can't exceed the phase amount")); return; }
-      const p = { id: nextId("PY", S.payreqs), contract: c.id, phase: ph.n, amount, by: me().id, status: "pending", t: nowIso(), decided: null, recon: null };
+      const [cid, n] = $("#py-ph").value.split("|"), c = famCon(cid), ph = c.phases.find(x => x.n === Number(n)), amount = Math.round(Number($("#py-amt").value)), g = payGate(c, ph);
+      if (!g.ok) {
+        if (!ph.hold) { ph.hold = { by: me().id, t: nowIso(), fails: g.checks.filter(x => !x.ok).map(x => x.label).join("; ") }; audit(["ประตูเบิกจ่ายพักรายการ", "The payment gate held a request"], `${c.id} ${tx(ph.name)}`); notify(["prochead", "exec"], [`${c.id} ${ph.name[0]} ไม่ผ่านประตูเบิกจ่าย รอปลดข้อยกเว้น`, `${c.id} ${ph.name[1]} did not pass the payment gate and waits for a release`], "prc-contracts"); commit(); }
+        toast(L("ไม่ผ่านประตูเบิกจ่าย (R-11): พักเป็นข้อยกเว้นให้หัวหน้าพัสดุปลด", "Payment gate not passed (R-11): held as an exception for release")); return;
+      }
+      if (amount !== g.net) { toast(L(`ยอดที่ขอต้องเท่ากับยอดงวดหักค่าปรับและส่วนที่ไม่ผ่านตรวจรับ (${fmt(g.net)} บาท)`, `The amount must equal the phase amount less penalty and rejected work (${fmt(g.net)} baht)`)); return; }
+      const p = { id: nextId("PY", S.payreqs), contract: c.id, phase: ph.n, amount, by: me().id, status: "pending", t: nowIso(), decided: null, recon: null, gate: { penalty: g.penalty, rejected: g.rejected, released: g.released && !g.pass } };
       S.payreqs.push(p);
       audit(["ขออนุมัติเบิกจ่าย", "Requested a payment approval"], `${p.id} ${c.id}`);
       notify(["exec"], [`คำขอเบิกจ่าย ${p.id} รออนุมัติ`, `Payment request ${p.id} is waiting for approval`], "fnc-pay");

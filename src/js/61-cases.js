@@ -14,7 +14,7 @@ const COMMITTEES = { tor: ["คณะกรรมการจัดทำ TOR �
 const CASE_EV = { created: ["สร้างแฟ้ม", "Case created"], requested: ["ขอซื้อขอจ้าง", "Requisition raised"], approved: ["อนุมัติหลักการ", "Approved in principle"], rejected: ["ไม่อนุมัติ", "Rejected"],
   method: ["เลือกวิธีจัดซื้อ", "Method chosen"], method_ok: ["หัวหน้าพัสดุอนุมัติวิธี", "Head approved the method"], method_no: ["หัวหน้าพัสดุไม่อนุมัติวิธี", "Head rejected the method"], specifying: ["เริ่มจัดทำ TOR", "Specifying started"],
   committee: ["แต่งตั้งคณะกรรมการ", "Committee appointed"], ref: ["บันทึกราคากลาง", "Reference price recorded"], tor: ["แนบ TOR", "TOR attached"], egp: ["บันทึกข้อมูล e-GP", "e-GP details recorded"],
-  sourcing: ["เข้าสู่การดำเนินการใน e-GP", "Sourcing started"], closed: ["ปิดรับข้อเสนอ", "Bids closed"], bidders: ["บันทึกจำนวนผู้ยื่น", "Bidders recorded"], quote: ["บันทึกใบเสนอราคา", "Quotation recorded"],
+  sourcing: ["เข้าสู่การดำเนินการใน e-GP", "Sourcing started"], closed: ["ปิดรับข้อเสนอ", "Bids closed"], closed_case: ["ปิดแฟ้ม", "Case closed"], bidders: ["บันทึกจำนวนผู้ยื่น", "Bidders recorded"], quote: ["บันทึกใบเสนอราคา", "Quotation recorded"],
   award: ["ประกาศผู้ชนะ", "Winner announced"], failed: ["ล้มเหลว ดำเนินการใหม่", "Failed, rerun"], appeal_filed: ["มีการอุทธรณ์", "Appeal filed"], appeal_dismissed: ["ยกอุทธรณ์", "Appeal dismissed"],
   appeal_upheld: ["รับอุทธรณ์ กลับไปพิจารณาผล", "Appeal upheld, back to evaluation"], appeal_elapsed: ["พ้นกำหนดอุทธรณ์", "Appeal period over"], contracting: ["เข้าขั้นทำสัญญา", "Ready for contract"],
   contract: ["ลงนามสัญญา", "Contract signed"], cancelled: ["ยกเลิกการจัดซื้อ", "Procurement cancelled"], split: ["ชี้แจงการแตกซื้อ", "Split-purchase explanation"] };
@@ -40,8 +40,8 @@ function caseState(c) {
   const con = caseCon(c);
   if (!con) return 9;
   const pays = S.payreqs.filter(p => p.contract === con.id && p.status !== "rejected");
-  if (con.phases.every(ph => pays.some(p => p.phase === ph.n && p.status === "approved"))) return 12;
   if (!con.phases.every(phaseAccepted)) return 9;
+  if (con.phases.every(ph => pays.some(p => p.phase === ph.n && p.status === "approved"))) return c.close ? 12 : 11;
   return pays.length ? 11 : 10;
 }
 const caseStTag = c => { const n = caseState(c); return n === 0 ? tag(L("ยกเลิก", "Cancelled"), "p-mute") : tag(`${n}/12 ${tx([CASE_STATES[n].th, CASE_STATES[n].en])}`, n >= 9 ? "p-ok" : n >= 5 ? "p-info" : "p-warn"); };
@@ -204,6 +204,7 @@ function caseDetail(c) {
       <div class="row" style="margin-top:10px">${edit && [3, 4, 5].includes(n) ? `<button class="btn primary" type="button" id="case-move" ${allOk ? "" : "disabled"}>${n === 3 ? L("ไปขั้นจัดทำ TOR และราคากลาง", "Move to TOR and reference price") : n === 4 ? (comp ? L("เข้าสู่การดำเนินการใน e-GP", "Move to e-GP sourcing") : L("ประกาศผู้เสนอราคาที่เลือก", "Award to the chosen supplier")) : L("เข้าสู่การพิจารณาผล", "Move to evaluation")}</button>` : ""}
         ${edit && n === 7 && !(c.appeal && c.appeal.status === "open") ? `<button class="btn primary" type="button" id="case-move" ${allOk ? "" : "disabled"}>${L("ไปขั้นทำสัญญา", "Move to contracting")}</button>` : ""}
         ${n === 8 && isProcRole() ? `<button class="btn primary" type="button" id="case-tocon">${L("สร้างสัญญา", "Create the contract")}</button>` : ""}
+        ${(edit && n >= 4 && n <= 7) || (isProcRole() && n >= 2 && n <= 8) ? `<input type="text" id="case-reason" placeholder="${L("เหตุผล (สำหรับล้มเหลวหรือยกเลิก)", "Reason (for failed or cancel)")}" style="min-width:220px" aria-label="${L("เหตุผล", "Reason")}">` : ""}
         ${edit && n >= 4 && n <= 7 ? `<button class="btn" type="button" id="case-fail">${L("ล้มเหลว ดำเนินการใหม่", "Failed, rerun")}</button>` : ""}
         ${isProcRole() && n >= 2 && n <= 8 ? `<button class="btn danger" type="button" id="case-cancel">${L("ยกเลิกการจัดซื้อ", "Cancel procurement")}</button>` : ""}</div></div></section>` : ""}
   ${sec(3, L("วิธีจัดซื้อ", "Procurement method"), `
@@ -252,7 +253,7 @@ function caseDetail(c) {
     ${c.appeal && c.appeal.status !== "open" ? `<div class="sub">${L("ผลอุทธรณ์", "Appeal result")}: ${c.appeal.status === "dismissed" ? L("ยก", "dismissed") : L("รับ", "upheld")}</div>` : ""}
     <div class="sub">${L("การอุทธรณ์ทำใน e-GP ภายใน 7 วันทำการ (ตามแหล่งที่ค้น ต้องยืนยัน) Fisko ติดตามกำหนดและกันการทำสัญญาก่อนพ้นกำหนด", "Appeals are filed in e-GP within 7 working days (per the sources found, to be confirmed). Fisko tracks the date and blocks the contract until it passes.")}</div>`
     : `<span class="sub">${L("วิธีนี้ไม่มีช่วงอุทธรณ์ตามค่าตั้งใน M10", "This method has no appeal period in the M10 settings")}</span>`)}
-  ${sec(8, L("สัญญา", "Contract"), con ? `<div><span class="mono">${con.id}</span> · ${esc(tx(con.vendor))} · ${mb(con.amount)} ${L("ลบ.", "M")} <button class="btn" type="button" id="case-gocon">${L("เปิดสัญญา", "Open the contract")}</button></div>` : `<span class="sub">${n === 8 ? L("พร้อมสร้างสัญญา วงเงินสัญญาต้องไม่เกินราคาที่ประกาศ", "Ready for the contract. Its amount can't exceed the announced price.") : ""}</span>`)}
+  ${sec(8, L("สัญญา", "Contract"), con ? `<div><span class="mono">${con.id}</span> · ${esc(tx(con.vendor))} · ${mb(con.amount)} ${L("ลบ.", "M")} <button class="btn" type="button" id="case-gocon">${L("เปิดสัญญา", "Open the contract")}</button></div>${closePanel(c, con)}` : `<span class="sub">${n === 8 ? L("พร้อมสร้างสัญญา วงเงินสัญญาต้องไม่เกินราคาที่ประกาศ", "Ready for the contract. Its amount can't exceed the announced price.") : ""}</span>`)}
   <section class="panel"><header><h2>${L("ไทม์ไลน์ของแฟ้ม", "Case timeline")}</h2><span class="sp"></span><span class="sub">${ev.length} ${L("เหตุการณ์", "events")}</span></header>
     <div class="body"><ol class="timeline">${ev.map(e => `<li class="done"><span class="dot"></span><div><b style="font-weight:600">${tx(CASE_EV[e.type] || [e.type, e.type])}</b><small>${esc(userName(e.by))} · ${fdate(e.t, true)}</small>${e.detail ? `<div class="sub">${esc(e.detail)}</div>` : ""}</div></li>`).join("") || `<li class="sub">—</li>`}</ol></div></section>`;
 }
@@ -269,10 +270,10 @@ function bindCases() {
   const tc = $("#case-tocon"); if (tc) tc.onclick = () => { CT_FROM = c.id; PROC_TAB = "contracts"; route(); };
   const gc = $("#case-gocon"); if (gc) gc.onclick = () => { PROC_TAB = "contracts"; route(); };
   const fl = $("#case-fail"); if (fl) fl.onclick = () => {
-    const why = prompt_(L("เหตุผลที่ล้มเหลว (เช่น ไม่มีผู้ยื่น ไม่ผ่านเกณฑ์)", "Why it failed (for example no bidders, none qualified)"));
-    if (why === null) return; caseFail(c, why); done(L("กลับไปขั้นจัดทำ TOR เพื่อดำเนินการใหม่", "Back to specifying to rerun"));
+    const why = ($("#case-reason").value || "").trim();
+    if (why.length < 5) { toast(L("ระบุเหตุผลอย่างน้อย 5 ตัวอักษร", "Give a reason of at least 5 characters")); return; } caseFail(c, why); done(L("กลับไปขั้นจัดทำ TOR เพื่อดำเนินการใหม่", "Back to specifying to rerun"));
   };
-  const cc = $("#case-cancel"); if (cc) cc.onclick = () => { const why = prompt_(L("เหตุผลที่ยกเลิก", "Why it is cancelled")); if (why === null) return; caseCancel(c, why); CASE_OPEN = null; done(L("ยกเลิกแล้ว วงเงินที่จองถูกคืน", "Cancelled, the reserved amount is released")); };
+  const cc = $("#case-cancel"); if (cc) cc.onclick = () => { const why = ($("#case-reason").value || "").trim(); if (why.length < 5) { toast(L("ระบุเหตุผลอย่างน้อย 5 ตัวอักษร", "Give a reason of at least 5 characters")); return; } caseCancel(c, why); CASE_OPEN = null; done(L("ยกเลิกแล้ว วงเงินที่จองถูกคืน", "Cancelled, the reserved amount is released")); };
   const mf = $("#mt-form");
   if (mf) mf.onsubmit = e => {
     e.preventDefault();
@@ -345,7 +346,6 @@ function bindCases() {
   const ad = $("#ap-dismiss"); if (ad) ad.onclick = () => { c.appeal.status = "dismissed"; c.appealElapsed = true; audit(["ยกอุทธรณ์", "Dismissed an appeal"], c.id); caseLog(c, "appeal_dismissed"); done(L("ยกอุทธรณ์แล้ว", "Appeal dismissed")); };
   const au = $("#ap-uphold"); if (au) au.onclick = () => { c.appeal.status = "upheld"; const aw = c.award; c.award = null; c.appealElapsed = false; setState(c, 6, "appeal_upheld", aw ? fmt(aw.price) : ""); audit(["รับอุทธรณ์", "Upheld an appeal"], c.id); done(L("รับอุทธรณ์ กลับไปพิจารณาผลใหม่", "Upheld; back to evaluation")); };
 }
-function prompt_(msg) { const v = window.prompt ? window.prompt(msg, "") : ""; return v === null ? null : (String(v).trim() || "-"); }
 {
   const base = BIND.procurement;
   BIND.procurement = () => { base(); if (PROC_TAB === "cases") bindCases(); };
@@ -382,7 +382,7 @@ function prompt_(msg) { const v = window.prompt ? window.prompt(msg, "") : ""; r
 ADMIN_TABS.push({ id: "procrules", roles: ["admin", "audit", "proc", "prochead"], label: ["กฎจัดซื้อจัดจ้าง", "Procurement rules"] });
 const CONF_TAG = c => tag(c, c === "A" ? "p-ok" : c === "B" ? "p-info" : "p-mute");
 ADMIN.procrules = () => {
-  const ad = isAdmin(), cfg = S.pcfg, num = (k, lbl, hint) => `<div class="f" style="flex:0 1 190px"><label for="pc-${k}">${lbl}</label><input type="number" id="pc-${k}" min="0" step="1" value="${cfg[k]}" ${ad ? "" : "disabled"}><span class="sub">${hint}</span></div>`;
+  const ad = isAdmin(), cfg = S.pcfg, num = (k, lbl, hint) => `<div class="f" style="flex:0 1 190px"><label for="pc-${k}">${lbl}</label><input type="number" id="pc-${k}" min="0" step="any" value="${cfg[k]}" ${ad ? "" : "disabled"}><span class="sub">${hint}</span></div>`;
   return `
   <div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("ค่าตั้งเหล่านี้ไม่ใช่คำวินิจฉัยทางกฎหมาย", "These settings are not legal advice")}</b>
     <p>${L("ระดับ A คือข้อเท็จจริงที่ยืนยันกับตัวบทแล้ว ระดับ B และ C เป็นค่าตั้งต้นที่หน่วยงานต้องยืนยันกับระเบียบและหนังสือเวียนที่ใช้อยู่ก่อนใช้จริง", "Level A is confirmed against the text. Levels B and C are starting values the agency must confirm against the current rules and circulars before real use.")}</p></div></div>
@@ -398,6 +398,15 @@ ADMIN.procrules = () => {
       ${num("minMembers", L("กรรมการอย่างน้อย (รวมประธาน)", "Committee size (with chair)"), CONF_TAG("A"))}
       ${num("appealDays", L("ช่วงอุทธรณ์ (วันทำการ)", "Appeal period (working days)"), CONF_TAG("B"))}
       ${num("splitDays", L("ช่วงตรวจการแตกซื้อ (วัน)", "Split-purchase look-back (days)"), CONF_TAG("C"))}
+      ${num("penaltyPct", L("ค่าปรับ (ร้อยละต่อวัน)", "Penalty (% per day)"), CONF_TAG("C"))}
+      ${num("penaltyCapPct", L("เตือนเมื่อค่าปรับสะสมเกิน (ร้อยละของสัญญา)", "Warn when penalties pass (% of contract)"), CONF_TAG("B"))}
+      ${num("guaranteePct", L("หลักประกันสัญญา (ร้อยละ)", "Contract guarantee (%)"), CONF_TAG("C"))}
+      ${num("guaranteeWarnDays", L("เตือนก่อนหลักประกันหมดอายุ (วัน)", "Warn before the guarantee expires (days)"), CONF_TAG("C"))}
+      ${num("ladderPct", L("แก้ไขวงเงินถึงร้อยละนี้ หัวหน้าพัสดุอนุมัติ", "Amount changes up to this % need the head"), CONF_TAG("C"))}
+      ${num("extDaysHead", L("ขยายเวลาถึงกี่วัน หัวหน้าพัสดุอนุมัติ", "Extensions up to this many days need the head"), CONF_TAG("C"))}
+      ${num("acceptWd", L("ตรวจรับงานก่อสร้าง งวดทั่วไป (วันทำการ)", "Construction acceptance, ordinary phase (working days)"), CONF_TAG("B"))}
+      ${num("acceptWdLast", L("ตรวจรับงานก่อสร้าง งวดสุดท้าย (วันทำการ)", "Construction acceptance, last phase (working days)"), CONF_TAG("B"))}
+      ${num("invoiceTol", L("ค่าเผื่อใบแจ้งหนี้ (บาท)", "Invoice tolerance (baht)"), CONF_TAG("C"))}
       ${ad ? `<button class="btn primary" type="button" id="pc-save">${L("บันทึกค่าตั้ง", "Save settings")}</button>` : ""}</div></section>
   <section class="panel"><header><h2>${L("วันหยุดราชการ (ตัวอย่าง)", "Public holidays (sample)")}</h2><span class="sp"></span><span class="sub">${L("ใช้นับวันทำการของช่วงอุทธรณ์", "Used to count working days in the appeal period")}</span></header>
     <div class="body row">${S.holidays.map((h, i) => `<span class="pill p-mute">${fdate(h)}${ad ? ` <button class="btn ghost" type="button" data-hrm="${i}" aria-label="${L("ลบ", "Remove")} ${h}">×</button>` : ""}</span>`).join("") || "—"}</div>
@@ -410,8 +419,8 @@ BIND_ADMIN.procrules = () => {
     commit(); route(); toast(L("บันทึกแล้ว", "Saved")); }; });
   const sv = $("#pc-save");
   if (sv) sv.onclick = () => {
-    const v = {}; for (const k of ["specificMax", "singleInspectorMax", "minMembers", "appealDays", "splitDays"]) v[k] = Math.round(Number($("#pc-" + k).value));
-    if (v.minMembers < 2 || v.appealDays < 0 || v.splitDays < 0 || v.specificMax < 1 || v.singleInspectorMax < 1) { toast(L("ค่าไม่ถูกต้อง", "Check the values")); return; }
+    const v = {}; for (const k of ["specificMax", "singleInspectorMax", "minMembers", "appealDays", "splitDays", "penaltyPct", "penaltyCapPct", "guaranteePct", "guaranteeWarnDays", "ladderPct", "extDaysHead", "acceptWd", "acceptWdLast", "invoiceTol"]) { const x = Number($("#pc-" + k).value); v[k] = k === "penaltyPct" ? x : Math.round(x); }
+    if (Object.values(v).some(x => !(x >= 0)) || v.minMembers < 2 || v.specificMax < 1 || v.singleInspectorMax < 1) { toast(L("ค่าไม่ถูกต้อง", "Check the values")); return; }
     Object.assign(S.pcfg, v); S.mrules.filter(r => r.id === "MR-01").forEach(r => (r.max = v.specificMax));
     audit(["แก้ค่าตั้งจัดซื้อจัดจ้าง", "Changed procurement settings"], Object.entries(v).map(([k, x]) => `${k}=${x}`).join(" ")); commit(); route(); toast(L("บันทึกค่าตั้งแล้ว", "Settings saved"));
   };

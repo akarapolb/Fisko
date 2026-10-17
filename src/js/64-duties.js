@@ -7,6 +7,7 @@ const SOD_RULES = [
   ["SD-03", ["ผู้ขอเบิกจ่ายต้องไม่เป็นผู้อนุมัติเบิกจ่ายรายการเดียวกัน", "A payment's requester can't approve it"]],
   ["SD-04", ["ผู้อนุมัติเบิกจ่ายต้องไม่เป็นกรรมการตรวจรับสัญญาเดียวกัน", "A payment's approver can't be on the contract's acceptance committee"]],
   ["SD-05", ["ผู้กระทบยอดต้องไม่เป็นผู้อนุมัติเบิกจ่ายรายการนั้น", "The person reconciling can't be the one who approved the payment"]],
+  ["SD-08", ["ผู้เสนอแก้ไขสัญญาต้องไม่เป็นผู้อนุมัติการแก้ไขนั้น", "Whoever proposes a contract change can't approve it"]],
   ["SD-06", ["กรรมการพิจารณาผลหรือกรรมการซื้อจ้างต้องไม่เป็นกรรมการตรวจรับของสัญญาเดียวกัน", "A member of the evaluation or purchasing committee can't sit on the acceptance committee of the same contract"]],
 ];
 const SOD_STEPS = [
@@ -16,6 +17,7 @@ const SOD_STEPS = [
   [["ตรวจรับงาน", "Accept the work"], ["อนุมัติเบิกจ่าย", "Approve the payment"], "SD-04"],
   [["อนุมัติเบิกจ่าย", "Approve the payment"], ["กระทบยอดกับ GFMIS", "Reconcile with GFMIS"], "SD-05"],
   [["พิจารณาผลหรือซื้อจ้างเป็นกรรมการ", "Sit on the evaluation or purchasing committee"], ["ตรวจรับงาน", "Accept the work"], "SD-06"],
+  [["เสนอแก้ไขสัญญา", "Propose a contract change"], ["อนุมัติการแก้ไขสัญญา", "Approve the change"], "SD-08"],
 ];
 const sodOn = id => { const r = ((S.sod || {}).rules || []).find(x => x.id === id); return !r || r.on; };
 // The people acting on a step: the signed-in user, plus the person whose authority they hold when acting by delegation.

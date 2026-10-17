@@ -110,19 +110,7 @@ PROC.contracts = () => {
         <div class="row">${people.map(u => `<label class="field-inline"><input type="checkbox" name="ct-insp" value="${u.id}" ${defs.includes(u.id) ? "checked" : ""}> ${esc(tx(u.name))} <span class="sub">· ${tx(ROLES[u.role])}</span></label>`).join("")}</div></fieldset>
       <div><button class="btn primary" type="submit">${L("สร้างสัญญา", "Create contract")}</button></div></form></div></section>`
     : isProc ? `<div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("ยังไม่มีแฟ้มที่พร้อมทำสัญญา", "No case is ready for a contract")}</b><p>${L("แฟ้มที่ประกาศผู้ชนะและพ้นกำหนดอุทธรณ์แล้วจะปรากฏที่นี่", "Cases with a winner and a finished appeal period will appear here")}</p></div></div>` : ""}
-  ${S.contracts.slice().reverse().map(c => { const l = famLine(c.line), locked = phaseSigners(c).length > 0;
-    return `<section class="panel"><header><h2><span class="mono">${c.id}</span> · ${esc(tx(famPlan(c.plan).name))}</h2><span class="sp"></span>${historyBtn(c.id, c.id)}${tag(`${L("วงเงินสัญญา", "Contract")} ${mb(c.amount)} ${L("ลบ.", "M")}`, "p-info")}</header>
-      <div class="body row"><span>${esc(tx(c.vendor))}</span><span class="sub">·</span><span class="mono sub">${esc(c.no)}</span><span class="sub">·</span><span class="sub">${L("ลงนาม", "Signed")} ${fdate(c.signed)}</span><span class="sub">·</span><span class="sub">${esc(lineLabel(l))}</span>
-        ${famPlan(c.plan).egp ? `<span class="sub">·</span><span class="sub mono">${famPlan(c.plan).egp.no}</span>` : ""}</div>
-      <div class="body" style="padding-top:0"><span class="sub">${L("คณะกรรมการตรวจรับ", "Acceptance committee")}:</span> ${c.inspectors.map(id => esc(userName(id))).join(", ")}
-        ${isProc ? (locked ? `<span class="sub"> · ${L("เปลี่ยนกรรมการไม่ได้หลังมีการลงนามตรวจรับ", "can't change after a signature")}</span>` : `<details style="margin-top:8px"><summary class="sub" style="cursor:pointer">${L("เปลี่ยนกรรมการ", "Change committee")}</summary>
-          <div class="row" style="margin-top:6px">${people.map(u => `<label class="field-inline"><input type="checkbox" name="cc-${c.id}" value="${u.id}" ${c.inspectors.includes(u.id) ? "checked" : ""}> ${esc(tx(u.name))}</label>`).join("")}<button class="btn" type="button" data-ccsave="${c.id}">${L("บันทึก", "Save")}</button></div></details>`) : ""}</div>
-      <div class="tbl-wrap"><table><thead><tr><th>${L("งวด", "Phase")}</th><th>${L("กำหนดส่งมอบ", "Due")}</th><th class="n">${L("วงเงิน (ลบ.)", "Amount (M)")}</th><th>${L("ลงนามตรวจรับ", "Acceptance signatures")}</th><th>${L("การเบิกจ่าย", "Payment")}</th><th></th></tr></thead>
-        <tbody>${c.phases.map(ph => { const pay = S.payreqs.find(p => p.contract === c.id && p.phase === ph.n && p.status !== "rejected"), acc = phaseAccepted(ph), late = !acc && ph.due < TODAY;
-          return `<tr><td>${tx(ph.name)}</td><td>${fdate(ph.due)}${late ? ` ${tag(L("เลยกำหนด", "Overdue"), "p-bad")}` : ""}</td><td class="n">${mb(ph.amount)}</td>
-            <td>${phaseSignText(c, ph)} ${acc ? tag(L("ตรวจรับแล้ว", "Accepted"), "p-ok") : ""}</td>
-            <td>${pay ? `<span class="mono sub">${pay.id}</span> ${tag(pay.status === "approved" ? L("อนุมัติแล้ว", "Approved") : L("รออนุมัติ", "Pending"), pay.status === "approved" ? "p-ok" : "p-warn")}` : acc ? `<span class="sub">${L("ยังไม่ขอเบิก", "Not requested")}</span>` : "—"}</td>
-            <td>${c.inspectors.includes(me_) && !acc && (ph.n === 1 || phaseAccepted(c.phases[ph.n - 2])) && !ph.signs.some(s => s.by === me_) ? `<button class="btn primary" type="button" data-sign="${c.id}|${ph.n}">${L("ลงนามตรวจรับ", "Sign acceptance")}</button>` : ""}</td></tr>`; }).join("")}</tbody></table></div></section>`; }).join("")
+  ${S.contracts.slice().reverse().map(conPanel).join("")
     || `<section class="panel"><div class="body sub">${L("ยังไม่มีสัญญา", "No contracts yet")}</div></section>`}`;
 };
 PROC.egp = () => {
@@ -218,16 +206,6 @@ BIND.procurement = () => {
     if (!sodCheck("SD-02", [me().id], insp, c.id)) return;
     const cs = caseByPlan(c.plan); if (cs && !sodCheck("SD-06", insp, caseJudges(cs), c.id)) return;
     c.inspectors = insp; audit(["เปลี่ยนกรรมการตรวจรับ", "Changed the acceptance committee"], c.id); commit(); route(); toast(L("บันทึกกรรมการแล้ว", "Committee saved"));
-  }));
-  $$("[data-sign]").forEach(b => (b.onclick = () => {
-    const [cid, n] = b.dataset.sign.split("|"), c = famCon(cid), ph = c.phases.find(x => x.n === Number(n));
-    if (!c.inspectors.includes(me().id)) { toast(L("คุณไม่ได้เป็นกรรมการตรวจรับสัญญานี้", "You're not on this contract's committee")); return; }
-    if (ph.n > 1 && !phaseAccepted(c.phases[ph.n - 2])) { toast(L("ต้องตรวจรับงวดก่อนหน้าให้ครบก่อน", "Accept the previous phase first")); return; }
-    if (!sodCheck("SD-02", [me().id], [c.by], c.id)) return;
-    ph.signs.push({ by: me().id, t: nowIso() });
-    audit(["ลงนามตรวจรับงาน", "Signed an acceptance"], `${c.id} ${tx(ph.name)}`);
-    if (phaseAccepted(ph)) { audit(["ตรวจรับงานครบองค์ประชุม", "Phase accepted"], `${c.id} ${tx(ph.name)}`); notify(["fin"], [`${c.id} ${ph.name[0]} ตรวจรับแล้ว ขอเบิกจ่ายได้`, `${c.id} ${ph.name[1]} is accepted; a payment can be requested`], "fnc-pay"); }
-    commit(); renderShell(); route(); toast(phaseAccepted(ph) ? L("ตรวจรับครบแล้ว", "Phase accepted") : L("ลงนามแล้ว รอกรรมการท่านอื่น", "Signed, waiting for the other members"));
   }));
   const sample = $("#egp-sample");
   if (sample) sample.onclick = () => {
