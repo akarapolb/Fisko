@@ -980,16 +980,16 @@ details.strat > summary:hover { background: var(--surface-2); }
 :root {
   --bg: #F7F8FA; --surface: #FFFFFF; --surface-2: #F4F5F7; --surface-3: #E9EBEF; --line: #E5E7EB; --line-2: #D7DAE0;
   --ink: #111827; --ink-2: #374151; --muted: #6B7280; --faint: #9CA3AF;
-  --accent: #2B3A67; --accent-2: #3B4C80; --accent-soft: #EEF1F7; --accent-ink: #2B3A67;
-  --info: #3B4C80; --info-soft: #EEF1F7; --violet: #5B6380; --sky: #4B6A88; --amber: #B7791F;
+  --accent: #34498C; --accent-2: #4A5FA3; --accent-soft: #ECF0FA; --accent-ink: #34498C;
+  --info: #4A5FA3; --info-soft: #ECF0FA; --violet: #5B6380; --sky: #4B6A88; --amber: #B7791F;
   --ok: #15803D; --ok-dot: #16A34A; --warn: #A16207; --warn-soft: #FBF6EA; --bad: #B91C1C; --bad-soft: #FBEFEF;
-  --ch-1: #16A34A; --ch-2: #2B3A67; --ch-3: #86CFA0; --ch-4: #D99A2B; --ch-5: #0F766E; --ch-6: #A3AAB8;
+  --ch-1: #16A34A; --ch-2: #34498C; --ch-3: #86CFA0; --ch-4: #D99A2B; --ch-5: #0F766E; --ch-6: #A3AAB8;
   --c-1: var(--ch-1); --c-2: var(--ch-2); --c-3: var(--ch-3); --c-4: var(--ch-4); --c-5: var(--ch-5); --c-6: var(--ch-6);
-  --app-b: #2B3A67; --app-p: #4A5D8A; --app-f: #5C6B7D;
-  --side: #FFFFFF; --side-ink: #374151; --side-muted: #9CA3AF; --side-hover: #F3F4F6; --side-on: #EEF1F7; --side-on-ink: #1F2A50; --side-line: #E5E7EB;
+  --app-b: #34498C; --app-p: #5A6EA8; --app-f: #5C6B7D;
+  --side: #FFFFFF; --side-ink: #374151; --side-muted: #9CA3AF; --side-hover: #F3F4F6; --side-on: #ECF0FA; --side-on-ink: #283B78; --side-line: #E5E7EB;
   --r: 10px; --r-sm: 8px; --r-xs: 7px;
   --sh-1: none; --sh-2: 0 1px 2px rgba(17, 24, 39, .05); --sh-3: 0 10px 30px rgba(17, 24, 39, .12);
-  --ring: 0 0 0 3px rgba(43, 58, 103, .14);
+  --ring: 0 0 0 3px rgba(52, 73, 140, .14);
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #0E1015; --surface: #15181F; --surface-2: #1B1F27; --surface-3: #242934; --line: #262B36; --line-2: #313744;
@@ -1123,6 +1123,17 @@ th { color: var(--muted); font-weight: 600; }
 .c1, .sw.c1 { background: var(--ch-1); } .c2, .sw.c2 { background: var(--ch-2); } .c3, .sw.c3 { background: var(--ch-3); } .c4, .sw.c4 { background: var(--ch-4); } .c5, .sw.c5 { background: var(--ch-5); }
 :root[data-theme="dark"] .c1 { background: var(--ch-1); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .c1 { background: var(--ch-1); } }
+
+/* ---------- app switcher (round 26c) ---------- */
+button.brand:hover, button.brand[aria-expanded="true"] { background: var(--side-hover); }
+.appmenu { box-shadow: var(--sh-3); border-color: var(--line); border-radius: 12px; }
+.appitem.on { box-shadow: none; background: var(--side-on); }
+.appitem.on .appt b { color: var(--side-on-ink); }
+.appico { color: #fff; font-family: var(--font); font-weight: 700; border-radius: 9px; }
+.appcnt { background: var(--surface-2); color: var(--ink-2); border: 1px solid var(--line); font-weight: 600; }
+.appcur { color: var(--accent); }
+:root[data-theme="dark"] .appico, :root[data-theme="dark"] .brand-mark { color: #0E1015; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .appico, :root:not([data-theme="light"]) .brand-mark { color: #0E1015; } }
 </style>
 <div class="app">
   <aside class="rail">

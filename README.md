@@ -15,6 +15,7 @@ This repository holds the conceptual design material and a clickable prototype p
 | `Fisko_Conceptual_Architecture.pptx` / `.pdf` | Customer deck: conceptual architecture and functional modules. |
 | `Fisko_Product_Family_Concept.html` | Concept v0.2 (Thai): Fisko Budget, Procurement and Finance as one product family on a shared core. Decisions D-F01 to D-F03 and D-F06 recorded; D-F04 and D-F05 open. |
 | `Fisko_Procurement_Design.html` | Fisko Procurement detailed design v0.2 (Thai): lifecycle and states, functions, rules and logic, data and OCDS mapping, AI use cases, analytics and red flags, plus the complete feature map (FR-PR-36 to 62), agentic AI, document intake and OCR, forecast and what-if, the boundary with Fisko Assets, and build rounds Q1 to Q6. Draft. |
+| `Fisko_Budget_Design.html` | Fisko Budget detailed design v0.1 (Thai): research on the Budget Procedures Act 2561, the Budget Administration Regulation 2562 and the Budget Bureau FY2570 request manual; design principles; budget cycle and states; gaps; functions FR-B-01 to 40; rules BR-07 to 21 and the transfer authority table R-B-01; data, roles and file-based links; eight redesigned screens; budget agents, forecast and what-if; KPIs and warning signals; build rounds B1 to B6; decisions D-B01 to 08. Draft. |
 | `HANDOFF.md` | Where things stand, how to run and change the prototype, decisions, limits and next steps. |
 | `ROADMAP.md` | The deeper feature planned for each module (all built). |
 | `src/` | Prototype source. |

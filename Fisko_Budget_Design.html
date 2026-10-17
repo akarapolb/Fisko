@@ -1,0 +1,770 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fisko Budget Detailed Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: sticky chapter index on the left, one reading column (~72ch prose, full-width tables and diagrams) on the right */
+:root {
+  --bg: #FFFFFF; --paper: #FFFFFF; --tint: #F4F5FA; --tint-2: #EEF0F7; --line: #DDDEE9;
+  --ink: #1C1D3F; --ink-2: #45465C; --muted: #7A7B92;
+  --navy: #1A1B50; --navy-2: #232366; --navy-ink: #C9CADF;
+  --accent: #1B9E29; --accent-2: #2AD03D; --accent-soft: #E4FBE7;
+  --warn: #A86A0C; --warn-soft: #FCF1DB; --bad: #B9381D; --bad-soft: #FBE3DA; --info: #3A3B9A; --info-soft: #E6E7F7;
+  --font: "IBM Plex Sans Thai", "Leelawadee UI", Tahoma, system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0F1029; --paper: #13153A; --tint: #1A1C44; --tint-2: #20224D; --line: #2D2F5E;
+  --ink: #ECEDF7; --ink-2: #C3C4D8; --muted: #8E90AE;
+  --navy: #0A0B22; --navy-2: #232366; --navy-ink: #B6B8D3;
+  --accent: #3DD552; --accent-2: #2AD03D; --accent-soft: #163A24;
+  --warn: #E7AA45; --warn-soft: #3A2C12; --bad: #F2805F; --bad-soft: #42201A; --info: #A9ABF5; --info-soft: #262862; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0F1029; --paper: #13153A; --tint: #1A1C44; --tint-2: #20224D; --line: #2D2F5E;
+  --ink: #ECEDF7; --ink-2: #C3C4D8; --muted: #8E90AE;
+  --navy: #0A0B22; --navy-2: #232366; --navy-ink: #B6B8D3;
+  --accent: #3DD552; --accent-2: #2AD03D; --accent-soft: #163A24;
+  --warn: #E7AA45; --warn-soft: #3A2C12; --bad: #F2805F; --bad-soft: #42201A; --info: #A9ABF5; --info-soft: #262862; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 20px; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.75 var(--font); }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.mono, code { font-family: var(--mono); font-size: .85em; }
+code { background: var(--tint-2); padding: 1px 5px; border-radius: 4px; }
+
+.layout { display: grid; grid-template-columns: 290px minmax(0, 1fr); }
+.toc { position: sticky; top: 0; height: 100vh; overflow: auto; background: var(--navy); color: var(--navy-ink); padding: 28px 18px 40px; font-size: 14px; }
+.toc .brand { color: #fff; font-weight: 700; font-size: 17px; line-height: 1.3; }
+.toc .brand small { display: block; color: var(--navy-ink); font-weight: 400; font-size: 12.5px; margin-top: 2px; }
+.toc ol { list-style: none; margin: 22px 0 0; padding: 0; counter-reset: c; }
+.toc li { margin: 1px 0; }
+.toc a { display: grid; grid-template-columns: 28px 1fr; gap: 6px; color: var(--navy-ink); text-decoration: none; padding: 6px 8px; border-radius: 7px; line-height: 1.4; }
+.toc a:hover { background: var(--navy-2); color: #fff; }
+.toc a.on { background: var(--navy-2); color: #fff; }
+.toc a .n { font-family: var(--mono); font-size: 11.5px; color: #8A8CB5; padding-top: 2px; }
+.toc a.on .n { color: var(--accent-2); }
+.toc .tools { margin-top: 22px; display: flex; gap: 8px; }
+.toc button { background: var(--navy-2); color: #fff; border: 1px solid #3A3B77; border-radius: 7px; padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+
+main { min-width: 0; padding-block: 0 80px; padding-left: max(28px, env(safe-area-inset-left, 0px)); padding-right: max(28px, env(safe-area-inset-right, 0px)); }
+.doc { max-width: 1080px; margin: 0 auto; }
+.prose { max-width: 74ch; }
+
+.cover { padding: 64px 0 40px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.eyebrow { font-size: 12.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+.cover h1 { font-size: clamp(30px, 4.2vw, 46px); line-height: 1.2; margin: 10px 0 8px; text-wrap: balance; }
+.cover .th { font-size: 20px; color: var(--ink-2); margin: 0; }
+.meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: 30px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.meta div { padding: 12px 16px; border-right: 1px solid var(--line); }
+.meta div:last-child { border-right: 0; }
+.meta span { display: block; font-size: 12px; color: var(--muted); letter-spacing: .04em; }
+.meta b { font-weight: 600; font-size: 15px; }
+.notice { margin-top: 18px; background: var(--warn-soft); color: var(--ink); border-radius: 10px; padding: 12px 16px; font-size: 14.5px; }
+.notice b { color: var(--warn); }
+
+section.ch { padding-top: 56px; }
+h2 { font-size: 28px; line-height: 1.3; margin: 0 0 6px; display: flex; gap: 14px; align-items: baseline; text-wrap: balance; }
+h2 .num { font-family: var(--mono); font-size: 15px; color: var(--accent); font-weight: 600; }
+.lede { color: var(--ink-2); margin: 0 0 22px; max-width: 74ch; }
+h3 { font-size: 19px; margin: 34px 0 10px; line-height: 1.4; }
+h3 .num { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-right: 8px; font-weight: 500; }
+h4 { font-size: 16px; margin: 22px 0 6px; }
+p { margin: 0 0 14px; }
+ul, ol { margin: 0 0 14px; padding-left: 22px; }
+li { margin: 3px 0; }
+.small { font-size: 13.5px; color: var(--muted); }
+
+.tbl { overflow-x: auto; margin: 10px 0 18px; border: 1px solid var(--line); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.55; }
+th { background: var(--tint); text-align: left; font-size: 12.5px; letter-spacing: .03em; color: var(--ink-2); font-weight: 600; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: bottom; }
+td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.id, th.id { white-space: nowrap; font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); }
+td.c, th.c { text-align: center; }
+td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.tag { display: inline-block; border-radius: 99px; padding: 1px 9px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.t-must { background: var(--accent-soft); color: var(--accent); }
+.t-should { background: var(--info-soft); color: var(--info); }
+.t-could { background: var(--tint-2); color: var(--muted); }
+.t-new { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+.t-warn { background: var(--warn-soft); color: var(--warn); }
+.t-bad { background: var(--bad-soft); color: var(--bad); }
+
+.callout { border-radius: 10px; padding: 14px 18px; margin: 14px 0 18px; background: var(--tint); }
+.callout.dark { background: var(--navy); color: #fff; }
+.callout.dark b { color: var(--accent-2); }
+.callout b:first-child { display: block; margin-bottom: 2px; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 12px 0 20px; }
+.card { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; background: var(--paper); }
+.card b { display: block; font-size: 15px; margin-bottom: 2px; }
+.card span { font-size: 13.5px; color: var(--ink-2); line-height: 1.6; display: block; }
+.card .k { font-family: var(--mono); font-size: 12px; color: var(--accent); margin-bottom: 4px; }
+
+/* layered architecture diagram */
+.arch { display: grid; grid-template-columns: minmax(0, 1fr) 210px; gap: 10px; margin: 14px 0 20px; }
+.layers { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.layer { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 10px; align-items: stretch; }
+.layer .lb { background: var(--navy-2); color: #fff; border-radius: 8px; padding: 10px 12px; font-weight: 600; font-size: 14px; line-height: 1.35; }
+.layer .lb small { display: block; color: var(--navy-ink); font-weight: 400; font-size: 12px; }
+.layer.top .lb { background: var(--accent); }
+.layer .chips { display: flex; flex-wrap: wrap; gap: 6px; align-content: center; background: var(--tint); border-radius: 8px; padding: 8px; }
+.chip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; font-size: 13px; }
+.chip.g { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.gov { background: var(--navy); color: #fff; border-radius: 8px; padding: 12px 14px; font-size: 13px; }
+.gov b { color: var(--accent-2); display: block; margin-bottom: 6px; font-size: 14px; }
+.gov ul { padding-left: 16px; margin: 0; }
+.gov li { color: var(--navy-ink); }
+
+/* flow */
+.flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0 20px; }
+.flow .st { background: var(--tint); border-radius: 8px; padding: 8px 12px; font-size: 13.5px; line-height: 1.4; }
+.flow .st b { display: block; font-family: var(--mono); font-size: 11.5px; color: var(--accent); }
+.flow .ar { color: var(--muted); }
+
+/* integration hub */
+.hub { display: grid; grid-template-columns: 1fr minmax(180px, 240px) 1fr; gap: 14px; align-items: center; margin: 14px 0 20px; }
+.hub .side { display: flex; flex-direction: column; gap: 8px; }
+.hub .ext { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 13.5px; background: var(--paper); }
+.hub .ext b { display: block; font-size: 14px; }
+.hub .core { background: var(--navy); color: #fff; border-radius: 12px; padding: 18px; text-align: center; }
+.hub .core b { color: var(--accent-2); font-size: 18px; display: block; }
+.hub .core span { font-size: 12.5px; color: var(--navy-ink); display: block; margin-top: 6px; }
+
+.matrix td.c { font-family: var(--mono); font-size: 12.5px; font-weight: 600; }
+.mx-a { color: var(--accent); } .mx-r { color: var(--muted); } .mx-u { color: var(--info); }
+
+footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+
+@media (max-width: 980px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .toc { position: static; height: auto; padding: 16px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px)); }
+  .toc ol { display: none; }
+  .toc.open ol { display: block; }
+  main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .meta div:nth-child(2) { border-right: 0; }
+  .meta div:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+  .arch { grid-template-columns: minmax(0, 1fr); }
+  .layer { grid-template-columns: minmax(0, 1fr); }
+  .hub { grid-template-columns: minmax(0, 1fr); }
+}
+@media (min-width: 981px) { #toc-toggle { display: none; } }
+@media print {
+  .toc { display: none; }
+  .layout { display: block; }
+  main { padding: 0; }
+  section.ch { break-before: page; padding-top: 0; }
+  .tbl { overflow: visible; }
+  tr, .card, .callout { break-inside: avoid; }
+}
+</style>
+<style>pre.logic { background: var(--tint); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-family: var(--mono); font-size: 12.5px; line-height: 1.65; margin: 12px 0 18px; white-space: pre; }</style>
+<style>
+.wf { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin: 12px 0 20px; background: var(--paper); font-size: 13.5px; }
+.wf-top { background: var(--tint); padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.wf-body { display: grid; grid-template-columns: 200px minmax(0, 1fr) 220px; gap: 0; }
+.wf-steps { list-style: none; margin: 0; padding: 10px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; }
+.wf-steps li { padding: 6px 8px; border-radius: 6px; color: var(--muted); }
+.wf-steps li::before { content: "○ "; }
+.wf-steps li.ok { color: var(--ink-2); } .wf-steps li.ok::before { content: "● "; color: var(--accent); }
+.wf-steps li.now { background: var(--tint-2); color: var(--ink); font-weight: 600; } .wf-steps li.now::before { content: "◐ "; color: var(--info); }
+.wf-main { padding: 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.wf-bars { display: flex; gap: 14px; align-items: flex-end; height: 110px; border-bottom: 1px solid var(--line); padding: 0 8px; }
+.wf-bars i { flex: 1; background: var(--accent); border-radius: 4px 4px 0 0; opacity: .85; }
+.wf-main span, .wf-side span { color: var(--ink-2); font-size: 13px; }
+.wf-side { padding: 14px; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; background: var(--tint); }
+@media (max-width: 760px) { .wf-body { grid-template-columns: minmax(0, 1fr); } .wf-steps, .wf-side { border: 0; } }
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="toc" id="toc" aria-label="สารบัญ">
+  <div class="brand">Fisko Budget<small>Detailed Design · v0.1</small></div>
+  <div class="tools"><button type="button" id="toc-toggle" aria-expanded="false">สารบัญ</button><button type="button" id="theme">ธีม</button></div>
+  <ol>
+    <li><a href="#s1"><span class="n">01</span>วัตถุประสงค์และวิธีค้นคว้า</a></li>
+    <li><a href="#s2"><span class="n">02</span>ผลการค้นคว้าและสิ่งที่นำไปออกแบบ</a></li>
+    <li><a href="#s3"><span class="n">03</span>หลักการออกแบบ</a></li>
+    <li><a href="#s4"><span class="n">04</span>วงจรงบประมาณและสถานะ</a></li>
+    <li><a href="#s5"><span class="n">05</span>สิ่งที่มีแล้วและช่องว่าง</a></li>
+    <li><a href="#s6"><span class="n">06</span>ฟังก์ชันรายขั้นตอน</a></li>
+    <li><a href="#s7"><span class="n">07</span>กฎและตรรกะ</a></li>
+    <li><a href="#s8"><span class="n">08</span>ข้อมูล บทบาท และการเชื่อมต่อ</a></li>
+    <li><a href="#s9"><span class="n">09</span>ออกแบบหน้าจอและประสบการณ์ใช้งาน</a></li>
+    <li><a href="#s10"><span class="n">10</span>AI, Agent, พยากรณ์ และ What-if</a></li>
+    <li><a href="#s11"><span class="n">11</span>Analytics และตัวชี้วัด</a></li>
+    <li><a href="#s12"><span class="n">12</span>ลำดับการสร้างต้นแบบ</a></li>
+    <li><a href="#s13"><span class="n">13</span>ความเสี่ยงและประเด็นที่ต้องตัดสินใจ</a></li>
+    <li><a href="#s14"><span class="n">14</span>แหล่งอ้างอิง</a></li>
+  </ol>
+</nav>
+
+<main>
+<div class="doc">
+
+<header class="cover">
+  <div class="eyebrow">Fisko Budget · Detailed Design</div>
+  <h1>Fisko Budget<br><span style="font-size:.55em;color:var(--accent)">ออกแบบเชิงลึก: วงจรงบประมาณตามแนวปฏิบัติไทย ฟังก์ชัน ตรรกะ หน้าจอ และ AI</span></h1>
+  <p class="th">ต่อยอดจากต้นแบบ Fisko Budget (M01 ถึง M10) และรูปแบบที่ใช้ในการออกแบบ Fisko Procurement</p>
+  <div class="meta">
+    <div><span>เวอร์ชัน</span><b>0.1 ฉบับร่างเพื่อการหารือ</b></div>
+    <div><span>วันที่</span><b>17 ตุลาคม 2569</b></div>
+    <div><span>จัดทำโดย</span><b>Avalant</b></div>
+    <div><span>ต่อยอดจาก</span><b>Solution Design v0.3 · ต้นแบบรอบ 1 ถึง 26</b></div>
+  </div>
+  <div class="callout" style="margin-top:14px"><b>ขอบเขตที่ตกลงกัน</b> ลงลึกทั้งฟังก์ชันและหน้าจอ ครอบคลุมทั้งวงจร (วางแผนและจัดทำ พิจารณาและเสนอ บริหารและติดตาม ผลสัมฤทธิ์และ AI) ยึดแนวปฏิบัติไทยตาม พ.ร.บ.วิธีการงบประมาณ พ.ศ. 2561 ระเบียบว่าด้วยการบริหารงบประมาณ พ.ศ. 2562 และคู่มือสำนักงบประมาณ เขียนเอกสารนี้ก่อน แล้วสร้างต้นแบบเป็นรอบ ๆ ตามบทที่ 12</div>
+  <div class="notice"><b>สถานะเอกสาร:</b> เป็นร่างเพื่อตัดสินใจ ไม่ใช่ความเห็นทางกฎหมาย ข้อกฎหมายและระเบียบมาจากเอกสารที่เปิดอ่านได้ ณ วันที่ในเอกสาร ระเบียบฯ พ.ศ. 2562 มีฉบับแก้ไข (ฉบับที่ 2) พ.ศ. 2567 ต้องตรวจถ้อยคำกับฉบับปัจจุบันก่อนใช้งานจริง ตัวเลขทั้งหมดในตัวอย่างเป็นข้อมูลสมมติ AI และการอ่านเอกสารในต้นแบบเป็นการจำลอง (ตามประเด็น D-P09 และ D-P10)</div>
+</header>
+
+<!-- ============================== 01 ============================== -->
+<section class="ch" id="s1">
+<h2><span class="num">01</span>วัตถุประสงค์และวิธีค้นคว้า</h2>
+<p class="lede">ทำให้ Fisko Budget เป็นสายเดียวที่ต่อกันตั้งแต่ยุทธศาสตร์ ถึงคำขอ วงเงินที่ได้รับ การใช้จ่าย และผลสัมฤทธิ์ โดยแต่ละขั้นใช้ข้อมูลจากขั้นก่อนหน้า ไม่ใช่ตัวอย่างแยกกัน</p>
+<div class="prose">
+<p>ต้นแบบปัจจุบันมีครบ 10 โมดูลและหลายฟังก์ชันเชิงลึกจากรอบ 8 ถึง 10 แต่หลายหน้ายังใช้ข้อมูลตัวอย่างของตัวเอง เช่น ภาพรวมการรวบรวมคำขอ (M03) ใช้ยอดตั้งไว้ ไม่ได้รวมจากคำขอจริง ตารางรอบพิจารณา (M04) ใช้โครงการคนละชุดกับคำขอ (M02) และแดชบอร์ดติดตาม (M07) เป็นภาพปี 2569 ที่ไม่ได้ต่อกับการจัดสรรปี 2570 (M06) เอกสารนี้ออกแบบให้ข้อมูลไหลต่อกันตลอดสาย เพิ่มสิ่งที่แนวปฏิบัติไทยกำหนดแต่ยังไม่มี และออกแบบหน้าจอหลักใหม่ให้ใช้งานง่ายขึ้น</p>
+<p>การค้นคว้าเปิดอ่านคู่มือปฏิบัติการจัดทำคำของบประมาณรายจ่ายประจำปีงบประมาณ พ.ศ. 2570 ของสำนักงบประมาณ (พฤศจิกายน 2568) และเอกสารบรรยายสาระของ พ.ร.บ.วิธีการงบประมาณ พ.ศ. 2561 กับระเบียบว่าด้วยการบริหารงบประมาณ พ.ศ. 2562 โดยตรง และใช้ข่าวเพื่อดูปฏิทินและมาตรการปีปัจจุบัน</p>
+</div>
+<h3><span class="num">1.1</span>ระดับความมั่นใจของข้อมูล</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ระดับ</th><th>ความหมาย</th><th>วิธีใช้ในการออกแบบ</th></tr></thead>
+  <tbody>
+    <tr><td><span class="tag t-must">A</span></td><td>เปิดอ่านจากเอกสารต้นทางโดยตรง (คู่มือสำนักงบประมาณปี 2570 สไลด์สาระของ พ.ร.บ. และระเบียบ)</td><td>ใช้เป็นค่าเริ่มต้นในระบบได้ แต่ยังเป็นค่าที่ตั้งได้ใน M10 เพราะกฎเปลี่ยนได้ทุกปี</td></tr>
+    <tr><td><span class="tag t-should">B</span></td><td>มาจากข่าวหรือเว็บรอง ยังไม่ได้ตรวจกับมติคณะรัฐมนตรีหรือหนังสือเวียน</td><td>ใช้เป็นค่าตั้งต้นที่มีป้าย “ต้องยืนยัน”</td></tr>
+    <tr><td><span class="tag t-could">C</span></td><td>ข้อเสนอการออกแบบหรือแนวปฏิบัติทั่วไป ไม่ใช่ข้อกำหนด</td><td>ตัดสินใจร่วมกับหน่วยงาน</td></tr>
+  </tbody>
+</table></div>
+<div class="callout"><b>สิ่งที่ยังไม่ได้ยืนยัน</b> ถ้อยคำเต็มของระเบียบฯ ฉบับที่ 2 พ.ศ. 2567 · หลักเกณฑ์การโอนเปลี่ยนแปลงเงินจัดสรรที่สำนักงบประมาณกำหนดตามข้อ 28 (ระดับรายการ) · เป้าหมายการเบิกจ่ายรายไตรมาสของปี 2570 · รูปแบบไฟล์ของระบบ e-Budgeting, BBL และ BB EvMIS</div>
+</section>
+
+<!-- ============================== 02 ============================== -->
+<section class="ch" id="s2">
+<h2><span class="num">02</span>ผลการค้นคว้าและสิ่งที่นำไปออกแบบ</h2>
+<p class="lede">แต่ละข้อค้นพบผูกกับการตัดสินใจออกแบบ รหัส S อ้างถึงแหล่งในบทที่ 14</p>
+<h3><span class="num">2.1</span>การจัดทำคำของบประมาณ</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ข้อค้นพบ</th><th>ระดับ</th><th>สิ่งที่นำไปออกแบบ</th></tr></thead>
+  <tbody>
+    <tr><td>คำขอต้องเชื่อมโยง (Mapping) กับยุทธศาสตร์ชาติ แผนแม่บทและแผนย่อย แผนพัฒนาฯ ฉบับที่ 13 ยุทธศาสตร์การจัดสรรงบประมาณ นโยบายรัฐบาล และ SDGs โดยแผนงาน → เป้าหมายการให้บริการกระทรวง → เป้าหมายการให้บริการหน่วยงาน → ผลผลิต/โครงการ → กิจกรรม มีตัวชี้วัดทุกระดับ (S1 หน้า 5–6)</td><td><span class="tag t-must">A</span></td><td>โครงสร้างงบประมาณใน M10 เปลี่ยนเป็น 5 ชั้นตามนี้ และ M01 เก็บความเชื่อมโยงแบบหนึ่งต่อหลายหรือหลายต่อหลายตามที่คู่มือกำหนด (FR-B-01 ถึง 04)</td></tr>
+    <tr><td>แผนงานมี 4 ประเภท: พื้นฐาน ยุทธศาสตร์ บูรณาการ และบุคลากรภาครัฐ (S1 หน้า 7–8)</td><td><span class="tag t-must">A</span></td><td>ทุกบรรทัดคำขอมีประเภทแผนงาน และกฎการโอนในบทที่ 7 ใช้ประเภทนี้</td></tr>
+    <tr><td>ภาพรวมคำขอปีใหม่ต้องเพิ่มไม่เกินร้อยละ 20 ของ พ.ร.บ. ปีก่อน ส่วนที่เพิ่มให้เป็นรายจ่ายลงทุนเท่านั้น ยกเว้นข้อผูกพันตามกฎหมายหรือสัญญา ค่าใช้จ่ายตามสิทธิ หรือนโยบายเร่งด่วน (S1 หน้า 40–41)</td><td><span class="tag t-must">A</span></td><td>BR-04 เดิม (เตือนเมื่อเพิ่มเกิน 20% รายคำขอ) เพิ่มการตรวจระดับหน่วยงานรวม และตรวจว่าส่วนเพิ่มอยู่ในงบลงทุน (BR-11)</td></tr>
+    <tr><td>วิเคราะห์ด้วยหลัก 3R: Review (ทบทวนจากผลการเบิกจ่ายจริง การโอนเปลี่ยนแปลง และเงินเหลื่อมปี) Redeploy (ลดหรือยกเลิกงานที่สำคัญต่ำ) Replace (นำวงเงินที่ลดได้ไปใช้กับงานจำเป็น) และแนบผลวิเคราะห์ในระบบ (S1 หน้า 41)</td><td><span class="tag t-must">A</span></td><td>หน้าวิเคราะห์ 3R ใหม่ใน M03 ดึงผลเบิกจ่ายและการโอนจาก M06/M07 มาให้เอง (FR-B-14)</td></tr>
+    <tr><td>หลักความคุ้มค่า 3E (Economy, Efficiency, Effectiveness) ใช้ต้นทุนต่อหน่วยผลผลิตเทียบปีก่อน (S1 หน้า 22–24)</td><td><span class="tag t-must">A</span></td><td>คำขอแสดงต้นทุนต่อหน่วยผลผลิตเทียบปีก่อนอัตโนมัติ และ M08 วัดซ้ำหลังใช้จ่าย</td></tr>
+    <tr><td>ข้อมูลพื้นฐานโครงการ: ลักษณะการดำเนินการ ความพร้อม (พื้นที่ บุคลากร การบริหาร วัสดุ ระดับ ต่ำมาก ถึง สูงมาก) ความเสี่ยง 6 ด้าน และแนวทางประเมินผล (ก่อน ระหว่าง หลัง และผลกระทบ) (S1 หน้า 17–21)</td><td><span class="tag t-must">A</span></td><td>แท็บ “ความพร้อมและความเสี่ยง” ในแบบฟอร์มคำขอ และคะแนนความพร้อมเข้าเกณฑ์จัดลำดับใน M03</td></tr>
+    <tr><td>รายการต้องใช้ทะเบียนกลางของสำนักงบประมาณ ค่าครุภัณฑ์ ที่ดินและสิ่งก่อสร้างต้องระบุพื้นที่และค่าพิกัด GPS (S1 หน้า 27, 34)</td><td><span class="tag t-must">A</span></td><td>ช่องพิกัดและพื้นที่ในรายการลงทุน (BR-03 ขยาย) และแผนที่รายการลงทุน</td></tr>
+    <tr><td>ราคาต่อหน่วยอ้างราคามาตรฐานของสำนักงบประมาณหรือหน่วยงานกลาง หรือราคาที่เคยอนุมัติไม่เกิน 2 ปี (S1 หน้า 34)</td><td><span class="tag t-must">A</span></td><td>BR-05 เดิมเพิ่มแหล่งราคาและอายุราคา</td></tr>
+    <tr><td>รายการผูกพันข้ามปีควรไม่เกิน 5 ปี ต้องแสดงวงเงินแต่ละปี รายการผูกพันใหม่ตั้งแต่ 1,000 ล้านบาทต้องได้รับอนุมัติจากคณะรัฐมนตรีก่อนยื่น (มาตรา 26) (S1 หน้า 33, 42; S2)</td><td><span class="tag t-must">A</span></td><td>BR-08 และ BR-09</td></tr>
+    <tr><td>โครงการ ICT ไม่เกิน 200 ล้านบาทต้องได้รับความเห็นชอบจาก CIO ระดับกรมหรือกระทรวง เกินกว่านั้นเสนอคณะกรรมการจัดหาระบบคอมพิวเตอร์ของรัฐ รายการลงทุนตั้งแต่ 500 ล้านบาทที่มีการจัดซื้อต้องประเมินความเสี่ยงการทุจริตเชิงนโยบายตามคู่มือ ป.ป.ท. (S1 หน้า 28, 42)</td><td><span class="tag t-must">A</span></td><td>BR-10 รายการเอกสารที่ต้องแนบตามเงื่อนไข</td></tr>
+    <tr><td>หน่วยงานจัดทำแผนการปฏิบัติงานและแผนการใช้จ่ายในระบบ BB EvMIS ด้วยแบบ สงป.301 และ สงป.302 รายไตรมาส ถือเป็นส่วนของคำขอ (S1 หน้า 35)</td><td><span class="tag t-must">A</span></td><td>แผนรายไตรมาสเป็นส่วนหนึ่งของคำขอตั้งแต่ M02 และส่งต่อเป็นแผนการใช้จ่ายใน M06</td></tr>
+    <tr><td>รายการสำคัญจัดลำดับตามเกณฑ์ 5 ข้อ: ภาระผูกพัน นโยบายเร่งด่วน ความพร้อม ความรุนแรงของปัญหา และจำนวนผู้ได้ประโยชน์ (S1 หน้า 35)</td><td><span class="tag t-must">A</span></td><td>เกณฑ์ c1–c4 เดิมใน M03 เปลี่ยนเป็น 5 เกณฑ์นี้ น้ำหนักตั้งได้</td></tr>
+    <tr><td>ปี 2570 รัฐบาลมอบนโยบายจัดทำงบประมาณฐานศูนย์ (Zero-based Budgeting) (S6)</td><td><span class="tag t-should">B</span></td><td>มุมมอง “ฐานศูนย์” ใน M03: ทุกรายการต้องมีเหตุผลใหม่ ไม่ใช่ยกยอดจากปีก่อน</td></tr>
+  </tbody>
+</table></div>
+<h3><span class="num">2.2</span>การบริหารงบประมาณระหว่างปี</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ข้อค้นพบ</th><th>ระดับ</th><th>สิ่งที่นำไปออกแบบ</th></tr></thead>
+  <tbody>
+    <tr><td>ต้องส่งแผนการปฏิบัติงานและแผนการใช้จ่ายให้สำนักงบประมาณไม่น้อยกว่า 15 วันก่อนเริ่มปีงบประมาณ (ระเบียบฯ ข้อ 9) และปรับแผนได้เมื่อเป้าหมายเปลี่ยน มีการโอนไปหน่วยงานอื่น หรือมีนโยบายใหม่ (ข้อ 15–16) (S2)</td><td><span class="tag t-must">A</span></td><td>สถานะแผนใน M06 และกำหนดส่งในปฏิทิน กฎ BR-14</td></tr>
+    <tr><td>งบประมาณจะโอนให้หน่วยรับงบประมาณอื่นไม่ได้ เว้นแต่มี พ.ร.บ. (มาตรา 35) โอนข้ามแผนงานหรือรายการต้องได้รับอนุมัติจากผู้อำนวยการสำนักงบประมาณ และอนุมัติไม่ได้ถ้าเพิ่มเงินราชการลับหรือเป็นแผนงานหรือโครงการใหม่ เว้นแต่ ครม. อนุมัติ (มาตรา 36) (S2)</td><td><span class="tag t-must">A</span></td><td>ตารางอำนาจอนุมัติการโอนในบทที่ 7 (R-B-01) แทนกฎ 3 ระดับเดิม</td></tr>
+    <tr><td>การโอนระหว่างแผนงาน (พื้นฐานและยุทธศาสตร์) ต้องตกลงกับสำนักงบประมาณ (ข้อ 26) ภายในแผนงานเดียวกันทำตามหลักเกณฑ์ที่สำนักงบประมาณกำหนด (ข้อ 28) และถ้าหลักเกณฑ์ให้ทำได้เอง ต้องรายงานภายใน 15 วัน (ข้อ 29) เงินที่ขยายเวลาเบิกจ่ายแล้วจะโอนต้องตกลงก่อน (ข้อ 27) (S2)</td><td><span class="tag t-must">A</span></td><td>คำขอโอนมีเส้นทางตามประเภท และนาฬิกา 15 วันสำหรับรายงานการโอน</td></tr>
+    <tr><td>เหตุผลการโอนต้องเป็น 1 ใน 5 ข้อ: แก้ปัญหาการปฏิบัติงาน เพิ่มประสิทธิภาพ เพิ่มคุณภาพบริการ พัฒนาบุคลากร พัฒนาเทคโนโลยี (ข้อ 25) (S2)</td><td><span class="tag t-must">A</span></td><td>ตัวเลือกเหตุผลการโอนเป็นรายการปิด พร้อมคำอธิบาย</td></tr>
+    <tr><td>จ่ายหรือก่อหนี้ผูกพันได้ตามแผนและเมื่อได้รับอนุมัติเงินจัดสรรแล้วเท่านั้น (มาตรา 40) หน่วยงานไม่ต้องยื่นขออนุมัติเงินจัดสรร เว้นแต่งบเพิ่มเติมหรืองบที่โอนมา (ข้อ 18) ส่งเงินจัดสรรให้ส่วนภูมิภาคภายใน 15 วัน (ข้อ 21) (S2)</td><td><span class="tag t-must">A</span></td><td>สถานะเงินจัดสรรต่อบรรทัด (ยังไม่อนุมัติ อนุมัติแล้ว ส่งต่อแล้ว) และตัวกันใน Fisko Procurement: ห้ามผูกพันเกินเงินจัดสรร</td></tr>
+    <tr><td>เบิกเงินได้เฉพาะในปีงบประมาณ ถ้าก่อหนี้ไว้ก่อนสิ้นปีและกันเงินไว้แล้ว ขยายเวลาได้อีก 6 เดือน และขยายต่อได้ไม่เกิน 6 เดือนเมื่อตกลงกับกระทรวงการคลัง (มาตรา 43) (S2)</td><td><span class="tag t-must">A</span></td><td>หน้ากันเงินเหลื่อมปีใน M06 ใช้กำหนดเวลา 6+6 เดือน (BR-17)</td></tr>
+    <tr><td>รายงานผลการปฏิบัติงานภายใน 15 วันหลังสิ้นไตรมาส รายงานประจำปีภายใน 45 วันหลังสิ้นปี (ข้อ 34; มาตรา 50) แผนบูรณาการรายงานภายใน 45 วันหลังสิ้นไตรมาส (ข้อ 35) (S2)</td><td><span class="tag t-must">A</span></td><td>รอบรายงานใน M08 พร้อมนาฬิกากำหนดส่ง (BR-18)</td></tr>
+    <tr><td>งบกลางที่ได้รับจัดสรรแล้วมีเงินเหลือจ่ายต้องส่งคืนสำนักงบประมาณภายใน 15 วัน (ข้อ 33) (S2)</td><td><span class="tag t-must">A</span></td><td>บรรทัดงบกลางมีป้ายและนาฬิกาคืนเงิน</td></tr>
+    <tr><td>มาตรการเร่งรัดเบิกจ่ายปี 2568: ลงทุนไม่น้อยกว่า 80% ประจำ 98% ภาพรวม 94% และโครงการที่ยังจัดซื้อต้องก่อหนี้ภายในไตรมาส 2 มิฉะนั้นอาจไม่ได้ขยายเวลา (S4, S5)</td><td><span class="tag t-should">B</span></td><td>เป้าหมายเป็นค่าตั้งได้ต่อปีใน M10 (แทน <code>CAB</code> ที่ตั้งไว้ในโค้ด) และสัญญาณเตือน “ยังไม่ก่อหนี้” ในไตรมาส 2</td></tr>
+  </tbody>
+</table></div>
+<h3><span class="num">2.3</span>การประเมินผล</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ข้อค้นพบ</th><th>ระดับ</th><th>สิ่งที่นำไปออกแบบ</th></tr></thead>
+  <tbody>
+    <tr><td>ผู้อำนวยการสำนักงบประมาณวางระบบติดตามและประเมินผลก่อนจัดสรร ระหว่างใช้จ่าย และหลังใช้จ่าย (มาตรา 46) หน่วยงานต้องมีระบบติดตามของตนและเปิดเผยต่อสาธารณะ (มาตรา 47) ถ้าไม่ได้ตามเป้า สำนักงบประมาณเสนอแนะให้ปรับปรุงภายในเวลาที่กำหนด (มาตรา 48) (S2)</td><td><span class="tag t-must">A</span></td><td>M08 มีการประเมิน 3 จังหวะ หน้าเผยแพร่ผล และรายการ “ข้อเสนอแนะที่ต้องแก้ไข” พร้อมกำหนดเวลา</td></tr>
+    <tr><td>สำนักงบประมาณใช้ผลการปฏิบัติงานประกอบการจัดทำงบประมาณปีถัดไป (ข้อ 36) (S2)</td><td><span class="tag t-must">A</span></td><td>ผลจาก M08 ไหลกลับไปที่ 3R ใน M03 และคะแนนความพร้อมใน M01</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 03 ============================== -->
+<section class="ch" id="s3">
+<h2><span class="num">03</span>หลักการออกแบบ</h2>
+<p class="lede">เจ็ดหลักที่ใช้ตัดสินเมื่อมีทางเลือก</p>
+<div class="cards">
+  <div class="card"><div class="k">P-01</div><b>สายข้อมูลเดียว</b><span>ทุกตัวเลขมาจากแหล่งเดียว ยอดรวมคำนวณจากรายการ ไม่มียอดตั้งไว้ คำขอที่อนุมัติกลายเป็นบรรทัดจัดสรร และการใช้จ่ายย้อนกลับไปหาคำขอได้</span></div>
+  <div class="card"><div class="k">P-02</div><b>กฎเป็นข้อมูล</b><span>สัดส่วน วงเงิน กำหนดเวลา และอำนาจอนุมัติอยู่ใน M10 ต่อปีงบประมาณ เพราะเปลี่ยนทุกปี ทุกกฎแสดงแหล่งที่มาและระดับความมั่นใจ</span></div>
+  <div class="card"><div class="k">P-03</div><b>บอกสิ่งที่ต้องทำต่อ</b><span>ทุกหน้ามีแผง “ขั้นต่อไป” ว่าใครต้องทำอะไร ภายในวันไหน และอะไรที่ยังขาด เหมือนแฟ้มจัดซื้อ</span></div>
+  <div class="card"><div class="k">P-04</div><b>หนึ่งหน้าจอต่อหนึ่งงาน</b><span>หน่วยงานเห็นแบบฟอร์มที่พาไปทีละขั้น กองแผนเห็นห้องรวบรวม ผู้บริหารเห็นภาพรวมและการตัดสินใจ ไม่ใช่ทุกคนเห็นตารางเดียวกัน</span></div>
+  <div class="card"><div class="k">P-05</div><b>ติดตามย้อนกลับได้</b><span>ทุกการเปลี่ยนวงเงินมีเหตุผล ผู้ทำ เวลา และรอบ การตัดลดเห็นได้ทั้งเส้นทางตั้งแต่คำขอถึงกฎหมาย</span></div>
+  <div class="card"><div class="k">P-06</div><b>AI ช่วยคิด ไม่ตัดสิน</b><span>AI ร่าง ตรวจ เปรียบเทียบ และพยากรณ์ แต่ไม่อนุมัติ ไม่ตัดวงเงิน และไม่ส่งเอกสารออก ทุกการใช้บันทึกใน M09</span></div>
+  <div class="card"><div class="k">P-07</div><b>ส่งออกแบบไฟล์</b><span>เชื่อมกับ e-Budgeting, BBL, BB EvMIS และ GFMIS เป็นไฟล์นำเข้าและส่งออก ตามแนวทางเดียวกับ e-GP (D-F05) จนกว่าจะมีช่องทางอย่างเป็นทางการ</span></div>
+</div>
+</section>
+
+<!-- ============================== 04 ============================== -->
+<section class="ch" id="s4">
+<h2><span class="num">04</span>วงจรงบประมาณและสถานะ</h2>
+<p class="lede">ปีงบประมาณเริ่ม 1 ตุลาคม ในแต่ละช่วงเวลาหน่วยงานทำงานกับงบประมาณ 3 ปีพร้อมกัน</p>
+<div class="flow">
+  <div class="st"><b>ปี N-1 (2569)</b>กันเงินเหลื่อมปีและปิดบัญชี</div><span class="ar">·</span>
+  <div class="st"><b>ปี N (2570)</b>บริหาร ใช้จ่าย ติดตาม รายงาน</div><span class="ar">·</span>
+  <div class="st"><b>ปี N+1 (2571)</b>จัดทำคำขอ พิจารณา เสนอ</div>
+</div>
+<h3><span class="num">4.1</span>ปฏิทินของหน่วยงาน (ตัวอย่างปี 2571)</h3>
+<p class="small">วันที่ภายนอกตามปฏิทินงบประมาณที่ ครม. เห็นชอบแต่ละปี ในต้นแบบเป็นค่าตั้งได้ใน M10 วันที่ภายในเป็นตัวอย่าง <span class="tag t-could">C</span></p>
+<div class="tbl"><table>
+  <thead><tr><th>ช่วง</th><th>เหตุการณ์</th><th>ผู้รับผิดชอบ</th><th>โมดูล</th></tr></thead>
+  <tbody>
+    <tr><td class="id">ต.ค.–พ.ย.</td><td>ทบทวนยุทธศาสตร์ ตัวชี้วัด และบัญชีโครงการ ประกาศแนวทางและกรอบเบื้องต้นภายใน</td><td>กองแผน ผู้บริหาร</td><td>M01, M03</td></tr>
+    <tr><td class="id">พ.ย.–ธ.ค.</td><td>กองต่าง ๆ จัดทำคำขอ พร้อมแผนรายไตรมาส ความพร้อม และ 3R</td><td>กองต่าง ๆ</td><td>M02</td></tr>
+    <tr><td class="id">ธ.ค.–ม.ค.</td><td>กองแผนรวบรวม จัดลำดับ ตรวจกรอบ และพิจารณารอบที่ 1–2 ประชุมคณะกรรมการงบประมาณของหน่วยงาน</td><td>กองแผน คณะกรรมการ</td><td>M03, M04</td></tr>
+    <tr><td class="id">ม.ค.–ก.พ.</td><td>ผู้บริหารเห็นชอบ รัฐมนตรีเจ้าสังกัดเห็นชอบ ยื่นคำขอต่อสำนักงบประมาณ (มาตรา 25)</td><td>ผู้บริหาร กองแผน</td><td>M04, M05</td></tr>
+    <tr><td class="id">มี.ค.–พ.ค.</td><td>ชี้แจงสำนักงบประมาณ รับผลการพิจารณา ปรับคำขอตามวงเงินที่ได้</td><td>กองแผน กองต่าง ๆ</td><td>M05</td></tr>
+    <tr><td class="id">พ.ค.–ก.ย.</td><td>ครม. เสนอร่าง พ.ร.บ. สภาผู้แทนราษฎรวาระ 1–3 กรรมาธิการตัดลด ขอแปรญัตติคืน วุฒิสภา ประกาศราชกิจจานุเบกษา</td><td>กองแผน ผู้บริหาร</td><td>M05</td></tr>
+    <tr><td class="id">ก.ย.</td><td>ส่งแผนการปฏิบัติงานและแผนการใช้จ่าย (สงป.301/302) ก่อนเริ่มปีไม่น้อยกว่า 15 วัน</td><td>กองแผน กองคลัง</td><td>M06</td></tr>
+    <tr><td class="id">ต.ค. เป็นต้นไป</td><td>รับเงินจัดสรร แจกจ่ายภายใน ก่อหนี้ เบิกจ่าย โอนเปลี่ยนแปลง รายงานรายไตรมาส (15 วัน)</td><td>กองคลัง กองต่าง ๆ</td><td>M06, M07, M08</td></tr>
+    <tr><td class="id">30 ก.ย.</td><td>สิ้นปี กันเงินเหลื่อมปี รายงานประจำปีภายใน 45 วัน</td><td>กองคลัง กองแผน</td><td>M06, M08</td></tr>
+  </tbody>
+</table></div>
+<h3><span class="num">4.2</span>สถานะหลัก</h3>
+<div class="tbl"><table>
+  <thead><tr><th>วัตถุ</th><th>สถานะ</th><th>หมายเหตุ</th></tr></thead>
+  <tbody>
+    <tr><td>คำขอ (M02)</td><td>ร่าง → ส่งกอง (ผู้อำนวยการกองเห็นชอบ) → กองแผนกลั่นกรอง → คณะกรรมการ → เห็นชอบภายใน → ยื่นแล้ว → สำนักงบประมาณพิจารณา → ได้รับ (บางส่วน) → อยู่ใน พ.ร.บ. → จัดสรรแล้ว · ส่งกลับแก้ไข · ไม่เห็นชอบ · ถอนคำขอ</td><td>เพิ่มขั้นเห็นชอบระดับกองก่อนส่งกองแผน และสถานะหลังยื่นที่ติดตามได้ถึงกฎหมาย <span class="tag t-new">ใหม่</span></td></tr>
+    <tr><td>ชุดคำขอ (M05)</td><td>เตรียม → รัฐมนตรีเห็นชอบ → ยื่นแล้ว → ชี้แจง → ได้ผล → ปรับตามผล → ปิด</td><td>มีอยู่แล้ว เพิ่มขั้นรัฐมนตรีเห็นชอบ</td></tr>
+    <tr><td>แผนการใช้จ่าย (M06)</td><td>ร่าง → ส่งสำนักงบประมาณ → เห็นชอบ → ปรับแผน (รอเห็นชอบ) → เห็นชอบฉบับใหม่</td><td>มีรุ่นของแผน <span class="tag t-new">ใหม่</span></td></tr>
+    <tr><td>เงินจัดสรร (M06)</td><td>ยังไม่อนุมัติ → อนุมัติแล้ว → ส่งต่อส่วนภูมิภาคแล้ว</td><td><span class="tag t-new">ใหม่</span></td></tr>
+    <tr><td>คำขอโอน (M06)</td><td>ร่าง → อนุมัติภายใน → (ตกลงสำนักงบประมาณ) → มีผล → รายงานแล้ว</td><td>เส้นทางขึ้นกับประเภทการโอน (บทที่ 7)</td></tr>
+    <tr><td>บรรทัดงบประมาณ (M07)</td><td>จัดสรร → จองวงเงิน → ผูกพัน → เบิกจ่าย → คงเหลือ / กันเหลื่อมปี / เหลือจ่าย</td><td>ใช้ยอดจาก Fisko Procurement และ Fisko Finance</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 05 ============================== -->
+<section class="ch" id="s5">
+<h2><span class="num">05</span>สิ่งที่มีแล้วและช่องว่าง</h2>
+<p class="lede">สรุปจากการสำรวจต้นแบบปัจจุบัน (ไฟล์ <code>src/js/40*–50*</code>)</p>
+<div class="tbl"><table>
+  <thead><tr><th>โมดูล</th><th>มีแล้ว</th><th>ช่องว่างหลัก</th></tr></thead>
+  <tbody>
+    <tr><td>M01 ยุทธศาสตร์</td><td>แผนที่ยุทธศาสตร์ ตัวชี้วัด 5 ปี การเชื่อมกิจกรรม บัญชีโครงการ (คัดกรอง ให้คะแนน แปลงเป็นคำขอ) การปรับแผน</td><td>ยังไม่มีชั้นแผนแม่บทและแผนย่อย ไม่มีกรอบวงเงินต่อยุทธศาสตร์ ไม่มีทะเบียนความเสี่ยง แก้ไขได้เฉพาะกองแผน</td></tr>
+    <tr><td>M02 คำขอ</td><td>บอร์ดสถานะ แบบฟอร์มหลายแท็บ หลายปี ครุภัณฑ์และสิ่งก่อสร้าง ประมาณการบุคลากร รุ่นของคำขอ ราคามาตรฐาน วางจาก Excel กฎ BR-01 ถึง 06</td><td>ไม่มีแผนรายไตรมาส ความพร้อม ความเสี่ยง 3R พิกัด และเอกสารแนบตามเงื่อนไข ไม่มีขั้นเห็นชอบระดับกอง แนบไฟล์เป็นชื่อเท่านั้น</td></tr>
+    <tr><td>M03 รวบรวม</td><td>ภาพรวม ให้คะแนน กรอบรายกอง การตอบรับกรอบ ตามแผนงาน ประมาณการล่วงหน้า</td><td>ยอดตั้งไว้ ไม่ได้รวมจากคำขอ เกณฑ์ไม่ตรงคู่มือ ไม่มี 3R ไม่มีมุมมองฐานศูนย์</td></tr>
+    <tr><td>M04 พิจารณา</td><td>คิวพิจารณา รอบวงเงิน 3 รอบ ประชุมคณะกรรมการ เปรียบเทียบรุ่น การชี้แจง ผลกระทบการตัด</td><td>รอบวงเงินใช้โครงการคนละชุดกับคำขอ ส่งคณะกรรมการทุกคำขอโดยไม่ดูเกณฑ์ 10 ล้าน ไม่มีบทบาทกรรมการและองค์ประชุม</td></tr>
+    <tr><td>M05 เสนอ</td><td>ตรวจก่อนส่ง แบบพิมพ์ ส่งออก สถานะ รัฐสภา 7 ขั้น การตัดและแปรญัตติ</td><td>แบบพิมพ์ไม่ตรงแบบของสำนักงบประมาณ ไม่มีขั้นรัฐมนตรีเห็นชอบ ผลไม่ไหลไปเป็นบรรทัดจัดสรร</td></tr>
+    <tr><td>M06 จัดสรร</td><td>วงเงินตาม พ.ร.บ. จัดสรรรายกอง แผนรายเดือน การโอน 3 ระดับ เงินงวด กันเงินเหลื่อมปี</td><td>บรรทัดไม่ได้มาจากคำขอที่อนุมัติ กฎการโอนไม่ตรงระเบียบ ไม่มีแผน สงป.302 และรุ่นของแผน ไม่มีเงินสำรองภายใน</td></tr>
+    <tr><td>M07 ติดตาม</td><td>ภาพรวม เจาะลึก รายงานความก้าวหน้า นำเข้า GFMIS แจ้งเตือน พยากรณ์สิ้นปี ความคืบหน้าจัดซื้อ</td><td>เป็นภาพปี 2569 คงที่ ไม่ได้ใช้ยอดจองและผูกพันจาก Procurement และ Finance เป้าหมาย ครม. ตั้งในโค้ด</td></tr>
+    <tr><td>M08 ผลสัมฤทธิ์</td><td>ผลตัวชี้วัด ห่วงโซ่ผลลัพธ์ สกอร์การ์ด รายงาน ประเมินโครงการ บทเรียน</td><td>มีแค่ครึ่งปี ไม่มีรอบรายไตรมาส ต้นทุนต่อผลผลิต หลักฐาน การเผยแพร่ และข้อเสนอแนะที่ต้องแก้</td></tr>
+    <tr><td>M09 AI</td><td>ถาม AI (คำถามตัวอย่าง) แนวโน้ม What-if ธรรมาภิบาล Agent ความผิดปกติ คุณภาพคำชี้แจง</td><td>Agent ด้านงบประมาณยังไม่ทำงานแบบหลายขั้นเหมือน Procurement (Q6) ไม่มีพยากรณ์จากข้อมูลจริงของปี 2570</td></tr>
+    <tr><td>M10 ผู้ดูแล</td><td>ข้อมูลหลัก ปฏิทิน โครงสร้าง ผู้ใช้ กระบวนงาน กฎ บันทึก การเชื่อมต่อ การแจ้งเตือน การเก็บรักษา</td><td>โครงสร้าง 3 ชั้น (ต้อง 5 ชั้น) ตารางสิทธิ์แก้ไขไม่ได้ ไม่มีชุดกฎต่อปีงบประมาณ</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 06 ============================== -->
+<section class="ch" id="s6">
+<h2><span class="num">06</span>ฟังก์ชันรายขั้นตอน</h2>
+<p class="lede">ข้อกำหนดใหม่ใช้รหัส FR-B ต่อจาก FR-M01 ถึง FR-M10 ใน Solution Design v0.3 · ระดับความสำคัญ <span class="tag t-must">ต้องมี</span> <span class="tag t-should">ควรมี</span> <span class="tag t-could">อาจมี</span> · คอลัมน์ “รอบ” อ้างถึงบทที่ 12</p>
+
+<h3><span class="num">6.1</span>วางแผน (M01)</h3>
+<div class="tbl"><table>
+  <thead><tr><th>รหัส</th><th>ฟังก์ชัน</th><th>รายละเอียด</th><th>ระดับ</th><th>รอบ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-B-01</td><td>ชั้นแผนระดับชาติ</td><td>ทะเบียนยุทธศาสตร์ชาติ 6 ด้าน แผนแม่บท 23 แผน แผนย่อย หมุดหมายแผนพัฒนาฯ ฉบับที่ 13 นโยบายรัฐบาล SDGs และยุทธศาสตร์การจัดสรรงบประมาณของปี นำเข้าจากไฟล์ (ตัวอย่างบางส่วนในต้นแบบ)</td><td><span class="tag t-must">ต้องมี</span></td><td>B2</td></tr>
+    <tr><td class="id">FR-B-02</td><td>เป้าหมายการให้บริการ</td><td>เป้าหมายการให้บริการกระทรวงและหน่วยงาน (ผลลัพธ์) พร้อมตัวชี้วัด เชื่อมแบบหนึ่งต่อหลายกับเป้าหมายเชิงยุทธศาสตร์ และกลยุทธ์หน่วยงานเชื่อมกับกิจกรรมแบบหนึ่งต่อหลาย</td><td><span class="tag t-must">ต้องมี</span></td><td>B2</td></tr>
+    <tr><td class="id">FR-B-03</td><td>ต้นไม้ความเชื่อมโยง</td><td>มุมมองต้นไม้จากยุทธศาสตร์ชาติถึงรายการ ทุกโหนดแสดงวงเงินที่ขอ วงเงินที่ได้ และผลตัวชี้วัด กดโหนดเพื่อดูคำขอ ตรวจหาโหนดที่ไม่มีคำขอหรือคำขอที่ไม่เชื่อมโหนด</td><td><span class="tag t-must">ต้องมี</span></td><td>B2</td></tr>
+    <tr><td class="id">FR-B-04</td><td>กรอบวงเงินตามยุทธศาสตร์</td><td>ผู้บริหารกำหนดสัดส่วนวงเงินเป้าหมายต่อยุทธศาสตร์ของหน่วยงาน (เช่น ยุทธศาสตร์ที่ 1 ไม่น้อยกว่า 40%) ระบบเทียบกับคำขอจริง</td><td><span class="tag t-should">ควรมี</span></td><td>B2</td></tr>
+    <tr><td class="id">FR-B-05</td><td>ทะเบียนความเสี่ยง</td><td>ความเสี่ยงต่อยุทธศาสตร์และโครงการ 6 ด้านตามคู่มือ (การเมืองและสังคม กฎหมาย การดำเนินการ การเงิน เทคโนโลยี สิ่งแวดล้อม) โอกาสและผลกระทบ มาตรการ ผู้รับผิดชอบ</td><td><span class="tag t-should">ควรมี</span></td><td>B2</td></tr>
+    <tr><td class="id">FR-B-06</td><td>กองเสนอยุทธศาสตร์ได้</td><td>กองต่าง ๆ เสนอแก้ไขตัวชี้วัดและเป้าหมายของตน กองแผนรับหรือปฏิเสธ (ขยายการปรับแผนเดิม)</td><td><span class="tag t-could">อาจมี</span></td><td>B2</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.2</span>จัดทำและรวบรวมคำขอ (M02, M03)</h3>
+<div class="tbl"><table>
+  <thead><tr><th>รหัส</th><th>ฟังก์ชัน</th><th>รายละเอียด</th><th>ระดับ</th><th>รอบ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-B-07</td><td>แบบฟอร์มทีละขั้น</td><td>คำขอแบ่งเป็น 7 ขั้น: ข้อมูลทั่วไปและความเชื่อมโยง → ที่มาและความจำเป็น → เป้าหมาย ผลลัพธ์ ตัวชี้วัด 4 มิติ (ปริมาณ คุณภาพ เวลา ต้นทุน) → รายการค่าใช้จ่าย → แผนรายไตรมาส → ความพร้อมและความเสี่ยง → เอกสารแนบ แต่ละขั้นมีสถานะครบหรือขาด และส่งได้เมื่อครบทุกขั้น</td><td><span class="tag t-must">ต้องมี</span></td><td>B1</td></tr>
+    <tr><td class="id">FR-B-08</td><td>แผนรายไตรมาส</td><td>แผนการปฏิบัติงานและแผนการใช้จ่ายระดับกิจกรรมรายไตรมาส (ตามแนว สงป.301/302) เติมให้อัตโนมัติจากรูปแบบการใช้จ่ายของงบรายจ่าย แก้ไขได้ และส่งต่อเป็นแผนใน M06 เมื่อได้รับเงิน</td><td><span class="tag t-must">ต้องมี</span></td><td>B1</td></tr>
+    <tr><td class="id">FR-B-09</td><td>ความพร้อมและความเสี่ยง</td><td>ความพร้อมของพื้นที่ (พร้อมทันที เตรียมการ ศึกษา) บุคลากร การบริหาร วัสดุอุปกรณ์ (5 ระดับ) ใบอนุญาตใช้พื้นที่ป่าไม้ การศึกษาผลกระทบสิ่งแวดล้อม ความเสี่ยง 6 ด้าน แนวทางประเมินผล คะแนนความพร้อมรวมคำนวณให้</td><td><span class="tag t-must">ต้องมี</span></td><td>B1</td></tr>
+    <tr><td class="id">FR-B-10</td><td>รายการลงทุนบนแผนที่</td><td>ครุภัณฑ์ ที่ดิน สิ่งก่อสร้าง มีสถานที่ (หมู่บ้าน ตำบล อำเภอ จังหวัด หรือช่วงจังหวัด) และพิกัด แสดงบนแผนที่ของหน่วยงาน ราคาอ้างแหล่งและวันที่ของราคา</td><td><span class="tag t-should">ควรมี</span></td><td>B1</td></tr>
+    <tr><td class="id">FR-B-11</td><td>เอกสารแนบตามเงื่อนไข</td><td>ระบบบอกเอกสารที่ต้องแนบจากข้อมูลคำขอ: มติ ครม. (ผูกพันใหม่ 1,000 ล้านบาทขึ้นไป) ความเห็นชอบ CIO หรือคณะกรรมการ (ICT) ผลประเมินความเสี่ยงทุจริตเชิงนโยบาย (ลงทุน 500 ล้านบาทขึ้นไป) แบบรูปรายการ TOR ใบเสนอราคา เอกสารสิทธิ์ที่ดิน รายการไหนยังขาดแสดงในแผงขั้นต่อไป</td><td><span class="tag t-must">ต้องมี</span></td><td>B1</td></tr>
+    <tr><td class="id">FR-B-12</td><td>เห็นชอบระดับกอง</td><td>ผู้อำนวยการกองเห็นชอบก่อนส่งกองแผน (ขั้นใหม่ในกระบวนงาน) ส่งกลับให้ผู้จัดทำได้</td><td><span class="tag t-must">ต้องมี</span></td><td>B1</td></tr>
+    <tr><td class="id">FR-B-13</td><td>รวบรวมจากคำขอจริง</td><td>ยอดใน M03 ทุกหน้า (ตามกอง งบรายจ่าย แผนงาน ยุทธศาสตร์) คำนวณจากคำขอปัจจุบัน แสดงเทียบ พ.ร.บ. ปีก่อน และเพดานร้อยละ 20</td><td><span class="tag t-must">ต้องมี</span></td><td>B1</td></tr>
+    <tr><td class="id">FR-B-14</td><td>วิเคราะห์ 3R</td><td>ต่อกองและต่อผลผลิต: Review แสดงอัตราเบิกจ่ายปีก่อน การโอนออก เงินเหลื่อมปีค้าง; Redeploy เสนอรายการที่คะแนนต่ำ หมดความจำเป็น หรือเบิกจ่ายช้า; Replace จับคู่วงเงินที่ลดได้กับรายการจำเป็นที่รอ ผลวิเคราะห์ส่งออกเป็นไฟล์แนบได้</td><td><span class="tag t-must">ต้องมี</span></td><td>B2</td></tr>
+    <tr><td class="id">FR-B-15</td><td>จัดลำดับตามเกณฑ์คู่มือ</td><td>5 เกณฑ์ (ภาระผูกพัน นโยบายเร่งด่วน ความพร้อม ความรุนแรงของปัญหา ผู้ได้ประโยชน์) น้ำหนักตั้งได้ ระบบเติมคะแนนจากข้อมูลคำขอเท่าที่ทำได้ ผู้พิจารณาปรับพร้อมเหตุผล ลำดับใช้ตัดเส้นตามกรอบ</td><td><span class="tag t-must">ต้องมี</span></td><td>B2</td></tr>
+    <tr><td class="id">FR-B-16</td><td>มุมมองฐานศูนย์</td><td>แยกคำขอเป็นต่อเนื่องและใหม่ แสดงรายการที่ยกยอดจากปีก่อนโดยไม่เปลี่ยนเหตุผล ให้ผู้พิจารณาติดป้าย “ต้องอธิบายใหม่”</td><td><span class="tag t-should">ควรมี</span></td><td>B2</td></tr>
+    <tr><td class="id">FR-B-17</td><td>ประมาณการล่วงหน้า (MTEF)</td><td>ประมาณการรายจ่ายล่วงหน้า 3 ปีจากรายการผูกพันและค่าใช้จ่ายประจำ เทียบกับกรอบที่คาด แสดงภาระที่ล็อกไว้แล้วในปีต่อไป</td><td><span class="tag t-should">ควรมี</span></td><td>B2</td></tr>
+    <tr><td class="id">FR-B-18</td><td>เงินนอกงบประมาณ</td><td>แหล่งเงินนอกงบประมาณ (รายได้ ทุนหมุนเวียน เงินกู้ เงินอุดหนุนและบริจาค) ต่อรายการ และรายงานสถานะและแผนการใช้จ่ายเงินนอกงบประมาณ</td><td><span class="tag t-could">อาจมี</span></td><td>B3</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.3</span>พิจารณาและเสนอ (M04, M05)</h3>
+<div class="tbl"><table>
+  <thead><tr><th>รหัส</th><th>ฟังก์ชัน</th><th>รายละเอียด</th><th>ระดับ</th><th>รอบ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-B-19</td><td>รอบวงเงินจากคำขอจริง</td><td>ทุกคำขอมีวงเงิน 5 จุด: ขอ → กองแผนเสนอ → คณะกรรมการ → ผู้บริหาร → สำนักงบประมาณ → พ.ร.บ. แสดงเป็นกราฟน้ำตก (waterfall) ต่อคำขอ ต่อกอง และทั้งหน่วยงาน ทุกการตัดมีเหตุผลจากรายการปิด</td><td><span class="tag t-must">ต้องมี</span></td><td>B1</td></tr>
+    <tr><td class="id">FR-B-20</td><td>เส้นทางตามเกณฑ์</td><td>คำขอไปคณะกรรมการเฉพาะเมื่อเข้าเงื่อนไข w3 (เช่น 10 ล้านบาทขึ้นไป งบลงทุน หรือโครงการใหม่) ที่เหลือไปผู้บริหารโดยตรง เงื่อนไขตั้งได้</td><td><span class="tag t-must">ต้องมี</span></td><td>B1</td></tr>
+    <tr><td class="id">FR-B-21</td><td>คณะกรรมการและองค์ประชุม</td><td>บทบาทใหม่ “กรรมการงบประมาณ” วาระการประชุมสร้างจากคิว ลงมติรายวาระ (เห็นชอบ ปรับลด เลื่อน ไม่เห็นชอบ) ตรวจองค์ประชุม บันทึกผู้มีส่วนได้เสียงดออกเสียง และรายงานการประชุมร่างให้อัตโนมัติ</td><td><span class="tag t-should">ควรมี</span></td><td>B3</td></tr>
+    <tr><td class="id">FR-B-22</td><td>ตัดลดแบบมีผลกระทบ</td><td>เมื่อปรับลด ระบบคำนวณผลต่อเป้าหมายตัวชี้วัด (ตามต้นทุนต่อหน่วย) และต่อแผนรายไตรมาส ผู้ตัดเห็นก่อนยืนยัน</td><td><span class="tag t-must">ต้องมี</span></td><td>B3</td></tr>
+    <tr><td class="id">FR-B-23</td><td>ชุดยื่นตามแบบสำนักงบประมาณ</td><td>สร้างรายงานตามแบบสรุปคำของบประมาณระดับหน่วยงาน ระดับผลผลิต/โครงการ รายละเอียดกิจกรรมตามลำดับความสำคัญ รายละเอียดตามงบรายจ่าย และเอกสารชี้แจง ส่งออกเป็นไฟล์สำหรับนำเข้า e-Budgeting (รูปแบบต้องยืนยัน)</td><td><span class="tag t-must">ต้องมี</span></td><td>B3</td></tr>
+    <tr><td class="id">FR-B-24</td><td>รัฐมนตรีเห็นชอบ</td><td>ขั้นรัฐมนตรีเจ้าสังกัดเห็นชอบก่อนยื่น (มาตรา 25) บันทึกเลขหนังสือและวันที่</td><td><span class="tag t-must">ต้องมี</span></td><td>B3</td></tr>
+    <tr><td class="id">FR-B-25</td><td>ชุดชี้แจง</td><td>สำหรับชี้แจงสำนักงบประมาณ ครม. และกรรมาธิการ: สรุปหนึ่งหน้าต่อผลผลิต คำถามที่คาดและคำตอบร่าง (AI) ข้อสังเกตของกรรมาธิการปีก่อนและการตอบสนอง</td><td><span class="tag t-should">ควรมี</span></td><td>B3</td></tr>
+    <tr><td class="id">FR-B-26</td><td>จาก พ.ร.บ. สู่บรรทัดจัดสรร</td><td>เมื่อประกาศ พ.ร.บ. ระบบสร้างบรรทัดจัดสรรของปีใหม่จากคำขอที่ได้รับ (วงเงินตามผลสุดท้าย) พร้อมแผนรายไตรมาสที่ปรับตามสัดส่วน ผู้ใช้ตรวจและยืนยันทีละกอง</td><td><span class="tag t-must">ต้องมี</span></td><td>B3</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.4</span>บริหารและติดตาม (M06, M07)</h3>
+<div class="tbl"><table>
+  <thead><tr><th>รหัส</th><th>ฟังก์ชัน</th><th>รายละเอียด</th><th>ระดับ</th><th>รอบ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-B-27</td><td>แผนการใช้จ่ายมีรุ่น</td><td>แผนรายไตรมาสและรายเดือนต่อบรรทัด ส่งก่อนเริ่มปี 15 วัน ปรับแผนได้ตามเหตุในข้อ 15 ทุกครั้งเป็นรุ่นใหม่ เทียบรุ่นได้</td><td><span class="tag t-must">ต้องมี</span></td><td>B4</td></tr>
+    <tr><td class="id">FR-B-28</td><td>เงินจัดสรรและการแจกจ่าย</td><td>สถานะเงินจัดสรรต่อบรรทัด แจกจ่ายต่อสำนักงานในภูมิภาคภายใน 15 วัน (นาฬิกา) เงินสำรองภายในของหน่วยงานแยกเป็นบรรทัด</td><td><span class="tag t-must">ต้องมี</span></td><td>B4</td></tr>
+    <tr><td class="id">FR-B-29</td><td>การโอนตามระเบียบ</td><td>ฟอร์มขอโอนเลือกบรรทัดต้นทางและปลายทาง ระบบจำแนกประเภทการโอน (ภายในผลผลิต ข้ามผลผลิตในแผนงานเดียว ข้ามแผนงาน ข้ามหน่วยรับงบประมาณ งบกลาง) และกำหนดเส้นทางอนุมัติตาม R-B-01 เหตุผลเลือกจาก 5 ข้อ ตรวจเงินที่ขยายเวลาแล้ว ตรวจผลต่อแผน และนาฬิการายงาน 15 วัน</td><td><span class="tag t-must">ต้องมี</span></td><td>B4</td></tr>
+    <tr><td class="id">FR-B-30</td><td>ยอดสี่ชั้นต่อบรรทัด</td><td>จัดสรร จอง (จากใบขอซื้อ) ผูกพัน (จากสัญญาหรือใบสั่ง) เบิกจ่าย (จาก Finance และ GFMIS) คงเหลือที่ใช้ได้ = จัดสรร − จอง − ผูกพัน − เบิกจ่ายที่ไม่ผ่านการผูกพัน ทุกตัวเลขกดดูที่มาได้</td><td><span class="tag t-must">ต้องมี</span></td><td>B4</td></tr>
+    <tr><td class="id">FR-B-31</td><td>ห้องติดตามแบบสด</td><td>M07 ใช้ข้อมูลปีปัจจุบันจาก FR-B-30 แทนภาพคงที่ เทียบเป้าหมายรายไตรมาสของปี (ค่าตั้งได้) แยกลงทุนและประจำ แสดงบรรทัดที่ยังไม่ก่อหนี้เมื่อใกล้สิ้นไตรมาส 2</td><td><span class="tag t-must">ต้องมี</span></td><td>B4</td></tr>
+    <tr><td class="id">FR-B-32</td><td>กันเงินเหลื่อมปี</td><td>เมื่อปิดปี ระบบเสนอรายการที่ก่อหนี้แล้วแต่ยังไม่เบิก ให้กันเงินพร้อมกำหนด 6 เดือน และขอขยายอีก 6 เดือน (ตกลงกระทรวงการคลัง) ติดตามเบิกจ่ายเงินกันแยกจากปีปัจจุบัน</td><td><span class="tag t-must">ต้องมี</span></td><td>B4</td></tr>
+    <tr><td class="id">FR-B-33</td><td>เงินเหลือจ่าย</td><td>เมื่อจัดซื้อได้ต่ำกว่าวงเงิน ระบบบันทึกเงินเหลือจ่ายจากราคาสัญญา (จาก Procurement) เสนอทางเลือก: ใช้ตามหลักเกณฑ์ โอนตามระเบียบ หรือคืน (งบกลางคืนภายใน 15 วัน)</td><td><span class="tag t-should">ควรมี</span></td><td>B4</td></tr>
+    <tr><td class="id">FR-B-34</td><td>งบกลางและงบเพิ่มเติม</td><td>คำขอใช้งบกลาง (พร้อมแผนรายเดือน) และงบเพิ่มเติมระหว่างปี ที่ต้องยื่นขออนุมัติเงินจัดสรร</td><td><span class="tag t-could">อาจมี</span></td><td>B4</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.5</span>ผลสัมฤทธิ์ (M08)</h3>
+<div class="tbl"><table>
+  <thead><tr><th>รหัส</th><th>ฟังก์ชัน</th><th>รายละเอียด</th><th>ระดับ</th><th>รอบ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-B-35</td><td>รอบรายงานรายไตรมาส</td><td>ทุกไตรมาสระบบเปิดรอบรายงาน กองรายงานผลตัวชี้วัด 4 มิติ ปัญหา และแนวทางแก้ ต้องส่งภายใน 15 วัน (รายงานประจำปี 45 วัน) แผงแสดงใครยังไม่ส่ง</td><td><span class="tag t-must">ต้องมี</span></td><td>B5</td></tr>
+    <tr><td class="id">FR-B-36</td><td>หลักฐานประกอบ</td><td>แนบรูป เอกสาร หรือลิงก์ต่อผลตัวชี้วัด ผู้ตรวจรับรองว่ามีหลักฐาน</td><td><span class="tag t-should">ควรมี</span></td><td>B5</td></tr>
+    <tr><td class="id">FR-B-37</td><td>ต้นทุนต่อผลผลิต</td><td>คำนวณต้นทุนต่อหน่วยผลผลิตจากเบิกจ่ายจริงและผลจริง เทียบแผนและปีก่อน (3E)</td><td><span class="tag t-must">ต้องมี</span></td><td>B5</td></tr>
+    <tr><td class="id">FR-B-38</td><td>ประเมิน 3 จังหวะ</td><td>ก่อนจัดสรร (จากความพร้อมและความคุ้มค่าในคำขอ) ระหว่างใช้จ่าย (รายไตรมาส) หลังใช้จ่าย (ประเมินโครงการเดิม) และผลกระทบสำหรับโครงการที่เลือก</td><td><span class="tag t-should">ควรมี</span></td><td>B5</td></tr>
+    <tr><td class="id">FR-B-39</td><td>ข้อเสนอแนะที่ต้องแก้</td><td>ทะเบียนข้อเสนอแนะจากสำนักงบประมาณ ผู้ตรวจ หรือกรรมาธิการ พร้อมกำหนดเวลาแก้ (มาตรา 48) และสถานะ</td><td><span class="tag t-should">ควรมี</span></td><td>B5</td></tr>
+    <tr><td class="id">FR-B-40</td><td>เผยแพร่ผล</td><td>หน้าสาธารณะสรุปการใช้จ่ายและผลตัวชี้วัดของหน่วยงาน (มาตรา 47) จากข้อมูลที่อนุมัติเผยแพร่แล้ว</td><td><span class="tag t-could">อาจมี</span></td><td>B5</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 07 ============================== -->
+<section class="ch" id="s7">
+<h2><span class="num">07</span>กฎและตรรกะ</h2>
+<p class="lede">กฎใหม่ต่อจาก BR-01 ถึง BR-06 ทุกกฎมีพารามิเตอร์ใน M10 ต่อปีงบประมาณ ระดับ “ห้าม” หยุดการส่ง ระดับ “เตือน” ให้ส่งได้พร้อมคำอธิบาย</p>
+<h3><span class="num">7.1</span>กฎการจัดทำคำขอ</h3>
+<div class="tbl"><table>
+  <thead><tr><th>รหัส</th><th>กฎ</th><th>ระดับ</th><th>พารามิเตอร์</th><th>ที่มา</th></tr></thead>
+  <tbody>
+    <tr><td class="id">BR-07</td><td>ทุกบรรทัดต้องเชื่อมกิจกรรม ผลผลิตหรือโครงการ แผนงาน และเป้าหมายการให้บริการหน่วยงาน (ขยาย BR-01)</td><td>ห้าม</td><td>–</td><td><span class="tag t-must">A</span> S1</td></tr>
+    <tr><td class="id">BR-08</td><td>รายการผูกพันข้ามปีต้องมีวงเงินทุกปี และระยะเวลาไม่เกินที่กำหนด</td><td>เตือน</td><td>5 ปี</td><td><span class="tag t-must">A</span> S1</td></tr>
+    <tr><td class="id">BR-09</td><td>รายการผูกพันใหม่ตั้งแต่วงเงินที่กำหนดต้องแนบมติ ครม. อนุมัติ</td><td>ห้าม</td><td>1,000 ล้านบาท</td><td><span class="tag t-must">A</span> มาตรา 26</td></tr>
+    <tr><td class="id">BR-10</td><td>เอกสารตามเงื่อนไข: ICT เกินวงเงินต้องมีความเห็นชอบของคณะกรรมการ ไม่เกินต้องมีความเห็นชอบของ CIO ลงทุนที่มีการจัดซื้อตั้งแต่วงเงินที่กำหนดต้องแนบผลประเมินความเสี่ยงทุจริตเชิงนโยบาย</td><td>ห้าม</td><td>200 / 500 ล้านบาท</td><td><span class="tag t-must">A</span> S1</td></tr>
+    <tr><td class="id">BR-11</td><td>ภาพรวมหน่วยงานเพิ่มจาก พ.ร.บ. ปีก่อนไม่เกินเพดาน และส่วนที่เพิ่มต้องเป็นงบลงทุน เว้นแต่ติดป้ายข้อยกเว้น (ข้อผูกพันตามกฎหมาย สัญญา สิทธิ นโยบายเร่งด่วน)</td><td>เตือน</td><td>20%</td><td><span class="tag t-must">A</span> S1</td></tr>
+    <tr><td class="id">BR-12</td><td>รายการลงทุนต้องมีสถานที่และพิกัด และราคาอ้างแหล่งที่อายุไม่เกินที่กำหนด</td><td>ห้าม / เตือน</td><td>2 ปี</td><td><span class="tag t-must">A</span> S1</td></tr>
+    <tr><td class="id">BR-13</td><td>คำขอต้องมีแผนรายไตรมาสที่รวมเท่ายอดขอ และคะแนนความพร้อมไม่ต่ำกว่าเกณฑ์สำหรับงบลงทุน</td><td>ห้าม / เตือน</td><td>ความพร้อม ≥ 3 จาก 5</td><td><span class="tag t-could">C</span></td></tr>
+  </tbody>
+</table></div>
+<h3><span class="num">7.2</span>R-B-01 ตารางอำนาจการโอน</h3>
+<p class="small">แทนกฎ 3 ระดับเดิมใน M06 · ประเภทการโอนจำแนกจากโครงสร้างงบประมาณของบรรทัดต้นทางและปลายทาง</p>
+<div class="tbl"><table>
+  <thead><tr><th>ประเภท</th><th>ตัวอย่าง</th><th>ผู้อนุมัติ</th><th>หลังอนุมัติ</th><th>ที่มา</th></tr></thead>
+  <tbody>
+    <tr><td>T1 ภายในผลผลิตหรือโครงการเดียว ตามที่หลักเกณฑ์ให้ทำได้เอง</td><td>ค่าวัสดุ → ค่าใช้สอย ในกิจกรรมเดียว</td><td>หัวหน้าหน่วยงาน (หรือผู้รับมอบอำนาจ)</td><td>รายงานสำนักงบประมาณภายใน 15 วัน</td><td><span class="tag t-must">A</span> ข้อ 28–29</td></tr>
+    <tr><td>T2 ข้ามผลผลิตหรือโครงการภายในแผนงานเดียว</td><td>ผลผลิต A → ผลผลิต B</td><td>ตามหลักเกณฑ์ข้อ 28 ถ้าไม่ให้ทำเอง ต้องขออนุมัติสำนักงบประมาณ</td><td>รายงาน หรือรอผลอนุมัติ</td><td><span class="tag t-should">B</span> ต้องตรวจหลักเกณฑ์</td></tr>
+    <tr><td>T3 ข้ามแผนงาน (พื้นฐานและยุทธศาสตร์)</td><td>แผนงานพื้นฐาน → แผนงานยุทธศาสตร์</td><td>ตกลงสำนักงบประมาณ (ผู้อำนวยการ)</td><td>ปรับแผนการใช้จ่าย</td><td><span class="tag t-must">A</span> ข้อ 26 มาตรา 36</td></tr>
+    <tr><td>T4 แผนงานหรือโครงการใหม่ เงินราชการลับ</td><td>ตั้งโครงการที่ไม่มีใน พ.ร.บ.</td><td>ครม.</td><td>–</td><td><span class="tag t-must">A</span> มาตรา 36</td></tr>
+    <tr><td>T5 ข้ามหน่วยรับงบประมาณ</td><td>กรม ก. → กรม ข.</td><td>ทำไม่ได้ เว้นแต่มี พ.ร.บ. โอน หรือแผนงานบูรณาการ หรือบุคลากรภาครัฐ</td><td>ระบบปิดทาง</td><td><span class="tag t-must">A</span> มาตรา 35</td></tr>
+    <tr><td>T6 เงินที่ได้รับอนุมัติขยายเวลาเบิกจ่าย</td><td>เงินกันเหลื่อมปี</td><td>ตกลงสำนักงบประมาณก่อน</td><td>–</td><td><span class="tag t-must">A</span> ข้อ 27</td></tr>
+  </tbody>
+</table></div>
+<pre class="logic">classifyTransfer(from, to):
+  if from.agency != to.agency            → T5   (block unless integrated / personnel plan, or a transfer act)
+  if from.extended                       → T6
+  if to.isNewProgramme or to.isSecret    → T4
+  if from.programme != to.programme      → T3
+  if from.output != to.output            → T2
+  else                                   → T1
+route(T) = M10.transferMatrix[FY][T]       // approvers, report clock, notes
+reason   ∈ { fix operations, efficiency, service quality, staff development, technology }   // clause 25
+after approval: new plan version if targets change (clause 15), else "no plan change" (clause 16, last para)</pre>
+<h3><span class="num">7.3</span>กฎระหว่างปีและการรายงาน</h3>
+<div class="tbl"><table>
+  <thead><tr><th>รหัส</th><th>กฎ</th><th>ระดับ</th><th>พารามิเตอร์</th><th>ที่มา</th></tr></thead>
+  <tbody>
+    <tr><td class="id">BR-14</td><td>ส่งแผนการปฏิบัติงานและแผนการใช้จ่ายก่อนเริ่มปีงบประมาณ</td><td>เตือน</td><td>15 วัน</td><td><span class="tag t-must">A</span> ข้อ 9</td></tr>
+    <tr><td class="id">BR-15</td><td>ห้ามจองหรือผูกพันเกินเงินจัดสรรที่อนุมัติแล้วของบรรทัด (ตรวจที่ Fisko Procurement และ Finance)</td><td>ห้าม</td><td>–</td><td><span class="tag t-must">A</span> มาตรา 40</td></tr>
+    <tr><td class="id">BR-16</td><td>แจกจ่ายเงินจัดสรรให้ส่วนภูมิภาคภายในกำหนด</td><td>เตือน</td><td>15 วัน</td><td><span class="tag t-must">A</span> ข้อ 21</td></tr>
+    <tr><td class="id">BR-17</td><td>กันเงินเหลื่อมปีได้เฉพาะรายการที่ก่อหนี้ก่อนสิ้นปี เบิกได้ 6 เดือน ขยายได้อีกไม่เกิน 6 เดือนเมื่อตกลงกระทรวงการคลัง</td><td>ห้าม</td><td>6 + 6 เดือน</td><td><span class="tag t-must">A</span> มาตรา 43</td></tr>
+    <tr><td class="id">BR-18</td><td>รายงานผลรายไตรมาสและรายงานประจำปีภายในกำหนด</td><td>เตือน</td><td>15 / 45 วัน</td><td><span class="tag t-must">A</span> ข้อ 34</td></tr>
+    <tr><td class="id">BR-19</td><td>เงินเหลือจ่ายงบกลางต้องคืนภายในกำหนด</td><td>เตือน</td><td>15 วัน</td><td><span class="tag t-must">A</span> ข้อ 33</td></tr>
+    <tr><td class="id">BR-20</td><td>รายการลงทุนที่ยังไม่ก่อหนี้เมื่อพ้นไตรมาสที่กำหนดเป็นสัญญาณเสี่ยงสูง</td><td>เตือน</td><td>ไตรมาส 2</td><td><span class="tag t-should">B</span> S5</td></tr>
+    <tr><td class="id">BR-21</td><td>เป้าหมายการเบิกจ่ายรายไตรมาสและสิ้นปี แยกลงทุน ประจำ ภาพรวม</td><td>ตัวชี้วัด</td><td>ตามมติ ครม. ของปี</td><td><span class="tag t-should">B</span> S4</td></tr>
+  </tbody>
+</table></div>
+<h3><span class="num">7.4</span>การคำนวณหลัก</h3>
+<pre class="logic">available(line)   = allotted(line) − reserved(line) − committed(line) − paidWithoutCommitment(line)
+increaseCheck(org) = Σ request(FY+1) / appropriation(FY) − 1      → BR-11 when > cap (excluding flagged exceptions)
+growthInInvestment = Σ increase where type = investment / Σ increase
+readiness(req)     = mean(site, staff, management, materials) on 1..5, site "ready now" = 5, "preparing" = 3, "studying" = 1
+priority(req)      = Σ weight_k × score_k, k ∈ {obligation, urgent policy, readiness, severity, beneficiaries}
+cutImpact(req, Δ)  = for each KPI: newTarget = target × (1 − Δ / amount × elasticity_kpi)   // elasticity default 1, settable
+unitCost(output)   = paid(output) / actualQuantity(output)   vs planned and last year</pre>
+</section>
+
+<!-- ============================== 08 ============================== -->
+<section class="ch" id="s8">
+<h2><span class="num">08</span>ข้อมูล บทบาท และการเชื่อมต่อ</h2>
+<p class="lede">ข้อมูลหลักเรียงตามสายจากยุทธศาสตร์ถึงผลสัมฤทธิ์ ทุกวัตถุมีปีงบประมาณ</p>
+<h3><span class="num">8.1</span>ข้อมูลหลัก</h3>
+<div class="tbl"><table>
+  <thead><tr><th>Entity</th><th>ฟิลด์สำคัญ</th><th>เชื่อมกับ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">NationalLink</td><td>ประเภท (ยุทธศาสตร์ชาติ แผนแม่บท แผนย่อย หมุดหมาย นโยบาย SDG) รหัส ชื่อ ปี</td><td>ServiceGoal, Activity</td></tr>
+    <tr><td class="id">ServiceGoal</td><td>ระดับ (กระทรวง หน่วยงาน) ข้อความผลลัพธ์ ตัวชี้วัด ค่าเป้าหมาย 4 ปี</td><td>Output</td></tr>
+    <tr><td class="id">Programme</td><td>ประเภท (พื้นฐาน ยุทธศาสตร์ บูรณาการ บุคลากรภาครัฐ) รหัสสำนักงบประมาณ</td><td>Output/Project</td></tr>
+    <tr><td class="id">Output / Project</td><td>ประเภท วัตถุประสงค์ กลุ่มเป้าหมาย ตัวชี้วัด 4 มิติ ลักษณะ (ครั้งเดียว ทำซ้ำ) ใหม่หรือต่อเนื่อง</td><td>Activity</td></tr>
+    <tr><td class="id">Activity</td><td>ประเภท (หลัก ย่อย รอง สนับสนุน) ที่มา ผู้รับผิดชอบ</td><td>Request, Line</td></tr>
+    <tr><td class="id">Request</td><td>เดิม + steps{} สถานะรายขั้น quarterPlan[4] readiness{} risks[] attachments[] amounts{req, plan, committee, exec, bb, act} cutReasons[]</td><td>Activity, Line</td></tr>
+    <tr><td class="id">Line (FY)</td><td>บรรทัดจัดสรร: request, programme, output, activity, type, item, allotted, allotStatus, plan versions, extended</td><td>Transfer, Reservation, Commitment, Payment</td></tr>
+    <tr><td class="id">Transfer</td><td>from, to, amount, type T1–T6, reason (5 ข้อ), route, status, reportDue</td><td>Line</td></tr>
+    <tr><td class="id">Reservation / Commitment</td><td>มาจาก Fisko Procurement (ใบขอซื้อ แฟ้ม สัญญา) และ Finance (ใบสั่ง)</td><td>Line</td></tr>
+    <tr><td class="id">QuarterReport</td><td>ไตรมาส ผลตัวชี้วัด 4 มิติ ปัญหา แนวทาง หลักฐาน ผู้รับรอง ส่งเมื่อ</td><td>Output, ServiceGoal</td></tr>
+    <tr><td class="id">RuleSet (FY)</td><td>ค่ากฎ BR-xx ตาราง R-B-01 เป้าหมายเบิกจ่าย ปฏิทิน ทุกค่ามีแหล่งและระดับความมั่นใจ</td><td>ทุกโมดูล</td></tr>
+  </tbody>
+</table></div>
+<h3><span class="num">8.2</span>บทบาท</h3>
+<div class="tbl matrix"><table>
+  <thead><tr><th>งาน</th><th class="c">กอง</th><th class="c">ผอ.กอง <span class="tag t-new">ใหม่</span></th><th class="c">กองแผน</th><th class="c">กรรมการ <span class="tag t-new">ใหม่</span></th><th class="c">ผู้บริหาร</th><th class="c">กองคลัง</th><th class="c">ผู้ตรวจ</th></tr></thead>
+  <tbody>
+    <tr><td>จัดทำคำขอ</td><td class="c mx-u">C/U</td><td class="c mx-a">A</td><td class="c mx-r">R</td><td class="c mx-r">–</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-r">R</td></tr>
+    <tr><td>รวบรวม 3R จัดลำดับ</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-u">C/U</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-r">–</td><td class="c mx-r">R</td></tr>
+    <tr><td>ลงมติคณะกรรมการ</td><td class="c mx-r">–</td><td class="c mx-r">–</td><td class="c mx-u">U</td><td class="c mx-a">A</td><td class="c mx-a">A</td><td class="c mx-r">–</td><td class="c mx-r">R</td></tr>
+    <tr><td>ยื่นสำนักงบประมาณ</td><td class="c mx-r">–</td><td class="c mx-r">–</td><td class="c mx-u">C/U</td><td class="c mx-r">–</td><td class="c mx-a">A</td><td class="c mx-r">–</td><td class="c mx-r">R</td></tr>
+    <tr><td>แผนการใช้จ่าย เงินจัดสรร</td><td class="c mx-u">U</td><td class="c mx-r">R</td><td class="c mx-u">U</td><td class="c mx-r">–</td><td class="c mx-a">A</td><td class="c mx-u">C/U</td><td class="c mx-r">R</td></tr>
+    <tr><td>ขอโอน</td><td class="c mx-u">C</td><td class="c mx-a">A</td><td class="c mx-u">U</td><td class="c mx-r">–</td><td class="c mx-a">A (T1–T2)</td><td class="c mx-u">U</td><td class="c mx-r">R</td></tr>
+    <tr><td>รายงานรายไตรมาส</td><td class="c mx-u">C/U</td><td class="c mx-a">A</td><td class="c mx-u">U</td><td class="c mx-r">–</td><td class="c mx-r">R</td><td class="c mx-r">R</td><td class="c mx-r">R</td></tr>
+  </tbody>
+</table></div>
+<p class="small">C สร้าง · U แก้ไข · A อนุมัติ · R อ่าน · กฎแยกหน้าที่: ผู้จัดทำคำขอโอนอนุมัติคำขอของตนไม่ได้ (SD-09 ใหม่) และกรรมการที่เป็นผู้ขอเองงดออกเสียงในวาระนั้น (SD-10 ใหม่)</p>
+<h3><span class="num">8.3</span>การเชื่อมต่อ (ไฟล์เท่านั้น)</h3>
+<div class="hub">
+  <div class="side">
+    <div class="ext"><b>e-Budgeting / BBL</b>ส่งออกคำขอและรายละเอียดตามงบรายจ่าย นำเข้าผลการพิจารณา</div>
+    <div class="ext"><b>BB EvMIS</b>ส่งออกแผน สงป.301/302 และรายงานรายไตรมาส</div>
+  </div>
+  <div class="core"><b>Fisko Budget</b><span>สายข้อมูลเดียว ยุทธศาสตร์ → คำขอ → พ.ร.บ. → จัดสรร → ใช้จ่าย → ผล</span></div>
+  <div class="side">
+    <div class="ext"><b>GFMIS</b>นำเข้าเบิกจ่ายและกันเงิน (มีแล้ว IF-xx)</div>
+    <div class="ext"><b>Fisko Procurement · Finance</b>ยอดจองและผูกพัน (ภายใน ทันที)</div>
+  </div>
+</div>
+</section>
+
+<!-- ============================== 09 ============================== -->
+<section class="ch" id="s9">
+<h2><span class="num">09</span>ออกแบบหน้าจอและประสบการณ์ใช้งาน</h2>
+<p class="lede">ใช้ระบบออกแบบเดิม (โทนสงบ สีน้ำเงินหนึ่งสี สถานะเป็นจุดสี กราฟใช้สีตระกูล Fisko) เพิ่มรูปแบบหน้าจอ 8 แบบที่ใช้ซ้ำทั้งโมดูล</p>
+<h3><span class="num">9.1</span>หน้าจอหลักที่ออกแบบใหม่</h3>
+<div class="cards">
+  <div class="card"><div class="k">UX-01 · ทุกบทบาท</div><b>โต๊ะทำงานงบประมาณ</b><span>หน้าแรกของ Fisko Budget ตามบทบาท: ช่วงปัจจุบันของปฏิทิน (แถบเวลาที่บอก “เราอยู่ตรงไหน”) งานที่ต้องทำพร้อมกำหนด ตัวเลข 3 ปีพร้อมกัน (กันเหลื่อม ปีนี้ ปีหน้า) และสิ่งที่เสี่ยง</span></div>
+  <div class="card"><div class="k">UX-02 · กอง</div><b>ตัวช่วยทำคำขอ 7 ขั้น</b><span>แถบขั้นด้านซ้าย แต่ละขั้นมีจุดสถานะ แผงด้านขวาแสดงกฎที่ยังไม่ผ่านและเอกสารที่ยังขาด สรุปวงเงินติดหน้าจอ ปุ่ม AI ร่างแต่ละขั้น และบันทึกอัตโนมัติ</span></div>
+  <div class="card"><div class="k">UX-03 · กองแผน</div><b>ห้องรวบรวมคำขอ</b><span>แถบบนแสดงรวมคำขอเทียบกรอบและเพดาน 20% ตารางจัดลำดับที่ลากเรียงได้ เส้นตัดตามกรอบ (เหนือเส้นได้ ใต้เส้นรอ) แท็บ 3R และฐานศูนย์ ปรับวงเงินในตารางพร้อมเหตุผล</span></div>
+  <div class="card"><div class="k">UX-04 · ทุกบทบาท</div><b>น้ำตกวงเงิน</b><span>กราฟน้ำตกจากวงเงินที่ขอถึง พ.ร.บ. ทุกขั้นที่ลดมีเหตุผล กดแท่งเพื่อดูคำขอที่ถูกตัด ใช้ทั้งระดับคำขอ กอง และหน่วยงาน</span></div>
+  <div class="card"><div class="k">UX-05 · กรรมการ</div><b>ห้องประชุม</b><span>วาระทีละเรื่อง สรุปหนึ่งหน้า (วงเงิน ความเชื่อมโยง ความพร้อม คะแนน ผลกระทบถ้าตัด) ปุ่มลงมติ 4 แบบ องค์ประชุม และรายงานการประชุมร่างอัตโนมัติ</span></div>
+  <div class="card"><div class="k">UX-06 · กองคลัง</div><b>ต้นไม้วงเงิน</b><span>ต้นไม้ แผนงาน → ผลผลิต → กิจกรรม → บรรทัด แต่ละโหนดมีแถบสี่ชั้น (จอง ผูกพัน เบิกจ่าย คงเหลือ) ลากวงเงินจากโหนดหนึ่งไปอีกโหนดเพื่อเริ่มคำขอโอน ระบบบอกประเภท T1–T6 และผู้อนุมัติทันที</span></div>
+  <div class="card"><div class="k">UX-07 · ผู้บริหาร</div><b>ห้องติดตามการเบิกจ่าย</b><span>กราฟสะสมเทียบเป้าหมายรายไตรมาส แยกลงทุนและประจำ ช่วงพยากรณ์สิ้นปี รายการที่ยังไม่ก่อหนี้ เรียงตามผลกระทบต่อเป้า และปุ่มส่งคำถามถึงกอง</span></div>
+  <div class="card"><div class="k">UX-08 · กอง กองแผน</div><b>ห่วงโซ่ผลลัพธ์</b><span>จากเงินที่ใช้ → ผลผลิต → ผลลัพธ์ → เป้าหมายยุทธศาสตร์ พร้อมต้นทุนต่อหน่วยและสถานะรายงานรายไตรมาส</span></div>
+</div>
+<h3><span class="num">9.2</span>โครงหน้าจอตัวอย่าง: ตัวช่วยทำคำขอ (UX-02)</h3>
+<div class="wf">
+  <div class="wf-top">REQ-2571-014 · ปรับปรุงระบบประปาชุมชน · <b>12.40 ล้านบาท</b> · ขั้น 5 จาก 7 · บันทึกแล้ว</div>
+  <div class="wf-body">
+    <ol class="wf-steps"><li class="ok">ข้อมูลและความเชื่อมโยง</li><li class="ok">ที่มาและความจำเป็น</li><li class="ok">เป้าหมายและตัวชี้วัด</li><li class="ok">รายการค่าใช้จ่าย</li><li class="now">แผนรายไตรมาส</li><li>ความพร้อมและความเสี่ยง</li><li>เอกสารแนบ</li></ol>
+    <div class="wf-main"><b>แผนรายไตรมาส</b><div class="wf-bars"><i style="height:30%"></i><i style="height:55%"></i><i style="height:85%"></i><i style="height:40%"></i></div><span>ไตรมาส 1–4 · เติมจากรูปแบบงบลงทุนแล้ว แก้ไขได้</span></div>
+    <div class="wf-side"><b>ขั้นต่อไป</b><span>• แผนรวม 12.10 ล้าน ยังขาด 0.30 ล้าน (BR-13)</span><span>• ต้องแนบแบบรูปรายการ (BR-10)</span><span>• ความพร้อมพื้นที่: ยังไม่ระบุ</span></div>
+  </div>
+</div>
+<h3><span class="num">9.3</span>หลักการหน้าจอ</h3>
+<div class="tbl"><table>
+  <thead><tr><th>หลัก</th><th>ใช้อย่างไร</th></tr></thead>
+  <tbody>
+    <tr><td>ตัวเลขเดียว ที่มาเดียว</td><td>ทุกยอดกดดูที่มา (คำขอ บรรทัด สัญญา ใบเบิก) ได้ใน 1 คลิก</td></tr>
+    <tr><td>บอกเวลา</td><td>ทุกงานมีกำหนดและนับถอยหลัง กำหนดตามระเบียบแสดงที่มา (เช่น “ข้อ 34: ภายใน 15 วัน”)</td></tr>
+    <tr><td>เปรียบเทียบเป็นค่าเริ่มต้น</td><td>ตัวเลขแสดงคู่กับปีก่อน แผน หรือเป้าหมายเสมอ</td></tr>
+    <tr><td>สถานะเป็นจุดสี</td><td>สีเขียว เหลือง แดงใช้กับสถานะเท่านั้น กราฟใช้สีตระกูล Fisko</td></tr>
+    <tr><td>ใช้ได้บนโทรศัพท์</td><td>ผู้บริหารอนุมัติและดูห้องติดตามบนจอแคบได้ ตารางยาวเปลี่ยนเป็นการ์ด</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 10 ============================== -->
+<section class="ch" id="s10">
+<h2><span class="num">10</span>AI, Agent, พยากรณ์ และ What-if</h2>
+<p class="lede">ใช้กรอบเดียวกับ Fisko Procurement: Agent วางแผน เรียกเครื่องมือ เสนอผล คนอนุมัติ ระดับความเป็นอิสระ L0–L3 และทุกขั้นบันทึกใน M09 (ต้นแบบจำลองตาม D-P09)</p>
+<h3><span class="num">10.1</span>Agent ด้านงบประมาณ</h3>
+<div class="tbl"><table>
+  <thead><tr><th>รหัส</th><th>ชื่อ</th><th>งาน</th><th>เครื่องมือหลัก</th><th>ระดับสูงสุด</th></tr></thead>
+  <tbody>
+    <tr><td class="id">AG-01</td><td>ผู้ช่วยจัดทำคำขอ</td><td>ร่างที่มา วัตถุประสงค์ ตัวชี้วัด 4 มิติ และแผนรายไตรมาสจากบัญชีโครงการและคำขอปีก่อน</td><td>readProjectBank, readLastYear, draftSection</td><td>L1 (ร่าง)</td></tr>
+    <tr><td class="id">AG-02</td><td>ผู้ตรวจคำขอ</td><td>ตรวจกฎ BR ทั้งหมด หาเอกสารที่ขาด ตรวจราคากับทะเบียนกลาง ตรวจความเชื่อมโยง</td><td>runRules, checkPrices, checkLinks</td><td>L2 (แจ้งเอง)</td></tr>
+    <tr><td class="id">AG-03</td><td>นักวิเคราะห์ 3R</td><td>เสนอ Review Redeploy Replace ต่อกอง พร้อมหลักฐานจากผลเบิกจ่ายและผลตัวชี้วัด</td><td>readExecution, readKpi, proposeRedeploy</td><td>L1</td></tr>
+    <tr><td class="id">AG-04</td><td>ผู้จัดสรรภายใต้กรอบ</td><td>หาชุดคำขอที่ให้คะแนนรวมสูงสุดภายใต้กรอบและเงื่อนไข (ขั้นต่ำต่อยุทธศาสตร์ ผูกพันต้องได้) แสดงทางเลือก 3 แบบ</td><td>optimise, cutImpact</td><td>L1</td></tr>
+    <tr><td class="id">AG-05</td><td>ผู้เฝ้าการเบิกจ่าย</td><td>เฝ้าบรรทัดที่ช้ากว่าแผน ยังไม่ก่อหนี้ หรือมีเงินเหลือจ่าย ส่งคำถามถึงกองตามระดับที่อนุญาต</td><td>readLines, forecast, notifyUnit</td><td>L2</td></tr>
+    <tr><td class="id">AG-06</td><td>ผู้ช่วยผู้บริหาร</td><td>ตอบคำถามจากชั้นตัวชี้วัด (ไม่ใช่สคริปต์) พร้อมแหล่งและสมมติฐาน</td><td>queryKpi, explain</td><td>L0</td></tr>
+    <tr><td class="id">AG-15 <span class="tag t-new">ใหม่</span></td><td>ผู้ช่วยโอนงบ</td><td>หาต้นทางที่โอนได้ (เหลือจ่าย ช้ากว่าแผน) สำหรับความต้องการใหม่ จัดประเภท T1–T6 ร่างเหตุผลตามข้อ 25</td><td>findSources, classifyTransfer, draftReason</td><td>L1</td></tr>
+    <tr><td class="id">AG-16 <span class="tag t-new">ใหม่</span></td><td>ผู้เตรียมชี้แจง</td><td>สร้างชุดชี้แจง คำถามที่คาด และคำตอบร่าง จากคำขอและข้อสังเกตปีก่อน</td><td>readObservations, draftQA</td><td>L1</td></tr>
+    <tr><td class="id">AG-17 <span class="tag t-new">ใหม่</span></td><td>ผู้รวบรวมรายงานรายไตรมาส</td><td>ดึงผลเบิกจ่ายและผลตัวชี้วัด ร่างรายงาน ติดตามกองที่ยังไม่ส่ง</td><td>collectReports, draftReport, remind</td><td>L2</td></tr>
+  </tbody>
+</table></div>
+<div class="callout"><b>สิ่งที่ AI ไม่ทำ</b> ไม่อนุมัติคำขอ ไม่ตัดหรือเพิ่มวงเงิน ไม่ยื่นต่อหน่วยงานภายนอก ไม่ลงมติแทนกรรมการ ไม่อนุมัติการโอน และไม่เปลี่ยนค่ากฎใน M10</div>
+<h3><span class="num">10.2</span>พยากรณ์</h3>
+<div class="tbl"><table>
+  <thead><tr><th>รหัส</th><th>พยากรณ์</th><th>วิธี (ต้นแบบ)</th><th>แสดงผล</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FC-B1</td><td>เบิกจ่ายสิ้นปีต่อบรรทัดและภาพรวม</td><td>ผลจริง + ผูกพันคงค้างตามกำหนดงวดงาน + ส่วนที่ยังไม่ผูกพันตามความน่าจะเป็นของการลงนามจาก Procurement (ใช้ simCase เดิม)</td><td>ช่วง P10–P50–P90 เทียบเป้าหมายรายไตรมาส</td></tr>
+    <tr><td class="id">FC-B2</td><td>เงินที่จะต้องกันเหลื่อมปี</td><td>ผูกพันที่จะยังไม่เบิกภายใน 30 ก.ย.</td><td>ยอดและรายการ</td></tr>
+    <tr><td class="id">FC-B3</td><td>ภาระปีต่อไป (MTEF)</td><td>รายการผูกพัน + ประจำที่โตตามอัตราตั้งได้</td><td>3 ปีข้างหน้าเทียบกรอบ</td></tr>
+  </tbody>
+</table></div>
+<h3><span class="num">10.3</span>จำลองสถานการณ์ (What-if)</h3>
+<div class="tbl"><table>
+  <thead><tr><th>รหัส</th><th>คำถาม</th><th>ตัวแปร</th><th>ผลที่เห็น</th></tr></thead>
+  <tbody>
+    <tr><td class="id">WI-B1</td><td>ถ้ากรอบลดลง X%</td><td>กรอบ วิธีตัด (ตามลำดับ ตามสัดส่วน ปกป้องผูกพัน)</td><td>คำขอที่หลุด ผลต่อตัวชี้วัด สัดส่วนยุทธศาสตร์</td></tr>
+    <tr><td class="id">WI-B2</td><td>ถ้าเลื่อนโครงการลงทุนไป 1 ไตรมาส</td><td>โครงการ ไตรมาส</td><td>ผลต่อเป้าหมายเบิกจ่ายและเงินกันเหลื่อมปี</td></tr>
+    <tr><td class="id">WI-B3</td><td>ถ้าโอนเงินเหลือจ่ายไปรายการ Y</td><td>ต้นทาง ปลายทาง จำนวน</td><td>ประเภทการโอน ผู้อนุมัติ เวลาที่ใช้ และผลต่อเป้าหมาย</td></tr>
+    <tr><td class="id">WI-B4</td><td>ถ้ากรรมาธิการตัด X</td><td>รายการ จำนวน</td><td>ผลกระทบ และร่างคำขอแปรญัตติคืน</td></tr>
+  </tbody>
+</table></div>
+<p class="small">หลักการเดียวกับ Procurement: จำลองไม่แก้ข้อมูลจริง บันทึกสถานการณ์ได้ แสดงสมมติฐานทุกครั้ง และอ่านผลเป็นช่วงเมื่อข้อมูลน้อย</p>
+</section>
+
+<!-- ============================== 11 ============================== -->
+<section class="ch" id="s11">
+<h2><span class="num">11</span>Analytics และตัวชี้วัด</h2>
+<p class="lede">นิยามตัวชี้วัดไว้ที่เดียว ใช้ทั้งแดชบอร์ด AG-06 และรายงาน</p>
+<div class="tbl"><table>
+  <thead><tr><th>รหัส</th><th>ตัวชี้วัด</th><th>นิยาม</th></tr></thead>
+  <tbody>
+    <tr><td class="id">KPI-B01</td><td>อัตราเบิกจ่ายเทียบเป้า</td><td>เบิกจ่ายสะสม / วงเงินจัดสรร เทียบเป้าหมายไตรมาส แยกลงทุน ประจำ ภาพรวม</td></tr>
+    <tr><td class="id">KPI-B02</td><td>อัตราก่อหนี้ผูกพันลงทุน</td><td>ผูกพันลงทุน / จัดสรรลงทุน ณ สิ้นไตรมาส 2</td></tr>
+    <tr><td class="id">KPI-B03</td><td>ความแม่นของแผน</td><td>1 − |เบิกจริง − แผน| / แผน รายไตรมาส</td></tr>
+    <tr><td class="id">KPI-B04</td><td>สัดส่วนการโอน</td><td>วงเงินโอนออก / จัดสรร ต่อกองและประเภท T</td></tr>
+    <tr><td class="id">KPI-B05</td><td>เงินกันเหลื่อมปี</td><td>ยอดกัน / จัดสรร และอัตราเบิกเงินกันภายใน 6 เดือน</td></tr>
+    <tr><td class="id">KPI-B06</td><td>อัตราได้รับ</td><td>พ.ร.บ. / คำขอ ต่อกอง ยุทธศาสตร์ งบรายจ่าย</td></tr>
+    <tr><td class="id">KPI-B07</td><td>ผลตัวชี้วัดบรรลุ</td><td>จำนวนตัวชี้วัดที่ได้ตามเป้า / ทั้งหมด</td></tr>
+    <tr><td class="id">KPI-B08</td><td>ต้นทุนต่อหน่วยผลผลิต</td><td>เบิกจ่าย / ผลผลิตจริง เทียบแผนและปีก่อน</td></tr>
+    <tr><td class="id">KPI-B09</td><td>ส่งรายงานตรงเวลา</td><td>รายงานที่ส่งภายใน 15 วัน / ทั้งหมด</td></tr>
+    <tr><td class="id">KPI-B10</td><td>ความพร้อมของคำขอลงทุน</td><td>คะแนนความพร้อมเฉลี่ย และสัดส่วนที่ “พร้อมทันที”</td></tr>
+  </tbody>
+</table></div>
+<h3><span class="num">11.1</span>สัญญาณเตือนด้านงบประมาณ</h3>
+<div class="tbl"><table>
+  <thead><tr><th>รหัส</th><th>สัญญาณ</th><th>เกณฑ์ตั้งต้น <span class="tag t-could">C</span></th></tr></thead>
+  <tbody>
+    <tr><td class="id">BF-01</td><td>เร่งใช้ปลายปี</td><td>เบิกจ่ายในเดือนกันยายนเกิน 25% ของทั้งปีสำหรับงบดำเนินงาน</td></tr>
+    <tr><td class="id">BF-02</td><td>โอนวนกลับ</td><td>บรรทัดเดียวกันโอนออกแล้วรับเข้าในปีเดียว</td></tr>
+    <tr><td class="id">BF-03</td><td>ลงทุนไม่ขยับ</td><td>รายการลงทุนไม่มีการจองหรือผูกพันเมื่อพ้นไตรมาส 2</td></tr>
+    <tr><td class="id">BF-04</td><td>คำขอยกยอด</td><td>คำขอเหมือนปีก่อนเกิน 90% (ข้อความและรายการ) แต่ผลเบิกจ่ายปีก่อนต่ำกว่า 70%</td></tr>
+    <tr><td class="id">BF-05</td><td>ตัวชี้วัดไม่ขยับ</td><td>เบิกจ่ายเกิน 80% แต่ผลตัวชี้วัดต่ำกว่า 50% ของเป้า</td></tr>
+    <tr><td class="id">BF-06</td><td>ตัดเท่ากันทุกกอง</td><td>ปรับลดทุกคำขอด้วยสัดส่วนเดียวกัน (ไม่ใช้ลำดับความสำคัญ)</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 12 ============================== -->
+<section class="ch" id="s12">
+<h2><span class="num">12</span>ลำดับการสร้างต้นแบบ</h2>
+<p class="lede">6 รอบ แต่ละรอบใช้ได้ทันทีและไม่ทำให้หน้าจอเดิมเสีย ทุกรอบทดสอบทุกบทบาท สองภาษา สององค์กร จอโทรศัพท์ และโหมดมืด</p>
+<div class="tbl"><table>
+  <thead><tr><th>รอบ</th><th>ชื่อ</th><th>ขอบเขต</th><th>หน้าจอ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">B1</td><td>สายข้อมูลและแบบฟอร์มใหม่</td><td>FR-B-07 ถึง 13, 19, 20 · BR-07 ถึง 13 · ยอด M03 และรอบ M04 มาจากคำขอจริง · ขั้นเห็นชอบระดับกอง</td><td>UX-02, UX-04</td></tr>
+    <tr><td class="id">B2</td><td>โครงสร้างตามสำนักงบประมาณและการรวบรวม</td><td>FR-B-01 ถึง 06, 14 ถึง 17 · โครงสร้าง 5 ชั้นใน M10 · 3R · เกณฑ์ 5 ข้อ · ฐานศูนย์ · MTEF</td><td>UX-03, ต้นไม้ความเชื่อมโยง</td></tr>
+    <tr><td class="id">B3</td><td>พิจารณา เสนอ และกฎหมาย</td><td>FR-B-18, 21 ถึง 26 · บทบาทกรรมการ · ชุดยื่นและชุดชี้แจง · สร้างบรรทัดจัดสรรจาก พ.ร.บ.</td><td>UX-05</td></tr>
+    <tr><td class="id">B4</td><td>บริหารระหว่างปีแบบสด</td><td>FR-B-27 ถึง 34 · R-B-01 · BR-14 ถึง 21 · ยอดสี่ชั้นจาก Procurement และ Finance · M07 ใช้ข้อมูลปีปัจจุบัน</td><td>UX-06, UX-07</td></tr>
+    <tr><td class="id">B5</td><td>ผลสัมฤทธิ์</td><td>FR-B-35 ถึง 40 · รอบรายงาน · ต้นทุนต่อผลผลิต · ข้อเสนอแนะ · หน้าสาธารณะ</td><td>UX-08</td></tr>
+    <tr><td class="id">B6</td><td>AI และ Analytics</td><td>AG-01 ถึง 06 แบบหลายขั้น · AG-15 ถึง 17 · FC-B1 ถึง 3 · WI-B1 ถึง 4 · KPI-B · BF-01 ถึง 06</td><td>UX-01 และแผง AI ทุกหน้า</td></tr>
+  </tbody>
+</table></div>
+<div class="callout"><b>ทำไมเริ่มที่ B1</b> หน้าจอเกือบทุกหน้าในรอบถัดไปพึ่งสายข้อมูลเดียว ถ้ายอดยังตั้งไว้แยกกัน 3R การโอน พยากรณ์ และ AI จะคำนวณจากตัวเลขที่ไม่ตรงกัน</div>
+</section>
+
+<!-- ============================== 13 ============================== -->
+<section class="ch" id="s13">
+<h2><span class="num">13</span>ความเสี่ยงและประเด็นที่ต้องตัดสินใจ</h2>
+<h3><span class="num">13.1</span>ความเสี่ยง</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ความเสี่ยง</th><th>ผล</th><th>ลดอย่างไร</th></tr></thead>
+  <tbody>
+    <tr><td>กฎและแบบฟอร์มเปลี่ยนทุกปี</td><td>ระบบล้าสมัยเร็ว</td><td>กฎเป็นข้อมูลต่อปี (P-02) และแสดงแหล่งที่มา</td></tr>
+    <tr><td>ระเบียบฯ ฉบับที่ 2 พ.ศ. 2567 เปลี่ยนข้อที่อ้าง</td><td>อ้างข้อผิด</td><td>ตรวจกับราชกิจจานุเบกษาก่อนใช้งานจริง (D-B01)</td></tr>
+    <tr><td>รูปแบบไฟล์ e-Budgeting และ BB EvMIS ไม่เปิดเผย</td><td>ส่งออกใช้ไม่ได้</td><td>เริ่มที่ Excel ตามแบบรายงาน แล้วปรับเมื่อได้ข้อกำหนด (D-B03)</td></tr>
+    <tr><td>สายข้อมูลเดียวทำให้ข้อมูลตัวอย่างเดิมต้องสร้างใหม่</td><td>หน้าจอเดิมเสียชั่วคราว</td><td>B1 ทำ migration ของข้อมูลตัวอย่าง (DATA_V ใหม่) และทดสอบทุกหน้า</td></tr>
+    <tr><td>หน่วยงานเชื่อ AI มากเกินไปในการตัดวงเงิน</td><td>การตัดสินใจไม่มีเจ้าของ</td><td>AI เสนอทางเลือก 3 แบบเสมอ ไม่มีปุ่มนำไปใช้ทั้งชุด ต้องยืนยันรายการ</td></tr>
+  </tbody>
+</table></div>
+<h3><span class="num">13.2</span>ประเด็นที่ต้องตัดสินใจ</h3>
+<div class="tbl"><table>
+  <thead><tr><th>รหัส</th><th>ประเด็น</th><th>ทางเลือก</th><th>ข้อเสนอ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">D-B01</td><td>ใช้ข้อระเบียบใดเป็นค่าตั้งต้น</td><td>ฉบับ 2562 ตามที่อ่านได้ · รอตรวจฉบับที่ 2</td><td>ใช้ 2562 พร้อมป้าย “ต้องยืนยัน” ในข้อที่อาจเปลี่ยน</td></tr>
+    <tr><td class="id">D-B02</td><td>มีบทบาทกรรมการแยกหรือไม่</td><td>บทบาทใหม่ · ให้ผู้บริหารบันทึกแทน (แบบเดิม)</td><td>บทบาทใหม่ (ต้องมีเพื่อองค์ประชุมและ SD-10)</td></tr>
+    <tr><td class="id">D-B03</td><td>ส่งออกรูปแบบใด</td><td>Excel ตามแบบรายงาน · CSV ตามโครงสร้าง e-Budgeting (ต้องขอข้อกำหนด)</td><td>Excel ก่อน</td></tr>
+    <tr><td class="id">D-B04</td><td>ระดับรายละเอียดของแผน</td><td>รายไตรมาส (ตาม สงป.301/302) · รายเดือน</td><td>รายไตรมาสในคำขอ รายเดือนเมื่อได้รับจัดสรร</td></tr>
+    <tr><td class="id">D-B05</td><td>เกณฑ์ส่งคณะกรรมการ</td><td>วงเงิน · งบลงทุน · โครงการใหม่ · ทุกคำขอ</td><td>10 ล้านบาทขึ้นไป หรือโครงการใหม่ ตั้งได้</td></tr>
+    <tr><td class="id">D-B06</td><td>เป้าหมายเบิกจ่ายของปี</td><td>ตามมติ ครม. ที่ประกาศ · ตั้งภายในหน่วยงานเพิ่ม</td><td>ทั้งสองแบบ แสดงแยกกัน</td></tr>
+    <tr><td class="id">D-B07</td><td>ความยืดหยุ่นของผลกระทบการตัด</td><td>สัดส่วนตรง · ค่าต่อตัวชี้วัด</td><td>สัดส่วนตรงเป็นค่าตั้งต้น ปรับต่อตัวชี้วัดได้</td></tr>
+    <tr><td class="id">D-B08</td><td>เผยแพร่ผลต่อสาธารณะในต้นแบบ</td><td>สร้างหน้า · ข้าม</td><td>สร้างหน้าแบบอ่านอย่างเดียวใน B5</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 14 ============================== -->
+<section class="ch" id="s14">
+<h2><span class="num">14</span>แหล่งอ้างอิง</h2>
+<p class="lede">เปิดอ่านเมื่อ 17 ตุลาคม 2569</p>
+<div class="tbl"><table>
+  <thead><tr><th>รหัส</th><th>แหล่ง</th><th>ใช้สำหรับ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">S1</td><td><a href="https://www.dss.go.th/isp/wp-content/uploads/2026/03/เอกสารแนบ-1-คู่มือปฏิบัติการจัดทำคำของบประมาณรายจ่าย-ประจำปีงบประมาณ-พ.ศ.-2570.pdf">สำนักงบประมาณ: คู่มือปฏิบัติการจัดทำคำของบประมาณรายจ่ายประจำปีงบประมาณ พ.ศ. 2570 (พฤศจิกายน 2568)</a> (สำเนาที่เผยแพร่โดยกรมวิทยาศาสตร์บริการ)</td><td>ความเชื่อมโยง ประเภทแผนงาน ข้อมูลผลผลิตและโครงการ 3E 3R เพดาน 20% ผูกพันข้ามปี ICT ความเสี่ยงทุจริต พิกัด สงป.301/302 เกณฑ์จัดลำดับ</td></tr>
+    <tr><td class="id">S2</td><td><a href="https://www.opsmoac.go.th/bpsp-dwl-files-431691791285">สำนักงานปลัดกระทรวงเกษตรและสหกรณ์: ความรู้เกี่ยวกับ พ.ร.บ.วิธีการงบประมาณ พ.ศ. 2561 ระเบียบที่เกี่ยวข้อง และแนวทางการจัดทำงบประมาณ (เอกสารบรรยาย)</a></td><td>มาตรา 24–51 ระเบียบฯ 2562 ข้อ 5–37</td></tr>
+    <tr><td class="id">S3</td><td><a href="https://www.bb.go.th/topic-detail.php?id=10069&amp;mid=267&amp;catID=0">สำนักงบประมาณ: หนังสือ นร 0702/ว 112 (31 กรกฎาคม 2562) ระเบียบว่าด้วยการบริหารงบประมาณ พ.ศ. 2562 และหลักเกณฑ์การใช้งบประมาณ การโอนเงินจัดสรร</a></td><td>ที่มาของระเบียบและหลักเกณฑ์ (ยังไม่ได้อ่านหลักเกณฑ์ข้อ 28 ฉบับเต็ม)</td></tr>
+    <tr><td class="id">S4</td><td><a href="https://www.thansettakij.com/economy/641376">ฐานเศรษฐกิจ: ข่าวมาตรการเร่งรัดการเบิกจ่าย</a></td><td>เป้าหมายเบิกจ่ายปี 2568 (ระดับ B)</td></tr>
+    <tr><td class="id">S5</td><td><a href="https://www.posttoday.com/business/749780">โพสต์ทูเดย์: การก่อหนี้ผูกพันภายในไตรมาส 2 และการขยายเวลาเบิกจ่าย</a></td><td>BR-20 (ระดับ B)</td></tr>
+    <tr><td class="id">S6</td><td><a href="https://www.thansettakij.com/economy/657127">ฐานเศรษฐกิจ: นโยบายการจัดทำงบประมาณปี 2570 และงบประมาณฐานศูนย์</a></td><td>FR-B-16 (ระดับ B)</td></tr>
+    <tr><td class="id">S7</td><td><a href="https://thestandard.co/pm-proposes-budget-transfer-crisis-fund/">The Standard: ร่าง พ.ร.บ.โอนงบประมาณ ปี 2569</a></td><td>ตัวอย่างมาตรา 35 (การโอนข้ามหน่วยต้องมี พ.ร.บ.)</td></tr>
+  </tbody>
+</table></div>
+<p class="small">แหล่งระดับ B และข้อที่ไม่มีรหัสแหล่ง ต้องตรวจกับตัวบทฉบับปัจจุบันก่อนใช้งานจริง</p>
+</section>
+
+<footer class="end">© 2026 Avalant. All rights reserved. · เอกสารฉบับร่างเพื่อการหารือ ไม่ใช่ความเห็นทางกฎหมาย · ตัวเลขในตัวอย่างเป็นข้อมูลสมมติ</footer>
+</div>
+</main>
+</div>
+
+<script>
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc ol a'));
+  var secs = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+  function onScroll() {
+    var y = window.scrollY + 120, cur = 0;
+    secs.forEach(function (s, i) { if (s && s.offsetTop <= y) cur = i; });
+    links.forEach(function (a, i) { a.classList.toggle('on', i === cur); });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+  var toc = document.getElementById('toc'), tg = document.getElementById('toc-toggle');
+  tg.addEventListener('click', function () { var o = toc.classList.toggle('open'); tg.setAttribute('aria-expanded', o); });
+  links.forEach(function (a) { a.addEventListener('click', function () { toc.classList.remove('open'); tg.setAttribute('aria-expanded', 'false'); }); });
+  document.getElementById('theme').addEventListener('click', function () {
+    var r = document.documentElement, cur = r.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    r.dataset.theme = cur === 'dark' ? 'light' : 'dark';
+  });
+})();
+</script>
+</body>
+</html>
