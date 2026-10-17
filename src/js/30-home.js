@@ -81,7 +81,7 @@ function myTasks() {
   if (ROLE === "plan") (S.evals || []).filter(e => e.status === "draft").forEach(e => R(`${L("ประเมินโครงการให้เสร็จ", "Finish a project evaluation")} ${e.id}`, tx((evProj(e) || { name: "" }).name), "2026-11-30", "perf-evaluate", "p-info"));
   if (ROLE === "fin" && S.proc) { const late = Object.values(S.proc).filter(ms => procState(ms).lv !== "ok").length; if (late) R(L("ติดตามโครงการลงทุนที่จัดซื้อจัดจ้างล่าช้า", "Chase investment projects behind on procurement"), `${late} ${L("โครงการ", "projects")}`, TODAY, "mon-procure", "p-warn"); }
   famTasks(R);
-  if (ROLE === "proc" && !t.length) R(L("ไม่มีงานค้าง", "Nothing waiting for you"), "", TODAY, "procurement", "p-mute");
+  if (isProcRole() && !t.length) R(L("ไม่มีงานค้าง", "Nothing waiting for you"), "", TODAY, "procurement", "p-mute");
   // Delegated work (round 7): cross-unit transfers this user may approve on an executive's behalf.
   const dg = ROLE !== "exec" && delegFor("exec", "transfer");
   if (dg) Object.values(S.allocs).forEach(A => A.transfers.filter(x => x.status === "pending").forEach(x => { const a = A.lines.find(l => l.id === x.from), b = A.lines.find(l => l.id === x.to);

@@ -1,5 +1,5 @@
 // App shell: navigation by role, top bar controls, notification centre, upcoming-module pages.
-const ALL = ["div", "plan", "exec", "fin", "audit", "admin", "proc"];
+const ALL = ["div", "plan", "exec", "fin", "audit", "admin", "proc", "prochead"];
 NAV.push(
   { id: "home", code: "", group: "overview", roles: ALL, label: ["พื้นที่ทำงานของฉัน", "My Workspace"] },
   { id: "strategy", code: "M01", group: "form", roles: ["plan", "exec", "div", "audit"], label: ["แผนยุทธศาสตร์", "Strategic Planning"],
@@ -11,11 +11,11 @@ NAV.push(
     plan: [["ตรวจรหัสและโครงสร้างข้อมูลก่อนส่ง", "Pre-submission code and structure checks"], ["ตัวอย่างแบบฟอร์มคำขอ", "Request form preview"], ["ส่งออก Excel / PDF", "Excel / PDF export"], ["ติดตามสถานะและบันทึกผลพิจารณา", "Status tracking and Budget Bureau results"]] },
   { id: "allocation", code: "M06", group: "exec", roles: ["fin", "plan", "exec", "audit"], label: ["จัดสรรงบประมาณ", "Budget Allocation"],
     plan: [["บันทึกวงเงินตามพระราชบัญญัติงบประมาณ", "Record the appropriation"], ["จัดสรรรายหน่วยงานและโครงการ", "Allocate by unit and project"], ["แผนการใช้จ่ายรายเดือน", "Monthly spending plan"], ["โอนเปลี่ยนแปลงผ่าน Workflow", "Budget transfers through the workflow"]] },
-  { id: "dashboard", code: "M07", group: "exec", roles: ["exec", "plan", "fin", "audit", "div", "proc"], label: ["ติดตามการใช้จ่าย", "Execution Monitoring"] },
+  { id: "dashboard", code: "M07", group: "exec", roles: ["exec", "plan", "fin", "audit", "div", "proc", "prochead"], label: ["ติดตามการใช้จ่าย", "Execution Monitoring"] },
   { id: "performance", code: "M08", group: "exec", roles: ["plan", "exec", "div", "audit"], label: ["ผลสัมฤทธิ์", "Performance"],
     plan: [["บันทึกผลตัวชี้วัด", "Enter KPI results"], ["ห่วงโซ่ผลลัพธ์รายโครงการ", "Results chain per project"], ["Scorecard งบประมาณกับผลลัพธ์", "Budget vs outcome scorecard"], ["รายงานประเมินผล", "Evaluation report"]] },
   { id: "assistant", code: "M09", group: "intel", roles: ["exec", "plan", "fin", "div", "audit"], label: ["ผู้ช่วย AI งบประมาณ", "AI Budget Assistant"] },
-  { id: "admin", code: "M10", group: "sys", roles: ["admin", "audit", "fin"], label: ["ผู้ดูแลระบบ", "System Administration"] },
+  { id: "admin", code: "M10", group: "sys", roles: ["admin", "audit", "fin", "proc", "prochead"], label: ["ผู้ดูแลระบบ", "System Administration"] },
 );
 
 function navBadge(id) {

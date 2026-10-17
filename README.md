@@ -22,9 +22,10 @@ This repository holds the conceptual design material and a clickable prototype p
 ## Prototype
 
 - All 10 modules: M01 Strategic Planning, M02 Budget Preparation, M03 Consolidation, M04 Review & Approval, M05 Submission, M06 Allocation, M07 Execution Monitoring, M08 Performance, M09 Budget Intelligence (AI), M10 System Administration.
-- Seven roles (division, planning, executive, finance, auditor, administrator, procurement officer), Thai/English, light and dark themes.
+- Eight roles (division, planning, executive, finance, auditor, administrator, procurement officer, head of procurement), Thai/English, light and dark themes.
 - Deeper module features, built in rounds and listed in [ROADMAP.md](ROADMAP.md). Round 8 added the M01 project bank and plan revision, the M02 standard-price catalogue and paste from Excel, and the M03 ceiling responses and 4-year forward estimates. Round 9 added M04 budget hearings and cut impact, M05 parliament stages, and M06 allotment releases and carry-over. Round 10 added the M07 year-end forecast and procurement milestones, M08 project evaluation (lessons flow to the M01 project bank), M09 spending anomalies and justification quality, and M10 notification templates, SLA escalation, retention and backup.
 - Round 11 added light versions of **Fisko Procurement** (procurement plan, requisitions, contracts with acceptance phases, e-GP file import) and **Fisko Finance** (allocation-to-payment chain, payment approvals, GFMIS file reconciliation), plus duty-separation rules (M10 → Duty separation). They are built on the FY2570 allocation lines and use files only for e-GP and GFMIS.
+- Round 13 built P0 and P1 of the [Procurement design](Fisko_Procurement_Design.html): a **procurement case file** with 12 steps (method advice from a rules table in M10, head-of-procurement approval of overrides, committees with checks, reference price, e-GP details, bidders, award, appeal window, contract gate), a split-purchase check on requisitions, a new duty rule SD-06, and an event timeline per case. Appeal-period and holiday rules are settings in M10 → Procurement rules; legal thresholds other than the few confirmed ones are marked as to be confirmed.
 - An **app switcher** (click the logo at the top of the menu) moves between Fisko Budget, Fisko Procurement and Fisko Finance. Each app shows only its own menu; My Workspace and System Administration are shared.
 - Simulated SSO sign-in with two-factor codes (the prototype code is `246810`), global search (Ctrl+K or `/`), a change-history drawer on records, and delegation of authority (acting on another user's behalf, recorded in the audit log).
 - Two sample organizations: a fictional department, and กรมโยธาธิการและผังเมือง with fictional figures and an indicative unit structure.
@@ -51,7 +52,7 @@ This regenerates `Fisko_Prototype.html` and `fisko-prototype.html`.
 | `src/js/20-shell.js`, `30-home.js` | Navigation, top bar, notifications, My Workspace |
 | `src/js/40*`–`48*` | Modules M07, M02, M04, M03, M09, M01, M05, M06, M08 |
 | `src/js/50-admin.js` | M10 System Administration |
-| `src/js/60-procurement.js`, `62-finance.js`, `64-duties.js` | Fisko Procurement, Fisko Finance, duty-separation rules |
+| `src/js/60-procurement.js`, `61-cases.js`, `62-finance.js`, `64-duties.js` | Fisko Procurement (plan, requisitions, contracts), procurement case files and rules, Fisko Finance, duty-separation rules |
 | `src/js/66-apps.js` | App switcher and the per-app menu |
 | `src/js/52-demo.js` | In-app demo guide |
 | `src/js/99-boot.js` | Startup |

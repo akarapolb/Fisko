@@ -7,6 +7,7 @@ const SOD_RULES = [
   ["SD-03", ["ผู้ขอเบิกจ่ายต้องไม่เป็นผู้อนุมัติเบิกจ่ายรายการเดียวกัน", "A payment's requester can't approve it"]],
   ["SD-04", ["ผู้อนุมัติเบิกจ่ายต้องไม่เป็นกรรมการตรวจรับสัญญาเดียวกัน", "A payment's approver can't be on the contract's acceptance committee"]],
   ["SD-05", ["ผู้กระทบยอดต้องไม่เป็นผู้อนุมัติเบิกจ่ายรายการนั้น", "The person reconciling can't be the one who approved the payment"]],
+  ["SD-06", ["กรรมการพิจารณาผลหรือกรรมการซื้อจ้างต้องไม่เป็นกรรมการตรวจรับของสัญญาเดียวกัน", "A member of the evaluation or purchasing committee can't sit on the acceptance committee of the same contract"]],
 ];
 const SOD_STEPS = [
   [["ขอซื้อ / ขอจ้าง", "Raise a requisition"], ["อนุมัติใบขอซื้อ", "Approve the requisition"], "SD-01"],
@@ -14,6 +15,7 @@ const SOD_STEPS = [
   [["ขออนุมัติเบิกจ่าย", "Request the payment"], ["อนุมัติเบิกจ่าย", "Approve the payment"], "SD-03"],
   [["ตรวจรับงาน", "Accept the work"], ["อนุมัติเบิกจ่าย", "Approve the payment"], "SD-04"],
   [["อนุมัติเบิกจ่าย", "Approve the payment"], ["กระทบยอดกับ GFMIS", "Reconcile with GFMIS"], "SD-05"],
+  [["พิจารณาผลหรือซื้อจ้างเป็นกรรมการ", "Sit on the evaluation or purchasing committee"], ["ตรวจรับงาน", "Accept the work"], "SD-06"],
 ];
 const sodOn = id => { const r = ((S.sod || {}).rules || []).find(x => x.id === id); return !r || r.on; };
 // The people acting on a step: the signed-in user, plus the person whose authority they hold when acting by delegation.
@@ -68,8 +70,8 @@ Object.assign(STYPE, { plan: ["แผนจัดซื้อ", "Plan item"], co
 }
 
 NAV.push(
-  { id: "procurement", code: "PR", group: "procurement", app: "procurement", jumpPrefix: "prc", roles: ["proc", "div", "exec", "plan", "fin", "audit"], label: ["Fisko Procurement · จัดซื้อจัดจ้าง", "Fisko Procurement"],
-    tabs: [["plan", ["แผนจัดซื้อ", "Procurement plan"], "P1"], ["reqn", ["ใบขอซื้อขอจ้าง", "Requisitions"], "P2"], ["contracts", ["สัญญาและงวดงาน", "Contracts and phases"], "P3"], ["egp", ["ไฟล์จาก e-GP", "e-GP file"], "P4"]],
+  { id: "procurement", code: "PR", group: "procurement", app: "procurement", jumpPrefix: "prc", roles: ["proc", "prochead", "div", "exec", "plan", "fin", "audit"], label: ["Fisko Procurement · จัดซื้อจัดจ้าง", "Fisko Procurement"],
+    tabs: [["cases", ["แฟ้มจัดซื้อ", "Case files"], "P1"], ["plan", ["แผนจัดซื้อ", "Procurement plan"], "P2"], ["reqn", ["ใบขอซื้อขอจ้าง", "Requisitions"], "P3"], ["contracts", ["สัญญาและงวดงาน", "Contracts and phases"], "P4"], ["egp", ["ไฟล์จาก e-GP", "e-GP file"], "P5"]],
     tabGet: () => PROC_TAB, tabSet: v => (PROC_TAB = v) },
   { id: "finance", code: "FN", group: "finance", app: "finance", jumpPrefix: "fnc", roles: ["fin", "exec", "plan", "audit"], label: ["Fisko Finance · ผูกพันและเบิกจ่าย", "Fisko Finance"],
     tabs: [["chain", ["สายงบประมาณถึงการจ่าย", "Allocation to payment"], "F1"], ["pay", ["ขออนุมัติเบิกจ่าย", "Payments"], "F2"], ["recon", ["กระทบยอด GFMIS", "GFMIS reconciliation"], "F3"]],

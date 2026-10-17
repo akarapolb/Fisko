@@ -177,7 +177,7 @@ function buildOrg(cfg) {
 
   // round 10: procurement milestones (FY2569 snapshot), evaluations and lessons, spending anomalies,
   // notification templates, SLA escalation, data retention and backups
-  const day = (iso, n) => { const d = new Date(iso + "T00:00:00"); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+  const day = (iso, n) => { const [y, m, dd] = iso.split("-").map(Number); return new Date(Date.UTC(y, m - 1, dd + n)).toISOString().slice(0, 10); };
   s.proc = {};
   s.dash.projects.filter(p => p.type === "inv").forEach((p, i) => {
     const slow = p.actual / p.plan < 0.75, done = slow ? 2 : 4, start = day("2025-10-20", i * 9);
@@ -225,6 +225,9 @@ function buildOrg(cfg) {
   const sec = s.units.find(u => u.code === "01") || s.units[1];
   if (!s.users.some(u => u.role === "proc")) s.users.push({ id: "u10", role: "proc", unit: sec.id, primary: true, mfa: true, active: true,
     name: (s.org[1] || "").startsWith("Sample") ? ["สุรชัย จัดหา", "Surachai Jatha"] : ["สุรีย์ พัสดุดี", "Suree Phatsudee"] });
+  // round 13: a head of procurement approves methods that differ from the advice and decides appeals.
+  if (!s.users.some(u => u.role === "prochead")) s.users.push({ id: "u11", role: "prochead", unit: sec.id, primary: true, mfa: true, active: true,
+    name: (s.org[1] || "").startsWith("Sample") ? ["วิชัย หัวหน้าพัสดุ", "Wichai Hua-na"] : ["วิไล หัวหน้าพัสดุ", "Wilai Huana"] });
   // The last two plan items sit on the demo requester's own unit, so that role can raise a requisition in the demo.
   const pool = A70.lines.filter(l => l.type === "inv" || l.type === "ope").sort((a, b) => b.amount - a.amount);
   const myUnit = s.users.find(u => u.role === "div" && u.primary).unit, mineL = pool.filter(l => l.unit === myUnit).slice(0, 2);
@@ -233,8 +236,10 @@ function buildOrg(cfg) {
   const months = ["2026-11-15", "2026-12-15", "2027-01-15", "2027-02-15", "2027-03-15", "2027-04-15"];
   s.pplan = FL.map((l, i) => {
     const est = Math.max(1e5, Math.round(l.amount * 0.5 / 1e5) * 1e5);
-    return { id: "PP-2570-" + String(i + 1).padStart(3, "0"), line: l.id, name: l.name, est, method: est <= 5e5 ? "specific" : "ebid", month: months[i], by: PO, status: "planned", egp: null };
+    return { id: "PP-2570-" + String(i + 1).padStart(3, "0"), line: l.id, name: l.name, est, method: est <= 5e5 ? "specific" : "ebid", month: months[i], by: PO, status: "planned", egp: null, kind: guessKind(l, l.name) };
   });
+  // The last two items are small, same kind, same unit: raising both in a row trips the split-purchase check (R-02).
+  [[s.pplan.length - 2, 4e5], [s.pplan.length - 1, 3.5e5]].forEach(([i, est]) => Object.assign(s.pplan[i], { est, method: "specific", kind: "goods" }));
   const why = ["จำเป็นต่อการดำเนินงานตามแผนปีงบประมาณ 2570", "Needed to deliver the FY2570 work plan"];
   const mkReq = (i, st, t) => ({ id: "RQ-2570-" + String(i + 1).padStart(3, "0"), plan: s.pplan[i].id, by: reqBy(FL[i].unit), amount: s.pplan[i].est, why, status: st, t,
     decided: st === "pending" ? null : { by: EX, holder: EX, via: null, t: t.slice(0, 10) + "T16:00" } });
@@ -262,7 +267,8 @@ function buildOrg(cfg) {
     decided: { by: EX, holder: EX, via: null, t: "2026-10-15T10:00" }, recon: { state: "matched", file: "GF-2570-01", t: "2026-10-16T08:00" } }];
   s.gfmisFiles = [{ id: "GF-2570-01", t: "2026-10-16T08:00", by: FN, rows: [{ pay: "PY-2570-001", doc: "GF-70-000417", amount: s.payreqs[0].amount, date: "2026-10-16", state: "matched" }] }];
   s.egpImports = [];
-  s.sod = { rules: ["SD-01", "SD-02", "SD-03", "SD-04", "SD-05"].map(id => ({ id, on: true })), blocks: [] };
+  s.sod = { rules: ["SD-01", "SD-02", "SD-03", "SD-04", "SD-05", "SD-06"].map(id => ({ id, on: true })), blocks: [] };
+  seedCases(s, { PO, PL, DV, EX, FN, vend });
   s.audit.unshift(
     { t: "2026-10-15T10:00", user: EX, role: "exec", action: ["อนุมัติเบิกจ่าย", "Approved a payment"], target: "PY-2570-001 CT-2570-001" },
     { t: "2026-10-14T15:00", user: FN, role: "fin", action: ["ขออนุมัติเบิกจ่าย", "Requested a payment approval"], target: "PY-2570-001 CT-2570-001" },

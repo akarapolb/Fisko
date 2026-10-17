@@ -17,7 +17,7 @@ function ensureApp() {
 }
 function appOfLink(l) {
   if (!l) return "budget";
-  if (l.startsWith("prc-") || l === "procurement") return "procurement";
+  if (l.startsWith("prc-") || l.startsWith("case:") || l === "procurement") return "procurement";
   if (l.startsWith("fnc-") || l === "finance") return "finance";
   if (l.startsWith("admin") || l === "home" || l === "delegation") return "all";
   return "budget";
@@ -28,7 +28,8 @@ const appChip = l => { const a = appOfLink(l); return a === "budget" || a === "a
 function tabBadge(nid, tab) {
   let n = 0;
   if (nid === "procurement" && tab === "reqn" && canSpend()) n = S.reqn.filter(r => r.status === "pending").length;
-  if (nid === "procurement" && tab === "contracts" && ROLE === "proc") n = S.reqn.filter(r => r.status === "approved").length;
+  if (nid === "procurement" && tab === "cases" && isProcRole()) n = S.cases.filter(c => { const s = caseState(c); return !c.cancelled && s >= 3 && s <= 8 && (ROLE === "prochead" ? (c.methodApproval && c.methodApproval.status === "pending") || (c.appeal && c.appeal.status === "open") : caseNext(c).who === "proc"); }).length;
+  if (nid === "procurement" && tab === "contracts" && isProcRole()) n = S.cases.filter(c => caseState(c) === 8).length;
   if (nid === "procurement" && tab === "plan" && ROLE === "div") n = S.pplan.filter(p => p.status === "planned" && famLine(p.line).unit === me().unit).length;
   if (nid === "finance" && tab === "pay") n = (canSpend() ? S.payreqs.filter(p => p.status === "pending").length : 0) + (ROLE === "fin" ? famAcceptedUnpaid().length : 0);
   return n ? `<span class="badge">${n}</span>` : "";

@@ -11,7 +11,8 @@ function revTabsBar() {
     ["hearings", `${L("การชี้แจงงบประมาณ", "Budget hearings")}${(() => { const n = (S.hearings || []).flatMap(h => h.qs).filter(q => q.ans && q.ok == null).length; return n ? ` (${n})` : ""; })()}`], ["impact", L("ผลกระทบต่อตัวชี้วัด", "Cut impact")]];
   return `<div class="tabs" role="tablist">${t.map(([id, l]) => `<button class="tab ${id === REV_TAB ? "on" : ""}" type="button" role="tab" aria-selected="${id === REV_TAB}" data-vtab="${id}">${l}</button>`).join("")}</div>`;
 }
-function addDays(iso, n) { const d = new Date(iso + "T00:00:00"); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); }
+// Calendar arithmetic in UTC so a viewer's time zone never shifts the date.
+function addDays(iso, n) { const [y, m, dd] = iso.split("-").map(Number); return new Date(Date.UTC(y, m - 1, dd + n)).toISOString().slice(0, 10); }
 
 // ---- queue ----
 REV_PANELS.queue = () => {
