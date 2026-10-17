@@ -476,3 +476,25 @@ table.proc td.ms { white-space: nowrap; font-size: 13px; }
 table.proc td.ms.done { background: color-mix(in srgb, var(--accent-soft) 55%, transparent); }
 table.proc td.ms.late { background: color-mix(in srgb, var(--bad-soft) 60%, transparent); }
 @media (max-width: 860px) { .ev-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .an-body { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- round 12: app switcher ---------- */
+button.brand { width: 100%; background: none; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; border-radius: 12px; padding: 8px; margin: -8px; box-sizing: content-box; }
+button.brand:hover, button.brand[aria-expanded="true"] { background: var(--rail-2); }
+.brand > div:nth-child(2) { min-width: 0; flex: 1; }
+.brand b, .brand small { overflow-wrap: anywhere; }
+.brand-caret { color: var(--rail-ink); font-size: 13px; margin-left: auto; }
+.appmenu { position: fixed; z-index: 45; width: min(340px, calc(100vw - 24px)); background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 18px 44px rgba(10, 11, 34, .28); padding: 8px; }
+.appmenu-h { font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 6px 10px 8px; }
+.appmenu-f { font-size: 12.5px; color: var(--muted); padding: 10px 10px 6px; border-top: 1px solid var(--line); margin-top: 6px; }
+.appitem { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: none; border: 0; border-radius: 10px; padding: 10px; font: inherit; color: inherit; cursor: pointer; }
+.appitem:hover:not([disabled]), .appitem:focus-visible { background: var(--surface-2); }
+.appitem.on { box-shadow: inset 3px 0 0 var(--accent); background: var(--surface-2); }
+.appitem[disabled] { opacity: .5; cursor: not-allowed; }
+.appico { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; color: #10112B; font-weight: 700; font-family: var(--mono); flex: none; }
+.appt { min-width: 0; flex: 1; }
+.appt b { display: block; font-size: 15px; }
+.appt small { display: block; color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+.appcnt { background: var(--accent-2); color: #10112B; border-radius: 99px; font-size: 12px; font-weight: 700; padding: 1px 8px; flex: none; }
+.appcur { color: var(--accent); font-weight: 700; flex: none; }
+.appchip { display: inline-block; font-size: 11.5px; font-weight: 600; border-radius: 6px; padding: 0 6px; margin-right: 6px; color: #10112B; background: var(--c, var(--accent-2)); vertical-align: 1px; }
+@media (max-width: 860px) { button.brand { margin: 0; padding: 6px 8px; } }

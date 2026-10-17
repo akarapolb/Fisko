@@ -74,6 +74,7 @@ It is one global scope: every `src/js` file becomes part of one `<script>`, so t
 | `40` to `48` | The modules. Files ending in `b` or `c` are tabs and deeper features added later |
 | `50`, `50b` | M10 administration |
 | `60`, `62`, `64` | Fisko Procurement, Fisko Finance, duty-separation engine and its M10 tab |
+| `66` | App switcher: the three apps, the menu built per app, the switcher menu |
 | `52-demo.js` | The in-app demo guide (`DEMO` array) |
 | `54-identity.js`, `56-search.js`, `58-history.js` | Sign-in and delegation, global search, record history drawer |
 | `99-boot.js` | Startup |
@@ -90,7 +91,7 @@ Conventions worth knowing before you edit:
 
 ## 5. State and data
 
-- State is kept per organisation in `localStorage` under `fisko-v1-<org>` (`sample` or `dpt`). Other keys: `fisko-session`, `fisko-lang`, `fisko-role`, `fisko-org`.
+- State is kept per organisation in `localStorage` under `fisko-v1-<org>` (`sample` or `dpt`). Other keys: `fisko-session`, `fisko-lang`, `fisko-role`, `fisko-org`, `fisko-app`.
 - `DATA_V` in `00-core.js` (now **11**) is the seed version. **Bump it whenever you change the shape of seeded data**, or browsers that already hold old saved state will keep the old shape and break. Bumping resets everyone's saved demo data once.
 - Seed data is built by `buildOrg()` in `06-seedhelp.js`. Rounds 7 to 10 add their data at the end of that function, in clearly commented blocks.
 - All dates are anchored to a constant, `TODAY = "2026-10-16"` in `00-core.js`, **not the computer's clock**. So deadlines, "days left" and delegation periods behave the same on any day. Only the time of day comes from the real clock.
@@ -123,6 +124,7 @@ Tested only in the browser pane (a Chromium engine). Safari and Firefox were not
 | 9 | M04 budget hearings and cut impact; M05 parliament stages; M06 allotment releases and carry-over |
 | 10 | M07 year-end forecast and procurement milestones; M08 project evaluation and lessons; M09 spending anomalies and justification quality; M10 notification templates, SLAs, retention and backup |
 | 11 | Light versions of Fisko Procurement and Fisko Finance, a procurement officer role, and duty-separation rules (see section 12) |
+| 12 | App switcher between Fisko Budget, Fisko Procurement and Fisko Finance (see section 12) |
 
 After round 10 the demo guide and script were rewritten, and the design document went to v0.3 with the new requirements tagged "ใหม่ v0.3".
 
@@ -182,3 +184,5 @@ Built as light versions inside the same prototype, following the product family 
 - **Chain:** allocation line, plan item, requisition (executive approves, within the room left on the line), contract (procurement officer creates it, which commits the line), acceptance (2 signatures from the committee), payment request (finance), payment approval (executive), file reconciliation (finance).
 - **Duty rules SD-01 to SD-05** are checked on the signed-in user and on the person whose authority they hold by delegation, so delegation can't get around them. Blocked attempts are logged in the audit log and shown in M10 → Duty separation. The two seeded delegations of "approve requisitions and payments" (to Planning and to Finance) exist so the SD-04 and SD-03 blocks can be shown in the demo. SD-01, SD-02 and SD-05 are in the code but are hard to trigger with the sample users.
 - **Not done:** the light M06 and M07 screens in Fisko Budget still keep their own data and don't read from the new products yet (the concept says they should). The demo guide and demo script don't cover these screens. The design document (Solution Design) and the concept document were not changed for these screens, except for the note in concept chapter 9.
+- **App switcher (round 12):** every `NAV` entry has an `app` (`budget`, `procurement`, `finance`, or `all` for My Workspace and M10). The left menu is built per app in `renderNav()` (`66-apps.js`). The Procurement and Finance entries carry `tabs`, which become their menu items (`P1`..`P4`, `F1`..`F3`). The page you open decides the current app (`appSync()` runs in the router), so deep links, tasks and notifications switch apps by themselves. The current app is kept in `localStorage` (`fisko-app`), and the last page of each app is remembered while the page is open. An app a role can't use is greyed out in the switcher. To add a fourth app, add it to `APPS` and `APP_IDS` (`00-core.js`, `66-apps.js`), give its `NAV` entries an `app` and a `group`, and add that group to `GROUPS`.
+

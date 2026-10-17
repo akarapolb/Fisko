@@ -24,6 +24,7 @@ This repository holds the conceptual design material and a clickable prototype p
 - Seven roles (division, planning, executive, finance, auditor, administrator, procurement officer), Thai/English, light and dark themes.
 - Deeper module features, built in rounds and listed in [ROADMAP.md](ROADMAP.md). Round 8 added the M01 project bank and plan revision, the M02 standard-price catalogue and paste from Excel, and the M03 ceiling responses and 4-year forward estimates. Round 9 added M04 budget hearings and cut impact, M05 parliament stages, and M06 allotment releases and carry-over. Round 10 added the M07 year-end forecast and procurement milestones, M08 project evaluation (lessons flow to the M01 project bank), M09 spending anomalies and justification quality, and M10 notification templates, SLA escalation, retention and backup.
 - Round 11 added light versions of **Fisko Procurement** (procurement plan, requisitions, contracts with acceptance phases, e-GP file import) and **Fisko Finance** (allocation-to-payment chain, payment approvals, GFMIS file reconciliation), plus duty-separation rules (M10 → Duty separation). They are built on the FY2570 allocation lines and use files only for e-GP and GFMIS.
+- An **app switcher** (click the logo at the top of the menu) moves between Fisko Budget, Fisko Procurement and Fisko Finance. Each app shows only its own menu; My Workspace and System Administration are shared.
 - Simulated SSO sign-in with two-factor codes (the prototype code is `246810`), global search (Ctrl+K or `/`), a change-history drawer on records, and delegation of authority (acting on another user's behalf, recorded in the audit log).
 - Two sample organizations: a fictional department, and กรมโยธาธิการและผังเมือง with fictional figures and an indicative unit structure.
 - State is kept in the browser's local storage. Use **Reset data** or the **Demo guide** (bottom of the left menu) to start over.
@@ -50,6 +51,7 @@ This regenerates `Fisko_Prototype.html` and `fisko-prototype.html`.
 | `src/js/40*`–`48*` | Modules M07, M02, M04, M03, M09, M01, M05, M06, M08 |
 | `src/js/50-admin.js` | M10 System Administration |
 | `src/js/60-procurement.js`, `62-finance.js`, `64-duties.js` | Fisko Procurement, Fisko Finance, duty-separation rules |
+| `src/js/66-apps.js` | App switcher and the per-app menu |
 | `src/js/52-demo.js` | In-app demo guide |
 | `src/js/99-boot.js` | Startup |
 

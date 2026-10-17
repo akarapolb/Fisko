@@ -28,18 +28,6 @@ const canSpend = () => acting("exec", "spend");
 const nextId = (prefix, list) => `${prefix}-${FAM_FY}-${String(Math.max(0, ...list.map(x => Number(x.id.split("-")[2]) || 0)) + 1).padStart(3, "0")}`;
 const famAcceptedUnpaid = () => S.contracts.flatMap(c => c.phases.filter(ph => phaseAccepted(ph) && !S.payreqs.some(p => p.contract === c.id && p.phase === ph.n && p.status !== "rejected")).map(ph => ({ c, ph })));
 
-function famBadge(id) {
-  let n = 0;
-  if (id === "procurement") {
-    if (canSpend()) n += S.reqn.filter(r => r.status === "pending").length;
-    if (ROLE === "proc") n += S.reqn.filter(r => r.status === "approved").length;
-  } else {
-    if (canSpend()) n += S.payreqs.filter(p => p.status === "pending").length;
-    if (ROLE === "fin") n += famAcceptedUnpaid().length;
-  }
-  return n ? `<span class="badge">${n}</span>` : "";
-}
-
 function famTasks(R) {
   if (!S.pplan) return;
   if (canSpend()) {

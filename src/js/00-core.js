@@ -99,8 +99,10 @@ function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = fal
 // ---------- router ----------
 const VIEWS = {}, BIND = {};
 const NAV = []; // { id, code, group, label: [th,en], roles: [...], soon: round number }
-const GROUPS = { overview: ["ภาพรวม", "Overview"], form: ["จัดทำงบประมาณ", "Budget formulation"], exec: ["บริหารและติดตาม", "Execution & results"], family: ["ผลิตภัณฑ์เพิ่มเติม", "More Fisko products"], intel: ["วิเคราะห์", "Intelligence"], sys: ["ระบบ", "System"] };
+const GROUPS = { overview: ["ภาพรวม", "Overview"], form: ["จัดทำงบประมาณ", "Budget formulation"], exec: ["บริหารและติดตาม", "Execution & results"], procurement: ["จัดซื้อจัดจ้าง", "Procurement"], finance: ["การเงิน", "Finance"], intel: ["วิเคราะห์", "Intelligence"], sys: ["ระบบ", "System"] };
 let CUR = "home";
+const APP_IDS = ["budget", "procurement", "finance"];
+let APP = APP_IDS.includes(store.get("fisko-app")) ? store.get("fisko-app") : "budget";
 function allowed(id) { const n = NAV.find(x => x.id === id); return !n || n.roles.includes(ROLE); }
 function go(v) { if (location.hash === "#" + v) route(); else location.hash = v; }
 function route() {
@@ -109,7 +111,7 @@ function route() {
   if (!VIEWS[v] && !NAV.find(n => n.id === v)) v = "home";
   CUR = v;
   const n = NAV.find(x => x.id === v) || (v === "request" ? NAV.find(x => x.id === "requests") : null);
-  $$("#nav a").forEach(a => a.classList.toggle("on", n && a.dataset.v === n.id));
+  appSync(n);
   const extra = { demo: ["คู่มือการสาธิต", "Demo guide"], delegation: ["การมอบอำนาจ", "Delegation of authority"] };
   $("#crumb").innerHTML = `${esc(tx(S.org))} · <b>${n ? tx(n.label) : extra[v] ? tx(extra[v]) : ""}</b>`;
   const view = $("#view");

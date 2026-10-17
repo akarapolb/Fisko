@@ -68,6 +68,10 @@ Object.assign(STYPE, { plan: ["แผนจัดซื้อ", "Plan item"], co
 }
 
 NAV.push(
-  { id: "procurement", code: "PR", group: "family", roles: ["proc", "div", "exec", "plan", "fin", "audit"], label: ["Fisko Procurement · จัดซื้อจัดจ้าง", "Fisko Procurement"] },
-  { id: "finance", code: "FN", group: "family", roles: ["fin", "exec", "plan", "audit"], label: ["Fisko Finance · ผูกพันและเบิกจ่าย", "Fisko Finance"] },
+  { id: "procurement", code: "PR", group: "procurement", app: "procurement", jumpPrefix: "prc", roles: ["proc", "div", "exec", "plan", "fin", "audit"], label: ["Fisko Procurement · จัดซื้อจัดจ้าง", "Fisko Procurement"],
+    tabs: [["plan", ["แผนจัดซื้อ", "Procurement plan"], "P1"], ["reqn", ["ใบขอซื้อขอจ้าง", "Requisitions"], "P2"], ["contracts", ["สัญญาและงวดงาน", "Contracts and phases"], "P3"], ["egp", ["ไฟล์จาก e-GP", "e-GP file"], "P4"]],
+    tabGet: () => PROC_TAB, tabSet: v => (PROC_TAB = v) },
+  { id: "finance", code: "FN", group: "finance", app: "finance", jumpPrefix: "fnc", roles: ["fin", "exec", "plan", "audit"], label: ["Fisko Finance · ผูกพันและเบิกจ่าย", "Fisko Finance"],
+    tabs: [["chain", ["สายงบประมาณถึงการจ่าย", "Allocation to payment"], "F1"], ["pay", ["ขออนุมัติเบิกจ่าย", "Payments"], "F2"], ["recon", ["กระทบยอด GFMIS", "GFMIS reconciliation"], "F3"]],
+    tabGet: () => FIN_TAB, tabSet: v => (FIN_TAB = v) },
 );

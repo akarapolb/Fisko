@@ -486,12 +486,34 @@ table.proc td.ms { white-space: nowrap; font-size: 13px; }
 table.proc td.ms.done { background: color-mix(in srgb, var(--accent-soft) 55%, transparent); }
 table.proc td.ms.late { background: color-mix(in srgb, var(--bad-soft) 60%, transparent); }
 @media (max-width: 860px) { .ev-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .an-body { grid-template-columns: minmax(0, 1fr); } }
+
+/* ---------- round 12: app switcher ---------- */
+button.brand { width: 100%; background: none; border: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; border-radius: 12px; padding: 8px; margin: -8px; box-sizing: content-box; }
+button.brand:hover, button.brand[aria-expanded="true"] { background: var(--rail-2); }
+.brand > div:nth-child(2) { min-width: 0; flex: 1; }
+.brand b, .brand small { overflow-wrap: anywhere; }
+.brand-caret { color: var(--rail-ink); font-size: 13px; margin-left: auto; }
+.appmenu { position: fixed; z-index: 45; width: min(340px, calc(100vw - 24px)); background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 18px 44px rgba(10, 11, 34, .28); padding: 8px; }
+.appmenu-h { font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 6px 10px 8px; }
+.appmenu-f { font-size: 12.5px; color: var(--muted); padding: 10px 10px 6px; border-top: 1px solid var(--line); margin-top: 6px; }
+.appitem { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: none; border: 0; border-radius: 10px; padding: 10px; font: inherit; color: inherit; cursor: pointer; }
+.appitem:hover:not([disabled]), .appitem:focus-visible { background: var(--surface-2); }
+.appitem.on { box-shadow: inset 3px 0 0 var(--accent); background: var(--surface-2); }
+.appitem[disabled] { opacity: .5; cursor: not-allowed; }
+.appico { width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; color: #10112B; font-weight: 700; font-family: var(--mono); flex: none; }
+.appt { min-width: 0; flex: 1; }
+.appt b { display: block; font-size: 15px; }
+.appt small { display: block; color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+.appcnt { background: var(--accent-2); color: #10112B; border-radius: 99px; font-size: 12px; font-weight: 700; padding: 1px 8px; flex: none; }
+.appcur { color: var(--accent); font-weight: 700; flex: none; }
+.appchip { display: inline-block; font-size: 11.5px; font-weight: 600; border-radius: 6px; padding: 0 6px; margin-right: 6px; color: #10112B; background: var(--c, var(--accent-2)); vertical-align: 1px; }
+@media (max-width: 860px) { button.brand { margin: 0; padding: 6px 8px; } }
 </style>
 </head>
 <body>
 <div class="app">
   <aside class="rail">
-    <div class="brand"><div class="brand-mark">Fk</div><div><b>Fisko</b><small id="brand-sub"></small></div></div>
+    <button class="brand" id="appsw" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="appmenu"><div class="brand-mark" id="brand-mark">Fk</div><div><b id="brand-app">Fisko</b><small id="brand-sub"></small></div><span class="brand-caret" aria-hidden="true">▾</span></button>
     <nav class="nav" id="nav" aria-label="Main menu"></nav>
     <div class="rail-foot" id="rail-foot"></div>
   </aside>
@@ -513,6 +535,7 @@ table.proc td.ms.late { background: color-mix(in srgb, var(--bad-soft) 60%, tran
     <main class="view" id="view"></main>
   </div>
 </div>
+<div class="appmenu" id="appmenu" role="menu" hidden></div>
 <aside class="hdrawer" id="hdrawer" hidden aria-label="History"></aside>
 <div class="signin" id="signin" hidden></div>
 <div class="toast" id="toast" hidden></div>
@@ -620,8 +643,10 @@ function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = fal
 // ---------- router ----------
 const VIEWS = {}, BIND = {};
 const NAV = []; // { id, code, group, label: [th,en], roles: [...], soon: round number }
-const GROUPS = { overview: ["ภาพรวม", "Overview"], form: ["จัดทำงบประมาณ", "Budget formulation"], exec: ["บริหารและติดตาม", "Execution & results"], family: ["ผลิตภัณฑ์เพิ่มเติม", "More Fisko products"], intel: ["วิเคราะห์", "Intelligence"], sys: ["ระบบ", "System"] };
+const GROUPS = { overview: ["ภาพรวม", "Overview"], form: ["จัดทำงบประมาณ", "Budget formulation"], exec: ["บริหารและติดตาม", "Execution & results"], procurement: ["จัดซื้อจัดจ้าง", "Procurement"], finance: ["การเงิน", "Finance"], intel: ["วิเคราะห์", "Intelligence"], sys: ["ระบบ", "System"] };
 let CUR = "home";
+const APP_IDS = ["budget", "procurement", "finance"];
+let APP = APP_IDS.includes(store.get("fisko-app")) ? store.get("fisko-app") : "budget";
 function allowed(id) { const n = NAV.find(x => x.id === id); return !n || n.roles.includes(ROLE); }
 function go(v) { if (location.hash === "#" + v) route(); else location.hash = v; }
 function route() {
@@ -630,7 +655,7 @@ function route() {
   if (!VIEWS[v] && !NAV.find(n => n.id === v)) v = "home";
   CUR = v;
   const n = NAV.find(x => x.id === v) || (v === "request" ? NAV.find(x => x.id === "requests") : null);
-  $$("#nav a").forEach(a => a.classList.toggle("on", n && a.dataset.v === n.id));
+  appSync(n);
   const extra = { demo: ["คู่มือการสาธิต", "Demo guide"], delegation: ["การมอบอำนาจ", "Delegation of authority"] };
   $("#crumb").innerHTML = `${esc(tx(S.org))} · <b>${n ? tx(n.label) : extra[v] ? tx(extra[v]) : ""}</b>`;
   const view = $("#view");
@@ -1557,7 +1582,6 @@ function navBadge(id) {
       : ROLE === "plan" ? S.requests.filter(r => r.status === "plan").length : 0;
     return n ? `<span class="badge">${n}</span>` : "";
   }
-  if (id === "procurement" || id === "finance") return famBadge(id);
   if (id === "review" && (ROLE === "plan" || ROLE === "exec")) return `<span class="badge">${S.review.length}</span>`;
   if (id === "admin" && ROLE === "admin") { const n = S.integrations.filter(i => i.status === "error").length; return n ? `<span class="badge">${n}</span>` : ""; }
   return "";
@@ -1565,17 +1589,7 @@ function navBadge(id) {
 
 function renderShell() {
   document.documentElement.lang = LANG;
-  $("#brand-sub").textContent = L("แพลตฟอร์มงบประมาณ (AEBMS)", "Budget platform (AEBMS)");
-  let html = "";
-  Object.keys(GROUPS).forEach(g => {
-    const items = NAV.filter(n => n.group === g && n.roles.includes(ROLE));
-    if (!items.length) return;
-    html += `<div class="nav-h">${tx(GROUPS[g])}</div>`;
-    items.forEach(n => {
-      html += `<a href="#${n.id}" data-v="${n.id}"><span class="code">${n.code}</span>${tx(n.label)}${n.soon ? `<span class="soon">${L("รอบ", "R")} ${n.soon}</span>` : navBadge(n.id)}</a>`;
-    });
-  });
-  $("#nav").innerHTML = html;
+  renderNav();
   $("#rail-foot").innerHTML = `${L("ต้นแบบเพื่อการหารือ ข้อมูลทั้งหมดเป็นตัวอย่าง", "Discussion prototype. All data is sample data.")}<br>
     <div class="row" style="gap:6px"><button class="btn" type="button" id="demo-guide">${L("คู่มือการสาธิต", "Demo guide")}</button><button class="btn" type="button" id="reset">${L("รีเซ็ตข้อมูล", "Reset data")}</button></div>`;
   $("#demo-guide").onclick = () => go("demo");
@@ -1603,7 +1617,7 @@ function updateBell() {
     const n = NAV.find(x => x.id === a.dataset.v);
     if (!n || n.soon) return;
     const old = a.querySelector(".badge"); if (old) old.remove();
-    const h = navBadge(n.id); if (h) a.insertAdjacentHTML("beforeend", h);
+    const h = a.dataset.tab ? tabBadge(n.id, a.dataset.tab) : navBadge(n.id); if (h) a.insertAdjacentHTML("beforeend", h);
   });
 }
 
@@ -1652,6 +1666,7 @@ function bindShell() {
   document.addEventListener("click", e => { if (!$("#umenu").hidden && !e.target.closest("#umenu")) toggleUserMenu(false); });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#umenu").hidden) { toggleUserMenu(false); $("#userchip").focus(); } });
   bindSearch();
+  bindApps();
   bindHistory();
   $("#bell").onclick = e => { e.stopPropagation(); toggleNotes(); };
   document.addEventListener("click", e => { if (!$("#npanel").hidden && !e.target.closest("#npanel")) toggleNotes(false); });
@@ -1793,7 +1808,7 @@ VIEWS.home = () => {
   <div class="grid2">
     <section class="panel"><header><h2>${L("งานของฉัน", "My tasks")}</h2><span class="sp"></span><span class="sub">${tx(ROLES[ROLE])}</span></header>
       <ul class="tasks">${tasks.map(k => `<li><span class="pill ${k.cls}" style="padding:2px 8px"></span>
-        <div><a href="#" data-link="${k.link}">${esc(k.title)}</a>${k.sub ? `<div class="sub">${esc(k.sub)}</div>` : ""}</div>${dueText(k.due)}</li>`).join("")}</ul></section>
+        <div>${appChip(k.link)}<a href="#" data-link="${k.link}">${esc(k.title)}</a>${k.sub ? `<div class="sub">${esc(k.sub)}</div>` : ""}</div>${dueText(k.due)}</li>`).join("")}</ul></section>
     <section class="panel"><header><h2>${L("ปฏิทินงบประมาณ ปี 2571", "FY2571 budget calendar")}</h2><span class="sp"></span><span class="pill p-warn">${L("ตัวอย่าง", "Sample")}</span></header>
       <ul class="tasks">${next.slice(0, 5).map(c => `<li><span class="pill ${c.role === ROLE ? "p-ok" : "p-mute"}" style="padding:2px 8px"></span>
         <div><b style="font-weight:600">${tx(c.name)}</b><div class="sub">${tx(ROLES[c.role])}</div></div>${dueText(c.date)}</li>`).join("")}</ul></section>
@@ -5377,18 +5392,6 @@ const canSpend = () => acting("exec", "spend");
 const nextId = (prefix, list) => `${prefix}-${FAM_FY}-${String(Math.max(0, ...list.map(x => Number(x.id.split("-")[2]) || 0)) + 1).padStart(3, "0")}`;
 const famAcceptedUnpaid = () => S.contracts.flatMap(c => c.phases.filter(ph => phaseAccepted(ph) && !S.payreqs.some(p => p.contract === c.id && p.phase === ph.n && p.status !== "rejected")).map(ph => ({ c, ph })));
 
-function famBadge(id) {
-  let n = 0;
-  if (id === "procurement") {
-    if (canSpend()) n += S.reqn.filter(r => r.status === "pending").length;
-    if (ROLE === "proc") n += S.reqn.filter(r => r.status === "approved").length;
-  } else {
-    if (canSpend()) n += S.payreqs.filter(p => p.status === "pending").length;
-    if (ROLE === "fin") n += famAcceptedUnpaid().length;
-  }
-  return n ? `<span class="badge">${n}</span>` : "";
-}
-
 function famTasks(R) {
   if (!S.pplan) return;
   if (canSpend()) {
@@ -5820,9 +5823,157 @@ Object.assign(STYPE, { plan: ["แผนจัดซื้อ", "Plan item"], co
 }
 
 NAV.push(
-  { id: "procurement", code: "PR", group: "family", roles: ["proc", "div", "exec", "plan", "fin", "audit"], label: ["Fisko Procurement · จัดซื้อจัดจ้าง", "Fisko Procurement"] },
-  { id: "finance", code: "FN", group: "family", roles: ["fin", "exec", "plan", "audit"], label: ["Fisko Finance · ผูกพันและเบิกจ่าย", "Fisko Finance"] },
+  { id: "procurement", code: "PR", group: "procurement", app: "procurement", jumpPrefix: "prc", roles: ["proc", "div", "exec", "plan", "fin", "audit"], label: ["Fisko Procurement · จัดซื้อจัดจ้าง", "Fisko Procurement"],
+    tabs: [["plan", ["แผนจัดซื้อ", "Procurement plan"], "P1"], ["reqn", ["ใบขอซื้อขอจ้าง", "Requisitions"], "P2"], ["contracts", ["สัญญาและงวดงาน", "Contracts and phases"], "P3"], ["egp", ["ไฟล์จาก e-GP", "e-GP file"], "P4"]],
+    tabGet: () => PROC_TAB, tabSet: v => (PROC_TAB = v) },
+  { id: "finance", code: "FN", group: "finance", app: "finance", jumpPrefix: "fnc", roles: ["fin", "exec", "plan", "audit"], label: ["Fisko Finance · ผูกพันและเบิกจ่าย", "Fisko Finance"],
+    tabs: [["chain", ["สายงบประมาณถึงการจ่าย", "Allocation to payment"], "F1"], ["pay", ["ขออนุมัติเบิกจ่าย", "Payments"], "F2"], ["recon", ["กระทบยอด GFMIS", "GFMIS reconciliation"], "F3"]],
+    tabGet: () => FIN_TAB, tabSet: v => (FIN_TAB = v) },
 );
+
+/* ---- 66-apps.js ---- */
+// App switcher (round 12): Fisko Budget, Fisko Procurement and Fisko Finance as three apps on one platform.
+// Each app shows only its own menu. My Workspace and System Administration are shared by every app.
+// The page you open decides the current app, so deep links, tasks and notifications switch apps by themselves.
+const APPS = {
+  budget: { name: ["Fisko Budget", "Fisko Budget"], desc: ["วางแผนและบริหารงบประมาณ", "Plan and manage the budget"], groups: ["form", "exec", "intel"], mark: "B", color: "var(--accent-2)" },
+  procurement: { name: ["Fisko Procurement", "Fisko Procurement"], desc: ["เตรียมและติดตามการจัดซื้อจัดจ้าง", "Prepare and track procurement"], groups: ["procurement"], mark: "P", color: "#8C8FEA" },
+  finance: { name: ["Fisko Finance", "Fisko Finance"], desc: ["วงเงินผูกพันและการเบิกจ่าย", "Commitments and payments"], groups: ["finance"], mark: "F", color: "#E2A93B" },
+};
+const APP_LAST = {}; // last page opened in each app, so switching back returns you there
+NAV.forEach(n => { if (!n.app) n.app = n.id === "home" || n.id === "admin" ? "all" : "budget"; });
+
+const appItems = id => NAV.filter(n => n.app === id && n.roles.includes(ROLE));
+const appAllowed = id => appItems(id).length > 0;
+function ensureApp() {
+  if (!APPS[APP]) APP = "budget";
+  if (!appAllowed(APP)) { const a = APP_IDS.find(appAllowed); if (a) APP = a; }
+}
+function appOfLink(l) {
+  if (!l) return "budget";
+  if (l.startsWith("prc-") || l === "procurement") return "procurement";
+  if (l.startsWith("fnc-") || l === "finance") return "finance";
+  if (l.startsWith("admin") || l === "home" || l === "delegation") return "all";
+  return "budget";
+}
+const appChip = l => { const a = appOfLink(l); return a === "budget" || a === "all" ? "" : `<span class="appchip" style="--c:${APPS[a].color}">${esc(tx(APPS[a].name))}</span> `; };
+
+// Menu badges for the pages inside the Procurement and Finance apps.
+function tabBadge(nid, tab) {
+  let n = 0;
+  if (nid === "procurement" && tab === "reqn" && canSpend()) n = S.reqn.filter(r => r.status === "pending").length;
+  if (nid === "procurement" && tab === "contracts" && ROLE === "proc") n = S.reqn.filter(r => r.status === "approved").length;
+  if (nid === "procurement" && tab === "plan" && ROLE === "div") n = S.pplan.filter(p => p.status === "planned" && famLine(p.line).unit === me().unit).length;
+  if (nid === "finance" && tab === "pay") n = (canSpend() ? S.payreqs.filter(p => p.status === "pending").length : 0) + (ROLE === "fin" ? famAcceptedUnpaid().length : 0);
+  return n ? `<span class="badge">${n}</span>` : "";
+}
+
+function navForHash() {
+  let v = (location.hash || "#home").slice(1);
+  if (v.startsWith("admin-")) v = "admin";
+  if (v === "request") v = "requests";
+  return NAV.find(n => n.id === v) || null;
+}
+function markNav(n) {
+  $$("#nav a").forEach(a => {
+    const t = a.dataset.tab;
+    a.classList.toggle("on", !!n && a.dataset.v === n.id && (!t || (n.tabGet && n.tabGet() === t)));
+  });
+}
+function renderAppBrand() {
+  const a = APPS[APP];
+  if (!a) return;
+  $("#brand-app").textContent = tx(a.name);
+  $("#brand-sub").textContent = tx(a.desc);
+  $("#brand-mark").style.background = a.color;
+  document.body.dataset.app = APP;
+  $("#appsw").setAttribute("aria-label", `${L("สลับแอป", "Switch app")}: ${tx(a.name)}`);
+}
+function renderNav() {
+  ensureApp();
+  const groups = ["overview", ...APPS[APP].groups, "sys"];
+  let html = "";
+  groups.forEach(g => {
+    const items = NAV.filter(n => n.group === g && n.roles.includes(ROLE) && (n.app === "all" || n.app === APP));
+    if (!items.length) return;
+    html += `<div class="nav-h">${tx(GROUPS[g])}</div>`;
+    items.forEach(n => {
+      if (n.tabs) n.tabs.forEach(([id, label, code]) => (html += `<a href="#${n.id}" data-v="${n.id}" data-tab="${id}"><span class="code">${code}</span>${tx(label)}${tabBadge(n.id, id)}</a>`));
+      else html += `<a href="#${n.id}" data-v="${n.id}"><span class="code">${n.code}</span>${tx(n.label)}${n.soon ? `<span class="soon">${L("รอบ", "R")} ${n.soon}</span>` : navBadge(n.id)}</a>`;
+    });
+  });
+  $("#nav").innerHTML = html;
+  $$("#nav a[data-tab]").forEach(a => (a.onclick = e => { e.preventDefault(); const n = NAV.find(x => x.id === a.dataset.v); n.tabSet(a.dataset.tab); go(n.id); }));
+  markNav(navForHash());
+  renderAppBrand();
+}
+// Called by the router on every page change: the page's app becomes the current app.
+function appSync(n) {
+  if (n && n.app !== "all" && n.roles.includes(ROLE)) {
+    APP_LAST[n.app] = n.id;
+    if (n.app !== APP) { APP = n.app; store.set("fisko-app", APP); renderNav(); }
+  }
+  markNav(n);
+}
+
+function renderAppMenu() {
+  const m = $("#appmenu"), tasks = myTasks();
+  m.innerHTML = `<div class="appmenu-h">${L("สลับแอป", "Switch app")}</div>` + APP_IDS.map(id => {
+    const a = APPS[id], ok = appAllowed(id), cnt = tasks.filter(t => appOfLink(t.link) === id).length;
+    return `<button type="button" role="menuitem" class="appitem ${id === APP ? "on" : ""}" data-app="${id}" ${ok ? "" : "disabled"}>
+      <span class="appico" style="background:${a.color}">${a.mark}</span>
+      <span class="appt"><b>${esc(tx(a.name))}</b><small>${ok ? esc(tx(a.desc)) : L("บทบาทนี้ไม่มีสิทธิ์ใช้แอปนี้", "This role has no access to this app")}</small></span>
+      ${cnt ? `<span class="appcnt" title="${L("งานที่ต้องทำ", "Tasks to do")}">${cnt}</span>` : ""}${id === APP ? `<span class="appcur" aria-label="${L("แอปปัจจุบัน", "Current app")}">✓</span>` : ""}</button>`;
+  }).join("") + `<div class="appmenu-f">${L("งานของฉันและผู้ดูแลระบบใช้ร่วมกันทุกแอป", "My Workspace and System Administration are shared by every app")}</div>`;
+  $$("#appmenu .appitem").forEach(b => (b.onclick = () => switchApp(b.dataset.app)));
+}
+function toggleAppMenu(show) {
+  const m = $("#appmenu"), b = $("#appsw"), s = show === undefined ? m.hidden : show;
+  if (s) renderAppMenu();
+  m.hidden = !s;
+  b.setAttribute("aria-expanded", String(s));
+  if (!s) return;
+  const r = b.getBoundingClientRect();
+  m.style.top = r.bottom + 8 + "px";
+  m.style.left = Math.max(12, Math.min(r.left, innerWidth - m.offsetWidth - 12)) + "px";
+  const f = m.querySelector(".appitem.on:not([disabled])") || m.querySelector(".appitem:not([disabled])");
+  if (f) f.focus();
+}
+function switchApp(id) {
+  if (!appAllowed(id)) return;
+  toggleAppMenu(false);
+  const items = appItems(id), target = items.find(n => n.id === APP_LAST[id]) || items[0];
+  APP = id; store.set("fisko-app", id);
+  renderNav();
+  go(target.id);
+  toast(`${L("เปิดแอป", "Opened")} ${tx(APPS[id].name)}`);
+}
+function bindApps() {
+  $("#appsw").onclick = e => { e.stopPropagation(); toggleNotes(false); toggleUserMenu(false); toggleAppMenu(); };
+  document.addEventListener("click", e => { if (!$("#appmenu").hidden && !e.target.closest("#appmenu")) toggleAppMenu(false); });
+  document.addEventListener("keydown", e => {
+    if ($("#appmenu").hidden) return;
+    if (e.key === "Escape") { toggleAppMenu(false); $("#appsw").focus(); }
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      const it = $$("#appmenu .appitem:not([disabled])"), i = it.indexOf(document.activeElement);
+      it[(i + (e.key === "ArrowDown" ? 1 : -1) + it.length) % it.length].focus();
+    }
+  });
+  window.addEventListener("resize", () => toggleAppMenu(false));
+}
+
+// Search: switch app, and jump to a page inside the Procurement or Finance apps.
+STYPE.app = ["แอป", "App"];
+{
+  const base = searchItems;
+  searchItems = () => {
+    const out = base();
+    APP_IDS.filter(appAllowed).forEach(id => out.push({ type: "app", label: tx(APPS[id].name), sub: tx(APPS[id].desc), run: () => switchApp(id), hay: (APPS[id].name.join(" ") + " " + APPS[id].desc.join(" ") + " switch app สลับแอป").toLowerCase() }));
+    NAV.filter(n => n.tabs && n.roles.includes(ROLE)).forEach(n => n.tabs.forEach(([id, label]) => out.push({ type: "page", label: `${tx(APPS[n.app].name)} › ${tx(label)}`, sub: n.code, run: () => jump(`${n.jumpPrefix}-${id}`), hay: (label.join(" ") + " " + APPS[n.app].name[0]).toLowerCase() })));
+    return out;
+  };
+}
 
 /* ---- 99-boot.js ---- */
 // Boot: pick the saved organization, load its state, draw the shell and the current page.

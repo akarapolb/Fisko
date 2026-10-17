@@ -127,7 +127,7 @@ VIEWS.home = () => {
   <div class="grid2">
     <section class="panel"><header><h2>${L("งานของฉัน", "My tasks")}</h2><span class="sp"></span><span class="sub">${tx(ROLES[ROLE])}</span></header>
       <ul class="tasks">${tasks.map(k => `<li><span class="pill ${k.cls}" style="padding:2px 8px"></span>
-        <div><a href="#" data-link="${k.link}">${esc(k.title)}</a>${k.sub ? `<div class="sub">${esc(k.sub)}</div>` : ""}</div>${dueText(k.due)}</li>`).join("")}</ul></section>
+        <div>${appChip(k.link)}<a href="#" data-link="${k.link}">${esc(k.title)}</a>${k.sub ? `<div class="sub">${esc(k.sub)}</div>` : ""}</div>${dueText(k.due)}</li>`).join("")}</ul></section>
     <section class="panel"><header><h2>${L("ปฏิทินงบประมาณ ปี 2571", "FY2571 budget calendar")}</h2><span class="sp"></span><span class="pill p-warn">${L("ตัวอย่าง", "Sample")}</span></header>
       <ul class="tasks">${next.slice(0, 5).map(c => `<li><span class="pill ${c.role === ROLE ? "p-ok" : "p-mute"}" style="padding:2px 8px"></span>
         <div><b style="font-weight:600">${tx(c.name)}</b><div class="sub">${tx(ROLES[c.role])}</div></div>${dueText(c.date)}</li>`).join("")}</ul></section>

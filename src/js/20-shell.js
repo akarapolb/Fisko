@@ -24,7 +24,6 @@ function navBadge(id) {
       : ROLE === "plan" ? S.requests.filter(r => r.status === "plan").length : 0;
     return n ? `<span class="badge">${n}</span>` : "";
   }
-  if (id === "procurement" || id === "finance") return famBadge(id);
   if (id === "review" && (ROLE === "plan" || ROLE === "exec")) return `<span class="badge">${S.review.length}</span>`;
   if (id === "admin" && ROLE === "admin") { const n = S.integrations.filter(i => i.status === "error").length; return n ? `<span class="badge">${n}</span>` : ""; }
   return "";
@@ -32,17 +31,7 @@ function navBadge(id) {
 
 function renderShell() {
   document.documentElement.lang = LANG;
-  $("#brand-sub").textContent = L("แพลตฟอร์มงบประมาณ (AEBMS)", "Budget platform (AEBMS)");
-  let html = "";
-  Object.keys(GROUPS).forEach(g => {
-    const items = NAV.filter(n => n.group === g && n.roles.includes(ROLE));
-    if (!items.length) return;
-    html += `<div class="nav-h">${tx(GROUPS[g])}</div>`;
-    items.forEach(n => {
-      html += `<a href="#${n.id}" data-v="${n.id}"><span class="code">${n.code}</span>${tx(n.label)}${n.soon ? `<span class="soon">${L("รอบ", "R")} ${n.soon}</span>` : navBadge(n.id)}</a>`;
-    });
-  });
-  $("#nav").innerHTML = html;
+  renderNav();
   $("#rail-foot").innerHTML = `${L("ต้นแบบเพื่อการหารือ ข้อมูลทั้งหมดเป็นตัวอย่าง", "Discussion prototype. All data is sample data.")}<br>
     <div class="row" style="gap:6px"><button class="btn" type="button" id="demo-guide">${L("คู่มือการสาธิต", "Demo guide")}</button><button class="btn" type="button" id="reset">${L("รีเซ็ตข้อมูล", "Reset data")}</button></div>`;
   $("#demo-guide").onclick = () => go("demo");
@@ -70,7 +59,7 @@ function updateBell() {
     const n = NAV.find(x => x.id === a.dataset.v);
     if (!n || n.soon) return;
     const old = a.querySelector(".badge"); if (old) old.remove();
-    const h = navBadge(n.id); if (h) a.insertAdjacentHTML("beforeend", h);
+    const h = a.dataset.tab ? tabBadge(n.id, a.dataset.tab) : navBadge(n.id); if (h) a.insertAdjacentHTML("beforeend", h);
   });
 }
 
@@ -119,6 +108,7 @@ function bindShell() {
   document.addEventListener("click", e => { if (!$("#umenu").hidden && !e.target.closest("#umenu")) toggleUserMenu(false); });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#umenu").hidden) { toggleUserMenu(false); $("#userchip").focus(); } });
   bindSearch();
+  bindApps();
   bindHistory();
   $("#bell").onclick = e => { e.stopPropagation(); toggleNotes(); };
   document.addEventListener("click", e => { if (!$("#npanel").hidden && !e.target.closest("#npanel")) toggleNotes(false); });
