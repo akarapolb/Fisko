@@ -1,0 +1,170 @@
+# Fisko: project handoff
+
+State as of 17 October 2026, branch `main`, last commit `5d1c164`. This note is for whoever picks the work up next: what exists, how to run and change it, what was decided, and what is still open.
+
+## 1. What this is
+
+**Fisko** is the working name for a budgeting platform for Thai government agencies (the requirements call it AEBMS, Agency e-Budgeting Management System). It covers the full cycle: strategic plan, budget requests, consolidation, review, submission to the Budget Bureau, allocation, spending, performance, AI support and administration (modules M01 to M10).
+
+What has been produced so far is **discussion material for a customer**, not a real system:
+
+- A customer deck, a solution design document and a demo script.
+- A clickable HTML prototype that runs entirely in the browser with fictional data.
+- No backend, no database, no real integrations, no real AI model.
+
+Everything is labelled sample data. The name Fisko still needs a trademark check, and no Avalant product names appear anywhere (on purpose).
+
+## 2. Where everything is
+
+| Item | File | Notes |
+|---|---|---|
+| Prototype (standalone) | `Fisko_Prototype.html` | Opens directly in a browser. Has both sample organisations. |
+| Prototype (published build) | `fisko-prototype.html` | Same code but **without** the กรมโยธา sample. Published as an artifact. |
+| Solution design (Thai) | `Fisko_Solution_Design.html` | v0.3. Functional, application, technical, data, integration, AI and security design. |
+| Demo script (Thai) | `Fisko_Demo_Script.html` | 15 steps, 15 minutes, matches the in-app demo guide. |
+| Customer deck | `Fisko_Conceptual_Architecture.pptx` / `.pdf` | Built on the customer's CPAxtra template. Not touched since round 1. |
+| Roadmap | `ROADMAP.md` | What each module's deeper feature was. All built. |
+| Prototype source | `src/` | The only place to edit the prototype. |
+
+Links and places:
+
+- GitHub: `https://github.com/akarapolb/Fisko` (private). Push works with stored credentials. The `gh` CLI is not installed.
+- Published prototype: `https://claude.ai/artifact/K8TJFETX7GMftoZYb9zFZR` (version 14, shared as "anyone with the link").
+- Working folder: `D:\Claude\Fisko`.
+
+## 3. Run, build, publish
+
+**Build** (plain bash, no dependencies):
+
+```bash
+bash src/build.sh
+```
+
+This concatenates `src/head.html`, `styles.css`, `body.html` and every `src/js/*.js` file (in filename order) into both HTML files. Files whose name contains `data-dpt` are left out of the published build only.
+
+**Check syntax** after a build (extract the script and let Node parse it):
+
+```bash
+sed -n "/<script>/,/<\/script>/p" Fisko_Prototype.html | sed '1d;$d' > "$TEMP/fk_check.js" && node --check "$TEMP/fk_check.js"
+```
+
+**Run locally**:
+
+```bash
+cd /d/Claude/Fisko && python -m http.server 8787 --bind 127.0.0.1
+```
+
+Then open `http://localhost:8787/Fisko_Prototype.html`. The page also works by double-clicking the file.
+
+**Publish**: the published page is the artifact tool's job. Republish `fisko-prototype.html` with the existing URL so the link stays the same. The artifact is a different file from the standalone one, so rebuild first.
+
+**Sign in**: pick a sample account and use the passcode `246810`. It is the same for every account (the two-factor step is simulated). Accounts without two-factor set up (for example มาลี ศรีสุข in the sample department) get a sample QR step first.
+
+## 4. How the prototype is put together
+
+It is one global scope: every `src/js` file becomes part of one `<script>`, so top-level `let`, `const` and `function` names are shared. Load order is the filename order, which is why files are numbered.
+
+| Range | What lives there |
+|---|---|
+| `00-core.js` | Language (`L(th, en)`, `tx([th, en])`), formatting, state load/save, roles, the router, `audit()`, `notify()`, `commit()` |
+| `05-shared.js`, `06-seedhelp.js` | Shared reference data and `buildOrg()`, which builds an organisation's starting state |
+| `10-data-sample.js`, `11-data-dpt.js` | The two sample organisations |
+| `20-shell.js`, `30-home.js` | Navigation, top bar, My Workspace tasks (`myTasks()`), `jump()` |
+| `40` to `48` | The modules. Files ending in `b` or `c` are tabs and deeper features added later |
+| `50`, `50b` | M10 administration |
+| `52-demo.js` | The in-app demo guide (`DEMO` array) |
+| `54-identity.js`, `56-search.js`, `58-history.js` | Sign-in and delegation, global search, record history drawer |
+| `99-boot.js` | Startup |
+
+Conventions worth knowing before you edit:
+
+- **Text in two languages.** Use `L("ไทย", "English")` inline, or arrays `[th, en]` for data with `tx()`. Dates go through `fdate()`, which shows Buddhist-era years in Thai.
+- **Views and wiring.** A page is `VIEWS.name = () => html` plus `BIND.name = () => { ...handlers }`. The router calls both. After changing state call `commit()` and `route()` to redraw.
+- **Tabs.** Each module has a tab list (`STRAT_TABS`, `SUB_TABS`, `ALLOC_TABS`, `PERF_TABS`, `ADMIN_TABS`, or a tab-bar function for M02, M03, M04, M07, M09). Later rounds added tabs by pushing onto the list and wrapping the module's `BIND` function. The `45b`, `46b`, `47b`, `48b` and `50b` files show the pattern.
+- **Deep links.** `jump("area-tab")` opens a module tab (areas: `mon`, `alloc`, `rev`, `perf`, `sub`, `cons`, `intel`, `strat`). `jump("req:<id>")` opens a request. `admin-<tab>` is a hash route.
+- **Roles.** `div`, `plan`, `exec`, `fin`, `audit`, `admin`. Page access is the `roles` list on each entry in the `NAV` array in `20-shell.js`. Use `acting(role, scope)` instead of `ROLE === role` where delegation applies, and `onBehalf(role, scope)` for the "on behalf of" note in audit entries.
+- **Audit and notifications.** Every state-changing action should call `audit([th, en], target)`. Put the record's id in `target`, because the history drawer (`historyBtn(key)`) finds entries by matching ids in that text.
+- **Home tasks.** Add work items for a role in `myTasks()` in `30-home.js`.
+
+## 5. State and data
+
+- State is kept per organisation in `localStorage` under `fisko-v1-<org>` (`sample` or `dpt`). Other keys: `fisko-session`, `fisko-lang`, `fisko-role`, `fisko-org`.
+- `DATA_V` in `00-core.js` (now **10**) is the seed version. **Bump it whenever you change the shape of seeded data**, or browsers that already hold old saved state will keep the old shape and break. Bumping resets everyone's saved demo data once.
+- Seed data is built by `buildOrg()` in `06-seedhelp.js`. Rounds 7 to 10 add their data at the end of that function, in clearly commented blocks.
+- All dates are anchored to a constant, `TODAY = "2026-10-16"` in `00-core.js`, **not the computer's clock**. So deadlines, "days left" and delegation periods behave the same on any day. Only the time of day comes from the real clock.
+- Two organisations: a fictional department (`sample`), and กรมโยธาธิการและผังเมือง (`dpt`) with fictional figures and an indicative unit structure. Keep real-agency data out of the published build. The filename pattern `*data-dpt*` is what does that.
+
+## 6. How it was tested
+
+There is **no automated test suite**. Testing was done by driving the page in the browser pane:
+
+1. Clear `fisko-v1-*` keys, reload, switch organisation, language and role through the page's own functions.
+2. A render sweep: visit every route and tab for every role, in both languages and both organisations, catching exceptions (about 1,200 renders per sweep).
+3. End-to-end flows for each new feature (create, approve, reject, edit), reading the resulting state.
+4. A phone-width check: set the viewport to 375 px and confirm `document.documentElement.scrollWidth` does not exceed the width, on every new screen.
+5. Click-through of all 15 demo steps in both organisations and both languages.
+
+Tested only in the browser pane (a Chromium engine). Safari and Firefox were not checked, and no formal accessibility audit has been done (labels and keyboard handling were added, but the design document's WCAG 2.1 AA target is unverified).
+
+## 7. What was built, by round
+
+| Round | Content |
+|---|---|
+| 1 | Foundation and M10 (data, roles, router, rules, workflow, audit, integrations) |
+| 2 | M01 strategy, M02 and M03 additions |
+| 3 | M04 additions and M05 submission |
+| 4 | M06 allocation and M07 additions |
+| 5 | M08 performance and M09 additions |
+| 6 | Polish, consistency pass, 15-minute demo script |
+| 7 | Sign-in with two-factor, global search, record history, delegation of authority |
+| 8 | M01 project bank and plan revision; M02 price catalogue and paste from Excel; M03 ceiling responses and 4-year forward estimates |
+| 9 | M04 budget hearings and cut impact; M05 parliament stages; M06 allotment releases and carry-over |
+| 10 | M07 year-end forecast and procurement milestones; M08 project evaluation and lessons; M09 spending anomalies and justification quality; M10 notification templates, SLAs, retention and backup |
+
+After round 10 the demo guide and script were rewritten, and the design document went to v0.3 with the new requirements tagged "ใหม่ v0.3".
+
+## 8. Decisions made and why
+
+- **Plain HTML/JS, no framework or build tool.** Easy to hand over, opens from a file, and publishes as one page. The cost is shared globals and long files.
+- **IBM Plex Sans Thai** for modern Thai typography. Colours follow the customer template.
+- **AI is scripted.** Drafts, answers and anomaly flags come from fixed rules and seeded text, with the same guardrails the design describes (AI suggests, humans decide, sources shown, every use logged). No model is called.
+- **Simulated external parties.** The Budget Bureau's replies, e-GP data, the parliament timetable and the single sign-on are all simulated with demo buttons or sample dates.
+- **Priorities and thresholds are proposals.** The Must/Should/Could labels on the new v0.3 requirements, the cut-impact method, the 500,000-baht purchasing threshold and the quarterly spending targets (the `CAB` constant in `40c-monitor-depth.js`) are my suggestions. They need confirming with the agency.
+- **Sample RPO is 1 hour** to match the design's NFR-DR-01 (it was 24 hours until the last change).
+- **Audit may use M09** (to close or escalate anomalies). The permission table in M10 and the design document both reflect that.
+
+## 9. Known limitations and simplifications
+
+- The design document lists seven roles, including a budget committee. The prototype has six; committee resolutions are recorded by Planning or the executive.
+- Delegation is checked for scope and dates. The design proposes banning re-delegation, but the prototype does not enforce or demonstrate it.
+- Notification templates have a LINE channel toggle, but there is no matching interface in the prototype's integration list (the design proposes it as IF-08, pending approval).
+- Cut impact and the spending forecast use simple proportional assumptions, explained on screen and in the design document.
+- Pasting lines into a multi-year request adds them to the first year, so the yearly split still adds up. Other splits are left to the user.
+- The retention and backup panel is informational plus two simulated buttons. Nothing is actually backed up.
+- Real-agency (กรมโยธา) sample data exists only in the standalone build.
+
+## 10. Open items and suggested next steps
+
+Customer-facing:
+
+1. Confirm the proposals above with the agency, especially priorities, thresholds and the cabinet targets.
+2. Settle the open decisions D-01 to D-09 in section 14 of the design document (deployment model, multi-organisation approach, allowed AI models, review rounds, history depth, forms, notification channels, anomaly thresholds, delegable approvals).
+3. Check the design against the agency's actual TOR, then write the Detailed Design (the demo closes by proposing six document sets and a workshop on real approval lines and forms).
+4. Run the Fisko trademark check.
+
+Engineering, if the prototype is kept going:
+
+5. Add automated checks. The render sweep and demo click-through are good candidates to turn into a script.
+6. Test in Safari and Firefox, and run an accessibility audit against WCAG 2.1 AA.
+7. Keep the design document's traceability table (appendix A.2) in step with the requirement rows when either changes. It is edited by hand.
+8. Replace simulated pieces with real ones only after integration channels are approved by each system owner (IF-01 to IF-08).
+
+## 11. Gotchas
+
+- **Edit `src/`, never the built HTML.** The two HTML files are overwritten by every build. Remember to rebuild before publishing or committing.
+- **Browser caching.** When reloading the local server in the browser pane, add a throwaway query string (for example `?v=2`), or old scripts may stay loaded.
+- **Heredocs.** On this Windows setup, bash heredocs containing complex JavaScript or Thai text failed. Write scripts to a file and run them instead.
+- **Python and AppData.** Python could not see paths under `AppData\Roaming`. Use the project folder or the scratchpad directory.
+- **Stopping the local server.** `Stop-Process` on the `http.server` process reports exit code 255 but does stop it.
+- **Line endings.** Git warns that LF will become CRLF. It is harmless here.
+- **Commit messages** end with the attribution line the session was told to use. Branch is `main` and was left as is on purpose.

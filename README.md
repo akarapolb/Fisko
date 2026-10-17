@@ -11,8 +11,10 @@ This repository holds the conceptual design material and a clickable prototype p
 | `Fisko_Prototype.html` | Standalone clickable prototype. Open it directly in a browser. Includes both sample organizations. |
 | `fisko-prototype.html` | Build of the prototype for publishing as a claude.ai artifact (no document wrapper; excludes the real-agency sample). |
 | `Fisko_Demo_Script.html` | 15-minute presenter script (Thai, with English lines). |
-| `Fisko_Solution_Design.html` | Solution Design Document v0.2 (Thai): functional, application, technical, data, integration, AI and security design. |
+| `Fisko_Solution_Design.html` | Solution Design Document v0.3 (Thai): functional, application, technical, data, integration, AI and security design. |
 | `Fisko_Conceptual_Architecture.pptx` / `.pdf` | Customer deck: conceptual architecture and functional modules. |
+| `HANDOFF.md` | Where things stand, how to run and change the prototype, decisions, limits and next steps. |
+| `ROADMAP.md` | The deeper feature planned for each module (all built). |
 | `src/` | Prototype source. |
 
 ## Prototype
