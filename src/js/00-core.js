@@ -28,7 +28,7 @@ const fyLabel = fy => L(`ปีงบประมาณ พ.ศ. ${fy}`, `FY${fy
 
 // ---------- organizations and state ----------
 const SEEDS = {}; // id -> { name: [th, en], seed: () => state }, registered by data files
-const DATA_V = 24; // bump when the seed shape changes so saved demo state is reseeded
+const DATA_V = 25; // bump when the seed shape changes so saved demo state is reseeded
 let ORG = "sample";
 let S = null;
 const key = () => "fisko-v1-" + ORG;

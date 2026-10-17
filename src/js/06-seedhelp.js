@@ -282,6 +282,7 @@ function buildOrg(cfg) {
   seedBudgetB2(s);
   seedBudgetB3(s);
   seedBudgetB3Sub(s);
+  seedBudgetB4(s);
   s.audit.unshift(
     { t: "2026-10-15T10:00", user: EX, role: "exec", action: ["อนุมัติเบิกจ่าย", "Approved a payment"], target: "PY-2570-001 CT-2570-001" },
     { t: "2026-10-14T15:00", user: FN, role: "fin", action: ["ขออนุมัติเบิกจ่าย", "Requested a payment approval"], target: "PY-2570-001 CT-2570-001" },

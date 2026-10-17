@@ -213,3 +213,10 @@ pre.minutes { white-space: pre-wrap; font-family: var(--mono); font-size: 12.5px
 .brief-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
 .brief > header h2 { font-size: 15px; }
 .brief-q { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; }
+
+/* ---------- Budget B4: balances ---------- */
+.bal4 { display: flex; height: 12px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
+.bal4 i { display: block; height: 100%; }
+.bal4 .p, .lg.bal-p { background: var(--ch-1); } .bal4 .c, .lg.bal-c { background: var(--ch-3); } .bal4 .r, .lg.bal-r { background: var(--ch-4); }
+.lg.bal-p, .lg.bal-c, .lg.bal-r { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+ul.plain { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
