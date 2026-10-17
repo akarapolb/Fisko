@@ -8,6 +8,7 @@ const SCOPES = {
   transfer: { role: ["exec", "fin"], name: ["อนุมัติโอนเปลี่ยนแปลง", "Approve budget transfers"] },
   review: { role: ["plan"], name: ["กลั่นกรองคำขอ", "Review budget requests"] },
   committee: { role: ["exec"], name: ["พิจารณาคำขอระดับผู้บริหาร", "Executive decisions on requests"] },
+  spend: { role: ["exec"], name: ["อนุมัติขอซื้อขอจ้างและเบิกจ่าย", "Approve requisitions and payments"] },
 };
 const userById = id => S.users.find(u => u.id === id) || { name: ["-", "-"], role: "" };
 const delegState = d => d.status === "revoked" ? "revoked" : TODAY < d.start ? "future" : TODAY > d.end ? "expired" : "active";

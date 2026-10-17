@@ -104,10 +104,12 @@ function buildOrg(cfg) {
 
   // round 7: delegation of authority — the executive is travelling and has delegated transfer approvals
   s.delegations = [
-    { id: "D-2570-001", from: U("exec"), to: U("plan"), scopes: ["transfer"], start: "2026-10-14", end: "2026-10-24", status: "active", t: "2026-10-13T17:00",
+    { id: "D-2570-001", from: U("exec"), to: U("plan"), scopes: ["transfer", "spend"], start: "2026-10-14", end: "2026-10-24", status: "active", t: "2026-10-13T17:00",
       why: ["เดินทางไปราชการต่างประเทศ", "Official travel abroad"] },
     { id: "D-2569-014", from: U("fin"), to: (s.users.find(u => u.role === "fin" && !u.primary) || s.users.find(u => u.role === "plan" && !u.primary) || { id: U("plan") }).id, scopes: ["transfer"], start: "2026-08-01", end: "2026-08-05", status: "active", t: "2026-07-30T09:00",
       why: ["ลาพักผ่อน", "Annual leave"] },
+    { id: "D-2570-002", from: U("exec"), to: U("fin"), scopes: ["spend"], start: "2026-10-14", end: "2026-10-24", status: "active", t: "2026-10-13T17:05",
+      why: ["เดินทางไปราชการต่างประเทศ", "Official travel abroad"] },
   ];
   s.audit.unshift({ t: "2026-10-13T17:00", user: U("exec"), role: "exec", action: ["มอบอำนาจ", "Delegated authority"], target: "D-2570-001" });
 
@@ -217,5 +219,56 @@ function buildOrg(cfg) {
     { id: "R5", cls: ["ประวัติการสนทนากับผู้ช่วย AI", "AI assistant chats"], years: 1, basis: ["PDPA · เก็บเท่าที่จำเป็น", "PDPA · keep only what is needed"], size: 0.6 },
   ];
   s.backup = { full: "2026-10-12T01:00", incr: "2026-10-16T01:00", restore: "2026-07-20T10:00", rpo: 1, rto: 4, log: [] };
+
+  // round 11: Fisko Procurement and Fisko Finance (light versions), built on the FY2570 allocation lines.
+  // A procurement officer joins the demo users; two contracts are running, one payment is paid and matched.
+  const sec = s.units.find(u => u.code === "01") || s.units[1];
+  if (!s.users.some(u => u.role === "proc")) s.users.push({ id: "u10", role: "proc", unit: sec.id, primary: true, mfa: true, active: true,
+    name: (s.org[1] || "").startsWith("Sample") ? ["สุรชัย จัดหา", "Surachai Jatha"] : ["สุรีย์ พัสดุดี", "Suree Phatsudee"] });
+  // The last two plan items sit on the demo requester's own unit, so that role can raise a requisition in the demo.
+  const pool = A70.lines.filter(l => l.type === "inv" || l.type === "ope").sort((a, b) => b.amount - a.amount);
+  const myUnit = s.users.find(u => u.role === "div" && u.primary).unit, mineL = pool.filter(l => l.unit === myUnit).slice(0, 2);
+  const FL = [...pool.filter(l => !mineL.includes(l)).slice(0, 6 - mineL.length), ...mineL];
+  const PO = U("proc"), reqBy = unit => divOf(unit) || U("div"), EX = U("exec"), FN = U("fin"), PL = U("plan"), DV = U("div");
+  const months = ["2026-11-15", "2026-12-15", "2027-01-15", "2027-02-15", "2027-03-15", "2027-04-15"];
+  s.pplan = FL.map((l, i) => {
+    const est = Math.max(1e5, Math.round(l.amount * 0.5 / 1e5) * 1e5);
+    return { id: "PP-2570-" + String(i + 1).padStart(3, "0"), line: l.id, name: l.name, est, method: est <= 5e5 ? "specific" : "ebid", month: months[i], by: PO, status: "planned", egp: null };
+  });
+  const why = ["จำเป็นต่อการดำเนินงานตามแผนปีงบประมาณ 2570", "Needed to deliver the FY2570 work plan"];
+  const mkReq = (i, st, t) => ({ id: "RQ-2570-" + String(i + 1).padStart(3, "0"), plan: s.pplan[i].id, by: reqBy(FL[i].unit), amount: s.pplan[i].est, why, status: st, t,
+    decided: st === "pending" ? null : { by: EX, holder: EX, via: null, t: t.slice(0, 10) + "T16:00" } });
+  s.reqn = [mkReq(0, "contracted", "2026-10-02T09:00"), mkReq(1, "contracted", "2026-10-03T09:00"), mkReq(2, "approved", "2026-10-14T09:00"), mkReq(3, "pending", "2026-10-15T09:00")];
+  [0, 1].forEach(i => (s.pplan[i].status = "contracted"));
+  [2, 3].forEach(i => (s.pplan[i].status = "requisitioned"));
+  s.pplan[0].egp = { no: "EGP-70-0101", stage: ["ลงนามสัญญา", "Contract signed"], date: "2026-10-06" };
+  s.pplan[1].egp = { no: "EGP-70-0102", stage: ["ลงนามสัญญา", "Contract signed"], date: "2026-10-07" };
+  s.pplan[2].egp = { no: "EGP-70-0103", stage: ["ประกาศเชิญชวน", "Invitation"], date: "2026-10-14" };
+  const vend = [["บริษัท ตัวอย่างระบบ จำกัด", "Sample Systems Co., Ltd."], ["ห้างหุ้นส่วนจำกัด ตัวอย่างก่อสร้าง", "Sample Construction Ltd. Partnership"]];
+  const mkPhases = (amount, dues, t) => {
+    const share = [0.4, 0.3]; let left = amount;
+    return dues.map((due, n) => {
+      const a = n < 2 ? Math.round(amount * share[n] / 1e3) * 1e3 : left; left -= a;
+      return { n: n + 1, name: [`งวดที่ ${n + 1}`, `Phase ${n + 1}`], due, amount: a, signs: n === 0 ? [{ by: PL, t }, { by: DV, t: t.slice(0, 10) + "T11:00" }] : [] };
+    });
+  };
+  const mkCon = (i, vi, no, signed, dues, t) => {
+    const r = s.reqn[i], amount = Math.round(r.amount * 0.97 / 1e3) * 1e3;
+    return { id: "CT-2570-" + String(i + 1).padStart(3, "0"), reqn: r.id, plan: r.plan, line: s.pplan[i].line, vendor: vend[vi], no, signed, amount, by: PO, inspectors: [PL, DV], status: "active", phases: mkPhases(amount, dues, t) };
+  };
+  s.contracts = [mkCon(0, 0, "CT-70/001", "2026-10-06", ["2026-10-14", "2026-11-30", "2027-01-31"], "2026-10-14T10:00"),
+    mkCon(1, 1, "CT-70/002", "2026-10-07", ["2026-10-15", "2026-12-15", "2027-02-28"], "2026-10-15T10:00")];
+  s.payreqs = [{ id: "PY-2570-001", contract: "CT-2570-001", phase: 1, amount: s.contracts[0].phases[0].amount, by: FN, status: "approved", t: "2026-10-14T15:00",
+    decided: { by: EX, holder: EX, via: null, t: "2026-10-15T10:00" }, recon: { state: "matched", file: "GF-2570-01", t: "2026-10-16T08:00" } }];
+  s.gfmisFiles = [{ id: "GF-2570-01", t: "2026-10-16T08:00", by: FN, rows: [{ pay: "PY-2570-001", doc: "GF-70-000417", amount: s.payreqs[0].amount, date: "2026-10-16", state: "matched" }] }];
+  s.egpImports = [];
+  s.sod = { rules: ["SD-01", "SD-02", "SD-03", "SD-04", "SD-05"].map(id => ({ id, on: true })), blocks: [] };
+  s.audit.unshift(
+    { t: "2026-10-15T10:00", user: EX, role: "exec", action: ["อนุมัติเบิกจ่าย", "Approved a payment"], target: "PY-2570-001 CT-2570-001" },
+    { t: "2026-10-14T15:00", user: FN, role: "fin", action: ["ขออนุมัติเบิกจ่าย", "Requested a payment approval"], target: "PY-2570-001 CT-2570-001" },
+    { t: "2026-10-14T11:00", user: DV, role: "div", action: ["ลงนามตรวจรับงาน", "Signed an acceptance"], target: "CT-2570-001 งวดที่ 1" },
+    { t: "2026-10-06T14:00", user: PO, role: "proc", action: ["สร้างสัญญา", "Created a contract"], target: "CT-2570-001 RQ-2570-001" },
+  );
+  s.audit.sort((a, b) => (a.t < b.t ? 1 : -1));
   return s;
 }

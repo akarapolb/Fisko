@@ -28,7 +28,7 @@ const fyLabel = fy => L(`ปีงบประมาณ พ.ศ. ${fy}`, `FY${fy
 
 // ---------- organizations and state ----------
 const SEEDS = {}; // id -> { name: [th, en], seed: () => state }, registered by data files
-const DATA_V = 10; // bump when the seed shape changes so saved demo state is reseeded
+const DATA_V = 11; // bump when the seed shape changes so saved demo state is reseeded
 let ORG = "sample";
 let S = null;
 const key = () => "fisko-v1-" + ORG;
@@ -44,7 +44,7 @@ function resetDemo() { store.del(key()); S = SEEDS[ORG].seed(); save(); resetUi(
 function resetUi() {
   CUR_REQ = null; REQ_TAB = "main"; VER_A = VER_B = null; CMP_REQ = null; CHAIN_P = null; CMT_OPEN = null;
   DRILL_U = DRILL_P = null; PLAN_UNIT = ""; ALLOC_FY = 2570; WI.locks = null; STAGED = null;
-  OPEN_PROG.clear(); OPEN_UNIT.clear(); IDEA_OPEN = null; PASTE_ROWS = [];
+  OPEN_PROG.clear(); OPEN_UNIT.clear(); IDEA_OPEN = null; PASTE_ROWS = []; PLAN_REQ = null; CT_FROM = null; PAY_FORM = null;
 }
 
 // ---------- roles ----------
@@ -55,6 +55,7 @@ const ROLES = {
   fin: ["การเงินและบัญชี", "Finance & Accounting"],
   audit: ["ผู้ตรวจสอบ", "Auditor"],
   admin: ["ผู้ดูแลระบบ", "System Administrator"],
+  proc: ["เจ้าหน้าที่พัสดุ", "Procurement officer"],
 };
 let ROLE = ROLES[store.get("fisko-role")] ? store.get("fisko-role") : "plan";
 // Signed-in session (round 7). The role switcher still works as a demo shortcut: it moves the session
@@ -98,7 +99,7 @@ function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = fal
 // ---------- router ----------
 const VIEWS = {}, BIND = {};
 const NAV = []; // { id, code, group, label: [th,en], roles: [...], soon: round number }
-const GROUPS = { overview: ["ภาพรวม", "Overview"], form: ["จัดทำงบประมาณ", "Budget formulation"], exec: ["บริหารและติดตาม", "Execution & results"], intel: ["วิเคราะห์", "Intelligence"], sys: ["ระบบ", "System"] };
+const GROUPS = { overview: ["ภาพรวม", "Overview"], form: ["จัดทำงบประมาณ", "Budget formulation"], exec: ["บริหารและติดตาม", "Execution & results"], family: ["ผลิตภัณฑ์เพิ่มเติม", "More Fisko products"], intel: ["วิเคราะห์", "Intelligence"], sys: ["ระบบ", "System"] };
 let CUR = "home";
 function allowed(id) { const n = NAV.find(x => x.id === id); return !n || n.roles.includes(ROLE); }
 function go(v) { if (location.hash === "#" + v) route(); else location.hash = v; }

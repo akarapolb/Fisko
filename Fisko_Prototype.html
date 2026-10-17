@@ -549,7 +549,7 @@ const fyLabel = fy => L(`ปีงบประมาณ พ.ศ. ${fy}`, `FY${fy
 
 // ---------- organizations and state ----------
 const SEEDS = {}; // id -> { name: [th, en], seed: () => state }, registered by data files
-const DATA_V = 10; // bump when the seed shape changes so saved demo state is reseeded
+const DATA_V = 11; // bump when the seed shape changes so saved demo state is reseeded
 let ORG = "sample";
 let S = null;
 const key = () => "fisko-v1-" + ORG;
@@ -565,7 +565,7 @@ function resetDemo() { store.del(key()); S = SEEDS[ORG].seed(); save(); resetUi(
 function resetUi() {
   CUR_REQ = null; REQ_TAB = "main"; VER_A = VER_B = null; CMP_REQ = null; CHAIN_P = null; CMT_OPEN = null;
   DRILL_U = DRILL_P = null; PLAN_UNIT = ""; ALLOC_FY = 2570; WI.locks = null; STAGED = null;
-  OPEN_PROG.clear(); OPEN_UNIT.clear(); IDEA_OPEN = null; PASTE_ROWS = [];
+  OPEN_PROG.clear(); OPEN_UNIT.clear(); IDEA_OPEN = null; PASTE_ROWS = []; PLAN_REQ = null; CT_FROM = null; PAY_FORM = null;
 }
 
 // ---------- roles ----------
@@ -576,6 +576,7 @@ const ROLES = {
   fin: ["การเงินและบัญชี", "Finance & Accounting"],
   audit: ["ผู้ตรวจสอบ", "Auditor"],
   admin: ["ผู้ดูแลระบบ", "System Administrator"],
+  proc: ["เจ้าหน้าที่พัสดุ", "Procurement officer"],
 };
 let ROLE = ROLES[store.get("fisko-role")] ? store.get("fisko-role") : "plan";
 // Signed-in session (round 7). The role switcher still works as a demo shortcut: it moves the session
@@ -619,7 +620,7 @@ function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = fal
 // ---------- router ----------
 const VIEWS = {}, BIND = {};
 const NAV = []; // { id, code, group, label: [th,en], roles: [...], soon: round number }
-const GROUPS = { overview: ["ภาพรวม", "Overview"], form: ["จัดทำงบประมาณ", "Budget formulation"], exec: ["บริหารและติดตาม", "Execution & results"], intel: ["วิเคราะห์", "Intelligence"], sys: ["ระบบ", "System"] };
+const GROUPS = { overview: ["ภาพรวม", "Overview"], form: ["จัดทำงบประมาณ", "Budget formulation"], exec: ["บริหารและติดตาม", "Execution & results"], family: ["ผลิตภัณฑ์เพิ่มเติม", "More Fisko products"], intel: ["วิเคราะห์", "Intelligence"], sys: ["ระบบ", "System"] };
 let CUR = "home";
 function allowed(id) { const n = NAV.find(x => x.id === id); return !n || n.roles.includes(ROLE); }
 function go(v) { if (location.hash === "#" + v) route(); else location.hash = v; }
@@ -850,10 +851,12 @@ function buildOrg(cfg) {
 
   // round 7: delegation of authority — the executive is travelling and has delegated transfer approvals
   s.delegations = [
-    { id: "D-2570-001", from: U("exec"), to: U("plan"), scopes: ["transfer"], start: "2026-10-14", end: "2026-10-24", status: "active", t: "2026-10-13T17:00",
+    { id: "D-2570-001", from: U("exec"), to: U("plan"), scopes: ["transfer", "spend"], start: "2026-10-14", end: "2026-10-24", status: "active", t: "2026-10-13T17:00",
       why: ["เดินทางไปราชการต่างประเทศ", "Official travel abroad"] },
     { id: "D-2569-014", from: U("fin"), to: (s.users.find(u => u.role === "fin" && !u.primary) || s.users.find(u => u.role === "plan" && !u.primary) || { id: U("plan") }).id, scopes: ["transfer"], start: "2026-08-01", end: "2026-08-05", status: "active", t: "2026-07-30T09:00",
       why: ["ลาพักผ่อน", "Annual leave"] },
+    { id: "D-2570-002", from: U("exec"), to: U("fin"), scopes: ["spend"], start: "2026-10-14", end: "2026-10-24", status: "active", t: "2026-10-13T17:05",
+      why: ["เดินทางไปราชการต่างประเทศ", "Official travel abroad"] },
   ];
   s.audit.unshift({ t: "2026-10-13T17:00", user: U("exec"), role: "exec", action: ["มอบอำนาจ", "Delegated authority"], target: "D-2570-001" });
 
@@ -963,6 +966,57 @@ function buildOrg(cfg) {
     { id: "R5", cls: ["ประวัติการสนทนากับผู้ช่วย AI", "AI assistant chats"], years: 1, basis: ["PDPA · เก็บเท่าที่จำเป็น", "PDPA · keep only what is needed"], size: 0.6 },
   ];
   s.backup = { full: "2026-10-12T01:00", incr: "2026-10-16T01:00", restore: "2026-07-20T10:00", rpo: 1, rto: 4, log: [] };
+
+  // round 11: Fisko Procurement and Fisko Finance (light versions), built on the FY2570 allocation lines.
+  // A procurement officer joins the demo users; two contracts are running, one payment is paid and matched.
+  const sec = s.units.find(u => u.code === "01") || s.units[1];
+  if (!s.users.some(u => u.role === "proc")) s.users.push({ id: "u10", role: "proc", unit: sec.id, primary: true, mfa: true, active: true,
+    name: (s.org[1] || "").startsWith("Sample") ? ["สุรชัย จัดหา", "Surachai Jatha"] : ["สุรีย์ พัสดุดี", "Suree Phatsudee"] });
+  // The last two plan items sit on the demo requester's own unit, so that role can raise a requisition in the demo.
+  const pool = A70.lines.filter(l => l.type === "inv" || l.type === "ope").sort((a, b) => b.amount - a.amount);
+  const myUnit = s.users.find(u => u.role === "div" && u.primary).unit, mineL = pool.filter(l => l.unit === myUnit).slice(0, 2);
+  const FL = [...pool.filter(l => !mineL.includes(l)).slice(0, 6 - mineL.length), ...mineL];
+  const PO = U("proc"), reqBy = unit => divOf(unit) || U("div"), EX = U("exec"), FN = U("fin"), PL = U("plan"), DV = U("div");
+  const months = ["2026-11-15", "2026-12-15", "2027-01-15", "2027-02-15", "2027-03-15", "2027-04-15"];
+  s.pplan = FL.map((l, i) => {
+    const est = Math.max(1e5, Math.round(l.amount * 0.5 / 1e5) * 1e5);
+    return { id: "PP-2570-" + String(i + 1).padStart(3, "0"), line: l.id, name: l.name, est, method: est <= 5e5 ? "specific" : "ebid", month: months[i], by: PO, status: "planned", egp: null };
+  });
+  const why = ["จำเป็นต่อการดำเนินงานตามแผนปีงบประมาณ 2570", "Needed to deliver the FY2570 work plan"];
+  const mkReq = (i, st, t) => ({ id: "RQ-2570-" + String(i + 1).padStart(3, "0"), plan: s.pplan[i].id, by: reqBy(FL[i].unit), amount: s.pplan[i].est, why, status: st, t,
+    decided: st === "pending" ? null : { by: EX, holder: EX, via: null, t: t.slice(0, 10) + "T16:00" } });
+  s.reqn = [mkReq(0, "contracted", "2026-10-02T09:00"), mkReq(1, "contracted", "2026-10-03T09:00"), mkReq(2, "approved", "2026-10-14T09:00"), mkReq(3, "pending", "2026-10-15T09:00")];
+  [0, 1].forEach(i => (s.pplan[i].status = "contracted"));
+  [2, 3].forEach(i => (s.pplan[i].status = "requisitioned"));
+  s.pplan[0].egp = { no: "EGP-70-0101", stage: ["ลงนามสัญญา", "Contract signed"], date: "2026-10-06" };
+  s.pplan[1].egp = { no: "EGP-70-0102", stage: ["ลงนามสัญญา", "Contract signed"], date: "2026-10-07" };
+  s.pplan[2].egp = { no: "EGP-70-0103", stage: ["ประกาศเชิญชวน", "Invitation"], date: "2026-10-14" };
+  const vend = [["บริษัท ตัวอย่างระบบ จำกัด", "Sample Systems Co., Ltd."], ["ห้างหุ้นส่วนจำกัด ตัวอย่างก่อสร้าง", "Sample Construction Ltd. Partnership"]];
+  const mkPhases = (amount, dues, t) => {
+    const share = [0.4, 0.3]; let left = amount;
+    return dues.map((due, n) => {
+      const a = n < 2 ? Math.round(amount * share[n] / 1e3) * 1e3 : left; left -= a;
+      return { n: n + 1, name: [`งวดที่ ${n + 1}`, `Phase ${n + 1}`], due, amount: a, signs: n === 0 ? [{ by: PL, t }, { by: DV, t: t.slice(0, 10) + "T11:00" }] : [] };
+    });
+  };
+  const mkCon = (i, vi, no, signed, dues, t) => {
+    const r = s.reqn[i], amount = Math.round(r.amount * 0.97 / 1e3) * 1e3;
+    return { id: "CT-2570-" + String(i + 1).padStart(3, "0"), reqn: r.id, plan: r.plan, line: s.pplan[i].line, vendor: vend[vi], no, signed, amount, by: PO, inspectors: [PL, DV], status: "active", phases: mkPhases(amount, dues, t) };
+  };
+  s.contracts = [mkCon(0, 0, "CT-70/001", "2026-10-06", ["2026-10-14", "2026-11-30", "2027-01-31"], "2026-10-14T10:00"),
+    mkCon(1, 1, "CT-70/002", "2026-10-07", ["2026-10-15", "2026-12-15", "2027-02-28"], "2026-10-15T10:00")];
+  s.payreqs = [{ id: "PY-2570-001", contract: "CT-2570-001", phase: 1, amount: s.contracts[0].phases[0].amount, by: FN, status: "approved", t: "2026-10-14T15:00",
+    decided: { by: EX, holder: EX, via: null, t: "2026-10-15T10:00" }, recon: { state: "matched", file: "GF-2570-01", t: "2026-10-16T08:00" } }];
+  s.gfmisFiles = [{ id: "GF-2570-01", t: "2026-10-16T08:00", by: FN, rows: [{ pay: "PY-2570-001", doc: "GF-70-000417", amount: s.payreqs[0].amount, date: "2026-10-16", state: "matched" }] }];
+  s.egpImports = [];
+  s.sod = { rules: ["SD-01", "SD-02", "SD-03", "SD-04", "SD-05"].map(id => ({ id, on: true })), blocks: [] };
+  s.audit.unshift(
+    { t: "2026-10-15T10:00", user: EX, role: "exec", action: ["อนุมัติเบิกจ่าย", "Approved a payment"], target: "PY-2570-001 CT-2570-001" },
+    { t: "2026-10-14T15:00", user: FN, role: "fin", action: ["ขออนุมัติเบิกจ่าย", "Requested a payment approval"], target: "PY-2570-001 CT-2570-001" },
+    { t: "2026-10-14T11:00", user: DV, role: "div", action: ["ลงนามตรวจรับงาน", "Signed an acceptance"], target: "CT-2570-001 งวดที่ 1" },
+    { t: "2026-10-06T14:00", user: PO, role: "proc", action: ["สร้างสัญญา", "Created a contract"], target: "CT-2570-001 RQ-2570-001" },
+  );
+  s.audit.sort((a, b) => (a.t < b.t ? 1 : -1));
   return s;
 }
 
@@ -1478,7 +1532,7 @@ SEEDS.dpt = {
 
 /* ---- 20-shell.js ---- */
 // App shell: navigation by role, top bar controls, notification centre, upcoming-module pages.
-const ALL = ["div", "plan", "exec", "fin", "audit", "admin"];
+const ALL = ["div", "plan", "exec", "fin", "audit", "admin", "proc"];
 NAV.push(
   { id: "home", code: "", group: "overview", roles: ALL, label: ["พื้นที่ทำงานของฉัน", "My Workspace"] },
   { id: "strategy", code: "M01", group: "form", roles: ["plan", "exec", "div", "audit"], label: ["แผนยุทธศาสตร์", "Strategic Planning"],
@@ -1490,7 +1544,7 @@ NAV.push(
     plan: [["ตรวจรหัสและโครงสร้างข้อมูลก่อนส่ง", "Pre-submission code and structure checks"], ["ตัวอย่างแบบฟอร์มคำขอ", "Request form preview"], ["ส่งออก Excel / PDF", "Excel / PDF export"], ["ติดตามสถานะและบันทึกผลพิจารณา", "Status tracking and Budget Bureau results"]] },
   { id: "allocation", code: "M06", group: "exec", roles: ["fin", "plan", "exec", "audit"], label: ["จัดสรรงบประมาณ", "Budget Allocation"],
     plan: [["บันทึกวงเงินตามพระราชบัญญัติงบประมาณ", "Record the appropriation"], ["จัดสรรรายหน่วยงานและโครงการ", "Allocate by unit and project"], ["แผนการใช้จ่ายรายเดือน", "Monthly spending plan"], ["โอนเปลี่ยนแปลงผ่าน Workflow", "Budget transfers through the workflow"]] },
-  { id: "dashboard", code: "M07", group: "exec", roles: ["exec", "plan", "fin", "audit", "div"], label: ["ติดตามการใช้จ่าย", "Execution Monitoring"] },
+  { id: "dashboard", code: "M07", group: "exec", roles: ["exec", "plan", "fin", "audit", "div", "proc"], label: ["ติดตามการใช้จ่าย", "Execution Monitoring"] },
   { id: "performance", code: "M08", group: "exec", roles: ["plan", "exec", "div", "audit"], label: ["ผลสัมฤทธิ์", "Performance"],
     plan: [["บันทึกผลตัวชี้วัด", "Enter KPI results"], ["ห่วงโซ่ผลลัพธ์รายโครงการ", "Results chain per project"], ["Scorecard งบประมาณกับผลลัพธ์", "Budget vs outcome scorecard"], ["รายงานประเมินผล", "Evaluation report"]] },
   { id: "assistant", code: "M09", group: "intel", roles: ["exec", "plan", "fin", "div", "audit"], label: ["ผู้ช่วย AI งบประมาณ", "AI Budget Assistant"] },
@@ -1503,6 +1557,7 @@ function navBadge(id) {
       : ROLE === "plan" ? S.requests.filter(r => r.status === "plan").length : 0;
     return n ? `<span class="badge">${n}</span>` : "";
   }
+  if (id === "procurement" || id === "finance") return famBadge(id);
   if (id === "review" && (ROLE === "plan" || ROLE === "exec")) return `<span class="badge">${S.review.length}</span>`;
   if (id === "admin" && ROLE === "admin") { const n = S.integrations.filter(i => i.status === "error").length; return n ? `<span class="badge">${n}</span>` : ""; }
   return "";
@@ -1618,6 +1673,7 @@ const JUMP_TABS = {
   mon: ["dashboard", v => (MON_TAB = v)], alloc: ["allocation", v => (ALLOC_TAB = v)], rev: ["review", v => (REV_TAB = v)],
   perf: ["performance", v => (PERF_TAB = v)], sub: ["submission", v => (SUB_TAB = v)], cons: ["consolidation", v => (CONS_TAB = v)],
   intel: ["assistant", v => (INTEL_TAB = v)], strat: ["strategy", v => (STRAT_TAB = v)],
+  prc: ["procurement", v => (PROC_TAB = v)], fnc: ["finance", v => (FIN_TAB = v)],
 };
 function jump(l) {
   if (l.startsWith("req:")) return openReq(l.slice(4));
@@ -1690,6 +1746,8 @@ function myTasks() {
   if (ROLE === "audit") (S.anoms || []).filter(a => a.status === "new").forEach(a => R(`${L("ตรวจรายการผิดปกติ", "Review an anomaly")} ${a.id}: ${tx(AN_KIND[a.kind])}`, `${unitName(a.unit)} · ${L("ความเสี่ยง", "risk")} ${a.risk}`, TODAY, "intel-anoms", a.risk >= 70 ? "p-bad" : "p-warn"));
   if (ROLE === "plan") (S.evals || []).filter(e => e.status === "draft").forEach(e => R(`${L("ประเมินโครงการให้เสร็จ", "Finish a project evaluation")} ${e.id}`, tx((evProj(e) || { name: "" }).name), "2026-11-30", "perf-evaluate", "p-info"));
   if (ROLE === "fin" && S.proc) { const late = Object.values(S.proc).filter(ms => procState(ms).lv !== "ok").length; if (late) R(L("ติดตามโครงการลงทุนที่จัดซื้อจัดจ้างล่าช้า", "Chase investment projects behind on procurement"), `${late} ${L("โครงการ", "projects")}`, TODAY, "mon-procure", "p-warn"); }
+  famTasks(R);
+  if (ROLE === "proc" && !t.length) R(L("ไม่มีงานค้าง", "Nothing waiting for you"), "", TODAY, "procurement", "p-mute");
   // Delegated work (round 7): cross-unit transfers this user may approve on an executive's behalf.
   const dg = ROLE !== "exec" && delegFor("exec", "transfer");
   if (dg) Object.values(S.allocs).forEach(A => A.transfers.filter(x => x.status === "pending").forEach(x => { const a = A.lines.find(l => l.id === x.from), b = A.lines.find(l => l.id === x.to);
@@ -4652,7 +4710,7 @@ const MAP_TYPE = { same: [["คงเดิม", "Unchanged"], "p-mute"], rename
 const MATRIX = { // role -> M01..M10 rights
   exec: ["R", "R", "R", "A", "R", "A", "R", "R", "U", "–"], plan: ["CU", "R", "CU", "U", "CU", "R", "R", "CU", "U", "–"],
   div: ["R", "CU", "–", "R", "–", "R", "U", "U", "U", "–"], fin: ["–", "R", "–", "–", "–", "CU", "CU", "–", "U", "R"],
-  audit: ["R", "R", "R", "R", "R", "R", "R", "R", "U", "R"], admin: ["–", "–", "–", "–", "–", "–", "–", "–", "–", "CU"],
+  audit: ["R", "R", "R", "R", "R", "R", "R", "R", "U", "R"], proc: ["–", "–", "–", "–", "–", "–", "R", "–", "–", "–"], admin: ["–", "–", "–", "–", "–", "–", "–", "–", "–", "CU"],
 };
 const isAdmin = () => ROLE === "admin";
 const sw = (id, on, dis) => `<label class="switch"><input type="checkbox" id="${id}" ${on ? "checked" : ""} ${dis ? "disabled" : ""}><span></span></label>`;
@@ -5035,6 +5093,7 @@ const SCOPES = {
   transfer: { role: ["exec", "fin"], name: ["อนุมัติโอนเปลี่ยนแปลง", "Approve budget transfers"] },
   review: { role: ["plan"], name: ["กลั่นกรองคำขอ", "Review budget requests"] },
   committee: { role: ["exec"], name: ["พิจารณาคำขอระดับผู้บริหาร", "Executive decisions on requests"] },
+  spend: { role: ["exec"], name: ["อนุมัติขอซื้อขอจ้างและเบิกจ่าย", "Approve requisitions and payments"] },
 };
 const userById = id => S.users.find(u => u.id === id) || { name: ["-", "-"], role: "" };
 const delegState = d => d.status === "revoked" ? "revoked" : TODAY < d.start ? "future" : TODAY > d.end ? "expired" : "active";
@@ -5286,6 +5345,484 @@ function bindHistory() {
   }, true);
   document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#hdrawer").hidden) closeHistory(); });
 }
+
+/* ---- 60-procurement.js ---- */
+// Fisko Procurement (round 11, light version): a procurement plan tied to FY2570 allocation lines,
+// requisitions, contracts with acceptance phases, and e-GP status by file import (files only, per D-F05).
+// The official procurement steps stay in e-GP; Fisko prepares, checks and tracks.
+let PROC_TAB = "plan", PLAN_REQ = null, CT_FROM = null, EGP_ROWS = null;
+const FAM_FY = 2570, PHASE_SIGNS = 2;
+const famLines = () => (S.allocs[FAM_FY] || { lines: [] }).lines;
+const famLine = id => famLines().find(l => l.id === id) || { id, name: ["-", "-"], unit: "", amount: 0, type: "ope" };
+const famPlan = id => S.pplan.find(p => p.id === id) || { id, name: ["-", "-"], line: "", est: 0 };
+const famReq = id => S.reqn.find(r => r.id === id);
+const famCon = id => S.contracts.find(c => c.id === id);
+const famCommitted = lineId => sumv(S.contracts.filter(c => c.line === lineId).map(c => c.amount));
+const famReserved = lineId => sumv(S.reqn.filter(r => r.status === "approved" && famPlan(r.plan).line === lineId).map(r => r.amount));
+const famHeadroom = lineId => famLine(lineId).amount - famCommitted(lineId) - famReserved(lineId);
+const phaseAccepted = ph => ph.signs.length >= PHASE_SIGNS;
+const phaseSigners = c => c.phases.flatMap(ph => ph.signs.map(s => s.by));
+const famPeople = () => S.users.filter(u => u.active && u.role !== "admin" && u.role !== "proc");
+const PMETHOD = { specific: ["เฉพาะเจาะจง", "Specific selection"], ebid: ["ประกวดราคาอิเล็กทรอนิกส์", "E-bidding"] };
+const PLAN_ST = { planned: [["อยู่ในแผน", "Planned"], "p-mute"], requisitioned: [["ขอซื้อแล้ว", "Requisitioned"], "p-info"], contracted: [["ทำสัญญาแล้ว", "Contracted"], "p-ok"] };
+const REQ_ST = { pending: [["รออนุมัติ", "Pending"], "p-warn"], approved: [["อนุมัติแล้ว", "Approved"], "p-ok"], rejected: [["ไม่อนุมัติ", "Rejected"], "p-bad"], contracted: [["ทำสัญญาแล้ว", "Contracted"], "p-mute"] };
+const stTag = (m, k) => tag(tx(m[k][0]), m[k][1]);
+// Authority for spend approvals: the executive, or a delegate. Returns who holds the authority and which delegation is used.
+function famAuth() {
+  if (ROLE === "exec") return { holder: me().id, via: null };
+  const d = delegFor("exec", "spend");
+  return { holder: d ? d.from : me().id, via: d ? d.id : null };
+}
+const canSpend = () => acting("exec", "spend");
+const nextId = (prefix, list) => `${prefix}-${FAM_FY}-${String(Math.max(0, ...list.map(x => Number(x.id.split("-")[2]) || 0)) + 1).padStart(3, "0")}`;
+const famAcceptedUnpaid = () => S.contracts.flatMap(c => c.phases.filter(ph => phaseAccepted(ph) && !S.payreqs.some(p => p.contract === c.id && p.phase === ph.n && p.status !== "rejected")).map(ph => ({ c, ph })));
+
+function famBadge(id) {
+  let n = 0;
+  if (id === "procurement") {
+    if (canSpend()) n += S.reqn.filter(r => r.status === "pending").length;
+    if (ROLE === "proc") n += S.reqn.filter(r => r.status === "approved").length;
+  } else {
+    if (canSpend()) n += S.payreqs.filter(p => p.status === "pending").length;
+    if (ROLE === "fin") n += famAcceptedUnpaid().length;
+  }
+  return n ? `<span class="badge">${n}</span>` : "";
+}
+
+function famTasks(R) {
+  if (!S.pplan) return;
+  if (canSpend()) {
+    S.reqn.filter(r => r.status === "pending").forEach(r => R(`${L("อนุมัติขอซื้อขอจ้าง", "Approve a requisition")} ${r.id}`, `${mb(r.amount)} ${L("ลบ.", "M")} · ${tx(famPlan(r.plan).name)}`, TODAY, "prc-reqn", "p-warn"));
+    S.payreqs.filter(p => p.status === "pending").forEach(p => R(`${L("อนุมัติเบิกจ่าย", "Approve a payment")} ${p.id}`, `${mb(p.amount)} ${L("ลบ.", "M")} · ${p.contract}`, TODAY, "fnc-pay", "p-warn"));
+  }
+  if (ROLE === "proc") S.reqn.filter(r => r.status === "approved").forEach(r => R(`${L("จัดทำสัญญาจากใบขอซื้อ", "Create a contract from requisition")} ${r.id}`, tx(famPlan(r.plan).name), TODAY, "prc-reqn", "p-info"));
+  if (ROLE === "div") S.pplan.filter(p => p.status === "planned" && famLine(p.line).unit === me().unit).forEach(p => R(`${L("ขอซื้อขอจ้างตามแผน", "Raise a requisition")} ${p.id}`, tx(p.name), p.month, "prc-plan", "p-info"));
+  if (ROLE === "fin") {
+    famAcceptedUnpaid().forEach(x => R(`${L("ขออนุมัติเบิกจ่าย", "Request a payment")} ${x.c.id} ${tx(x.ph.name)}`, `${mb(x.ph.amount)} ${L("ลบ.", "M")}`, TODAY, "fnc-pay", "p-info"));
+    S.payreqs.filter(p => p.recon && p.recon.state === "diff").forEach(p => R(`${L("ชี้แจงผลต่างจากไฟล์ GFMIS", "Explain a GFMIS file difference")} ${p.id}`, "", TODAY, "fnc-recon", "p-warn"));
+  }
+  S.contracts.filter(c => c.inspectors.includes(me().id)).forEach(c => c.phases.filter(ph => !phaseAccepted(ph) && ph.due <= addDays(TODAY, 30) && !ph.signs.some(s => s.by === me().id))
+    .forEach(ph => R(`${L("ลงนามตรวจรับงาน", "Sign the acceptance")} ${c.id} ${tx(ph.name)}`, `${mb(ph.amount)} ${L("ลบ.", "M")}`, ph.due, "prc-contracts", "p-info")));
+}
+
+const PROC = {};
+PROC.plan = () => {
+  const P = S.pplan, isProc = ROLE === "proc", tot = sumv(P.map(p => p.est));
+  const lines = famLines().filter(l => l.type === "inv" || l.type === "ope");
+  return `
+  <section class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+    <div class="kpi"><span class="l">${L("รายการในแผนจัดซื้อ", "Plan items")}</span><span class="v">${P.length}</span></div>
+    <div class="kpi"><span class="l">${L("ประมาณการรวม", "Estimated total")}</span><span class="v">${mb(tot)}<small>${L("ลบ.", "M")}</small></span></div>
+    <div class="kpi"><span class="l">${L("ขอซื้อแล้ว", "Requisitioned")}</span><span class="v">${P.filter(p => p.status === "requisitioned").length}</span></div>
+    <div class="kpi"><span class="l">${L("ทำสัญญาแล้ว", "Contracted")}</span><span class="v">${P.filter(p => p.status === "contracted").length}</span></div>
+  </section>
+  <section class="panel"><header><h2>${L("แผนจัดซื้อจัดจ้าง", "Procurement plan")} · ${fyLabel(FAM_FY)}</h2><span class="sp"></span><span class="sub">${L("ทุกรายการผูกกับรายการจัดสรรของ M06 · วิธีจัดซื้อตามวงเงินเป็นค่าตัวอย่าง", "Every item links to an M06 allocation line · the method by amount is a sample rule")}</span></header>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("รายการ", "Item")}</th><th>${L("วิธี", "Method")}</th><th class="n">${L("ประมาณการ (ลบ.)", "Estimate (M)")}</th><th>${L("กำหนด", "Planned")}</th><th>${L("สถานะ", "Status")}</th><th>e-GP</th><th></th></tr></thead>
+      <tbody>${P.map(p => { const l = famLine(p.line), mine = ROLE === "div" && l.unit === me().unit;
+        return `<tr><td class="mono">${p.id}</td><td><b style="font-weight:600">${esc(tx(p.name))}</b><div class="sub">${esc(lineLabel(l))} · <span class="mono">${l.id}</span></div></td><td class="sub">${tx(PMETHOD[p.method])}</td>
+          <td class="n">${mb(p.est)}</td><td class="sub">${fdate(p.month)}</td><td>${stTag(PLAN_ST, p.status)}</td>
+          <td class="sub">${p.egp ? `<span class="mono">${p.egp.no}</span><div>${tx(p.egp.stage)} · ${fdate(p.egp.date)}</div>` : "—"}</td>
+          <td><div class="row" style="flex-wrap:nowrap">${mine && p.status === "planned" ? `<button class="btn primary" type="button" data-preq="${p.id}">${L("ขอซื้อขอจ้าง", "Raise requisition")}</button>` : ""}${historyBtn(p.id, p.id)}</div></td></tr>
+          ${PLAN_REQ === p.id ? `<tr class="cmt-row"><td colspan="8"><div class="row" style="align-items:flex-end">
+            <div class="f" style="flex:0 1 150px"><label for="pr-amt">${L("วงเงิน (ล้านบาท)", "Amount (M baht)")}</label><input type="number" id="pr-amt" min="0.001" step="0.001" value="${(p.est / 1e6).toFixed(3)}"></div>
+            <div class="f" style="flex:1 1 240px"><label for="pr-why">${L("เหตุผลความจำเป็น", "Justification")}</label><input type="text" id="pr-why" value="${esc(L("จำเป็นต่อการดำเนินงานตามแผนปีงบประมาณ 2570", "Needed to deliver the FY2570 work plan"))}"></div>
+            <span class="sub">${L("วงเงินคงเหลือของรายการจัดสรร", "Room left on the line")} ${mb(famHeadroom(p.line))} ${L("ลบ.", "M")}</span>
+            <button class="btn primary" type="button" id="pr-send">${L("ส่งขออนุมัติ", "Send for approval")}</button><button class="btn ghost" type="button" id="pr-cancel">${L("ยกเลิก", "Cancel")}</button></div></td></tr>` : ""}`; }).join("")}</tbody></table></div>
+    ${isProc ? `<div class="body"><form class="inline-form" id="pp-form">
+      <div class="f" style="flex:2 1 240px"><label for="pp-line">${L("รายการจัดสรร (M06)", "Allocation line (M06)")}</label><select id="pp-line">${lines.map(l => `<option value="${l.id}">${esc(lineLabel(l))} · ${mb(l.amount)}</option>`).join("")}</select></div>
+      <div class="f" style="flex:2 1 220px"><label for="pp-name">${L("รายการจัดซื้อจัดจ้าง", "Item to buy")}</label><input type="text" id="pp-name" required></div>
+      <div class="f" style="flex:0 1 130px"><label for="pp-est">${L("ประมาณการ (ลบ.)", "Estimate (M)")}</label><input type="number" id="pp-est" min="0.001" step="0.001" required></div>
+      <div class="f" style="flex:0 1 160px"><label for="pp-month">${L("กำหนดดำเนินการ", "Planned date")}</label><input type="date" id="pp-month" value="${addDays(TODAY, 60)}" required></div>
+      <button class="btn primary" type="submit">+ ${L("เพิ่มในแผน", "Add to plan")}</button></form></div>` : ""}</section>`;
+};
+PROC.reqn = () => {
+  const R = S.reqn, auth = canSpend(), viaTxt = onBehalf("exec", "spend");
+  return `
+  ${auth && viaTxt ? `<div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("คุณกำลังอนุมัติแทนผู้บริหาร", "You are approving on the executive's behalf")}</b><p>${viaTxt.replace(/^ · /, "")} · ${L("ระบบตรวจกฎแยกหน้าที่กับตัวคุณและกับผู้มอบอำนาจ", "Duty-separation rules are checked against you and against the person who delegated")}</p></div></div>` : ""}
+  <section class="panel"><header><h2>${L("ใบขอซื้อขอจ้าง", "Requisitions")}</h2><span class="sp"></span><span class="sub">${L("อนุมัติได้เมื่อไม่เกินวงเงินคงเหลือของรายการจัดสรร และผู้ขอไม่ใช่ผู้อนุมัติ (SD-01)", "Approved only within the room left on the line, and never by the requester (SD-01)")}</span></header>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("รายการในแผน", "Plan item")}</th><th>${L("ผู้ขอ", "Requester")}</th><th class="n">${L("วงเงิน (ลบ.)", "Amount (M)")}</th><th class="n">${L("คงเหลือบนรายการ (ลบ.)", "Room on line (M)")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
+      <tbody>${R.slice().reverse().map(r => { const p = famPlan(r.plan);
+        return `<tr><td class="mono">${r.id}</td><td><b style="font-weight:600">${esc(tx(p.name))}</b><div class="sub"><span class="mono">${p.id}</span> · ${esc(tx(r.why))}</div></td><td>${esc(userName(r.by))}<div class="sub">${fdate(r.t, true)}</div></td>
+          <td class="n">${mb(r.amount)}</td><td class="n">${mb(famHeadroom(p.line))}</td>
+          <td>${stTag(REQ_ST, r.status)}${r.decided ? `<div class="sub">${esc(userName(r.decided.by))}${r.decided.via ? ` · ${L("แทน", "for")} ${esc(userName(r.decided.holder))} (${r.decided.via})` : ""}</div>` : ""}</td>
+          <td><div class="row" style="flex-wrap:nowrap">
+            ${r.status === "pending" && auth ? `<button class="btn primary" type="button" data-rqok="${r.id}">${viaTxt ? L("อนุมัติแทน", "Approve on behalf") : L("อนุมัติ", "Approve")}</button><button class="btn danger" type="button" data-rqno="${r.id}">${L("ไม่อนุมัติ", "Reject")}</button>` : ""}
+            ${r.status === "approved" && ROLE === "proc" ? `<button class="btn primary" type="button" data-rqct="${r.id}">${L("สร้างสัญญา", "Create contract")}</button>` : ""}${historyBtn(r.id, r.id)}</div></td></tr>`; }).join("")
+        || `<tr><td colspan="7" class="sub">${L("ยังไม่มีใบขอซื้อขอจ้าง", "No requisitions yet")}</td></tr>`}</tbody></table></div></section>`;
+};
+function phaseSignText(c, ph) {
+  return `${ph.signs.map(s => esc(userName(s.by))).join(", ") || "—"} <span class="sub">(${ph.signs.length}/${PHASE_SIGNS})</span>`;
+}
+PROC.contracts = () => {
+  const isProc = ROLE === "proc", open = S.reqn.filter(r => r.status === "approved"), me_ = me().id, people = famPeople().filter(u => u.id !== me_);
+  const defs = [S.users.find(u => u.role === "plan" && u.primary), S.users.find(u => u.role === "div" && u.primary)].filter(Boolean).map(u => u.id);
+  const sel = open.find(r => r.id === CT_FROM) || open[0];
+  return `
+  ${isProc && open.length ? `<section class="panel"><header><h2>${L("สร้างสัญญา", "Create a contract")}</h2><span class="sp"></span><span class="sub">${L("วงเงินสัญญาเป็นภาระผูกพันของรายการจัดสรรทันที · ต้องมีกรรมการตรวจรับอย่างน้อย 2 คน และผู้ดำเนินการจัดซื้อห้ามเป็นกรรมการ (SD-02)", "The contract amount commits the allocation line at once · at least 2 committee members, and the procurement officer can't be one (SD-02)")}</span></header>
+    <div class="body"><form id="ct-form" style="display:flex;flex-direction:column;gap:12px">
+      <div class="inline-form">
+        <div class="f" style="flex:2 1 260px"><label for="ct-req">${L("ใบขอซื้อที่อนุมัติแล้ว", "Approved requisition")}</label><select id="ct-req">${open.map(r => `<option value="${r.id}" ${sel && r.id === sel.id ? "selected" : ""}>${r.id} · ${esc(tx(famPlan(r.plan).name))} · ${mb(r.amount)}</option>`).join("")}</select></div>
+        <div class="f" style="flex:1 1 200px"><label for="ct-vendor">${L("คู่สัญญา", "Supplier")}</label><input type="text" id="ct-vendor" required></div>
+        <div class="f" style="flex:0 1 150px"><label for="ct-no">${L("เลขที่สัญญา", "Contract no.")}</label><input type="text" id="ct-no" value="CT-70/${String(S.contracts.length + 1).padStart(3, "0")}" required></div>
+        <div class="f" style="flex:0 1 160px"><label for="ct-date">${L("วันที่ลงนาม", "Signed on")}</label><input type="date" id="ct-date" value="${TODAY}" required></div>
+        <div class="f" style="flex:0 1 150px"><label for="ct-amt">${L("วงเงินสัญญา (ลบ.)", "Amount (M)")}</label><input type="number" id="ct-amt" min="0.001" step="0.001" value="${sel ? (sel.amount / 1e6).toFixed(3) : ""}" required></div>
+        <div class="f" style="flex:0 1 100px"><label for="ct-ph">${L("จำนวนงวด", "Phases")}</label><select id="ct-ph">${[1, 2, 3, 4].map(n => `<option ${n === 3 ? "selected" : ""}>${n}</option>`).join("")}</select></div></div>
+      <fieldset style="border:1px solid var(--line);border-radius:8px;padding:8px 12px"><legend class="sub">${L("คณะกรรมการตรวจรับ", "Acceptance committee")}</legend>
+        <div class="row">${people.map(u => `<label class="field-inline"><input type="checkbox" name="ct-insp" value="${u.id}" ${defs.includes(u.id) ? "checked" : ""}> ${esc(tx(u.name))} <span class="sub">· ${tx(ROLES[u.role])}</span></label>`).join("")}</div></fieldset>
+      <div><button class="btn primary" type="submit">${L("สร้างสัญญา", "Create contract")}</button></div></form></div></section>`
+    : isProc ? `<div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("ยังไม่มีใบขอซื้อที่รอทำสัญญา", "No approved requisition is waiting for a contract")}</b><p>${L("ใบขอซื้อที่ผู้บริหารอนุมัติแล้วจะปรากฏที่นี่", "Requisitions approved by the executive will appear here")}</p></div></div>` : ""}
+  ${S.contracts.slice().reverse().map(c => { const l = famLine(c.line), locked = phaseSigners(c).length > 0;
+    return `<section class="panel"><header><h2><span class="mono">${c.id}</span> · ${esc(tx(famPlan(c.plan).name))}</h2><span class="sp"></span>${historyBtn(c.id, c.id)}${tag(`${L("วงเงินสัญญา", "Contract")} ${mb(c.amount)} ${L("ลบ.", "M")}`, "p-info")}</header>
+      <div class="body row"><span>${esc(tx(c.vendor))}</span><span class="sub">·</span><span class="mono sub">${esc(c.no)}</span><span class="sub">·</span><span class="sub">${L("ลงนาม", "Signed")} ${fdate(c.signed)}</span><span class="sub">·</span><span class="sub">${esc(lineLabel(l))}</span>
+        ${famPlan(c.plan).egp ? `<span class="sub">·</span><span class="sub mono">${famPlan(c.plan).egp.no}</span>` : ""}</div>
+      <div class="body" style="padding-top:0"><span class="sub">${L("คณะกรรมการตรวจรับ", "Acceptance committee")}:</span> ${c.inspectors.map(id => esc(userName(id))).join(", ")}
+        ${isProc ? (locked ? `<span class="sub"> · ${L("เปลี่ยนกรรมการไม่ได้หลังมีการลงนามตรวจรับ", "can't change after a signature")}</span>` : `<details style="margin-top:8px"><summary class="sub" style="cursor:pointer">${L("เปลี่ยนกรรมการ", "Change committee")}</summary>
+          <div class="row" style="margin-top:6px">${people.map(u => `<label class="field-inline"><input type="checkbox" name="cc-${c.id}" value="${u.id}" ${c.inspectors.includes(u.id) ? "checked" : ""}> ${esc(tx(u.name))}</label>`).join("")}<button class="btn" type="button" data-ccsave="${c.id}">${L("บันทึก", "Save")}</button></div></details>`) : ""}</div>
+      <div class="tbl-wrap"><table><thead><tr><th>${L("งวด", "Phase")}</th><th>${L("กำหนดส่งมอบ", "Due")}</th><th class="n">${L("วงเงิน (ลบ.)", "Amount (M)")}</th><th>${L("ลงนามตรวจรับ", "Acceptance signatures")}</th><th>${L("การเบิกจ่าย", "Payment")}</th><th></th></tr></thead>
+        <tbody>${c.phases.map(ph => { const pay = S.payreqs.find(p => p.contract === c.id && p.phase === ph.n && p.status !== "rejected"), acc = phaseAccepted(ph), late = !acc && ph.due < TODAY;
+          return `<tr><td>${tx(ph.name)}</td><td>${fdate(ph.due)}${late ? ` ${tag(L("เลยกำหนด", "Overdue"), "p-bad")}` : ""}</td><td class="n">${mb(ph.amount)}</td>
+            <td>${phaseSignText(c, ph)} ${acc ? tag(L("ตรวจรับแล้ว", "Accepted"), "p-ok") : ""}</td>
+            <td>${pay ? `<span class="mono sub">${pay.id}</span> ${tag(pay.status === "approved" ? L("อนุมัติแล้ว", "Approved") : L("รออนุมัติ", "Pending"), pay.status === "approved" ? "p-ok" : "p-warn")}` : acc ? `<span class="sub">${L("ยังไม่ขอเบิก", "Not requested")}</span>` : "—"}</td>
+            <td>${c.inspectors.includes(me_) && !acc && (ph.n === 1 || phaseAccepted(c.phases[ph.n - 2])) && !ph.signs.some(s => s.by === me_) ? `<button class="btn primary" type="button" data-sign="${c.id}|${ph.n}">${L("ลงนามตรวจรับ", "Sign acceptance")}</button>` : ""}</td></tr>`; }).join("")}</tbody></table></div></section>`; }).join("")
+    || `<section class="panel"><div class="body sub">${L("ยังไม่มีสัญญา", "No contracts yet")}</div></section>`}`;
+};
+PROC.egp = () => {
+  const log = S.egpImports || [];
+  return `
+  <div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("รับสถานะจาก e-GP เป็นไฟล์", "e-GP status comes in as a file")}</b>
+    <p>${L("ระหว่างรอยืนยันช่องทางเชื่อมต่อ (ประเด็น D-F05) ใช้ไฟล์ที่ส่งออกจาก e-GP ระบบตรวจรายการกับแผนจัดซื้อก่อนนำเข้า รายการที่ไม่พบจะไม่ถูกนำเข้า", "Until the access channel is confirmed (decision D-F05), a file exported from e-GP is used. Rows are checked against the plan first and unknown ones are left out.")}</p></div></div>
+  <section class="panel"><header><h2>${L("นำเข้าไฟล์สถานะ e-GP", "Import an e-GP status file")}</h2><span class="sp"></span>${ROLE === "proc" ? `<button class="btn" type="button" id="egp-sample">${L("สร้างไฟล์ตัวอย่าง", "Create a sample file")}</button>` : `<span class="sub">${L("เจ้าหน้าที่พัสดุนำเข้า", "Procurement officers import")}</span>`}</header>
+    ${EGP_ROWS ? `<div class="tbl-wrap"><table><thead><tr><th>plan</th><th>egp_no</th><th>${L("ขั้นตอน", "Stage")}</th><th>${L("วันที่", "Date")}</th><th>${L("ผลตรวจ", "Check")}</th></tr></thead>
+      <tbody>${EGP_ROWS.map(r => `<tr><td class="mono">${esc(r.plan)}</td><td class="mono">${esc(r.no)}</td><td>${tx(r.stage)}</td><td>${fdate(r.date)}</td><td>${r.ok ? tag(L("พร้อมนำเข้า", "Ready"), "p-ok") : tag(L("ไม่พบรายการในแผน", "Not in the plan"), "p-bad")}</td></tr>`).join("")}</tbody></table></div>
+      <div class="body row"><button class="btn primary" type="button" id="egp-go" ${EGP_ROWS.some(r => r.ok) ? "" : "disabled"}>${L("นำเข้า", "Import")} ${EGP_ROWS.filter(r => r.ok).length} ${L("รายการ", "rows")}</button><button class="btn ghost" type="button" id="egp-clear">${L("ล้าง", "Clear")}</button></div>` : `<div class="body sub">${L("ยังไม่ได้เลือกไฟล์", "No file chosen")}</div>`}</section>
+  ${log.length ? `<section class="panel"><header><h2>${L("ประวัติการนำเข้า", "Import log")}</h2></header><div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("เวลา", "Time")}</th><th>${L("ผู้นำเข้า", "By")}</th><th class="n">${L("นำเข้า", "Imported")}</th><th class="n">${L("ข้าม", "Skipped")}</th></tr></thead>
+    <tbody>${log.map(g => `<tr><td class="mono">${g.id}</td><td class="sub">${fdate(g.t, true)}</td><td>${esc(userName(g.by))}</td><td class="n">${g.ok}</td><td class="n">${g.bad}</td></tr>`).join("")}</tbody></table></div></section>` : ""}`;
+};
+
+VIEWS.procurement = () => {
+  if (!PROC[PROC_TAB]) PROC_TAB = "plan";
+  const tabs = [["plan", L("แผนจัดซื้อ", "Procurement plan")], ["reqn", `${L("ใบขอซื้อขอจ้าง", "Requisitions")}${S.reqn.filter(r => r.status === "pending").length ? ` (${S.reqn.filter(r => r.status === "pending").length})` : ""}`], ["contracts", L("สัญญาและงวดงาน", "Contracts and phases")], ["egp", L("ไฟล์จาก e-GP", "e-GP file")]];
+  return `
+  <div class="head"><div><div class="eyebrow">Fisko Procurement · ${L("เวอร์ชันเบา", "light version")}</div><h1>${L("จัดซื้อจัดจ้าง", "Procurement")}</h1>
+    <p>${L("เตรียมและติดตามการจัดซื้อที่ผูกกับรายการจัดสรร ขั้นตอนทางการยังทำใน e-GP", "Prepare and track procurement tied to allocation lines. The official steps stay in e-GP.")} · ${fyLabel(FAM_FY)}</p></div></div>
+  <div class="tabs" role="tablist">${tabs.map(([id, l]) => `<button class="tab ${id === PROC_TAB ? "on" : ""}" type="button" role="tab" aria-selected="${id === PROC_TAB}" data-prtab="${id}">${l}</button>`).join("")}</div>
+  ${PROC[PROC_TAB]()}`;
+};
+
+BIND.procurement = () => {
+  $$("[data-prtab]").forEach(b => (b.onclick = () => { PROC_TAB = b.dataset.prtab; route(); }));
+  $$("[data-preq]").forEach(b => (b.onclick = () => { PLAN_REQ = PLAN_REQ === b.dataset.preq ? null : b.dataset.preq; route(); }));
+  const cancel = $("#pr-cancel"); if (cancel) cancel.onclick = () => { PLAN_REQ = null; route(); };
+  const send = $("#pr-send");
+  if (send) send.onclick = () => {
+    const p = famPlan(PLAN_REQ), amount = Math.round(Number($("#pr-amt").value) * 1e6 / 1e3) * 1e3, why = $("#pr-why").value.trim();
+    if (!(amount > 0)) { toast(L("ใส่วงเงินก่อน", "Enter an amount")); return; }
+    if (amount > famHeadroom(p.line)) { toast(L(`เกินวงเงินคงเหลือของรายการจัดสรร (${mb(famHeadroom(p.line))} ลบ.)`, `More than the room left on the line (${mb(famHeadroom(p.line))} M)`)); return; }
+    const r = { id: nextId("RQ", S.reqn), plan: p.id, by: me().id, amount, why: [why || "-", why || "-"], status: "pending", t: nowIso(), decided: null };
+    S.reqn.push(r); p.status = "requisitioned"; PLAN_REQ = null;
+    audit(["ขอซื้อขอจ้าง", "Raised a requisition"], `${r.id} ${p.id}`);
+    notify(["exec"], [`ใบขอซื้อขอจ้าง ${r.id} รออนุมัติ`, `Requisition ${r.id} is waiting for approval`], "prc-reqn");
+    commit(); renderShell(); route(); toast(L("ส่งขออนุมัติแล้ว", "Sent for approval"));
+  };
+  const pf = $("#pp-form");
+  if (pf) pf.onsubmit = e => {
+    e.preventDefault();
+    const est = Math.round(Number($("#pp-est").value) * 1e6 / 1e3) * 1e3, nm = $("#pp-name").value.trim();
+    const p = { id: nextId("PP", S.pplan), line: $("#pp-line").value, name: [nm, nm], est, method: est <= 5e5 ? "specific" : "ebid", month: $("#pp-month").value, by: me().id, status: "planned", egp: null };
+    S.pplan.push(p);
+    audit(["เพิ่มรายการในแผนจัดซื้อ", "Added a procurement plan item"], `${p.id} ${nm}`); commit(); route(); toast(L("เพิ่มในแผนแล้ว", "Added to the plan"));
+  };
+  const decide = (id, ok) => {
+    const rq = famReq(id), p = famPlan(rq.plan), au = famAuth();
+    if (ok) {
+      if (!sodCheck("SD-01", sodActors("exec", "spend"), [rq.by], rq.id)) return;
+      if (rq.amount > famHeadroom(p.line)) { toast(L(`เกินวงเงินคงเหลือของรายการจัดสรร (${mb(famHeadroom(p.line))} ลบ.)`, `More than the room left on the line (${mb(famHeadroom(p.line))} M)`)); return; }
+    }
+    rq.status = ok ? "approved" : "rejected"; rq.decided = { by: me().id, holder: au.holder, via: au.via, t: nowIso() };
+    if (!ok) p.status = "planned";
+    audit(ok ? ["อนุมัติขอซื้อขอจ้าง", "Approved a requisition"] : ["ไม่อนุมัติขอซื้อขอจ้าง", "Rejected a requisition"], `${rq.id} ${p.id}${onBehalf("exec", "spend")}`);
+    notify(ok ? ["proc", "div"] : ["div"], ok ? [`ใบขอซื้อ ${rq.id} อนุมัติแล้ว จัดทำสัญญาได้`, `Requisition ${rq.id} is approved; a contract can be created`] : [`ใบขอซื้อ ${rq.id} ไม่ได้รับอนุมัติ`, `Requisition ${rq.id} was not approved`], "prc-reqn");
+    commit(); renderShell(); route(); toast(ok ? L("อนุมัติแล้ว", "Approved") : L("ไม่อนุมัติ", "Rejected"));
+  };
+  $$("[data-rqok]").forEach(b => (b.onclick = () => decide(b.dataset.rqok, true)));
+  $$("[data-rqno]").forEach(b => (b.onclick = () => decide(b.dataset.rqno, false)));
+  $$("[data-rqct]").forEach(b => (b.onclick = () => { CT_FROM = b.dataset.rqct; PROC_TAB = "contracts"; route(); }));
+  const cf = $("#ct-form");
+  if (cf) {
+    $("#ct-req").onchange = e => { const r = famReq(e.target.value); CT_FROM = r.id; $("#ct-amt").value = (r.amount / 1e6).toFixed(3); };
+    cf.onsubmit = e => {
+      e.preventDefault();
+      const rq = famReq($("#ct-req").value), insp = $$('input[name="ct-insp"]:checked').map(x => x.value), amount = Math.round(Number($("#ct-amt").value) * 1e6 / 1e3) * 1e3;
+      if (!(amount > 0) || amount > rq.amount) { toast(L("วงเงินสัญญาต้องไม่เกินวงเงินในใบขอซื้อ", "The contract amount can't exceed the requisition amount")); return; }
+      if (insp.length < 2) { toast(L("ต้องมีกรรมการตรวจรับอย่างน้อย 2 คน", "Choose at least 2 committee members")); return; }
+      if (!sodCheck("SD-02", [me().id], insp, `${rq.id}`)) return;
+      const p = famPlan(rq.plan), n = Number($("#ct-ph").value), signed = $("#ct-date").value, share = amount / n; let left = amount;
+      const phases = Array.from({ length: n }, (_, i) => { const a = i < n - 1 ? Math.round(share / 1e3) * 1e3 : left; left -= a; return { n: i + 1, name: [`งวดที่ ${i + 1}`, `Phase ${i + 1}`], due: addDays(signed, 45 * (i + 1)), amount: a, signs: [] }; });
+      const c = { id: nextId("CT", S.contracts), reqn: rq.id, plan: p.id, line: p.line, vendor: [$("#ct-vendor").value.trim(), $("#ct-vendor").value.trim()], no: $("#ct-no").value.trim(), signed, amount, by: me().id, inspectors: insp, status: "active", phases };
+      S.contracts.push(c); rq.status = "contracted"; p.status = "contracted"; CT_FROM = null;
+      audit(["สร้างสัญญา", "Created a contract"], `${c.id} ${rq.id}`);
+      notify(["fin", "exec"], [`สัญญา ${c.id} ผูกพันวงเงิน ${mb(amount)} ล้านบาท`, `Contract ${c.id} commits ${mb(amount)} M`], "fnc-chain");
+      commit(); renderShell(); route(); toast(L("สร้างสัญญาแล้ว · วงเงินผูกพันบนรายการจัดสรรแล้ว", "Contract created · the allocation line is committed"));
+    };
+  }
+  $$("[data-ccsave]").forEach(b => (b.onclick = () => {
+    const c = famCon(b.dataset.ccsave), insp = $$(`input[name="cc-${c.id}"]:checked`).map(x => x.value);
+    if (insp.length < 2) { toast(L("ต้องมีกรรมการตรวจรับอย่างน้อย 2 คน", "Choose at least 2 committee members")); return; }
+    if (!sodCheck("SD-02", [me().id], insp, c.id)) return;
+    c.inspectors = insp; audit(["เปลี่ยนกรรมการตรวจรับ", "Changed the acceptance committee"], c.id); commit(); route(); toast(L("บันทึกกรรมการแล้ว", "Committee saved"));
+  }));
+  $$("[data-sign]").forEach(b => (b.onclick = () => {
+    const [cid, n] = b.dataset.sign.split("|"), c = famCon(cid), ph = c.phases.find(x => x.n === Number(n));
+    if (!c.inspectors.includes(me().id)) { toast(L("คุณไม่ได้เป็นกรรมการตรวจรับสัญญานี้", "You're not on this contract's committee")); return; }
+    if (ph.n > 1 && !phaseAccepted(c.phases[ph.n - 2])) { toast(L("ต้องตรวจรับงวดก่อนหน้าให้ครบก่อน", "Accept the previous phase first")); return; }
+    if (!sodCheck("SD-02", [me().id], [c.by], c.id)) return;
+    ph.signs.push({ by: me().id, t: nowIso() });
+    audit(["ลงนามตรวจรับงาน", "Signed an acceptance"], `${c.id} ${tx(ph.name)}`);
+    if (phaseAccepted(ph)) { audit(["ตรวจรับงานครบองค์ประชุม", "Phase accepted"], `${c.id} ${tx(ph.name)}`); notify(["fin"], [`${c.id} ${ph.name[0]} ตรวจรับแล้ว ขอเบิกจ่ายได้`, `${c.id} ${ph.name[1]} is accepted; a payment can be requested`], "fnc-pay"); }
+    commit(); renderShell(); route(); toast(phaseAccepted(ph) ? L("ตรวจรับครบแล้ว", "Phase accepted") : L("ลงนามแล้ว รอกรรมการท่านอื่น", "Signed, waiting for the other members"));
+  }));
+  const sample = $("#egp-sample");
+  if (sample) sample.onclick = () => {
+    const pick = S.pplan.filter(p => p.status !== "contracted").slice(0, 2);
+    EGP_ROWS = pick.map((p, i) => ({ plan: p.id, no: `EGP-70-${String(110 + i)}`, stage: i ? [["ประกาศเชิญชวน", "Invitation"], ["ประกาศผู้ชนะ", "Winner announced"]][0] : ["ประกาศผู้ชนะ", "Winner announced"], date: TODAY, ok: true }));
+    EGP_ROWS.push({ plan: "PP-2570-999", no: "EGP-70-199", stage: ["ประกาศเชิญชวน", "Invitation"], date: TODAY, ok: false });
+    route();
+  };
+  const go_ = $("#egp-go");
+  if (go_) go_.onclick = () => {
+    const ok = EGP_ROWS.filter(r => famPlan(r.plan).line !== "" && r.ok);
+    ok.forEach(r => (famPlan(r.plan).egp = { no: r.no, stage: r.stage, date: r.date }));
+    const g = { id: `EG-${FAM_FY}-${String(S.egpImports.length + 1).padStart(2, "0")}`, t: nowIso(), by: me().id, ok: ok.length, bad: EGP_ROWS.length - ok.length };
+    S.egpImports.unshift(g); EGP_ROWS = null;
+    audit(["นำเข้าไฟล์สถานะ e-GP", "Imported an e-GP status file"], `${g.id} · ${g.ok}`); commit(); route(); toast(L("นำเข้าแล้ว", "Imported"));
+  };
+  const clr = $("#egp-clear"); if (clr) clr.onclick = () => { EGP_ROWS = null; route(); };
+};
+
+/* ---- 62-finance.js ---- */
+// Fisko Finance (round 11, light version): commitments and the chain from allocation to payment,
+// payment requests with approval, and GFMIS reconciliation by file import (files only, per D-F05).
+// Official recording and payment stay in GFMIS; Fisko controls the commitment and matches the result.
+let FIN_TAB = "chain", PAY_FORM = null, GF_ROWS = null;
+const PAY_ST = { pending: [["รออนุมัติ", "Pending"], "p-warn"], approved: [["อนุมัติแล้ว", "Approved"], "p-ok"], rejected: [["ไม่อนุมัติ", "Rejected"], "p-bad"] };
+const RECON_ST = { matched: [["ตรงกับ GFMIS", "Matches GFMIS"], "p-ok"], diff: [["ผลต่าง", "Difference"], "p-bad"], explained: [["ชี้แจงแล้ว", "Explained"], "p-info"], none: [["รอไฟล์ GFMIS", "Waiting for a file"], "p-mute"] };
+const payPaid = lineId => sumv(S.payreqs.filter(p => p.status === "approved" && famCon(p.contract).line === lineId).map(p => p.amount));
+const acceptedValue = lineId => sumv(S.contracts.filter(c => c.line === lineId).flatMap(c => c.phases.filter(phaseAccepted).map(ph => ph.amount)));
+const reconState = p => (p.recon ? p.recon.state : "none");
+const FIN = {};
+
+FIN.chain = () => {
+  const ids = [...new Set([...S.pplan.map(p => p.line), ...S.contracts.map(c => c.line)])];
+  const rows = ids.map(id => ({ l: famLine(id), planned: sumv(S.pplan.filter(p => p.line === id).map(p => p.est)), com: famCommitted(id), acc: acceptedValue(id), paid: payPaid(id) }));
+  const T = k => sumv(rows.map(r => r[k])), alloc = sumv(rows.map(r => r.l.amount));
+  const overdue = S.contracts.flatMap(c => c.phases.filter(ph => !phaseAccepted(ph) && ph.due < TODAY).map(ph => ({ c, ph })));
+  const top = rows.slice().sort((a, b) => b.com - a.com)[0];
+  return `
+  <section class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+    <div class="kpi"><span class="l">${L("วงเงินจัดสรร (รายการที่มีแผนจัดซื้อ)", "Allocated (lines with a plan)")}</span><span class="v">${mb(alloc)}<small>${L("ลบ.", "M")}</small></span></div>
+    <div class="kpi"><span class="l">${L("ผูกพันแล้ว (สัญญา)", "Committed (contracts)")}</span><span class="v">${mb(T("com"))}</span><span class="d sub">${fmt(alloc ? T("com") / alloc * 100 : 0, 1)}%</span></div>
+    <div class="kpi"><span class="l">${L("ตรวจรับแล้ว", "Accepted")}</span><span class="v">${mb(T("acc"))}</span></div>
+    <div class="kpi hl"><span class="l">${L("อนุมัติเบิกจ่ายแล้ว", "Payments approved")}</span><span class="v">${mb(T("paid"))}</span><span class="d" style="color:var(--rail-ink)">${fmt(T("com") ? T("paid") / T("com") * 100 : 0, 1)}% ${L("ของวงเงินผูกพัน", "of committed")}</span></div>
+  </section>
+  <section class="panel"><header><h2>${L("สายจากวงเงินจัดสรรถึงการเบิกจ่าย", "From allocation to payment")} · ${fyLabel(FAM_FY)}</h2><span class="sp"></span><span class="sub">${L("ล้านบาท · ทุกขั้นอ้างรหัสรายการจัดสรร (M06) เดียวกัน", "M baht · every step refers to the same M06 allocation line")}</span></header>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("รายการจัดสรร", "Allocation line")}</th><th class="n">${L("จัดสรร", "Allocated")}</th><th class="n">${L("ในแผนจัดซื้อ", "Planned")}</th><th class="n">${L("ผูกพัน", "Committed")}</th><th class="n">${L("ตรวจรับ", "Accepted")}</th><th class="n">${L("เบิกจ่าย", "Paid")}</th><th style="width:150px">${L("ผูกพันของจัดสรร", "Committed / allocated")}</th><th class="n">${L("ยังไม่ผูกพัน", "Not committed")}</th></tr></thead>
+      <tbody>${rows.map(r => `<tr><td><b style="font-weight:600">${esc(tx(r.l.name))}</b><div class="sub">${unitName(r.l.unit)} · <span class="mono">${r.l.id}</span></div></td><td class="n">${mb(r.l.amount)}</td><td class="n">${mb(r.planned)}</td><td class="n">${mb(r.com)}</td><td class="n">${mb(r.acc)}</td><td class="n">${mb(r.paid)}</td>
+        <td><div class="bar"><i style="width:${Math.min(100, r.l.amount ? r.com / r.l.amount * 100 : 0)}%"></i></div><span class="sub">${fmt(r.l.amount ? r.com / r.l.amount * 100 : 0, 0)}%</span></td><td class="n">${mb(famHeadroom(r.l.id))}</td></tr>`).join("")}</tbody>
+      <tfoot><tr><td>${L("รวม", "Total")}</td><td class="n">${mb(alloc)}</td><td class="n">${mb(T("planned"))}</td><td class="n">${mb(T("com"))}</td><td class="n">${mb(T("acc"))}</td><td class="n">${mb(T("paid"))}</td><td></td><td class="n">${mb(sumv(rows.map(r => famHeadroom(r.l.id))))}</td></tr></tfoot></table></div>
+    ${top ? `<div class="body"><div class="callout" style="margin:0"><b>${L("ตอบได้ในที่เดียว", "Answered in one place")}</b> ${esc(tx(top.l.name))}: ${L("จัดสรร", "allocated")} ${mb(top.l.amount)} · ${L("ผูกพัน", "committed")} ${mb(top.com)} · ${L("จ่ายแล้ว", "paid")} ${mb(top.paid)} · ${L("ยังไม่ผูกพัน", "not committed")} ${mb(famHeadroom(top.l.id))} ${L("ล้านบาท", "M baht")} · ${overdue.length ? `${overdue.length} ${L("งวดเลยกำหนดและยังไม่ตรวจรับ", "overdue phases are not accepted yet")}` : L("ไม่มีงวดเลยกำหนด", "no overdue phases")}</div></div>` : ""}</section>
+  ${overdue.length ? `<section class="panel"><header><h2>${L("งวดที่เลยกำหนดและยังไม่ตรวจรับ", "Overdue phases not yet accepted")}</h2></header><div class="tbl-wrap"><table><thead><tr><th>${L("สัญญา", "Contract")}</th><th>${L("งวด", "Phase")}</th><th>${L("กำหนด", "Due")}</th><th class="n">${L("วงเงิน (ลบ.)", "Amount (M)")}</th></tr></thead>
+    <tbody>${overdue.map(x => `<tr><td><span class="mono">${x.c.id}</span> ${esc(tx(famPlan(x.c.plan).name))}</td><td>${tx(x.ph.name)}</td><td>${dueText(x.ph.due)}</td><td class="n">${mb(x.ph.amount)}</td></tr>`).join("")}</tbody></table></div></section>` : ""}`;
+};
+
+FIN.pay = () => {
+  const accepted = famAcceptedUnpaid(), viaTxt = onBehalf("exec", "spend"), auth = canSpend(), isFin = ROLE === "fin";
+  return `
+  ${auth && viaTxt ? `<div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("คุณกำลังอนุมัติแทนผู้บริหาร", "You are approving on the executive's behalf")}</b><p>${viaTxt.replace(/^ · /, "")} · ${L("ผู้ขอเบิกจ่ายและกรรมการตรวจรับของรายการนั้นอนุมัติไม่ได้ (SD-03, SD-04)", "The payment's requester and the contract's committee members can't approve it (SD-03, SD-04)")}</p></div></div>` : ""}
+  ${isFin ? `<section class="panel"><header><h2>${L("ขออนุมัติเบิกจ่าย", "Request a payment")}</h2><span class="sp"></span><span class="sub">${L("ขอได้เฉพาะงวดที่คณะกรรมการตรวจรับครบแล้ว", "Only for phases the committee has fully accepted")}</span></header>
+    ${accepted.length ? `<div class="body"><form class="inline-form" id="py-form">
+      <div class="f" style="flex:2 1 280px"><label for="py-ph">${L("งวดที่ตรวจรับแล้ว", "Accepted phase")}</label><select id="py-ph">${accepted.map(x => `<option value="${x.c.id}|${x.ph.n}" ${PAY_FORM === x.c.id + "|" + x.ph.n ? "selected" : ""}>${x.c.id} · ${esc(tx(x.c.vendor))} · ${tx(x.ph.name)} · ${mb(x.ph.amount)}</option>`).join("")}</select></div>
+      <div class="f" style="flex:0 1 170px"><label for="py-amt">${L("วงเงินที่ขอ (ลบ.)", "Amount (M)")}</label><input type="number" id="py-amt" min="0.001" step="0.001" required></div>
+      <button class="btn primary" type="submit">${L("ส่งขออนุมัติ", "Send for approval")}</button></form></div>`
+      : `<div class="body sub">${L("ไม่มีงวดที่ตรวจรับแล้วและยังไม่ได้ขอเบิก", "No accepted phase is waiting for a payment request")}</div>`}</section>` : ""}
+  <section class="panel"><header><h2>${L("คำขออนุมัติเบิกจ่าย", "Payment requests")}</h2></header>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("สัญญา / งวด", "Contract / phase")}</th><th class="n">${L("วงเงิน (ลบ.)", "Amount (M)")}</th><th>${L("ผู้ขอ", "Requested by")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
+      <tbody>${S.payreqs.slice().reverse().map(p => { const c = famCon(p.contract), ph = c.phases.find(x => x.n === p.phase);
+        return `<tr><td class="mono">${p.id}</td><td><span class="mono">${c.id}</span> ${esc(tx(c.vendor))}<div class="sub">${tx(ph.name)} · ${esc(tx(famPlan(c.plan).name))}</div></td><td class="n">${mb(p.amount)}</td><td>${esc(userName(p.by))}<div class="sub">${fdate(p.t, true)}</div></td>
+          <td>${stTag(PAY_ST, p.status)}${p.decided ? `<div class="sub">${esc(userName(p.decided.by))}${p.decided.via ? ` · ${L("แทน", "for")} ${esc(userName(p.decided.holder))} (${p.decided.via})` : ""}</div>` : ""}</td>
+          <td><div class="row" style="flex-wrap:nowrap">${p.status === "pending" && auth ? `<button class="btn primary" type="button" data-pyok="${p.id}">${viaTxt ? L("อนุมัติแทน", "Approve on behalf") : L("อนุมัติ", "Approve")}</button><button class="btn danger" type="button" data-pyno="${p.id}">${L("ไม่อนุมัติ", "Reject")}</button>` : ""}${historyBtn(p.id, p.id)}</div></td></tr>`; }).join("")
+        || `<tr><td colspan="6" class="sub">${L("ยังไม่มีคำขอ", "No requests yet")}</td></tr>`}</tbody></table></div></section>`;
+};
+
+FIN.recon = () => {
+  const appr = S.payreqs.filter(p => p.status === "approved"), isFin = ROLE === "fin", files = S.gfmisFiles || [];
+  const open = appr.filter(p => reconState(p) === "none" || reconState(p) === "diff").length;
+  return `
+  <div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("กระทบยอดกับไฟล์รายงานจาก GFMIS", "Reconcile with a GFMIS report file")}</b>
+    <p>${L("ระหว่างรอยืนยันช่องทางเชื่อมต่อ (ประเด็น D-F05) ใช้ไฟล์รายงานที่ส่งออกจาก GFMIS ระบบเทียบรายการจ่ายกับที่อนุมัติใน Fisko ผู้กระทบยอดต้องไม่ใช่ผู้อนุมัติรายการนั้น (SD-05)", "Until the access channel is confirmed (decision D-F05), a report file exported from GFMIS is used. Payments are matched with what was approved in Fisko; the person reconciling can't be the one who approved it (SD-05).")}</p></div></div>
+  <section class="kpis" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+    <div class="kpi"><span class="l">${L("อนุมัติเบิกจ่ายแล้ว", "Approved payments")}</span><span class="v">${appr.length}</span></div>
+    <div class="kpi"><span class="l">${L("ตรงกับ GFMIS / ชี้แจงแล้ว", "Matched / explained")}</span><span class="v">${appr.filter(p => ["matched", "explained"].includes(reconState(p))).length}</span></div>
+    <div class="kpi"><span class="l">${L("รอไฟล์หรือมีผลต่าง", "Waiting or different")}</span><span class="v" style="color:var(--${open ? "warn" : "accent"})">${open}</span></div>
+  </section>
+  <section class="panel"><header><h2>${L("นำเข้าไฟล์ GFMIS", "Import a GFMIS file")}</h2><span class="sp"></span>${isFin ? `<button class="btn" type="button" id="gf-sample">${L("สร้างไฟล์ตัวอย่าง", "Create a sample file")}</button>` : `<span class="sub">${L("เจ้าหน้าที่การเงินนำเข้า", "Finance officers import")}</span>`}</header>
+    ${GF_ROWS ? `<div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่คำขอ", "Request")}</th><th>${L("เลขที่เอกสาร GFMIS", "GFMIS document")}</th><th class="n">${L("วงเงินในไฟล์ (บาท)", "File amount (baht)")}</th><th>${L("วันที่", "Date")}</th><th>${L("ผลตรวจ", "Check")}</th></tr></thead>
+      <tbody>${GF_ROWS.map(r => `<tr><td class="mono">${esc(r.pay || "—")}</td><td class="mono">${esc(r.doc)}</td><td class="n">${fmt(r.amount)}</td><td class="sub">${fdate(r.date)}</td><td>${r.state === "matched" ? tag(L("ตรงกัน", "Matches"), "p-ok") : r.state === "diff" ? tag(`${L("ผลต่าง", "Difference")} ${fmt(r.amount - r.expect)}`, "p-bad") : tag(L("ไม่พบในระบบ", "Not in Fisko"), "p-warn")}</td></tr>`).join("")}</tbody></table></div>
+      <div class="body row"><button class="btn primary" type="button" id="gf-go">${L("นำเข้าไฟล์", "Import file")}</button><button class="btn ghost" type="button" id="gf-clear">${L("ล้าง", "Clear")}</button></div>`
+      : `<div class="body sub">${isFin ? L("กด “สร้างไฟล์ตัวอย่าง” เพื่อสร้างไฟล์จากรายการที่อนุมัติแล้วและยังไม่ตรงกับ GFMIS", "Press “Create a sample file” to build one from approved payments that haven't been matched yet") : L("ยังไม่ได้เลือกไฟล์", "No file chosen")}</div>`}</section>
+  <section class="panel"><header><h2>${L("ผลกระทบยอดรายการเบิกจ่าย", "Reconciliation by payment")}</h2></header>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("สัญญา", "Contract")}</th><th class="n">${L("วงเงิน (บาท)", "Amount (baht)")}</th><th>${L("ผู้อนุมัติ", "Approved by")}</th><th>${L("ผล", "Result")}</th><th></th></tr></thead>
+      <tbody>${appr.map(p => { const st = reconState(p);
+        return `<tr><td class="mono">${p.id}</td><td class="mono">${p.contract}</td><td class="n">${fmt(p.amount)}</td><td>${esc(userName(p.decided.by))}${p.decided.via ? `<div class="sub">${L("แทน", "for")} ${esc(userName(p.decided.holder))}</div>` : ""}</td>
+          <td>${stTag(RECON_ST, st)}${p.recon && p.recon.doc ? `<div class="sub mono">${esc(p.recon.doc)}</div>` : ""}${p.recon && p.recon.note ? `<div class="sub">${esc(p.recon.note)}</div>` : ""}</td>
+          <td>${isFin && st === "diff" ? `<div class="row" style="flex-wrap:nowrap"><input type="text" id="rn-${p.id}" placeholder="${L("คำชี้แจงผลต่าง", "Explain the difference")}" style="min-width:160px"><button class="btn" type="button" data-rexp="${p.id}">${L("บันทึกคำชี้แจง", "Save")}</button></div>` : ""}${historyBtn(p.id, p.id)}</td></tr>`; }).join("")
+        || `<tr><td colspan="6" class="sub">${L("ยังไม่มีรายการที่อนุมัติเบิกจ่าย", "No approved payments yet")}</td></tr>`}</tbody></table></div></section>
+  ${files.length ? `<section class="panel"><header><h2>${L("ประวัติการนำเข้าไฟล์", "File import log")}</h2></header><div class="tbl-wrap"><table><thead><tr><th>${L("ไฟล์", "File")}</th><th>${L("เวลา", "Time")}</th><th>${L("ผู้นำเข้า", "By")}</th><th class="n">${L("แถว", "Rows")}</th><th class="n">${L("ไม่ตรง", "Not matching")}</th></tr></thead>
+    <tbody>${files.map(g => `<tr><td class="mono">${g.id}</td><td class="sub">${fdate(g.t, true)}</td><td>${esc(userName(g.by))}</td><td class="n">${g.rows.length}</td><td class="n">${g.rows.filter(r => r.state !== "matched").length}</td></tr>`).join("")}</tbody></table></div></section>` : ""}`;
+};
+
+VIEWS.finance = () => {
+  if (!FIN[FIN_TAB]) FIN_TAB = "chain";
+  const pend = S.payreqs.filter(p => p.status === "pending").length;
+  const tabs = [["chain", L("สายงบประมาณถึงการจ่าย", "Allocation to payment")], ["pay", `${L("ขออนุมัติเบิกจ่าย", "Payments")}${pend ? ` (${pend})` : ""}`], ["recon", L("กระทบยอด GFMIS", "GFMIS reconciliation")]];
+  return `
+  <div class="head"><div><div class="eyebrow">Fisko Finance · ${L("เวอร์ชันเบา", "light version")}</div><h1>${L("วงเงินผูกพันและการเบิกจ่าย", "Commitments and payments")}</h1>
+    <p>${L("ควบคุมวงเงินผูกพันจากสัญญา และกระทบยอดกับ GFMIS การบันทึกบัญชีและการจ่ายเงินทางการยังทำใน GFMIS", "Control commitments from contracts and match results with GFMIS. Official recording and payment stay in GFMIS.")} · ${fyLabel(FAM_FY)}</p></div></div>
+  <div class="tabs" role="tablist">${tabs.map(([id, l]) => `<button class="tab ${id === FIN_TAB ? "on" : ""}" type="button" role="tab" aria-selected="${id === FIN_TAB}" data-fntab="${id}">${l}</button>`).join("")}</div>
+  ${FIN[FIN_TAB]()}`;
+};
+
+BIND.finance = () => {
+  $$("[data-fntab]").forEach(b => (b.onclick = () => { FIN_TAB = b.dataset.fntab; route(); }));
+  const pf = $("#py-form");
+  if (pf) {
+    const fill = () => { const [cid, n] = $("#py-ph").value.split("|"), ph = famCon(cid).phases.find(x => x.n === Number(n)); $("#py-amt").value = (ph.amount / 1e6).toFixed(3); };
+    $("#py-ph").onchange = fill; fill();
+    pf.onsubmit = e => {
+      e.preventDefault();
+      const [cid, n] = $("#py-ph").value.split("|"), c = famCon(cid), ph = c.phases.find(x => x.n === Number(n)), amount = Math.round(Number($("#py-amt").value) * 1e6 / 1e3) * 1e3;
+      if (!(amount > 0) || amount > ph.amount) { toast(L("วงเงินที่ขอต้องไม่เกินวงเงินของงวด", "The amount can't exceed the phase amount")); return; }
+      const p = { id: nextId("PY", S.payreqs), contract: c.id, phase: ph.n, amount, by: me().id, status: "pending", t: nowIso(), decided: null, recon: null };
+      S.payreqs.push(p);
+      audit(["ขออนุมัติเบิกจ่าย", "Requested a payment approval"], `${p.id} ${c.id}`);
+      notify(["exec"], [`คำขอเบิกจ่าย ${p.id} รออนุมัติ`, `Payment request ${p.id} is waiting for approval`], "fnc-pay");
+      commit(); renderShell(); route(); toast(L("ส่งขออนุมัติเบิกจ่ายแล้ว", "Sent for approval"));
+    };
+  }
+  const decide = (id, ok) => {
+    const p = S.payreqs.find(x => x.id === id), c = famCon(p.contract), au = famAuth();
+    if (ok) {
+      const actors = sodActors("exec", "spend");
+      if (!sodCheck("SD-03", actors, [p.by], p.id)) return;
+      if (!sodCheck("SD-04", actors, [...new Set([...c.inspectors, ...phaseSigners(c)])], p.id)) return;
+    }
+    p.status = ok ? "approved" : "rejected"; p.decided = { by: me().id, holder: au.holder, via: au.via, t: nowIso() };
+    audit(ok ? ["อนุมัติเบิกจ่าย", "Approved a payment"] : ["ไม่อนุมัติเบิกจ่าย", "Rejected a payment"], `${p.id} ${c.id}${onBehalf("exec", "spend")}`);
+    notify(["fin"], ok ? [`${p.id} อนุมัติแล้ว บันทึกใน GFMIS และนำเข้าไฟล์กระทบยอด`, `${p.id} is approved; record it in GFMIS and import the file to reconcile`] : [`${p.id} ไม่ได้รับอนุมัติ`, `${p.id} was not approved`], "fnc-recon");
+    commit(); renderShell(); route(); toast(ok ? L("อนุมัติเบิกจ่ายแล้ว", "Payment approved") : L("ไม่อนุมัติ", "Rejected"));
+  };
+  $$("[data-pyok]").forEach(b => (b.onclick = () => decide(b.dataset.pyok, true)));
+  $$("[data-pyno]").forEach(b => (b.onclick = () => decide(b.dataset.pyno, false)));
+  const sample = $("#gf-sample");
+  if (sample) sample.onclick = () => {
+    const todo = S.payreqs.filter(p => p.status === "approved" && ["none", "diff"].includes(reconState(p)));
+    GF_ROWS = todo.map((p, i) => ({ pay: p.id, doc: `GF-70-${String(430 + i).padStart(6, "0")}`, amount: i === 0 ? p.amount - 1000 : p.amount, expect: p.amount, date: TODAY, state: i === 0 ? "diff" : "matched" }));
+    GF_ROWS.push({ pay: "", doc: "GF-70-000499", amount: 250000, expect: 0, date: TODAY, state: "extra" });
+    if (!todo.length) toast(L("ไม่มีรายการอนุมัติที่รอกระทบยอด จึงมีเฉพาะแถวที่ไม่พบในระบบ", "No approved payment is waiting, so the file only has a row that isn't in Fisko"));
+    route();
+  };
+  const go_ = $("#gf-go");
+  if (go_) go_.onclick = () => {
+    const g = { id: `GF-${FAM_FY}-${String(S.gfmisFiles.length + 1).padStart(2, "0")}`, t: nowIso(), by: me().id, rows: GF_ROWS.map(r => ({ pay: r.pay, doc: r.doc, amount: r.amount, date: r.date, state: r.state })) };
+    GF_ROWS.filter(r => r.pay).forEach(r => { const p = S.payreqs.find(x => x.id === r.pay); p.recon = { state: r.state === "matched" ? "matched" : "diff", doc: r.doc, file: g.id, t: g.t, diff: r.amount - r.expect }; });
+    S.gfmisFiles.unshift(g); GF_ROWS = null;
+    audit(["นำเข้าไฟล์ GFMIS และกระทบยอด", "Imported a GFMIS file and reconciled"], `${g.id} · ${g.rows.length}`);
+    commit(); renderShell(); route(); toast(L("นำเข้าไฟล์แล้ว", "File imported"));
+  };
+  const clr = $("#gf-clear"); if (clr) clr.onclick = () => { GF_ROWS = null; route(); };
+  $$("[data-rexp]").forEach(b => (b.onclick = () => {
+    const p = S.payreqs.find(x => x.id === b.dataset.rexp), note = $("#rn-" + p.id).value.trim();
+    if (!note) { toast(L("พิมพ์คำชี้แจงก่อน", "Type an explanation first")); return; }
+    if (!sodCheck("SD-05", [me().id], [p.decided.by, p.decided.holder], p.id)) return;
+    p.recon = Object.assign({}, p.recon, { state: "explained", note, by: me().id });
+    audit(["ชี้แจงผลต่างจากการกระทบยอด", "Explained a reconciliation difference"], `${p.id} · ${note}`);
+    commit(); route(); toast(L("บันทึกคำชี้แจงแล้ว", "Explanation saved"));
+  }));
+};
+
+/* ---- 64-duties.js ---- */
+// Segregation of duties (round 11): rules that stop one person doing consecutive steps on the same item
+// across Fisko Procurement and Fisko Finance. Delegation never bypasses them: the signed-in user and the
+// person whose authority they hold are both checked. Rules can be switched off in M10 (admin only).
+const SOD_RULES = [
+  ["SD-01", ["ผู้ขอซื้อขอจ้างต้องไม่เป็นผู้อนุมัติใบขอซื้อรายการเดียวกัน", "A requester can't approve their own requisition"]],
+  ["SD-02", ["ผู้ดำเนินการจัดซื้อต้องไม่เป็นกรรมการตรวจรับสัญญาเดียวกัน", "The procurement officer can't sit on the acceptance committee of the same contract"]],
+  ["SD-03", ["ผู้ขอเบิกจ่ายต้องไม่เป็นผู้อนุมัติเบิกจ่ายรายการเดียวกัน", "A payment's requester can't approve it"]],
+  ["SD-04", ["ผู้อนุมัติเบิกจ่ายต้องไม่เป็นกรรมการตรวจรับสัญญาเดียวกัน", "A payment's approver can't be on the contract's acceptance committee"]],
+  ["SD-05", ["ผู้กระทบยอดต้องไม่เป็นผู้อนุมัติเบิกจ่ายรายการนั้น", "The person reconciling can't be the one who approved the payment"]],
+];
+const SOD_STEPS = [
+  [["ขอซื้อ / ขอจ้าง", "Raise a requisition"], ["อนุมัติใบขอซื้อ", "Approve the requisition"], "SD-01"],
+  [["ดำเนินการจัดซื้อและสร้างสัญญา", "Run the procurement and create the contract"], ["ตรวจรับงาน", "Accept the work"], "SD-02"],
+  [["ขออนุมัติเบิกจ่าย", "Request the payment"], ["อนุมัติเบิกจ่าย", "Approve the payment"], "SD-03"],
+  [["ตรวจรับงาน", "Accept the work"], ["อนุมัติเบิกจ่าย", "Approve the payment"], "SD-04"],
+  [["อนุมัติเบิกจ่าย", "Approve the payment"], ["กระทบยอดกับ GFMIS", "Reconcile with GFMIS"], "SD-05"],
+];
+const sodOn = id => { const r = ((S.sod || {}).rules || []).find(x => x.id === id); return !r || r.on; };
+// The people acting on a step: the signed-in user, plus the person whose authority they hold when acting by delegation.
+function sodActors(role, scope) { const ids = [me().id]; if (ROLE !== role) { const d = delegFor(role, scope); if (d) ids.push(d.from); } return ids; }
+function sodCheck(rule, actors, others, item) {
+  if (!sodOn(rule)) return true;
+  const clash = actors.find(a => others.includes(a));
+  if (!clash) return true;
+  const txt = SOD_RULES.find(r => r[0] === rule)[1], by = me().id;
+  S.sod.blocks.unshift({ t: nowIso(), by, role: ROLE, rule, item, who: clash });
+  if (S.sod.blocks.length > 100) S.sod.blocks.length = 100;
+  audit(["ระบบกันรายการตามกฎแยกหน้าที่", "Blocked by a duty-separation rule"], `${item} · ${rule} · ${userName(clash)}${clash !== by ? ` (${L("ผู้มอบอำนาจ", "delegator")})` : ""}`);
+  commit();
+  toast(`${rule}: ${tx(txt)} · ${userName(clash)}`);
+  return false;
+}
+
+ADMIN_TABS.push({ id: "duties", roles: ["admin", "audit"], label: ["การแยกหน้าที่", "Duty separation"] });
+ADMIN.duties = () => {
+  const ad = isAdmin(), B = S.sod.blocks;
+  return `
+  <section class="panel"><header><h2>${L("กฎการแยกหน้าที่", "Duty-separation rules")}</h2><span class="sp"></span>${tag(ad ? L("แก้ไขได้", "Editable") : L("ดูอย่างเดียว", "View only"), ad ? "p-ok" : "p-mute")}</header>
+    <div class="tbl-wrap"><table><thead><tr><th class="c" style="width:70px">${L("ใช้งาน", "On")}</th><th>${L("รหัส", "ID")}</th><th>${L("ขั้นแรก", "First step")}</th><th>${L("ขั้นถัดไป", "Next step")}</th><th>${L("กฎ", "Rule")}</th></tr></thead>
+      <tbody>${SOD_STEPS.map(([a, b, id]) => `<tr><td class="c">${sw("sod-" + id, sodOn(id), !ad)}</td><td class="mono">${id}</td><td>${tx(a)}</td><td>${tx(b)}</td><td class="sub">${tx(SOD_RULES.find(r => r[0] === id)[1])}</td></tr>`).join("")}</tbody></table></div>
+    <div class="body sub">${L("ตรวจกับตัวผู้ทำรายการและผู้ที่มอบอำนาจให้ทุกครั้ง การปิดกฎต้องมีเหตุผลและแจ้งผู้ตรวจสอบ · ค่าเริ่มต้นนี้เป็นข้อเสนอ (ประเด็น D-F04) หน่วยงานปรับตามนโยบายควบคุมภายในได้", "Each rule checks the person acting and anyone who delegated to them. Switching a rule off is recorded and visible to Audit. These defaults are a proposal (decision D-F04); an agency adjusts them to its internal-control policy.")}</div></section>
+  <section class="panel"><header><h2>${L("รายการที่ระบบกันไว้", "Attempts the system blocked")}</h2><span class="sp"></span><span class="sub">${B.length} ${L("รายการ", "entries")}</span></header>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("เวลา", "Time")}</th><th>${L("รายการ", "Item")}</th><th>${L("กฎ", "Rule")}</th><th>${L("ผู้พยายาม", "Attempted by")}</th><th>${L("ติดกฎเพราะ", "Blocked because of")}</th></tr></thead>
+      <tbody>${B.map(b => `<tr><td class="sub" style="white-space:nowrap">${fdate(b.t, true)}</td><td class="mono">${esc(b.item)}</td><td class="mono">${b.rule}</td><td>${esc(userName(b.by))}<div class="sub">${tx(ROLES[b.role])}</div></td><td>${esc(userName(b.who))}${b.who !== b.by ? `<div class="sub">${L("ผู้มอบอำนาจ", "delegator")}</div>` : ""}</td></tr>`).join("")
+        || `<tr><td colspan="5" class="sub">${L("ยังไม่มีรายการที่ถูกกัน", "Nothing has been blocked yet")}</td></tr>`}</tbody></table></div></section>`;
+};
+BIND_ADMIN.duties = () => SOD_RULES.forEach(([id]) => {
+  const el = $("#sod-" + id); if (!el || el.disabled) return;
+  el.onchange = () => {
+    const r = S.sod.rules.find(x => x.id === id); r.on = el.checked;
+    audit([el.checked ? "เปิดกฎแยกหน้าที่" : "ปิดกฎแยกหน้าที่", el.checked ? "Switched a duty-separation rule on" : "Switched a duty-separation rule off"], id);
+    if (!el.checked) notify(["audit"], [`ผู้ดูแลระบบปิดกฎแยกหน้าที่ ${id}`, `An administrator switched off duty rule ${id}`], "admin-duties");
+    commit(); route(); toast(L("บันทึกแล้ว", "Saved"));
+  };
+});
+
+// ---- search: plan items, contracts and payments ----
+Object.assign(STYPE, { plan: ["แผนจัดซื้อ", "Plan item"], contract: ["สัญญา", "Contract"], payment: ["คำขอเบิกจ่าย", "Payment"] });
+{
+  const base = searchItems;
+  searchItems = () => {
+    const out = base(), add = (type, page, label, sub, run, hay) => { if (allowed(page)) out.push({ type, label, sub, run, hay: (label + " " + sub + " " + hay).toLowerCase() }); };
+    (S.pplan || []).forEach(p => add("plan", "procurement", `${p.id} ${tx(p.name)}`, tx(PLAN_ST[p.status][0]), () => jump("prc-plan"), p.name.join(" ")));
+    (S.contracts || []).forEach(c => add("contract", "procurement", `${c.id} ${c.no}`, `${tx(c.vendor)} · ${mb(c.amount)} ${L("ลบ.", "M")}`, () => jump("prc-contracts"), c.vendor.join(" ") + " " + famPlan(c.plan).name.join(" ")));
+    (S.payreqs || []).forEach(p => add("payment", "finance", p.id, `${p.contract} · ${mb(p.amount)} ${L("ลบ.", "M")}`, () => jump("fnc-pay"), p.contract));
+    return out;
+  };
+}
+
+NAV.push(
+  { id: "procurement", code: "PR", group: "family", roles: ["proc", "div", "exec", "plan", "fin", "audit"], label: ["Fisko Procurement · จัดซื้อจัดจ้าง", "Fisko Procurement"] },
+  { id: "finance", code: "FN", group: "family", roles: ["fin", "exec", "plan", "audit"], label: ["Fisko Finance · ผูกพันและเบิกจ่าย", "Fisko Finance"] },
+);
 
 /* ---- 99-boot.js ---- */
 // Boot: pick the saved organization, load its state, draw the shell and the current page.

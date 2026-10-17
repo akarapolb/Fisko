@@ -4,7 +4,7 @@ Rounds 1–7 built the full module set and the platform features (sign-in, searc
 Rounds 8–10 take each module one level deeper, toward what a ministry budget office actually does day to day.
 All figures stay fictional and labelled as sample data.
 
-**Status:** rounds 8, 9 and 10 are built and published. M09 is now also open to the Auditor role, for reviewing spending anomalies.
+**Status:** rounds 8, 9 and 10 are built and published. Round 11 (outside the original plan) added light versions of Fisko Procurement and Fisko Finance, described in `HANDOFF.md` section 12. M09 is now also open to the Auditor role, for reviewing spending anomalies.
 
 | Round | Module | Deeper feature | What the demo shows |
 |---|---|---|---|

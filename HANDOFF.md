@@ -73,6 +73,7 @@ It is one global scope: every `src/js` file becomes part of one `<script>`, so t
 | `20-shell.js`, `30-home.js` | Navigation, top bar, My Workspace tasks (`myTasks()`), `jump()` |
 | `40` to `48` | The modules. Files ending in `b` or `c` are tabs and deeper features added later |
 | `50`, `50b` | M10 administration |
+| `60`, `62`, `64` | Fisko Procurement, Fisko Finance, duty-separation engine and its M10 tab |
 | `52-demo.js` | The in-app demo guide (`DEMO` array) |
 | `54-identity.js`, `56-search.js`, `58-history.js` | Sign-in and delegation, global search, record history drawer |
 | `99-boot.js` | Startup |
@@ -90,7 +91,7 @@ Conventions worth knowing before you edit:
 ## 5. State and data
 
 - State is kept per organisation in `localStorage` under `fisko-v1-<org>` (`sample` or `dpt`). Other keys: `fisko-session`, `fisko-lang`, `fisko-role`, `fisko-org`.
-- `DATA_V` in `00-core.js` (now **10**) is the seed version. **Bump it whenever you change the shape of seeded data**, or browsers that already hold old saved state will keep the old shape and break. Bumping resets everyone's saved demo data once.
+- `DATA_V` in `00-core.js` (now **11**) is the seed version. **Bump it whenever you change the shape of seeded data**, or browsers that already hold old saved state will keep the old shape and break. Bumping resets everyone's saved demo data once.
 - Seed data is built by `buildOrg()` in `06-seedhelp.js`. Rounds 7 to 10 add their data at the end of that function, in clearly commented blocks.
 - All dates are anchored to a constant, `TODAY = "2026-10-16"` in `00-core.js`, **not the computer's clock**. So deadlines, "days left" and delegation periods behave the same on any day. Only the time of day comes from the real clock.
 - Two organisations: a fictional department (`sample`), and กรมโยธาธิการและผังเมือง (`dpt`) with fictional figures and an indicative unit structure. Keep real-agency data out of the published build. The filename pattern `*data-dpt*` is what does that.
@@ -121,6 +122,7 @@ Tested only in the browser pane (a Chromium engine). Safari and Firefox were not
 | 8 | M01 project bank and plan revision; M02 price catalogue and paste from Excel; M03 ceiling responses and 4-year forward estimates |
 | 9 | M04 budget hearings and cut impact; M05 parliament stages; M06 allotment releases and carry-over |
 | 10 | M07 year-end forecast and procurement milestones; M08 project evaluation and lessons; M09 spending anomalies and justification quality; M10 notification templates, SLAs, retention and backup |
+| 11 | Light versions of Fisko Procurement and Fisko Finance, a procurement officer role, and duty-separation rules (see section 12) |
 
 After round 10 the demo guide and script were rewritten, and the design document went to v0.3 with the new requirements tagged "ใหม่ v0.3".
 
@@ -136,7 +138,7 @@ After round 10 the demo guide and script were rewritten, and the design document
 
 ## 9. Known limitations and simplifications
 
-- The design document lists seven roles, including a budget committee. The prototype has six; committee resolutions are recorded by Planning or the executive.
+- The design document lists seven roles, including a budget committee. The prototype has seven too, but not the same seven: it adds a procurement officer and still has no committee role. Committee resolutions are recorded by Planning or the executive, and contract acceptance committees are just named users on the contract.
 - Delegation is checked for scope and dates. The design proposes banning re-delegation, but the prototype does not enforce or demonstrate it.
 - Notification templates have a LINE channel toggle, but there is no matching interface in the prototype's integration list (the design proposes it as IF-08, pending approval).
 - Cut impact and the spending forecast use simple proportional assumptions, explained on screen and in the design document.
@@ -170,3 +172,13 @@ Engineering, if the prototype is kept going:
 - **Stopping the local server.** `Stop-Process` on the `http.server` process reports exit code 255 but does stop it.
 - **Line endings.** Git warns that LF will become CRLF. It is harmless here.
 - **Commit messages** end with the attribution line the session was told to use. Branch is `main` and was left as is on purpose.
+
+## 12. Fisko Procurement and Fisko Finance (round 11)
+
+Built as light versions inside the same prototype, following the product family concept (decisions D-F01 to D-F03 and D-F06). The working defaults for the two open decisions are the ones chosen in this session: **files only** for e-GP and GFMIS (D-F05) and the **chapter 7 table** for duty separation (D-F04).
+
+- **Where:** two new menu items under "More Fisko products" (`procurement`, `finance`) and an M10 tab, "Duty separation". Code is in `60-procurement.js`, `62-finance.js` and `64-duties.js`. Deep links are `prc-<tab>` and `fnc-<tab>`.
+- **Data:** FY2570 only, built on the M06 allocation lines. Seeded in `06-seedhelp.js` (round 11 block): a procurement plan (`S.pplan`), requisitions (`S.reqn`), contracts with phases and acceptance signatures (`S.contracts`), payment requests (`S.payreqs`), GFMIS file imports (`S.gfmisFiles`), e-GP file imports (`S.egpImports`) and the duty rules (`S.sod`). A procurement officer user is added to both organisations.
+- **Chain:** allocation line, plan item, requisition (executive approves, within the room left on the line), contract (procurement officer creates it, which commits the line), acceptance (2 signatures from the committee), payment request (finance), payment approval (executive), file reconciliation (finance).
+- **Duty rules SD-01 to SD-05** are checked on the signed-in user and on the person whose authority they hold by delegation, so delegation can't get around them. Blocked attempts are logged in the audit log and shown in M10 → Duty separation. The two seeded delegations of "approve requisitions and payments" (to Planning and to Finance) exist so the SD-04 and SD-03 blocks can be shown in the demo. SD-01, SD-02 and SD-05 are in the code but are hard to trigger with the sample users.
+- **Not done:** the light M06 and M07 screens in Fisko Budget still keep their own data and don't read from the new products yet (the concept says they should). The demo guide and demo script don't cover these screens. The design document (Solution Design) and the concept document were not changed for these screens, except for the note in concept chapter 9.

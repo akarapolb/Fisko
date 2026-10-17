@@ -1,5 +1,5 @@
 // App shell: navigation by role, top bar controls, notification centre, upcoming-module pages.
-const ALL = ["div", "plan", "exec", "fin", "audit", "admin"];
+const ALL = ["div", "plan", "exec", "fin", "audit", "admin", "proc"];
 NAV.push(
   { id: "home", code: "", group: "overview", roles: ALL, label: ["พื้นที่ทำงานของฉัน", "My Workspace"] },
   { id: "strategy", code: "M01", group: "form", roles: ["plan", "exec", "div", "audit"], label: ["แผนยุทธศาสตร์", "Strategic Planning"],
@@ -11,7 +11,7 @@ NAV.push(
     plan: [["ตรวจรหัสและโครงสร้างข้อมูลก่อนส่ง", "Pre-submission code and structure checks"], ["ตัวอย่างแบบฟอร์มคำขอ", "Request form preview"], ["ส่งออก Excel / PDF", "Excel / PDF export"], ["ติดตามสถานะและบันทึกผลพิจารณา", "Status tracking and Budget Bureau results"]] },
   { id: "allocation", code: "M06", group: "exec", roles: ["fin", "plan", "exec", "audit"], label: ["จัดสรรงบประมาณ", "Budget Allocation"],
     plan: [["บันทึกวงเงินตามพระราชบัญญัติงบประมาณ", "Record the appropriation"], ["จัดสรรรายหน่วยงานและโครงการ", "Allocate by unit and project"], ["แผนการใช้จ่ายรายเดือน", "Monthly spending plan"], ["โอนเปลี่ยนแปลงผ่าน Workflow", "Budget transfers through the workflow"]] },
-  { id: "dashboard", code: "M07", group: "exec", roles: ["exec", "plan", "fin", "audit", "div"], label: ["ติดตามการใช้จ่าย", "Execution Monitoring"] },
+  { id: "dashboard", code: "M07", group: "exec", roles: ["exec", "plan", "fin", "audit", "div", "proc"], label: ["ติดตามการใช้จ่าย", "Execution Monitoring"] },
   { id: "performance", code: "M08", group: "exec", roles: ["plan", "exec", "div", "audit"], label: ["ผลสัมฤทธิ์", "Performance"],
     plan: [["บันทึกผลตัวชี้วัด", "Enter KPI results"], ["ห่วงโซ่ผลลัพธ์รายโครงการ", "Results chain per project"], ["Scorecard งบประมาณกับผลลัพธ์", "Budget vs outcome scorecard"], ["รายงานประเมินผล", "Evaluation report"]] },
   { id: "assistant", code: "M09", group: "intel", roles: ["exec", "plan", "fin", "div", "audit"], label: ["ผู้ช่วย AI งบประมาณ", "AI Budget Assistant"] },
@@ -24,6 +24,7 @@ function navBadge(id) {
       : ROLE === "plan" ? S.requests.filter(r => r.status === "plan").length : 0;
     return n ? `<span class="badge">${n}</span>` : "";
   }
+  if (id === "procurement" || id === "finance") return famBadge(id);
   if (id === "review" && (ROLE === "plan" || ROLE === "exec")) return `<span class="badge">${S.review.length}</span>`;
   if (id === "admin" && ROLE === "admin") { const n = S.integrations.filter(i => i.status === "error").length; return n ? `<span class="badge">${n}</span>` : ""; }
   return "";

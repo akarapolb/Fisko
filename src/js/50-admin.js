@@ -15,7 +15,7 @@ const MAP_TYPE = { same: [["คงเดิม", "Unchanged"], "p-mute"], rename
 const MATRIX = { // role -> M01..M10 rights
   exec: ["R", "R", "R", "A", "R", "A", "R", "R", "U", "–"], plan: ["CU", "R", "CU", "U", "CU", "R", "R", "CU", "U", "–"],
   div: ["R", "CU", "–", "R", "–", "R", "U", "U", "U", "–"], fin: ["–", "R", "–", "–", "–", "CU", "CU", "–", "U", "R"],
-  audit: ["R", "R", "R", "R", "R", "R", "R", "R", "U", "R"], admin: ["–", "–", "–", "–", "–", "–", "–", "–", "–", "CU"],
+  audit: ["R", "R", "R", "R", "R", "R", "R", "R", "U", "R"], proc: ["–", "–", "–", "–", "–", "–", "R", "–", "–", "–"], admin: ["–", "–", "–", "–", "–", "–", "–", "–", "–", "CU"],
 };
 const isAdmin = () => ROLE === "admin";
 const sw = (id, on, dis) => `<label class="switch"><input type="checkbox" id="${id}" ${on ? "checked" : ""} ${dis ? "disabled" : ""}><span></span></label>`;
