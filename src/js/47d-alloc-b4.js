@@ -177,7 +177,7 @@ const qTotals = A => [0, 1, 2, 3].map(q => sumv(A.lines.map(l => sumv(l.plan.sli
   const bm = monTabsBar;
   monTabsBar = function () { const h = bm(); return h.replace(/<\/div>\s*$/, `<button class="tab ${MON_TAB === "live" ? "on" : ""}" type="button" role="tab" aria-selected="${MON_TAB === "live"}" data-mtab="live">${L("ปีปัจจุบัน (สด)", "This year (live)")}</button></div>`); };
 }
-const spendT = () => S.spendTargets || { q: [32, 54, 77, 100], end: { all: 94, inv: 80, ope: 98 } };
+const spendT = () => (typeof bcfg === "function" ? bcfg().targets : S.spendTargets) || { q: [32, 54, 77, 100], end: { all: 94, inv: 80, ope: 98 } };
 MON_PANELS.live = () => {
   const A = S.allocs[B4_FY]; if (!A) return `<section class="panel"><div class="body sub">–</div></section>`;
   const mIdx = Math.max(0, Math.min(11, (new Date(TODAY).getFullYear() - (B4_FY - 544)) * 12 + new Date(TODAY).getMonth() - 9)), qNow = Math.floor(mIdx / 3), T = spendT();

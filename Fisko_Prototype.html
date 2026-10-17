@@ -4844,7 +4844,7 @@ CONS_BIND.r3 = () => {
 };
 
 // ---------- zero-based view ----------
-const rolled = r => r.prev > 0 && Math.abs(r.amount / r.prev - 1) <= 0.05;
+const rolled = r => r.prev > 0 && Math.abs(r.amount / r.prev - 1) <= (typeof bcfg === "function" ? bcfg().sig.rollBand : 5) / 100;
 CONS_PANELS.zbb = () => {
   const live = S.requests.filter(r => r.status !== "rejected" && !isPersonnel(r)), news = live.filter(r => !r.prev), cont = live.filter(r => r.prev > 0), roll = cont.filter(rolled), ed = ROLE === "plan";
   return `<section class="stats">
@@ -6494,7 +6494,7 @@ const qTotals = A => [0, 1, 2, 3].map(q => sumv(A.lines.map(l => sumv(l.plan.sli
   const bm = monTabsBar;
   monTabsBar = function () { const h = bm(); return h.replace(/<\/div>\s*$/, `<button class="tab ${MON_TAB === "live" ? "on" : ""}" type="button" role="tab" aria-selected="${MON_TAB === "live"}" data-mtab="live">${L("ปีปัจจุบัน (สด)", "This year (live)")}</button></div>`); };
 }
-const spendT = () => S.spendTargets || { q: [32, 54, 77, 100], end: { all: 94, inv: 80, ope: 98 } };
+const spendT = () => (typeof bcfg === "function" ? bcfg().targets : S.spendTargets) || { q: [32, 54, 77, 100], end: { all: 94, inv: 80, ope: 98 } };
 MON_PANELS.live = () => {
   const A = S.allocs[B4_FY]; if (!A) return `<section class="panel"><div class="body sub">–</div></section>`;
   const mIdx = Math.max(0, Math.min(11, (new Date(TODAY).getFullYear() - (B4_FY - 544)) * 12 + new Date(TODAY).getMonth() - 9)), qNow = Math.floor(mIdx / 3), T = spendT();
@@ -10934,7 +10934,7 @@ function bindAgents() {
   famTasks = R => {
     base(R);
     if (!S.agentRuns) return;
-    S.agentTasks.filter(t => t.role === ROLE || (t.role === "proc" && isProcRole())).forEach(t => R(`${t.title}`, `${t.agent} · ${t.run}`, t.due, t.link, "p-info"));
+    S.agentTasks.filter(t => (t.role === ROLE || (t.role === "proc" && isProcRole()) || (ROLE === "divhead" && t.role === "div")) && (!t.unit || t.unit === me().unit)).forEach(t => R(`${t.title}`, `${t.agent} · ${t.run}`, t.due, t.link, "p-info"));
     S.agentRuns.filter(r => r.status === "waiting" && canApprove(r, r.steps[r.ptr])).forEach(r => R(`${L("Agent รออนุมัติ", "An agent is waiting for you")} ${r.id}`, `${agName(r.agent)} · ${tx([TOOLS[r.steps[r.ptr].tool][1], TOOLS[r.steps[r.ptr].tool][2]])}`, TODAY, "prc-agents", "p-warn"));
   };
 }
@@ -11503,11 +11503,11 @@ const bCanApprove = r => ({ "AG-02": ["plan"], "AG-03": ["plan"], "AG-05": ["fin
 // ---------- forecasts ----------
 function fcYear() {
   const A = S.allocs[B4_FY]; if (!A) return { p10: 0, p50: 0, p90: 0, carry: 0, rows: [] };
-  const P = { per: 1, ope: 0.9, inv: 0.62, sub: 0.95, oth: 0.85 }, end = `${B4_FY - 543}-09-30`;
+  const C = bcfg().fc, P = Object.fromEntries(Object.entries(C.p).map(([k, v]) => [k, v / 100])), end = `${B4_FY - 543}-09-30`;
   const rows = A.lines.map(l => {
     const b = bal(l), cs = S.contracts.filter(c => c.line === l.id), dueIn = sumv(cs.flatMap(c => c.phases.filter(ph => !ph.cancelled && ph.due <= end).map(ph => ph.amount))), dueOut = sumv(cs.flatMap(c => c.phases.filter(ph => !ph.cancelled && ph.due > end).map(ph => ph.amount)));
-    const free = Math.max(0, b.allot - b.com - b.res), exp = Math.min(b.allot, Math.max(b.paid, dueIn) + b.res * 0.8 + free * P[l.type]);
-    return { l, b, exp, carry: dueOut + (l.type === "inv" ? free * 0.25 : 0) };
+    const free = Math.max(0, b.allot - b.com - b.res), exp = Math.min(b.allot, Math.max(b.paid, dueIn) + b.res * C.res / 100 + free * (P[l.type] != null ? P[l.type] : 0.85));
+    return { l, b, exp, carry: dueOut + (l.type === "inv" ? free * C.invCarry / 100 : 0) };
   });
   const tot = sumv(rows.map(x => x.b.allot)) || 1, p50 = sumv(rows.map(x => x.exp)) / tot * 100, spread = Math.max(2, (sumv(rows.filter(x => x.l.type === "inv").map(x => x.b.allot)) / tot) * 25);
   return { p10: Math.max(0, p50 - spread), p50, p90: Math.min(100, p50 + spread * 0.6), carry: sumv(rows.map(x => x.carry)), rows };
@@ -11515,16 +11515,16 @@ function fcYear() {
 
 // ---------- signals BF-01 to 06 ----------
 function bSignals() {
-  const out = [], A = S.allocs[B4_FY];
+  const out = [], A = S.allocs[B4_FY], G = bcfg().sig;
   if (A) {
-    A.lines.filter(l => l.type === "ope" && l.amount && l.plan[11] / l.amount > 0.25).forEach(l => out.push({ id: "BF-01", text: L(`${l.id} วางแผนใช้เดือนกันยายน ${fmt(l.plan[11] / l.amount * 100, 0)}%`, `${l.id} plans ${fmt(l.plan[11] / l.amount * 100, 0)}% in September`), link: "alloc-plan" }));
+    A.lines.filter(l => l.type === "ope" && l.amount && l.plan[11] / l.amount > G.sept / 100).forEach(l => out.push({ id: "BF-01", text: L(`${l.id} วางแผนใช้เดือนกันยายน ${fmt(l.plan[11] / l.amount * 100, 0)}%`, `${l.id} plans ${fmt(l.plan[11] / l.amount * 100, 0)}% in September`), link: "alloc-plan" }));
     const ap = A.transfers.filter(t => t.status === "approved"); A.lines.filter(l => ap.some(t => t.from === l.id) && ap.some(t => t.to === l.id)).forEach(l => out.push({ id: "BF-02", text: L(`${l.id} โอนออกและรับเข้าในปีเดียว`, `${l.id} moved money out and back in the same year`), link: "alloc-transfers" }));
     A.lines.filter(l => l.type === "inv" && bal(l).res + bal(l).com === 0).forEach(l => out.push({ id: "BF-03", text: L(`${l.id} ${tx(l.name)} ยังไม่มีการจองหรือผูกพัน`, `${l.id} ${tx(l.name)} has no reservation or commitment`), link: "alloc-balance" }));
   }
-  S.requests.filter(r => typeof rolled === "function" && rolled(r) && (lastYearRate(r.unit) || 1) < 0.7).forEach(r => out.push({ id: "BF-04", text: L(`${r.id} ยกยอดจากปีก่อน แต่ปีก่อนกองเบิกจ่าย ${fmt(lastYearRate(r.unit) * 100, 0)}%`, `${r.id} rolled over while the unit spent ${fmt(lastYearRate(r.unit) * 100, 0)}% last year`), link: "req:" + r.id }));
-  S.dash.projects.filter(p => S.perf.outputs[p.id] && p.alloc && p.actual / p.alloc > 0.8 && (S.perf.outputs[p.id].result || 0) / S.perf.outputs[p.id].target < 0.5).forEach(p => out.push({ id: "BF-05", text: L(`${tx(p.name)} ใช้เงิน ${fmt(p.actual / p.alloc * 100, 0)}% แต่ผลผลิตต่ำกว่าครึ่ง`, `${tx(p.name)} spent ${fmt(p.actual / p.alloc * 100, 0)}% but delivered under half`), link: "perf-cost" }));
+  S.requests.filter(r => typeof rolled === "function" && rolled(r) && (lastYearRate(r.unit) || 1) < G.lyRate / 100).forEach(r => out.push({ id: "BF-04", text: L(`${r.id} ยกยอดจากปีก่อน แต่ปีก่อนกองเบิกจ่าย ${fmt(lastYearRate(r.unit) * 100, 0)}%`, `${r.id} rolled over while the unit spent ${fmt(lastYearRate(r.unit) * 100, 0)}% last year`), link: "req:" + r.id }));
+  S.dash.projects.filter(p => S.perf.outputs[p.id] && p.alloc && p.actual / p.alloc > G.spend / 100 && (S.perf.outputs[p.id].result || 0) / S.perf.outputs[p.id].target < G.out / 100).forEach(p => out.push({ id: "BF-05", text: L(`${tx(p.name)} ใช้เงิน ${fmt(p.actual / p.alloc * 100, 0)}% แต่ผลผลิตต่ำกว่าครึ่ง`, `${tx(p.name)} spent ${fmt(p.actual / p.alloc * 100, 0)}% but delivered under half`), link: "perf-cost" }));
   const cut = (S.review || []).filter(v => v.r1 < v.r0).map(v => Math.round(v.r1 / v.r0 * 100));
-  if (cut.length >= 3 && cut.every(x => x === cut[0])) out.push({ id: "BF-06", text: L(`ปรับลดทุกคำขอเท่ากัน ${100 - cut[0]}%`, `Every request cut by the same ${100 - cut[0]}%`), link: "rev-rounds" });
+  if (cut.length >= G.eqMin && cut.every(x => x === cut[0])) out.push({ id: "BF-06", text: L(`ปรับลดทุกคำขอเท่ากัน ${100 - cut[0]}%`, `Every request cut by the same ${100 - cut[0]}%`), link: "rev-rounds" });
   return out;
 }
 
@@ -11588,7 +11588,7 @@ INTEL.bfore = () => {
         <div class="row sub" style="justify-content:space-between"><span>0%</span><span>${L("แถบ = P10–P90 · เส้นเข้ม = P50 · เส้นแดง = เป้า", "band = P10–P90 · dark line = P50 · red line = target")}</span><span>100%</span></div></div>
       <div class="tbl-wrap"><table><thead><tr><th>${L("บรรทัด", "Line")}</th><th class="n">${L("จัดสรร", "Allotted")}</th><th class="n">${L("คาดเบิกจ่าย", "Expected spend")}</th><th class="n">%</th><th class="n">${L("คาดกันเหลื่อมปี", "Expected carry-over")}</th></tr></thead>
         <tbody>${f.rows.filter(x => x.l.type !== "per").map(x => `<tr><td>${esc(tx(x.l.name))}<div class="sub">${x.l.id} · ${unitName(x.l.unit)} · ${typeName(x.l.type)}</div></td><td class="n">${mb(x.b.allot)}</td><td class="n">${mb(x.exp)}</td><td class="n">${fmt(x.b.allot ? x.exp / x.b.allot * 100 : 0, 0)}%</td><td class="n">${x.carry ? mb(x.carry) : "–"}</td></tr>`).join("")}</tbody></table></div>
-      <div class="body sub">${L("วิธีในต้นแบบ: เบิกจ่ายแล้ว หรืองวดสัญญาที่ครบภายในปี (เลือกค่าที่มากกว่า) + 80% ของยอดจอง + ส่วนที่ยังว่างคูณความน่าจะเป็นตามงบรายจ่าย (บุคลากร 100% ดำเนินงาน 90% ลงทุน 62%) · อ่านเป็นช่วง", "Prototype method: paid, or contract phases due within the year (whichever is larger) + 80% of reservations + the free amount times a probability by budget type (personnel 100%, operating 90%, investment 62%) · read it as a range")}</div></section>`;
+      <div class="body sub">${L("วิธีในต้นแบบ: เบิกจ่ายแล้ว หรืองวดสัญญาที่ครบภายในปี (เลือกค่าที่มากกว่า) + ส่วนหนึ่งของยอดจอง + ส่วนที่ยังว่างคูณความน่าจะเป็นตามงบรายจ่าย (ตั้งค่าได้ที่ M10) · อ่านเป็นช่วง", "Prototype method: paid, or contract phases due within the year (whichever is larger) + a share of reservations + the free amount times a probability by budget type (set in M10) · read it as a range")}</div></section>`;
 };
 let WI_B = { cut: 10, how: "rank", delay: "L3", tr: { from: "L10", to: "L14", amt: 1.95 }, sc: { id: "", amt: 1 } };
 INTEL.bwhatif = () => {
@@ -11626,7 +11626,7 @@ INTEL.bkpi = () => {
       <div class="tbl-wrap"><table><thead><tr><th>${L("รหัส", "Code")}</th><th>${L("ตัวชี้วัด", "KPI")}</th><th class="n">${L("ค่า", "Value")}</th><th>${L("นิยาม", "Definition")}</th></tr></thead><tbody>${ks.map(k => `<tr><td class="mono">${k[0]}</td><td>${k[1]}</td><td class="n"><b>${k[2]}</b></td><td class="sub">${k[3]}</td></tr>`).join("")}</tbody></table></div></section>
     <section class="panel"><header>${chipIco("alert", "warn")}<h2>${L("สัญญาณเตือนด้านงบประมาณ", "Budget warning signals")}</h2><span class="sp"></span>${tag(`${sg.length}`, sg.length ? "p-warn" : "p-ok")}</header>
       <ul class="tlist">${sg.map(x => `<li><span class="prio p-warn"></span><div style="min-width:0"><a href="#" data-link="${x.link}">${esc(x.text)}</a><div class="sub mono">${x.id}</div></div><span class="sub">${{ "BF-01": L("เร่งใช้ปลายปี", "Year-end rush"), "BF-02": L("โอนวนกลับ", "Round-trip transfer"), "BF-03": L("ลงทุนไม่ขยับ", "Investment not moving"), "BF-04": L("คำขอยกยอด", "Rolled-over request"), "BF-05": L("ตัวชี้วัดไม่ขยับ", "Results not moving"), "BF-06": L("ตัดเท่ากันทุกคำขอ", "Equal cuts") }[x.id]}</span></li>`).join("") || `<li><span></span><div class="sub">${L("ไม่มีสัญญาณ", "No signals")}</div></li>`}</ul>
-      <div class="body sub">${L("เกณฑ์ตั้งต้นเป็นข้อเสนอ (ระดับ C) ปรับได้ในอนาคตที่ M10", "Default thresholds are proposals (level C), to be made settings in M10")}</div></section>`;
+      <div class="body sub">${L("เกณฑ์ตั้งค่าได้ที่ M10 · ตั้งค่างบประมาณ (AI และสัญญาณ)", "Thresholds are set in M10 · Budget AI and signals")}</div></section>`;
 };
 
 // ---------- seed ----------
@@ -11634,6 +11634,56 @@ function seedBudgetB6(s) {
   [["AG-15", ["Transfer Helper Agent", "Transfer Helper Agent"], ["หาแหล่งเงิน จัดประเภทการโอน และร่างคำขอโอน", "Finds sources, classifies and drafts transfers"]], ["AG-17", ["Report Collector Agent", "Report Collector Agent"], ["รวบรวมรายงานรายไตรมาสและติดตามกองที่ยังไม่ส่ง", "Collects quarterly reports and chases late units"]]].forEach(([id, name, what]) => { if (!s.agents.some(a => a.id === id)) s.agents.push({ id, on: true, uses: 0, name, what }); });
   s.bRuns = [];
 }
+
+/* ---- 69b-budget-settings.js ---- */
+// M10 · Budget AI and signals: the settings that rounds B4 to B6 used to keep in code. Spending targets
+// (per year, from the Cabinet resolution), the forecast assumptions (FC-B1, FC-B2) and the warning-signal
+// thresholds (BF-01 to BF-06, and the zero-based "rolled over" band). The administrator edits; finance and the
+// auditor read. Every change is in the audit log. Values carry their confidence level (B or C).
+const BCFG_DEFAULT = () => ({
+  targets: { q: [32, 54, 77, 100], end: { all: 94, inv: 80, ope: 98 } },
+  fc: { p: { per: 100, ope: 90, inv: 62, sub: 95, oth: 85 }, res: 80, invCarry: 25 },
+  sig: { sept: 25, rollBand: 5, lyRate: 70, spend: 80, out: 50, eqMin: 3 },
+});
+function bcfg() {
+  const d = BCFG_DEFAULT(), c = (S && S.bcfg) || {};
+  return { targets: Object.assign({}, d.targets, S && S.spendTargets, c.targets), fc: { p: Object.assign({}, d.fc.p, (c.fc || {}).p), res: (c.fc || {}).res != null ? c.fc.res : d.fc.res, invCarry: (c.fc || {}).invCarry != null ? c.fc.invCarry : d.fc.invCarry }, sig: Object.assign({}, d.sig, c.sig) };
+}
+ADMIN_TABS.push({ id: "bcfg", label: ["ตั้งค่างบประมาณ (AI และสัญญาณ)", "Budget AI and signals"], roles: ["admin", "fin", "audit"] });
+ADMIN.bcfg = () => {
+  const c = bcfg(), ed = ROLE === "admin", ds = ed ? "" : "disabled";
+  const num = (path, v, o = {}) => `<input type="number" data-bc="${path}" value="${v}" min="${o.min != null ? o.min : 0}" max="${o.max != null ? o.max : 100}" step="${o.step || 1}" ${ds} style="width:80px" aria-label="${path}">`;
+  const row = (label, input, unit, lvl, note) => `<tr><td>${label}${note ? `<div class="sub">${note}</div>` : ""}</td><td class="n">${input} ${unit}</td><td>${tag(lvl, lvl === "B" ? "p-info" : "p-mute")}</td></tr>`;
+  const P = { per: L("งบบุคลากร", "Personnel"), ope: L("งบดำเนินงาน", "Operating"), inv: L("งบลงทุน", "Investment"), sub: L("งบเงินอุดหนุน", "Subsidies"), oth: L("งบรายจ่ายอื่น", "Other") };
+  const sec = (title, sub, rows) => `<section class="panel"><header><h2>${title}</h2><span class="sp"></span><span class="sub">${sub}</span></header><div class="tbl-wrap"><table><thead><tr><th>${L("ค่า", "Setting")}</th><th class="n">${L("ตั้งไว้", "Value")}</th><th>${L("ระดับ", "Level")}</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
+  return `${ed ? "" : `<div class="alert"><div class="ic">i</div><div><b>${L("ดูอย่างเดียว", "View only")}</b><p>${L("ผู้ดูแลระบบเป็นผู้แก้ไข", "The administrator edits these")}</p></div></div>`}
+    <div class="grid2">
+      ${sec(L("เป้าหมายการเบิกจ่ายของปี (BR-21)", "Spending targets for the year (BR-21)"), L("ตามมติ ครม. ของปีนั้น", "From that year's Cabinet resolution"),
+        [0, 1, 2, 3].map(i => row(`${L("สะสมสิ้นไตรมาส", "Cumulative end of Q")}${i + 1}`, num(`targets.q.${i}`, c.targets.q[i]), "%", "B")).join("") +
+        row(L("ภาพรวมสิ้นปี", "Total, year end"), num("targets.end.all", c.targets.end.all), "%", "B") + row(L("รายจ่ายลงทุนสิ้นปี", "Investment, year end"), num("targets.end.inv", c.targets.end.inv), "%", "B") + row(L("รายจ่ายประจำสิ้นปี", "Recurrent, year end"), num("targets.end.ope", c.targets.end.ope), "%", "B"))}
+      ${sec(L("สมมติฐานพยากรณ์ (FC-B1, FC-B2)", "Forecast assumptions (FC-B1, FC-B2)"), L("ใช้ที่ M09 พยากรณ์ปีนี้ และ Agent AG-05", "Used by M09 forecast and agent AG-05"),
+        Object.keys(P).map(k => row(`${L("โอกาสเบิกจ่ายส่วนที่ยังว่าง", "Chance the free amount is spent")} · ${P[k]}`, num(`fc.p.${k}`, c.fc.p[k]), "%", "C")).join("") +
+        row(L("ส่วนของยอดจองที่จะเบิกจ่ายในปี", "Share of reservations spent in the year"), num("fc.res", c.fc.res), "%", "C") +
+        row(L("ส่วนของงบลงทุนที่ยังว่างที่จะกันเหลื่อมปี", "Share of free investment carried over"), num("fc.invCarry", c.fc.invCarry), "%", "C"))}
+    </div>
+    ${sec(L("เกณฑ์สัญญาณเตือน (BF-01 ถึง BF-06)", "Warning-signal thresholds (BF-01 to BF-06)"), L("ใช้ที่ M09 ตัวชี้วัดและสัญญาณ และ M03 มุมมองฐานศูนย์", "Used by M09 KPIs and signals, and the M03 zero-based view"),
+      row(`BF-01 · ${L("แผนใช้เดือนกันยายนเกิน", "September share of the plan above")}`, num("sig.sept", c.sig.sept), "%", "C", L("งบดำเนินงาน", "Operating lines")) +
+      row(`BF-04 · ${L("ยกยอด = เปลี่ยนจากปีก่อนไม่เกิน", "Rolled over = within")}`, num("sig.rollBand", c.sig.rollBand, { max: 50 }), "%", "C", L("ใช้ทั้ง BF-04 และมุมมองฐานศูนย์", "Also used by the zero-based view")) +
+      row(`BF-04 · ${L("ปีก่อนกองเบิกจ่ายต่ำกว่า", "Unit spent under, last year")}`, num("sig.lyRate", c.sig.lyRate), "%", "C") +
+      row(`BF-05 · ${L("ใช้เงินเกิน", "Spent more than")}`, num("sig.spend", c.sig.spend), "%", "C") +
+      row(`BF-05 · ${L("แต่ผลผลิตต่ำกว่า", "but output below")}`, num("sig.out", c.sig.out), "%", "C") +
+      row(`BF-06 · ${L("จำนวนคำขอขั้นต่ำที่ตัดเท่ากัน", "Minimum requests cut equally")}`, num("sig.eqMin", c.sig.eqMin, { min: 2, max: 20 }), L("คำขอ", "requests"), "C"))}
+    ${ed ? `<div class="row"><button class="btn ghost" type="button" id="bc-reset">${L("คืนค่าตั้งต้น", "Restore defaults")}</button><span class="sub">${L("ระดับ B มาจากข่าวหรือแหล่งรอง ต้องยืนยันกับมติ ครม. · ระดับ C เป็นข้อเสนอการออกแบบ", "Level B comes from news or secondary sources and needs the Cabinet resolution · level C is a design proposal")}</span></div>` : ""}`;
+};
+BIND_ADMIN.bcfg = () => {
+  $$("[data-bc]").forEach(inp => (inp.onchange = () => {
+    const cfg = JSON.parse(JSON.stringify(bcfg())), path = inp.dataset.bc.split("."), v = Number(inp.value);
+    let o = cfg; path.slice(0, -1).forEach(k => (o = o[k]));
+    const old = o[path[path.length - 1]]; o[path[path.length - 1]] = v; S.bcfg = cfg;
+    audit(["ปรับค่าตั้งงบประมาณ (AI และสัญญาณ)", "Changed a budget AI and signals setting"], `${inp.dataset.bc}: ${old} → ${v}`); commit(); route();
+  }));
+  const r = $("#bc-reset"); if (r) r.onclick = () => { S.bcfg = {}; delete S.spendTargets; audit(["คืนค่าตั้งต้นงบประมาณ (AI และสัญญาณ)", "Restored budget AI and signals defaults"], ""); commit(); route(); };
+};
 
 /* ---- 99-boot.js ---- */
 // Boot: pick the saved organization, load its state, draw the shell and the current page.

@@ -80,11 +80,11 @@ const bCanApprove = r => ({ "AG-02": ["plan"], "AG-03": ["plan"], "AG-05": ["fin
 // ---------- forecasts ----------
 function fcYear() {
   const A = S.allocs[B4_FY]; if (!A) return { p10: 0, p50: 0, p90: 0, carry: 0, rows: [] };
-  const P = { per: 1, ope: 0.9, inv: 0.62, sub: 0.95, oth: 0.85 }, end = `${B4_FY - 543}-09-30`;
+  const C = bcfg().fc, P = Object.fromEntries(Object.entries(C.p).map(([k, v]) => [k, v / 100])), end = `${B4_FY - 543}-09-30`;
   const rows = A.lines.map(l => {
     const b = bal(l), cs = S.contracts.filter(c => c.line === l.id), dueIn = sumv(cs.flatMap(c => c.phases.filter(ph => !ph.cancelled && ph.due <= end).map(ph => ph.amount))), dueOut = sumv(cs.flatMap(c => c.phases.filter(ph => !ph.cancelled && ph.due > end).map(ph => ph.amount)));
-    const free = Math.max(0, b.allot - b.com - b.res), exp = Math.min(b.allot, Math.max(b.paid, dueIn) + b.res * 0.8 + free * P[l.type]);
-    return { l, b, exp, carry: dueOut + (l.type === "inv" ? free * 0.25 : 0) };
+    const free = Math.max(0, b.allot - b.com - b.res), exp = Math.min(b.allot, Math.max(b.paid, dueIn) + b.res * C.res / 100 + free * (P[l.type] != null ? P[l.type] : 0.85));
+    return { l, b, exp, carry: dueOut + (l.type === "inv" ? free * C.invCarry / 100 : 0) };
   });
   const tot = sumv(rows.map(x => x.b.allot)) || 1, p50 = sumv(rows.map(x => x.exp)) / tot * 100, spread = Math.max(2, (sumv(rows.filter(x => x.l.type === "inv").map(x => x.b.allot)) / tot) * 25);
   return { p10: Math.max(0, p50 - spread), p50, p90: Math.min(100, p50 + spread * 0.6), carry: sumv(rows.map(x => x.carry)), rows };
@@ -92,16 +92,16 @@ function fcYear() {
 
 // ---------- signals BF-01 to 06 ----------
 function bSignals() {
-  const out = [], A = S.allocs[B4_FY];
+  const out = [], A = S.allocs[B4_FY], G = bcfg().sig;
   if (A) {
-    A.lines.filter(l => l.type === "ope" && l.amount && l.plan[11] / l.amount > 0.25).forEach(l => out.push({ id: "BF-01", text: L(`${l.id} วางแผนใช้เดือนกันยายน ${fmt(l.plan[11] / l.amount * 100, 0)}%`, `${l.id} plans ${fmt(l.plan[11] / l.amount * 100, 0)}% in September`), link: "alloc-plan" }));
+    A.lines.filter(l => l.type === "ope" && l.amount && l.plan[11] / l.amount > G.sept / 100).forEach(l => out.push({ id: "BF-01", text: L(`${l.id} วางแผนใช้เดือนกันยายน ${fmt(l.plan[11] / l.amount * 100, 0)}%`, `${l.id} plans ${fmt(l.plan[11] / l.amount * 100, 0)}% in September`), link: "alloc-plan" }));
     const ap = A.transfers.filter(t => t.status === "approved"); A.lines.filter(l => ap.some(t => t.from === l.id) && ap.some(t => t.to === l.id)).forEach(l => out.push({ id: "BF-02", text: L(`${l.id} โอนออกและรับเข้าในปีเดียว`, `${l.id} moved money out and back in the same year`), link: "alloc-transfers" }));
     A.lines.filter(l => l.type === "inv" && bal(l).res + bal(l).com === 0).forEach(l => out.push({ id: "BF-03", text: L(`${l.id} ${tx(l.name)} ยังไม่มีการจองหรือผูกพัน`, `${l.id} ${tx(l.name)} has no reservation or commitment`), link: "alloc-balance" }));
   }
-  S.requests.filter(r => typeof rolled === "function" && rolled(r) && (lastYearRate(r.unit) || 1) < 0.7).forEach(r => out.push({ id: "BF-04", text: L(`${r.id} ยกยอดจากปีก่อน แต่ปีก่อนกองเบิกจ่าย ${fmt(lastYearRate(r.unit) * 100, 0)}%`, `${r.id} rolled over while the unit spent ${fmt(lastYearRate(r.unit) * 100, 0)}% last year`), link: "req:" + r.id }));
-  S.dash.projects.filter(p => S.perf.outputs[p.id] && p.alloc && p.actual / p.alloc > 0.8 && (S.perf.outputs[p.id].result || 0) / S.perf.outputs[p.id].target < 0.5).forEach(p => out.push({ id: "BF-05", text: L(`${tx(p.name)} ใช้เงิน ${fmt(p.actual / p.alloc * 100, 0)}% แต่ผลผลิตต่ำกว่าครึ่ง`, `${tx(p.name)} spent ${fmt(p.actual / p.alloc * 100, 0)}% but delivered under half`), link: "perf-cost" }));
+  S.requests.filter(r => typeof rolled === "function" && rolled(r) && (lastYearRate(r.unit) || 1) < G.lyRate / 100).forEach(r => out.push({ id: "BF-04", text: L(`${r.id} ยกยอดจากปีก่อน แต่ปีก่อนกองเบิกจ่าย ${fmt(lastYearRate(r.unit) * 100, 0)}%`, `${r.id} rolled over while the unit spent ${fmt(lastYearRate(r.unit) * 100, 0)}% last year`), link: "req:" + r.id }));
+  S.dash.projects.filter(p => S.perf.outputs[p.id] && p.alloc && p.actual / p.alloc > G.spend / 100 && (S.perf.outputs[p.id].result || 0) / S.perf.outputs[p.id].target < G.out / 100).forEach(p => out.push({ id: "BF-05", text: L(`${tx(p.name)} ใช้เงิน ${fmt(p.actual / p.alloc * 100, 0)}% แต่ผลผลิตต่ำกว่าครึ่ง`, `${tx(p.name)} spent ${fmt(p.actual / p.alloc * 100, 0)}% but delivered under half`), link: "perf-cost" }));
   const cut = (S.review || []).filter(v => v.r1 < v.r0).map(v => Math.round(v.r1 / v.r0 * 100));
-  if (cut.length >= 3 && cut.every(x => x === cut[0])) out.push({ id: "BF-06", text: L(`ปรับลดทุกคำขอเท่ากัน ${100 - cut[0]}%`, `Every request cut by the same ${100 - cut[0]}%`), link: "rev-rounds" });
+  if (cut.length >= G.eqMin && cut.every(x => x === cut[0])) out.push({ id: "BF-06", text: L(`ปรับลดทุกคำขอเท่ากัน ${100 - cut[0]}%`, `Every request cut by the same ${100 - cut[0]}%`), link: "rev-rounds" });
   return out;
 }
 
@@ -165,7 +165,7 @@ INTEL.bfore = () => {
         <div class="row sub" style="justify-content:space-between"><span>0%</span><span>${L("แถบ = P10–P90 · เส้นเข้ม = P50 · เส้นแดง = เป้า", "band = P10–P90 · dark line = P50 · red line = target")}</span><span>100%</span></div></div>
       <div class="tbl-wrap"><table><thead><tr><th>${L("บรรทัด", "Line")}</th><th class="n">${L("จัดสรร", "Allotted")}</th><th class="n">${L("คาดเบิกจ่าย", "Expected spend")}</th><th class="n">%</th><th class="n">${L("คาดกันเหลื่อมปี", "Expected carry-over")}</th></tr></thead>
         <tbody>${f.rows.filter(x => x.l.type !== "per").map(x => `<tr><td>${esc(tx(x.l.name))}<div class="sub">${x.l.id} · ${unitName(x.l.unit)} · ${typeName(x.l.type)}</div></td><td class="n">${mb(x.b.allot)}</td><td class="n">${mb(x.exp)}</td><td class="n">${fmt(x.b.allot ? x.exp / x.b.allot * 100 : 0, 0)}%</td><td class="n">${x.carry ? mb(x.carry) : "–"}</td></tr>`).join("")}</tbody></table></div>
-      <div class="body sub">${L("วิธีในต้นแบบ: เบิกจ่ายแล้ว หรืองวดสัญญาที่ครบภายในปี (เลือกค่าที่มากกว่า) + 80% ของยอดจอง + ส่วนที่ยังว่างคูณความน่าจะเป็นตามงบรายจ่าย (บุคลากร 100% ดำเนินงาน 90% ลงทุน 62%) · อ่านเป็นช่วง", "Prototype method: paid, or contract phases due within the year (whichever is larger) + 80% of reservations + the free amount times a probability by budget type (personnel 100%, operating 90%, investment 62%) · read it as a range")}</div></section>`;
+      <div class="body sub">${L("วิธีในต้นแบบ: เบิกจ่ายแล้ว หรืองวดสัญญาที่ครบภายในปี (เลือกค่าที่มากกว่า) + ส่วนหนึ่งของยอดจอง + ส่วนที่ยังว่างคูณความน่าจะเป็นตามงบรายจ่าย (ตั้งค่าได้ที่ M10) · อ่านเป็นช่วง", "Prototype method: paid, or contract phases due within the year (whichever is larger) + a share of reservations + the free amount times a probability by budget type (set in M10) · read it as a range")}</div></section>`;
 };
 let WI_B = { cut: 10, how: "rank", delay: "L3", tr: { from: "L10", to: "L14", amt: 1.95 }, sc: { id: "", amt: 1 } };
 INTEL.bwhatif = () => {
@@ -203,7 +203,7 @@ INTEL.bkpi = () => {
       <div class="tbl-wrap"><table><thead><tr><th>${L("รหัส", "Code")}</th><th>${L("ตัวชี้วัด", "KPI")}</th><th class="n">${L("ค่า", "Value")}</th><th>${L("นิยาม", "Definition")}</th></tr></thead><tbody>${ks.map(k => `<tr><td class="mono">${k[0]}</td><td>${k[1]}</td><td class="n"><b>${k[2]}</b></td><td class="sub">${k[3]}</td></tr>`).join("")}</tbody></table></div></section>
     <section class="panel"><header>${chipIco("alert", "warn")}<h2>${L("สัญญาณเตือนด้านงบประมาณ", "Budget warning signals")}</h2><span class="sp"></span>${tag(`${sg.length}`, sg.length ? "p-warn" : "p-ok")}</header>
       <ul class="tlist">${sg.map(x => `<li><span class="prio p-warn"></span><div style="min-width:0"><a href="#" data-link="${x.link}">${esc(x.text)}</a><div class="sub mono">${x.id}</div></div><span class="sub">${{ "BF-01": L("เร่งใช้ปลายปี", "Year-end rush"), "BF-02": L("โอนวนกลับ", "Round-trip transfer"), "BF-03": L("ลงทุนไม่ขยับ", "Investment not moving"), "BF-04": L("คำขอยกยอด", "Rolled-over request"), "BF-05": L("ตัวชี้วัดไม่ขยับ", "Results not moving"), "BF-06": L("ตัดเท่ากันทุกคำขอ", "Equal cuts") }[x.id]}</span></li>`).join("") || `<li><span></span><div class="sub">${L("ไม่มีสัญญาณ", "No signals")}</div></li>`}</ul>
-      <div class="body sub">${L("เกณฑ์ตั้งต้นเป็นข้อเสนอ (ระดับ C) ปรับได้ในอนาคตที่ M10", "Default thresholds are proposals (level C), to be made settings in M10")}</div></section>`;
+      <div class="body sub">${L("เกณฑ์ตั้งค่าได้ที่ M10 · ตั้งค่างบประมาณ (AI และสัญญาณ)", "Thresholds are set in M10 · Budget AI and signals")}</div></section>`;
 };
 
 // ---------- seed ----------

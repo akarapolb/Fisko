@@ -89,7 +89,7 @@ CONS_BIND.r3 = () => {
 };
 
 // ---------- zero-based view ----------
-const rolled = r => r.prev > 0 && Math.abs(r.amount / r.prev - 1) <= 0.05;
+const rolled = r => r.prev > 0 && Math.abs(r.amount / r.prev - 1) <= (typeof bcfg === "function" ? bcfg().sig.rollBand : 5) / 100;
 CONS_PANELS.zbb = () => {
   const live = S.requests.filter(r => r.status !== "rejected" && !isPersonnel(r)), news = live.filter(r => !r.prev), cont = live.filter(r => r.prev > 0), roll = cont.filter(rolled), ed = ROLE === "plan";
   return `<section class="stats">

@@ -442,4 +442,14 @@ The user found the interface unimpressive and chose a clean enterprise direction
 - **What-ifs:** `WI_B` holds the inputs (never saved; nothing in `S` changes). WI-B1 uses `scoreOf` and `impactText`; WI-B2 moves the line's Q4 plan into next year; WI-B3 uses `classifyTransfer` and `TR_TYPE`; WI-B4 uses `impactText` and drafts an appeal.
 - **KPIs and signals:** `kpiB()` and `bSignals()`; thresholds are level-C proposals in code (to become M10 settings).
 - **Tested:** 1,968 renders (every page and tab for every role, both languages and organisations, every budget agent started and shown, every what-if cut method), each agent run to completion with approvals (AG-02 notifications, AG-03 round 2, AG-05 tasks reaching the requester, AG-15 creating a pending T3 transfer, AG-17 reminders), the 25-step demo walk, 375 px width and dark mode.
-- **Known simplifications:** agent tasks for the requester role are shown to every requester (the task's unit isn't filtered yet); signal thresholds and forecast probabilities are fixed in code.
+- **Known simplifications:** fixed in round 34 (see below).
+
+## 34. Agent tasks by unit, and budget AI settings in M10 (round 34)
+
+- **Agent tasks:** the My Workspace hook in `67b-agents.js` now shows a task only to its role and, when the task has a `unit`, only to that unit. A division director also sees the division's tasks for the director's own unit.
+- **Settings:** `src/js/69b-budget-settings.js` adds M10 tab "Budget AI and signals" (`ADMIN_TABS` id `bcfg`; administrator edits, finance and the auditor read). `bcfg()` merges defaults (`BCFG_DEFAULT`), any older `S.spendTargets` and `S.bcfg`:
+  - `targets`: quarterly cumulative and year-end spending targets (level B). `spendT()` in `47d` reads them.
+  - `fc`: probability that the free amount is spent, per budget type; share of reservations spent; share of free investment carried over (level C). `fcYear()` in `69` reads them.
+  - `sig`: BF-01 September share, the rolled-over band (also used by the M03 zero-based view through `rolled()` in `43d`), BF-04 last-year rate, BF-05 spend and output, BF-06 minimum count (level C). `bSignals()` reads them.
+  - Each change writes the whole config to `S.bcfg` and an audit entry; "Restore defaults" clears it. The 3R thresholds (score 55, 70% of plan) are still fixed in `43d`.
+- **Tested:** changing settings moves the forecast (93.2% → 95.0% with investment at 90%), the signals (3 → 14 with September at 5%) and the target; finance is read-only; reset restores the defaults; tasks reach only the right unit; about 1,400 renders across both organisations; the 25-step demo walk; 375 px width.

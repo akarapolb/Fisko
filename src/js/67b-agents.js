@@ -211,7 +211,7 @@ function bindAgents() {
   famTasks = R => {
     base(R);
     if (!S.agentRuns) return;
-    S.agentTasks.filter(t => t.role === ROLE || (t.role === "proc" && isProcRole())).forEach(t => R(`${t.title}`, `${t.agent} · ${t.run}`, t.due, t.link, "p-info"));
+    S.agentTasks.filter(t => (t.role === ROLE || (t.role === "proc" && isProcRole()) || (ROLE === "divhead" && t.role === "div")) && (!t.unit || t.unit === me().unit)).forEach(t => R(`${t.title}`, `${t.agent} · ${t.run}`, t.due, t.link, "p-info"));
     S.agentRuns.filter(r => r.status === "waiting" && canApprove(r, r.steps[r.ptr])).forEach(r => R(`${L("Agent รออนุมัติ", "An agent is waiting for you")} ${r.id}`, `${agName(r.agent)} · ${tx([TOOLS[r.steps[r.ptr].tool][1], TOOLS[r.steps[r.ptr].tool][2]])}`, TODAY, "prc-agents", "p-warn"));
   };
 }
