@@ -205,3 +205,11 @@ button.brand:hover, button.brand[aria-expanded="true"] { background: var(--side-
 .lreqs { display: flex; flex-wrap: wrap; gap: 6px; }
 .lreq { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 8px; padding: 3px 8px; font-size: 12.5px; color: var(--ink-2); text-decoration: none; }
 .lreq:hover { border-color: var(--accent); }
+
+/* ---------- Budget B3: minutes, pack, briefing ---------- */
+pre.minutes { white-space: pre-wrap; font-family: var(--mono); font-size: 12.5px; line-height: 1.6; background: var(--surface-2); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin: 0; max-height: 360px; overflow: auto; }
+.form-sheet > header { gap: 10px; }
+.form-sheet > header .mono { width: 24px; height: 24px; border-radius: 6px; background: var(--surface-2); display: inline-grid; place-items: center; }
+.brief-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+.brief > header h2 { font-size: 15px; }
+.brief-q { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; }
