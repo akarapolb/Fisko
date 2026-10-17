@@ -188,3 +188,20 @@ button.brand:hover, button.brand[aria-expanded="true"] { background: var(--side-
 .capbar { position: relative; height: 12px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
 .capbar i { position: absolute; inset: 0 auto 0 0; background: var(--ch-1, var(--accent)); border-radius: 99px; }
 .capbar b { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--bad); }
+
+/* ---------- Budget B2: linkage tree ---------- */
+.ltree { display: flex; flex-direction: column; gap: 8px; }
+.lnode { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.lnode > summary { display: flex; align-items: center; gap: 10px; padding: 9px 12px; cursor: pointer; list-style: none; flex-wrap: wrap; }
+.lnode > summary::-webkit-details-marker { display: none; }
+.lnode > summary::before { content: "▸"; color: var(--muted); font-size: 12px; }
+.lnode[open] > summary::before { content: "▾"; }
+.lnode .lt { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.lnode .la { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+.lnode .la b { color: var(--ink); }
+.lkids { padding: 0 12px 10px 26px; display: flex; flex-direction: column; gap: 8px; }
+.lnode.nat { background: var(--surface-2); }
+.lkpi { border-left: 3px solid var(--ch-1, var(--accent)); padding: 6px 10px; display: flex; flex-direction: column; gap: 6px; background: var(--surface); border-radius: 0 8px 8px 0; }
+.lreqs { display: flex; flex-wrap: wrap; gap: 6px; }
+.lreq { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 8px; padding: 3px 8px; font-size: 12.5px; color: var(--ink-2); text-decoration: none; }
+.lreq:hover { border-color: var(--accent); }
