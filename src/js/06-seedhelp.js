@@ -278,6 +278,7 @@ function buildOrg(cfg) {
   seedDocs(s);
   seedForecast(s);
   seedAgents(s);
+  seedProfile(s);
   seedBudgetB1(s);
   seedBudgetB2(s);
   seedBudgetB3(s);
