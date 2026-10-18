@@ -62,6 +62,25 @@
         if (prSees(prPage("ai"))) for (const [k] of AI_TOOLS) safe(`${org}/${lang}/${role}/ai ${k}`, () => { AI_TOOL = k; procSet("ai:assist"); go2("procurement"); chk(`${org}/${lang}/${role}/ai ${k}`); });
         AI_TOOL = "AI-01"; await tick();
       } }
+      // Budget pages (round 47): every old tab key on the page that holds it, and the old deep links
+      if (o.suites.includes("render") && typeof BUD_PAGES !== "undefined") for (const lang of o.langs) { LANG = lang; for (const role of o.roles) {
+        ROLE = role; safe("shell", renderShell);
+        for (const p of BUD_PAGES.filter(x => x.mod && bSees(x))) for (const t of bTabs(p)) for (const k of t.keys) safe(`${org}/${lang}/${role}/${p.code} ${t.id}/${k}`, () => {
+          BUD_MOD[p.mod].set(k); go2(p.id); chk(`${org}/${lang}/${role}/${p.code} ${t.id}/${k}`);
+          const on = document.querySelector("#view [data-btab].on");
+          if (BUD_MOD[p.mod].get() === k && (!on || on.dataset.btab !== t.id)) errs.push(`${org}/${role}/${p.code}: key ${k} shows tab ${on && on.dataset.btab}, not ${t.id}`);
+        });
+        for (const [l, page] of [["alloc-carry", "allocation"], ["intel-bkpi", "insight"], ["intel-ask", "assistant"], ["perf-quarter", "performance"], ["mon-progress", "dashboard"], ["strat-bank", "strategy"], ["sub-parliament", "submission"]])
+          if (allowed(page) && bSees(bPage(page))) safe(`link ${l}`, () => {
+            const [a, k] = l.split("-"), p = bPage(page);
+            if (!bTabOf(p, k)) return;
+            const q = bOwner(p.mod, k);
+            if (!q || q.id !== page) errs.push(`link ${l} belongs to ${q && q.id}, not ${page}`);
+            JUMP_TABS[a][1](k); go2(page); chk(`${org}/${lang}/${role}/link ${l}`);
+            if (BUD_MOD[p.mod].get() !== k) errs.push(`${org}/${role}: link ${l} opened ${BUD_MOD[p.mod].get()}`);
+          });
+        await tick();
+      } }
       // Finance F9 sub-pages and every finance agent run
       if (o.suites.includes("agents") && typeof F_AG !== "undefined") {
         LANG = "en"; ROLE = "finhead"; renderShell();

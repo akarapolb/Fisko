@@ -78,6 +78,8 @@ h1, h2, h3 { letter-spacing: -.015em; }
 .seg { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 3px; height: 36px; }
 .seg button { border-radius: 7px; font-size: 12.5px; padding: 0 10px; }
 .seg button.on { background: var(--surface); color: var(--ink); box-shadow: var(--sh-1); }
+.seg-scroll { overflow-x: auto; max-width: 100%; scrollbar-width: thin; }
+.seg-scroll .seg button { white-space: nowrap; }
 .iconbtn { height: 36px; min-width: 36px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); transition: background .15s, border-color .15s; }
 .iconbtn:hover { border-color: var(--line-2); background: var(--surface-2); }
 .iconbtn .cnt { background: var(--bad); box-shadow: 0 0 0 2px var(--surface); }

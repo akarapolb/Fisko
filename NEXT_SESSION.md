@@ -6,7 +6,7 @@ Written 18 October 2026, after round 35; updated after round 43 (Finance informa
 
 Fisko is a discussion prototype of a Thai government budgeting platform with three apps:
 
-- **Fisko Budget:** M01 to M10, now built to its own design (`Fisko_Budget_Design.html` v0.2, rounds B1 to B6).
+- **Fisko Budget:** pages B1 to B11 since round 47 (old module codes M01 to M09 shown beside them; M10 stays shared), built to its own design (`Fisko_Budget_Design.html` v0.3, build rounds B1 to B6).
 - **Fisko Procurement:** P1 to P18, built to its design (`Fisko_Procurement_Design.html` v0.2, rounds P0 to P4 and Q1 to Q6).
 - **Fisko Finance:** F1 to F10, built to its design (`Fisko_Finance_Design.html` v0.3, rounds FN1 to FN6) and reorganised around the work in round 43. The page layout is declared in one file, `src/js/66h-fin-pages.js` (see section 4).
 
@@ -127,3 +127,6 @@ Built on branch `procurement-ia` (worktree `..\Fisko-proc`). Procurement now has
 
 The Finance decisions D-FN-01 to D-FN-09 are answered (design v0.4, 13.2) and non-budget money is a full cycle on F11 (`66i-fin-nb.js`, `DATA_V = 36`). Still open: FR-FN-33 and exports, a demo step for F11, a full demo rehearsal, then Fisko Assets or the real-AI plan.
 
+## Round 47 (Budget information architecture)
+
+Fisko Budget now has 11 pages B1 to B11 in four groups, declared in `src/js/75-budget-pages.js` (see `HANDOFF.md` section 47 and Budget design chapter 15). All three apps now share one page-table pattern (`66h-fin-pages.js`, `74-proc-pages.js`, `75-budget-pages.js`). Still open: FR-FN-33 and exports, a demo step for F11, a full demo rehearsal, then Fisko Assets or the real-AI plan.

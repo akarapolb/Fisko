@@ -595,6 +595,8 @@ h1, h2, h3 { letter-spacing: -.015em; }
 .seg { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 3px; height: 36px; }
 .seg button { border-radius: 7px; font-size: 12.5px; padding: 0 10px; }
 .seg button.on { background: var(--surface); color: var(--ink); box-shadow: var(--sh-1); }
+.seg-scroll { overflow-x: auto; max-width: 100%; scrollbar-width: thin; }
+.seg-scroll .seg button { white-space: nowrap; }
 .iconbtn { height: 36px; min-width: 36px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); transition: background .15s, border-color .15s; }
 .iconbtn:hover { border-color: var(--line-2); background: var(--surface-2); }
 .iconbtn .cnt { background: var(--bad); box-shadow: 0 0 0 2px var(--surface); }
@@ -7439,43 +7441,43 @@ const DEMO = [
   { t: "0:00", role: "plan", link: "home", title: ["แพลตฟอร์มเดียว 6 บทบาท", "One platform, six roles"],
     say: ["Fisko รวมวงจรงบประมาณทั้งหมดไว้ในระบบเดียว แต่ละบทบาทเห็นเฉพาะงานของตนเอง พร้อมกำหนดส่งจากปฏิทินงบประมาณ", "Fisko holds the whole budget cycle. Each role sees only its own work, with deadlines from the budget calendar."],
     do: ["เข้าสู่ระบบด้วย SSO และรหัส MFA (246810) ชี้งานของฉันและปฏิทิน ลองค้นหาด้วย Ctrl+K สลับภาษา TH/EN", "Sign in with SSO and the MFA code (246810); point at My tasks and the calendar; try Ctrl+K search; switch TH/EN"] },
-  { t: "0:45", role: "plan", link: "strat-bank", title: ["M01 คลังโครงการ", "M01 Project bank"],
+  { t: "0:45", role: "plan", link: "strat-bank", title: ["B2 คลังโครงการ", "B2 Project bank"],
     say: ["แนวคิดโครงการทุกเรื่องผูกกับตัวชี้วัดตั้งแต่ต้น กองแผนงานให้คะแนนตามเกณฑ์เดียวกัน และใช้บทเรียนจากการประเมินผลปีก่อนประกอบ", "Every project idea is tied to a KPI from the start. Planning scores them on the same criteria, informed by lessons from past evaluations."],
-    do: ["“ให้คะแนน” แนวคิดที่รอกลั่นกรอง → “รับเข้าแผน” แนวคิดที่ให้คะแนนแล้ว → ชี้บทเรียนจาก M08 ด้านล่าง", "Score the idea awaiting screening → Accept a scored idea → point at the M08 lessons below"] },
-  { t: "1:45", role: "div", link: "req:STORY", title: ["M02 จัดทำคำขอพร้อมผู้ช่วย AI", "M02 Preparing a request with AI"],
+    do: ["“ให้คะแนน” แนวคิดที่รอกลั่นกรอง → “รับเข้าแผน” แนวคิดที่ให้คะแนนแล้ว → ชี้บทเรียนจาก B9 ด้านล่าง", "Score the idea awaiting screening → Accept a scored idea → point at the B9 lessons below"] },
+  { t: "1:45", role: "div", link: "req:STORY", title: ["B3 จัดทำคำขอพร้อมผู้ช่วย AI", "B3 Preparing a request with AI"],
     say: ["ผู้จัดทำวางรายการจาก Excel ได้ทันที ระบบเทียบราคามาตรฐานและตรวจตามกฎ AI ช่วยร่างเหตุผลความจำเป็น แต่ผู้จัดทำเป็นคนตรวจและส่ง", "The requester pastes lines from Excel; the system checks them against standard prices and the rules. AI drafts the justification, but the requester reviews and sends."],
     do: ["“วางจาก Excel” → “ใส่ข้อมูลตัวอย่าง” → “เพิ่ม” → “ร่างเหตุผลความจำเป็น” → ทำตามแถบ “ขั้นต่อไป”: แผนรายไตรมาส “เติมตามรูปแบบ” · ความพร้อม เลือกระดับ · เอกสารแนบ “ใช้ไฟล์ตัวอย่าง” · ครุภัณฑ์ ใส่สถานที่ → “ส่งให้ ผอ.กองเห็นชอบ” → เปลี่ยนบทบาทเป็น ผอ.กอง → “เห็นชอบและส่งกองแผนงาน”", "Paste from Excel → Use sample rows → Add → Draft justification → follow the Next hint: Quarterly plan, Fill from the pattern · Readiness, pick the levels · Documents, Use a sample · Equipment, add the location → Send to the division director → switch the role to Division director → Approve and send to Planning"] },
-  { t: "3:30", role: "plan", link: "rev-queue", title: ["M04 กลั่นกรองรายบรรทัด", "M04 Line-by-line review"],
+  { t: "3:30", role: "plan", link: "rev-queue", title: ["B5 กลั่นกรองรายบรรทัด", "B5 Line-by-line review"],
     say: ["กองแผนงานเห็นคิวพร้อมกำหนดเวลาตาม SLA ใส่ความเห็นรายบรรทัด ส่งกลับหรือเสนอต่อได้ ทุกอย่างถูกบันทึก", "Planning sees the queue with SLA due dates, comments on single lines, and returns or sends on. Everything is recorded."],
     do: ["กด “พิจารณา” ที่โครงการตัวอย่าง → ปุ่ม ✎ ใส่ความเห็น → “ผ่านการกลั่นกรอง · เสนอต่อ”", "Click Review on the storyline project → ✎ to comment → Pass review · send on"] },
-  { t: "4:30", role: "plan", link: "cons-responses", title: ["M03 กรอบวงเงินและประมาณการล่วงหน้า", "M03 Ceilings and forward estimates"],
+  { t: "4:30", role: "plan", link: "cons-responses", title: ["B4 กรอบวงเงินและประมาณการล่วงหน้า", "B4 Ceilings and forward estimates"],
     say: ["กองแผนงานแจ้งกรอบวงเงินรายหน่วยงาน หน่วยงานยอมรับหรือขอทบทวนพร้อมเหตุผล และเห็นผลต่อประมาณการรายจ่าย 4 ปี", "Planning issues unit ceilings; units accept or appeal with a reason, and the 4-year forward estimates show the effect."],
     do: ["“เพิ่มกรอบให้” หน่วยงานที่ขอทบทวน → แท็บประมาณการล่วงหน้า 4 ปี ปรับสมมติฐานหนึ่งช่อง", "Grant the appeal → Forward estimates tab, change one assumption"] },
-  { t: "5:30", role: "plan", link: "rev-impact", title: ["M04 ผลกระทบของการปรับลด", "M04 Impact of cuts"],
+  { t: "5:30", role: "plan", link: "rev-impact", title: ["B5 ผลกระทบของการปรับลด", "B5 Impact of cuts"],
     say: ["ก่อนคณะกรรมการตัดสิน ระบบชี้ว่าการปรับลดแต่ละโครงการทำให้ตัวชี้วัดใดเสี่ยงไม่บรรลุเป้า", "Before the committee decides, the system shows which KPI targets each cut puts at risk."],
     do: ["สลับ “รอบ 2 กองแผน” กับ “รอบ 3 ผู้บริหาร” ชี้ตัวชี้วัดที่เสี่ยงสูง", "Switch between Round 2 and Round 3; point at the high-risk KPIs"] },
-  { t: "6:15", role: "exec", link: "rev-meetings", title: ["M04 มติคณะกรรมการ", "M04 Committee resolutions"],
+  { t: "6:15", role: "exec", link: "rev-meetings", title: ["B5 มติคณะกรรมการ", "B5 Committee resolutions"],
     say: ["กรรมการลงความเห็นก่อนประชุม ผู้มีส่วนได้เสียงดออกเสียง ระบบตรวจองค์ประชุม แสดงผลกระทบของการปรับลดต่อตัวชี้วัด และร่างรายงานการประชุมจากมติ", "Members vote before the meeting, anyone with an interest abstains, the quorum is checked, a cut shows its effect on KPIs, and the minutes are drafted from the record."],
     do: ["ลง “ความเห็นของฉัน” → เลือก “เห็นชอบโดยปรับลดวงเงิน” ใส่วงเงิน ดูผลกระทบที่เปลี่ยนตาม → “บันทึกมติและปิดการประชุม” → ชี้รายงานการประชุมที่ร่างให้", "Cast My vote → choose Approved, amount reduced, enter an amount and watch the impact change → Record resolutions → point at the drafted minutes"] },
-  { t: "7:00", role: "plan", link: "sub-checks", title: ["M05 ส่งสำนักงบประมาณ", "M05 Submitting to the Budget Bureau"],
+  { t: "7:00", role: "plan", link: "sub-checks", title: ["B6 ส่งสำนักงบประมาณ", "B6 Submitting to the Budget Bureau"],
     say: ["ก่อนส่ง ระบบตรวจรหัส โครงสร้าง เอกสาร และสร้างแบบฟอร์มให้อัตโนมัติ จากนั้นติดตามสถานะจนได้ผลพิจารณา", "Before sending, codes, structure and documents are checked and the form is generated, then status is tracked to the result."],
     do: ["ดูแท็บตัวอย่างแบบฟอร์ม → แท็บสถานะ: ส่ง → จำลองผล 2 ขั้น", "Open Form preview → Status: send → run the two demo steps"] },
-  { t: "8:00", role: "plan", link: "sub-parliament", title: ["M05 ร่าง พ.ร.บ. ในรัฐสภา", "M05 The budget bill in parliament"],
+  { t: "8:00", role: "plan", link: "sub-parliament", title: ["B6 ร่าง พ.ร.บ. ในรัฐสภา", "B6 The budget bill in parliament"],
     say: ["ติดตามร่าง พ.ร.บ. ทุกวาระ เห็นวงเงินที่กรรมาธิการปรับลดรายโครงการ ยื่นแปรญัตติขอคืน และได้วงเงินสุดท้ายสำหรับการจัดสรร", "Follow the bill through every reading: the committee's cut per project, the appeal to restore it, and the final amount for allocation."],
     do: ["กดปุ่มจำลอง 3 ครั้งจนถึงกรรมาธิการ → ยื่นขอคืนหนึ่งโครงการ → กดจำลองต่อ ชี้วงเงินที่ได้คืน", "Click the demo button 3 times to reach the committee → file one appeal → continue and point at the restored amount"] },
-  { t: "9:00", role: "fin", link: "alloc-carry", title: ["M06 งวดเงินและกันเงินเหลื่อมปี", "M06 Releases and carry-over"],
+  { t: "9:00", role: "fin", link: "alloc-carry", title: ["B7 งวดเงินและกันเงินเหลื่อมปี", "B7 Releases and carry-over"],
     say: ["กองคลังขออนุมัติงวดเงินตามแผนรายไตรมาส และติดตามเงินกันเหลื่อมปีก่อนครบกำหนด พร้อมตรวจหลักฐานสัญญาก่อนยื่นกันเงินใหม่", "Finance requests quarterly releases against the plan and tracks carried-over funds before their deadline, checking contract evidence before new carry-overs."],
     do: ["“ขอขยายเวลา” รายการที่เบิกจ่ายต่ำ → สลับเป็นผู้บริหาร “อนุมัติขยายเวลา” → ชี้แท็บงวดเงิน", "Ask to extend a slow item → switch to Executive and approve the extension → show the Allotment releases tab"] },
-  { t: "10:00", role: "exec", link: "mon-forecast", title: ["M07 คาดการณ์สิ้นปีและการจัดซื้อจัดจ้าง", "M07 Year-end forecast and procurement"],
+  { t: "10:00", role: "exec", link: "mon-forecast", title: ["B8 คาดการณ์สิ้นปีและการจัดซื้อจัดจ้าง", "B8 Year-end forecast and procurement"],
     say: ["ผู้บริหารเห็นว่าหน่วยงานใดจะเบิกจ่ายไม่ถึงเป้าตามมติ ครม. ตั้งแต่วันนี้ และโครงการลงทุนใดติดขั้นตอนจัดซื้อจัดจ้าง", "Executives see now which units will miss the cabinet's spending targets, and which investment projects are stuck in procurement."],
     do: ["ชี้หน่วยงานที่เสี่ยงในตาราง → แท็บขั้นตอนจัดซื้อจัดจ้าง ชี้ช่องสีแดง", "Point at the at-risk units → Procurement tab, point at the red cells"] },
-  { t: "11:00", role: "plan", link: "perf-evaluate", title: ["M08 ประเมินโครงการและบทเรียน", "M08 Project evaluation and lessons"],
-    say: ["ประเมินโครงการตั้งแต่ปัจจัยนำเข้าถึงผลลัพธ์ด้วยเกณฑ์ 5 ด้าน บทเรียนที่ได้ส่งกลับเข้าคลังโครงการ M01 สำหรับปีถัดไป", "Projects are evaluated from inputs to outcomes on five criteria; lessons go back into the M01 project bank for next year."],
+  { t: "11:00", role: "plan", link: "perf-evaluate", title: ["B9 ประเมินโครงการและบทเรียน", "B9 Project evaluation and lessons"],
+    say: ["ประเมินโครงการตั้งแต่ปัจจัยนำเข้าถึงผลลัพธ์ด้วยเกณฑ์ 5 ด้าน บทเรียนที่ได้ส่งกลับเข้าคลังโครงการ B2 สำหรับปีถัดไป", "Projects are evaluated from inputs to outcomes on five criteria; lessons go back into the B2 project bank for next year."],
     do: ["ให้คะแนนครบ 5 ด้าน ใส่ข้อค้นพบและบทเรียน → “ประเมินเสร็จ · ส่งบทเรียนเข้าคลังโครงการ”", "Score all five criteria, add findings and a lesson → Finish · send lessons to the project bank"] },
-  { t: "12:00", role: "audit", link: "intel-anoms", title: ["M09 AI ตรวจความผิดปกติ", "M09 AI flags anomalies"],
+  { t: "12:00", role: "audit", link: "intel-anoms", title: ["B10 AI ตรวจความผิดปกติ", "B10 AI flags anomalies"],
     say: ["AI ชี้รายการที่ควรตรวจ เช่น แบ่งซื้อแบ่งจ้าง หรือจ่ายก่อนตรวจรับ ผู้ตรวจสอบเป็นผู้ตัดสินและทุกการตัดสินถูกบันทึก", "AI points to what to check, such as split purchases or payment before inspection. The auditor decides, and every decision is logged."],
     do: ["พิมพ์ผลการตรวจในรายการแบ่งซื้อแบ่งจ้าง → “ส่งตรวจสอบเพิ่มเติม” → แท็บคุณภาพเหตุผลคำขอ", "Type a note on the split-purchase item → Escalate → Justification quality tab"] },
-  { t: "13:00", role: "exec", link: "intel-ask", title: ["M09 ถาม AI และจำลองสถานการณ์", "M09 Ask AI and what-if"],
+  { t: "13:00", role: "exec", link: "intel-ask", title: ["B11 ถาม AI และจำลองสถานการณ์", "B11 Ask AI and what-if"],
     say: ["ถามด้วยภาษาธรรมชาติ ได้คำตอบพร้อมแหล่งอ้างอิง และจำลองการลดวงเงินโดยล็อกโครงการสำคัญ AI เสนอเท่านั้น", "Ask in plain language and get sourced answers; simulate a cut while locking key projects. AI only suggests."],
     do: ["คลิกคำถามตัวอย่าง → แท็บจำลองสถานการณ์ เลื่อนตัวเลข", "Click a sample question → What-if, move the slider"] },
   { t: "14:00", role: "admin", link: "admin-notify", title: ["M10 ปรับได้โดยไม่แก้โค้ด และปิดท้าย", "M10 Configure without code, and close"],
@@ -7483,7 +7485,7 @@ const DEMO = [
     do: ["แก้ข้อความแม่แบบดูตัวอย่าง → “ตรวจและส่งแจ้งเตือนตอนนี้” → แท็บบันทึกการใช้งาน", "Edit a template and watch the preview → Check and notify now → Audit log tab"] },
   // Extension (round 17): Fisko Procurement and Fisko Finance, about 10 minutes, same sample organisation.
   { t: "15:00", role: "div", link: "prc-plan", title: ["ขอซื้อขอจ้าง และระบบตรวจการแตกซื้อ", "Raising requisitions and the split-purchase check"],
-    say: ["แผนจัดซื้อผูกกับรายการจัดสรรของ M06 ผู้ขอซื้อส่งใบขอได้ในวงเงินที่เหลือ และระบบเตือนเมื่อรายการเล็กหลายรายการรวมกันเกินเพดานวิธีเฉพาะเจาะจง", "The procurement plan is tied to M06 allocation lines. The requester raises a requisition within the room left, and the system warns when several small items together pass the specific-method ceiling."],
+    say: ["แผนจัดซื้อผูกกับรายการจัดสรรของ B7 ผู้ขอซื้อส่งใบขอได้ในวงเงินที่เหลือ และระบบเตือนเมื่อรายการเล็กหลายรายการรวมกันเกินเพดานวิธีเฉพาะเจาะจง", "The procurement plan is tied to B7 allocation lines. The requester raises a requisition within the room left, and the system warns when several small items together pass the specific-method ceiling."],
     do: ["“ขอซื้อขอจ้าง” PP-2570-006 (0.35 ล้าน) → “ส่งขออนุมัติ” → ทำซ้ำกับ PP-2570-005 (0.4 ล้าน) ระบบขอคำชี้แจง → พิมพ์เหตุผล → ส่ง", "Raise PP-2570-006 (0.35 M) → Send → do the same for PP-2570-005 (0.4 M); the system asks for an explanation → type a reason → Send"] },
   { t: "16:00", role: "exec", link: "prc-reqn", title: ["อนุมัติใบขอซื้อ และการแยกหน้าที่", "Approving requisitions and duty separation"],
     say: ["ผู้บริหารอนุมัติได้เมื่อไม่เกินวงเงินคงเหลือ และผู้ขอไม่ใช่ผู้อนุมัติ (SD-01) ถ้าอนุมัติแทน ระบบตรวจทั้งตัวผู้อนุมัติและผู้มอบอำนาจ", "The executive approves within the room left, and never the requester's own request (SD-01). If approving by delegation, both the approver and the delegator are checked."],
@@ -7516,40 +7518,40 @@ const DEMO = [
   { t: "28:00", role: "div", link: "home", title: ["ผู้ช่วย AI ทำงานร่วมในทุกหน้า", "AI co-work on every page"],
     say: ["กดปุ่ม AI ที่แถบบนได้ทุกหน้า ผู้ช่วยรู้ว่าเราอยู่หน้าไหน คุยกับผู้ช่วยทั่วไปหรือผู้ช่วยเฉพาะทาง แนบไฟล์หรือพูดได้ และทุกอย่างที่เขียนข้อมูลเป็นปุ่มที่คนกดเอง", "The AI button works on every page and knows where you are. Talk to the general assistant or a specialist, attach a file or speak, and anything that writes data is a button a person presses."],
     do: ["กด “ผู้ช่วย AI” (Ctrl+J) → ถาม “วันนี้ฉันควรทำอะไรก่อน” → พิมพ์ @AG-05 แล้วถาม “หน่วยงานไหนเบิกจ่ายช้ากว่าแผน” → ปุ่มขยายเต็มจอ ชี้รายชื่อผู้ช่วย", "Click AI (Ctrl+J) → ask “What should I do first today?” → type @AG-05 and ask “Which units are behind their spending plan?” → expand to full screen and point at the agent directory"] },
-  { t: "29:00", role: "plan", link: "strat-link", title: ["M01 เชื่อมโยงถึงแผนระดับชาติ", "M01 Link to national plans"],
+  { t: "29:00", role: "plan", link: "strat-link", title: ["B2 เชื่อมโยงถึงแผนระดับชาติ", "B2 Link to national plans"],
     say: ["ทุกคำขอเชื่อมยุทธศาสตร์ชาติ แผนแม่บท ยุทธศาสตร์หน่วยงาน และตัวชี้วัดตามคู่มือสำนักงบประมาณ เห็นว่าตัวชี้วัดใดยังไม่มีคำขอ และสัดส่วนวงเงินเทียบขั้นต่ำที่ผู้บริหารกำหนด", "Every request links to the national strategy, a master plan, the agency strategy and a KPI, as in the Budget Bureau manual. You see which KPIs have no request, and each strategy's share against the executive's minimum."],
     do: ["เปิดต้นไม้จากยุทธศาสตร์ชาติถึงคำขอ → ชี้ “ตัวชี้วัดที่ยังไม่มีคำขอ” → ชี้ตารางสัดส่วนวงเงินตามยุทธศาสตร์", "Open the tree from national strategy to requests → point at KPIs with no request → point at the budget share table"] },
-  { t: "30:00", role: "plan", link: "cons-r3", title: ["M03 วิเคราะห์ 3R และงบฐานศูนย์", "M03 3R analysis and zero-based view"],
+  { t: "30:00", role: "plan", link: "cons-r3", title: ["B4 วิเคราะห์ 3R และงบฐานศูนย์", "B4 3R analysis and zero-based view"],
     say: ["Review ผลเบิกจ่ายปีก่อน Redeploy จากคำขอคะแนนต่ำหรือกองที่ใช้จ่ายช้า Replace ไปยังงานจำเป็นที่อยู่ใต้เส้นกรอบ ตามคู่มือปี 2570 แล้วใช้เป็นข้อเสนอรอบ 2 ได้ทันที", "Review last year's spending, Redeploy from low-score or slow-spending requests, Replace into priority work below the line, per the FY2570 manual, then use it as Planning's round-2 proposal."],
     do: ["ชี้การ์ด Review Redeploy Replace → “ใช้เป็นข้อเสนอรอบ 2 ของกองแผน” → แท็บมุมมองฐานศูนย์ “ขอให้อธิบายใหม่” หนึ่งคำขอ", "Point at the Review, Redeploy and Replace cards → Use as Planning's round-2 proposal → Zero-based view tab, Ask to explain one request"] },
-  { t: "31:00", role: "plan", link: "rev-rounds", title: ["M04 จากวงเงินที่ขอถึงที่เห็นชอบ", "M04 From requested to decided"],
+  { t: "31:00", role: "plan", link: "rev-rounds", title: ["B5 จากวงเงินที่ขอถึงที่เห็นชอบ", "B5 From requested to decided"],
     say: ["รอบวงเงินมาจากคำขอจริง ไม่ใช่ตัวอย่างแยก กราฟน้ำตกบอกว่าลดที่ไหน เท่าไร และทุกการปรับมีเหตุผลในบันทึก", "Round amounts come from the real requests. The waterfall shows where and how much was cut, and every change has a reason in the log."],
     do: ["ชี้กราฟน้ำตก → ชี้คำขอที่ถูกปรับลดมากที่สุด → ชี้บันทึกการปรับวงเงินที่มาจาก 3R", "Point at the waterfall → the largest cuts → the change log entries that came from 3R"] },
-  { t: "32:00", role: "plan", link: "sub-status", title: ["M05 รัฐมนตรีเห็นชอบ และชุดยื่นตามแบบสำนักงบประมาณ", "M05 Minister's approval and the Budget Bureau pack"],
+  { t: "32:00", role: "plan", link: "sub-status", title: ["B6 รัฐมนตรีเห็นชอบ และชุดยื่นตามแบบสำนักงบประมาณ", "B6 Minister's approval and the Budget Bureau pack"],
     say: ["ส่งได้เมื่อรัฐมนตรีเจ้าสังกัดเห็นชอบตามมาตรา 25 ชุดยื่นจัดตามแบบรายงานในคู่มือสำนักงบประมาณ พร้อมไฟล์ CSV สำหรับ e-Budgeting", "Sending needs the minister's approval (section 25). The pack follows the Budget Bureau's report layout, with a CSV for e-Budgeting."],
     do: ["ชี้ปุ่มส่งที่ยังกดไม่ได้ → ใส่เลขที่หนังสือ “บันทึกความเห็นชอบ” → แท็บชุดยื่นตามแบบสำนักงบประมาณ เลื่อนดู 5 ส่วน → “คัดลอก CSV”", "Point at the disabled send button → enter a letter number, Record the approval → Budget Bureau pack tab, scroll the five parts → Copy CSV"] },
-  { t: "33:00", role: "plan", link: "sub-brief", title: ["M05 ชุดชี้แจง", "M05 Briefing pack"],
+  { t: "33:00", role: "plan", link: "sub-brief", title: ["B6 ชุดชี้แจง", "B6 Briefing pack"],
     say: ["ก่อนชี้แจงสำนักงบประมาณ ครม. หรือกรรมาธิการ ระบบสรุปหนึ่งหน้าต่อคำขอ คาดคำถาม และให้ AI ร่างคำตอบจากข้อมูลคำขอ พร้อมข้อสังเกตของกรรมาธิการปีก่อน", "Before a hearing, one page per request, the likely questions and AI-drafted answers from the request data, plus last year's committee observations."],
     do: ["ชี้ข้อสังเกตปีก่อน → “ให้ AI ร่างคำตอบ (AG-16)” → อ่านคำตอบหนึ่งข้อ", "Point at last year's observations → Have AI draft the answers (AG-16) → read one answer"] },
-  { t: "34:00", role: "fin", link: "alloc-balance", title: ["M06 ยอดคงเหลือ 4 ระดับ", "M06 Four-level balances"],
+  { t: "34:00", role: "fin", link: "alloc-balance", title: ["B7 ยอดคงเหลือ 4 ระดับ", "B7 Four-level balances"],
     say: ["ทุกบรรทัดเห็นจัดสรร จอง ผูกพัน และเบิกจ่าย จาก Fisko Procurement และ Fisko Finance ยอดใช้ได้จริงคือจัดสรรลบจองและผูกพัน และระบบจัดซื้อไม่ให้ใช้เกินยอดนี้", "Each line shows allotted, reserved, committed and paid, from Fisko Procurement and Finance. Available = allotted − reserved − committed, and procurement can't go beyond it."],
     do: ["ชี้แถบสี่ชั้น → คลิกบรรทัดที่มีสัญญาเพื่อดูใบขอซื้อ สัญญา และการเบิกจ่าย → ชี้บรรทัดที่ต้องส่งต่อส่วนภูมิภาคภายใน 15 วัน", "Point at the four-part bars → click a line with a contract to see its requisitions, contracts and payments → point at the line due to the region within 15 days"] },
-  { t: "35:00", role: "fin", link: "alloc-savings", title: ["M06 เงินเหลือจ่ายและการโอนตามระเบียบ", "M06 Savings and transfers by the regulation"],
+  { t: "35:00", role: "fin", link: "alloc-savings", title: ["B7 เงินเหลือจ่ายและการโอนตามระเบียบ", "B7 Savings and transfers by the regulation"],
     say: ["เงินเหลือจ่ายจากสัญญาโอนได้ ระบบจัดประเภทการโอนจากโครงสร้างงบประมาณ: ภายในผลผลิตอนุมัติได้เองแล้วรายงานภายใน 15 วัน ข้ามแผนงานต้องตกลงสำนักงบประมาณ โครงการใหม่ต้องเสนอ ครม.", "A contract saving can be moved. The system classifies the transfer from the budget structure: within an output it is approved here and reported within 15 days, across programmes it needs the Budget Bureau, a new project needs the Cabinet."],
     do: ["“โอนตามระเบียบ” ที่เงินเหลือจ่าย → เลือกปลายทาง ดูประเภท T ที่เปลี่ยนตาม → เลือกเหตุผลตามข้อ 25 → “ขอโอนเปลี่ยนแปลง”", "Transfer it, on a saving → pick a destination and watch the T type change → pick a clause-25 reason → Request transfer"] },
-  { t: "36:00", role: "exec", link: "mon-live", title: ["M07 ติดตามปีนี้แบบสด", "M07 This year, live"],
+  { t: "36:00", role: "exec", link: "mon-live", title: ["B8 ติดตามปีนี้แบบสด", "B8 This year, live"],
     say: ["ผู้บริหารเห็นการเบิกจ่ายปีนี้จากข้อมูลจริงของการจัดสรร จัดซื้อ และการเงิน เทียบเป้าหมายรายไตรมาสของปี และงบลงทุนที่ยังไม่ก่อหนี้ก่อนพ้นไตรมาส 2", "The executive sees this year's spending from live allocation, procurement and finance data, against the year's quarterly targets, and investment not yet committed before Q2 ends."],
     do: ["ชี้การ์ดเทียบเป้า → ตารางรายหน่วยงาน → รายการงบลงทุนที่ยังไม่ขยับ", "Point at the target cards → the unit table → the investment not moving"] },
-  { t: "37:00", role: "div", link: "perf-quarter", title: ["M08 รายงานรายไตรมาส", "M08 Quarterly reports"],
+  { t: "37:00", role: "div", link: "perf-quarter", title: ["B9 รายงานรายไตรมาส", "B9 Quarterly reports"],
     say: ["รายงานผลภายใน 15 วันหลังสิ้นไตรมาส และรายงานประจำปีภายใน 45 วัน พร้อมปัญหา แนวทางแก้ และหลักฐานที่ผู้ตรวจรับรอง ระบบบอกใครยังไม่ส่ง", "Results are due 15 days after each quarter and the annual report 45 days after the year, with problems, fixes and evidence the auditor certifies. The system shows who hasn't reported."],
     do: ["กรอกผลทุกรายการ → “ใช้รูปตัวอย่าง” → “ส่งรายงาน” → เปลี่ยนเป็นกองแผน “รับรายงาน” → ชี้แท็บต้นทุนต่อผลผลิต และเผยแพร่", "Enter every result → Use a sample photo → Send report → switch to Planning, Accept → point at the Cost per output and Public page tabs"] },
-  { t: "38:00", role: "plan", link: "intel-bagents", title: ["M09 Agent งบประมาณ", "M09 Budget agents"],
+  { t: "38:00", role: "plan", link: "intel-bagents", title: ["B11 Agent งบประมาณ", "B11 Budget agents"],
     say: ["Agent วางแผนเป็นขั้น อ่านข้อมูลจริง และหยุดให้คนอนุมัติทุกขั้นที่เปลี่ยนข้อมูลหรือแจ้งผู้อื่น เช่น เขียนวงเงินรอบ 2 หรือยื่นคำขอโอน ไม่มีการอนุมัติคำขอหรือการโอนแทนคน", "Agents plan steps, read real data and stop for a person at every step that changes data or notifies people, such as writing round-2 amounts or filing a transfer. They never approve requests or transfers."],
     do: ["“เริ่มงาน” ที่ AG-03 → อ่านแต่ละขั้น → “อนุมัติขั้นนี้” ที่ขั้นบันทึกวงเงินรอบ 2 → ลอง AG-17 เตือนกองที่ยังไม่ส่งรายงาน", "Start AG-03 → read each step → Approve this step at the round-2 write → try AG-17 to remind units that haven't reported"] },
-  { t: "39:00", role: "exec", link: "intel-bwhatif", title: ["M09 พยากรณ์และจำลอง 4 สถานการณ์", "M09 Forecast and four what-ifs"],
+  { t: "39:00", role: "exec", link: "intel-bwhatif", title: ["B10 พยากรณ์และจำลอง 4 สถานการณ์", "B10 Forecast and four what-ifs"],
     say: ["พยากรณ์เบิกจ่ายสิ้นปีเป็นช่วง เงินที่จะต้องกันเหลื่อมปี และภาระปีหน้า จำลองการลดกรอบ การเลื่อนงบลงทุน การโอนเงินเหลือจ่าย และการตัดของกรรมาธิการ โดยไม่แก้ข้อมูลจริง", "Year-end spending as a range, likely carry-over and next year's load; what-ifs for a ceiling cut, an investment slip, moving savings and a committee cut, without changing real data."],
     do: ["ปรับ % ลดกรอบ และเปลี่ยนวิธีตัด ดูคำขอและตัวชี้วัดที่กระทบ → เลือกคำขอใน WI-B4 อ่านร่างคำขอแปรญัตติคืน → แท็บพยากรณ์ปีนี้", "Change the cut % and the method, watch the requests and KPIs affected → pick a request in WI-B4 and read the drafted appeal → This year's forecast tab"] },
-  { t: "40:00", role: "plan", link: "intel-bkpi", title: ["M09 ตัวชี้วัดและสัญญาณเตือน", "M09 KPIs and warning signals"],
+  { t: "40:00", role: "plan", link: "intel-bkpi", title: ["B10 ตัวชี้วัดและสัญญาณเตือน", "B10 KPIs and warning signals"],
     say: ["ตัวชี้วัดงบประมาณ 10 ตัวนิยามไว้ที่เดียว ใช้ร่วมกับแดชบอร์ดและผู้ช่วย AI สัญญาณเตือน เช่น เร่งใช้ปลายปี ลงทุนไม่ขยับ หรือตัดเท่ากันทุกคำขอ ชี้ไปที่หลักฐาน", "Ten budget KPIs are defined once and shared by dashboards and the AI assistant. Signals such as a year-end rush, investment not moving or equal cuts link to the evidence."],
     do: ["ชี้ KPI-B01 ถึง B10 → คลิกสัญญาณหนึ่งรายการเพื่อไปที่หลักฐาน", "Point at KPI-B01 to B10 → click a signal to open its evidence"] },
   { t: "41:00", role: "admin", link: "admin-bcfg", title: ["M10 ตั้งค่า AI และสัญญาณ แล้วปิด", "M10 AI and signal settings, and close"],
@@ -15461,6 +15463,197 @@ Object.assign(NAV_ICON, { today: "home", insight: "chart", suppliers: "users", f
     if (!p) return tb(nid, tab);
     const k = p.id === "today" ? prMine().filter(x => x.due <= TODAY).length : sumv([...new Set(prTabs(p).map(x => x.key))].map(prKeyBadge));
     return k ? `<span class="badge">${k}</span>` : "";
+  };
+}
+
+/* ---- 75-budget-pages.js ---- */
+// Fisko Budget pages (round 47: information architecture), the same way 66h-fin-pages.js and 74-proc-pages.js lay
+// out Finance and Procurement. The pages are renumbered B1 to B11 (the old module code stays on the eyebrow, for
+// example "B7 · M06"), grouped by the budget cycle: formulation for FY2571, execution for FY2570, and results and
+// analysis. M09 is split into two pages: analytics and forecasts (B10) and the AI assistant and agents (B11).
+// Each tab lists the old tab keys it holds. Opening a tab sets the module's variable (STRAT_TAB, MON_TAB and so on) to
+// a key, so the panels and binders from rounds 1 to B5 and old links such as "alloc-carry" keep working. A tab with
+// more than one key shows a segment bar for them. The old tab bar is still rendered by each module and is swapped
+// for the new one here, so its role filter and its counts carry over. Moving a tab means editing this table.
+const B_ALL = ["div", "plan", "exec", "fin", "audit"];
+const BUD_MOD = {
+  strategy: { get: () => STRAT_TAB, set: v => (STRAT_TAB = v) },
+  consolidation: { get: () => CONS_TAB, set: v => (CONS_TAB = v) },
+  review: { get: () => REV_TAB, set: v => (REV_TAB = v) },
+  submission: { get: () => SUB_TAB, set: v => (SUB_TAB = v) },
+  allocation: { get: () => ALLOC_TAB, set: v => (ALLOC_TAB = v) },
+  dashboard: { get: () => MON_TAB, set: v => (MON_TAB = v) },
+  performance: { get: () => PERF_TAB, set: v => (PERF_TAB = v) },
+  intel: { get: () => INTEL_TAB, set: v => (INTEL_TAB = v) },
+};
+Object.assign(GROUPS, { bud: ["งบประมาณ", "Budget"], form: ["จัดทำงบประมาณ ปี 2571", "Formulation, FY2571"], exec: ["บริหารงบประมาณ ปี 2570", "Execution, FY2570"], intel: ["ผลสัมฤทธิ์และวิเคราะห์", "Results and analysis"] });
+APPS.budget.groups = ["bud", "form", "exec", "intel"];
+// A tab is an old key, or { id, label, keys, roles } for several keys behind one tab.
+const BUD_PAGES = [
+  { id: "btoday", code: "B1", group: "bud", label: ["งานงบประมาณวันนี้", "Budget today"], roles: B_ALL },
+  { id: "strategy", code: "B2", m: "M01", group: "form", mod: "strategy",
+    tabs: [{ id: "map", roles: [...B_ALL] }, { id: "kpis" }, { id: "linkage", label: ["ความเชื่อมโยง", "Linkage"], keys: ["links", "link"], roles: ["plan", "exec", "audit"] },
+      { id: "align", roles: ["plan", "exec", "audit"] }, { id: "bank" }, { id: "revise", roles: ["plan", "exec", "audit"] }] },
+  { id: "requests", code: "B3", m: "M02", group: "form" },
+  { id: "consolidation", code: "B4", m: "M03", group: "form", mod: "consolidation",
+    tabs: ["overview", "priority", { id: "ceil", label: ["เพดานวงเงินและคำตอบหน่วยงาน", "Ceilings and replies"], keys: ["ceilings", "responses"] }, "programme",
+      { id: "analysis", label: ["วิเคราะห์ 3 ปีและฐานศูนย์", "Three-year and zero-base"], keys: ["r3", "zbb"] }, "forward"] },
+  { id: "review", code: "B5", m: "M04", group: "form", mod: "review", tabs: ["queue", "rounds", "meetings", "compare", "hearings", "impact"] },
+  { id: "submission", code: "B6", m: "M05", group: "form", mod: "submission",
+    tabs: ["checks", { id: "pack", label: ["ชุดคำขอและแบบฟอร์ม", "Pack and forms"], keys: ["pack", "form", "export"] },
+      { id: "status", label: ["สถานะและรัฐสภา", "Status and Parliament"], keys: ["status", "parliament"] }, "brief"] },
+  { id: "allocation", code: "B7", m: "M06", group: "exec", mod: "allocation",
+    tabs: [{ id: "money", label: ["วงเงินและการจัดสรร", "Appropriation and allocation"], keys: ["appropriation", "allocate"] }, "plan", "balance", "transfers", "releases",
+      { id: "carry", label: ["กันเงินและเงินเหลือจ่าย", "Carry-over and savings"], keys: ["carry", "savings"] }, "nb"] },
+  { id: "dashboard", code: "B8", m: "M07", group: "exec", mod: "dashboard",
+    tabs: ["live", "drill", "forecast", "alerts", "progress", "procure", { id: "import", roles: ["plan", "exec", "fin", "audit"] }, { id: "overview", label: ["ปี 2569", "FY2569"] }] },
+  { id: "performance", code: "B9", m: "M08", group: "intel", mod: "performance",
+    tabs: [{ id: "kpis", label: ["ตัวชี้วัดและ Scorecard", "KPIs and scorecard"], keys: ["kpis", "scorecard"] }, "chain", "quarter", { id: "cost", roles: ["plan", "exec", "audit"] },
+      { id: "evals", label: ["รายงานและประเมินผล", "Reports and evaluation"], keys: ["report", "evaluate", "stages"], roles: ["plan", "exec", "audit"] }, "recs", { id: "public", roles: ["plan", "exec", "audit"] }] },
+  { id: "insight", code: "B10", m: "M09", group: "intel", mod: "intel", view: "assistant", roles: ["plan", "exec", "fin", "audit"],
+    label: ["วิเคราะห์และพยากรณ์", "Analytics and forecasts"], h1: ["วิเคราะห์และพยากรณ์งบประมาณ", "Budget analytics and forecasts"],
+    tabs: ["bfore", { id: "sim", label: ["จำลองสถานการณ์", "What-if"], keys: ["bwhatif", "whatif"] }, "trends",
+      { id: "signals", label: ["สัญญาณและคุณภาพ", "Signals and quality"], keys: ["bkpi", "anoms", "quality"] }] },
+  { id: "assistant", code: "B11", m: "M09", group: "intel", mod: "intel",
+    label: ["ผู้ช่วย AI และ Agent", "AI assistant and agents"], h1: ["ผู้ช่วย AI และ Agent งบประมาณ", "Budget AI assistant and agents"],
+    tabs: ["ask", { id: "bagents", roles: ["plan", "exec", "fin", "audit"] }, { id: "agents", roles: ["plan", "exec", "fin", "audit"] }] },
+];
+BUD_PAGES.forEach(p => (p.tabs = (p.tabs || []).map(t => (typeof t === "string" ? { id: t } : t)).map(t => ({ ...t, keys: t.keys || [t.id] }))));
+const bPage = id => BUD_PAGES.find(p => p.id === id);
+const bTabs = p => p.tabs.filter(t => !t.roles || t.roles.includes(ROLE));
+const bSees = p => allowed(p.id) && (!p.tabs.length || bTabs(p).length > 0);
+const bTabOf = (p, k) => bTabs(p).find(t => t.keys.includes(k));
+// The visible page that holds an old key of a module (the M09 keys live on B10 or B11).
+const bOwner = (mod, k) => BUD_PAGES.find(p => p.mod === mod && bSees(p) && bTabOf(p, k));
+const BUD_SEEN = {}, BUD_KEY = {}, BUD_SUB = {};
+let BUD_ON = null; // the Budget page on screen
+
+// The old bar's tabs: key → label (the label keeps its counts, for example "Alerts (3)").
+function bOldBar(html) {
+  const m = html.match(/<div class="tabs" role="tablist">[\s\S]*?<\/div>/);
+  if (!m) return null;
+  const L2 = {};
+  m[0].replace(/<button[^>]*data-\w+="([^"]+)"[^>]*>([\s\S]*?)<\/button>/g, (_, k, l) => (L2[k] = l));
+  return { html: m[0], L: L2 };
+}
+const bCount = l => { const m = String(l).match(/\((\d+)\)\s*$/) || String(l).match(/class="badge">(\d+)</); return m ? Number(m[1]) : 0; };
+const bPlain = l => String(l).replace(/\s*\(\d+\)\s*$/, "").replace(/\s*<span class="badge">\d+<\/span>/, "");
+
+function bRender(p, base) {
+  const mod = BUD_MOD[p.mod];
+  let k = mod.get();
+  const changed = k !== BUD_SEEN[p.mod];
+  if (!bTabOf(p, k)) {
+    // A key set on purpose (a deep link, or a button in another panel) opens the page that holds it.
+    const q = changed ? bOwner(p.mod, k) : null;
+    if (q && q.id !== p.id) return bRedirect(q, base);
+    const last = BUD_KEY[p.id];
+    mod.set(last && bTabOf(p, last) ? last : bTabs(p)[0].keys[0]);
+  }
+  let html = base(), bar = bOldBar(html);
+  if (bar && !bar.L[mod.get()]) {
+    const first = bTabs(p).map(t => t.keys.find(x => bar.L[x])).find(Boolean);
+    if (first) { mod.set(first); html = base(); bar = bOldBar(html); }
+  }
+  k = mod.get(); BUD_SEEN[p.mod] = k; BUD_KEY[p.id] = k; BUD_ON = p.id;
+  if (bar) {
+    const T = bTabs(p).map(t => ({ ...t, keys: t.keys.filter(x => bar.L[x]) })).filter(t => t.keys.length), cur = T.find(t => t.keys.includes(k));
+    if (cur) BUD_SUB[`${p.id}:${cur.id}`] = k;
+    const lab = t => (t.label ? tx(t.label) : bPlain(bar.L[t.keys[0]]));
+    const cnt = t => sumv(t.keys.map(x => bCount(bar.L[x])));
+    const nb = `<div class="tabs" role="tablist" aria-label="${esc(tx(p.label || NAV.find(n => n.id === p.id).label))}" data-bbar>${T.map(t => `<button class="tab ${t === cur ? "on" : ""}" type="button" role="tab" aria-selected="${t === cur}" data-btab="${t.id}">${lab(t)}${cnt(t) ? ` <span class="badge">${cnt(t)}</span>` : ""}</button>`).join("")}</div>`
+      + (cur && cur.keys.length > 1 ? `<div class="seg-scroll" style="margin:-4px 0 12px">${segBar(cur.keys.map(x => [x, bar.L[x]]), k, "bseg")}</div>` : "");
+    html = html.replace(bar.html, nb);
+  }
+  return bHead(p, html);
+}
+// The eyebrow names the app, the new code and the old module code; B10 and B11 get their own heading.
+function bHead(p, html) {
+  html = html.replace(/<div class="eyebrow">M\d\d ·[^<]*/, `<div class="eyebrow">Fisko Budget · ${p.code}${p.m ? ` · ${p.m}` : ""} · ${tx(GROUPS[p.group])}`);
+  if (p.h1) html = html.replace(/<h1>[\s\S]*?<\/h1>/, `<h1>${tx(p.h1)}</h1>`);
+  return html;
+}
+// Render another page in place of this one and fix the address, the crumb and the menu to match.
+function bRedirect(q, base) {
+  CUR = q.id;
+  if (!window.FISKO_ROUTE && location.hash !== "#" + q.id) history.replaceState(null, "", "#" + q.id);
+  const n = NAV.find(x => x.id === q.id);
+  setTimeout(() => { markNav(n); $("#crumb").innerHTML = `${esc(tx(S.org))} · <b>${tx(n.label)}</b>`; });
+  return bRender(q, base);
+}
+
+// ---------- wiring ----------
+{
+  const views = {}, binds = {};
+  BUD_PAGES.filter(p => p.mod).forEach(p => { views[p.id] = VIEWS[p.view || p.id]; binds[p.id] = BIND[p.view || p.id] || (() => {}); });
+  BUD_PAGES.filter(p => p.mod).forEach(p => {
+    VIEWS[p.id] = () => bRender(p, views[p.view || p.id] || views[p.id]);
+    BIND[p.id] = () => {
+      binds[p.id]();
+      const on = bPage(BUD_ON) || p, mod = BUD_MOD[on.mod];
+      $$("[data-btab]").forEach(b => (b.onclick = () => { const t = bTabs(on).find(x => x.id === b.dataset.btab), s = BUD_SUB[`${on.id}:${t.id}`]; mod.set(s && t.keys.includes(s) ? s : t.keys[0]); route(); }));
+      $$("[data-bseg]").forEach(b => (b.onclick = () => { mod.set(b.dataset.bseg); route(); }));
+    };
+  });
+  ["requests", "request"].forEach(id => { const v = VIEWS[id]; if (v) VIEWS[id] = () => bHead(bPage("requests"), v()); });
+  // B8 opens on this year; the FY2569 sample stays as the last tab.
+  MON_TAB = "live";
+  // The starting keys are defaults, not deep links: opening #insight fresh must not move you to B11.
+  Object.keys(BUD_MOD).forEach(m => (BUD_SEEN[m] = BUD_MOD[m].get()));
+  // "intel-bkpi" opens B10, "intel-ask" opens B11.
+  const j = jump;
+  jump = function (l) {
+    if (typeof l === "string" && l.startsWith("intel-")) { const k = l.slice(6), q = bOwner("intel", k); INTEL_TAB = k; return go(q ? q.id : "assistant"); }
+    return j(l);
+  };
+}
+
+// ---------- B1 Budget today ----------
+function bMine() { return myTasks().filter(t => t.cls !== "p-mute" && typeof t.link === "string" && appOfLink(t.link) === "budget"); }
+function bAlerts() { return allowed("dashboard") && ROLE !== "div" ? monAlerts().filter(a => !S.acks.includes(a.id)) : []; }
+VIEWS.btoday = () => {
+  const t = bMine().sort((a, b) => (a.due < b.due ? -1 : 1)), next = S.calendar.filter(c => c.date >= TODAY).sort((a, b) => (a.date < b.date ? -1 : 1));
+  const R = S.requests.filter(r => ROLE !== "div" || r.unit === me().unit), sent = R.filter(r => !["draft", "returned"].includes(r.status)), al = bAlerts();
+  const p = bPage("btoday"), go2 = (l, txt) => `<button class="btn" type="button" data-bjump="${esc(l)}">${txt || L("เปิด", "Open")}</button>`;
+  const pages = BUD_PAGES.filter(x => x.id !== "btoday" && bSees(x));
+  return `
+  <div class="head"><div><div class="eyebrow">Fisko Budget · ${p.code} · ${tx(GROUPS.bud)}</div><h1>${tx(p.label)}</h1>
+    <p>${L("งานของคุณ กำหนดการในปฏิทินงบประมาณ และสิ่งที่ต้องดูในปีที่ใช้จ่ายอยู่", "Your work, the budget calendar, and what to watch in the year being spent")} · ${tx(ROLES[ROLE])}</p></div></div>
+  <section class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+    <div class="kpi hl"><span class="l">${L("งานของฉัน", "My work")}</span><span class="v">${t.length}</span><span class="d" style="color:var(--rail-ink)">${t.filter(x => x.due <= TODAY).length} ${L("ถึงกำหนดหรือเลยแล้ว", "due or overdue")}</span></div>
+    <div class="kpi"><span class="l">${L("กำหนดการถัดไป", "Next deadline")}</span><span class="v">${next.length ? daysUntil(next[0].date) : "–"}</span><span class="d sub">${next.length ? `${L("วัน", "days")} · ${esc(tx(next[0].name))}` : ""}</span></div>
+    <div class="kpi"><span class="l">${ROLE === "div" ? L("คำขอของหน่วยงาน ปี 2571", "Your unit's FY2571 requests") : L("คำขอ ปี 2571 ที่ส่งแล้ว", "FY2571 requests sent")}</span><span class="v">${sent.length}/${R.length}</span></div>
+    <div class="kpi"><span class="l">${L("การแจ้งเตือนการใช้จ่าย ปี 2570", "FY2570 spending alerts")}</span><span class="v">${ROLE === "div" ? "–" : al.length}</span><span class="d sub">${ROLE === "div" ? L("ดูที่ B8", "See B8") : al.filter(a => a.lv === "bad").length + " " + L("รุนแรง", "serious")}</span></div>
+  </section>
+  <div class="grid2">
+    <section class="panel"><header><h2>${L("งานของฉันในแอปงบประมาณ", "My work in Budget")}</h2><span class="sp"></span><span class="sub">${t.length} ${L("รายการ", "items")}</span></header>
+      ${t.length ? `<div class="tbl-wrap"><table><tbody>${t.slice(0, 10).map(x => `<tr><td>${dotI(x.cls === "p-bad" ? "bad" : x.cls === "p-warn" ? "warn" : "ok")}<b style="font-weight:600">${esc(x.title)}</b>${x.sub ? `<div class="sub">${esc(x.sub)}</div>` : ""}</td><td class="sub" style="white-space:nowrap">${clockTxt(x.due)}</td><td>${go2(x.link)}</td></tr>`).join("")}</tbody></table></div>`
+        : `<div class="body sub">${dotI("ok")}${L("ไม่มีงานค้างในแอปงบประมาณ", "Nothing waiting for you in Budget")}</div>`}</section>
+    <section class="panel"><header><h2>${L("ปฏิทินงบประมาณ ปี 2571", "FY2571 budget calendar")}</h2><span class="sp"></span><span class="pill p-warn">${L("ตัวอย่าง", "Sample")}</span></header>
+      <ul class="tasks">${next.slice(0, 6).map(c => `<li><span class="pill ${c.role === ROLE ? "p-ok" : "p-mute"}" style="padding:2px 8px"></span>
+        <div><b style="font-weight:600">${tx(c.name)}</b><div class="sub">${tx(ROLES[c.role])}</div></div>${dueText(c.date)}</li>`).join("") || `<li class="sub">${L("ไม่มีกำหนดการ", "No dates ahead")}</li>`}</ul></section>
+  </div>
+  ${al.length ? `<section class="panel"><header><h2>${L("ต้องดูในปี 2570", "To watch in FY2570")}</h2><span class="sp"></span>${go2("mon-alerts", `${L("การแจ้งเตือนทั้งหมด", "All alerts")} (${al.length})`)}</header>
+    <div class="tbl-wrap"><table><tbody>${al.slice(0, 5).map(a => `<tr><td>${dotI(a.lv === "bad" ? "bad" : a.lv === "warn" ? "warn" : "ok")}<b style="font-weight:600">${esc(a.t)}</b><div class="sub">${esc(a.d)}</div></td></tr>`).join("")}</tbody></table></div></section>` : ""}
+  <section class="panel"><header><h2>${L("หน้าในแอปงบประมาณ", "Pages in Budget")}</h2></header>
+    <div class="body" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">${pages.map(x => { const n = NAV.find(y => y.id === x.id); return `<button class="btn ghost" type="button" data-bjump="${x.id}" style="justify-content:flex-start;text-align:left"><span class="mono">${x.code}</span>&nbsp;${esc(tx(x.label || n.label))}${x.m ? ` <span class="sub">· ${x.m}</span>` : ""}</button>`; }).join("")}</div></section>`;
+};
+BIND.btoday = () => $$("[data-bjump]").forEach(b => (b.onclick = () => jump(b.dataset.bjump)));
+
+// ---------- menu ----------
+{
+  const i = NAV.findIndex(n => n.id === "home");
+  NAV.splice(i + 1, 0, { id: "btoday", code: "B1", group: "bud", app: "budget", roles: B_ALL, label: bPage("btoday").label });
+  const a = NAV.findIndex(n => n.id === "assistant"), as = NAV[a];
+  NAV.splice(a, 0, { id: "insight", code: "B10", group: "intel", app: "budget", roles: bPage("insight").roles, label: bPage("insight").label });
+  as.label = bPage("assistant").label;
+  BUD_PAGES.forEach(p => { const n = NAV.find(x => x.id === p.id); if (n) { n.code = p.code; n.group = p.group; } });
+  Object.assign(NAV_ICON, { btoday: "home", insight: "chart" });
+  const nb = navBadge;
+  navBadge = function (id) {
+    if (id === "btoday") { const n = bMine().filter(x => x.due <= TODAY).length; return n ? `<span class="badge">${n}</span>` : ""; }
+    if (id === "insight" && ["plan", "exec", "audit"].includes(ROLE)) { const n = (S.anoms || []).filter(x => x.status === "new").length; return n ? `<span class="badge">${n}</span>` : ""; }
+    return nb(id);
   };
 }
 
