@@ -1,6 +1,6 @@
 # Fisko: project handoff
 
-State as of 18 October 2026, branch `main`. Round 39 (Fisko Finance FN3) is the latest; see sections 36 to 39. This note is for whoever picks the work up next: what exists, how to run and change it, what was decided, and what is still open.
+State as of 18 October 2026, branch `main`. Round 40 (Fisko Finance FN4) is the latest; see sections 36 to 40. This note is for whoever picks the work up next: what exists, how to run and change it, what was decided, and what is still open.
 
 ## 1. What this is
 
@@ -566,3 +566,20 @@ Builds FR-FN-18 to 24. New file `src/js/66d-fin-fn3.js`.
 - **Data version** `DATA_V` is 32. **Demo guide** steps 46 and 47 (`52-demo.js`, `Fisko_Demo_Script.html`).
 - **Tested:** full sweep 6,545 checks passed. By hand: serial numbers saved, a repeat refused, more than the quantity refused; a BOQ row added; ERP reference saved; the first phase's acceptance form replaced by the R-23 message, a drawing round recorded with MN/001/2570, a send-back refused without a reason and accepted with one, a second round approved and the form restored; a fee claim for three dates (the Saturday dropped, one attendance unticked) came to 7,800, the officer could not approve it and the head did; a second claim for an already-claimed date paid nothing; the fees tab disappears when the switch is off; the supplier requested a bank change and Finance saw it. Not checked: phone width, dark mode, the English wording, and the overdue tag on a drawing round (text was checked in the wrong language).
 - **Not done:** not committed or published. T4 (forms catalogue, e-mail outbox and signature status, conflict-of-interest report, announcement builder, entity check) and FR-PR-85 remain. A Finance FN3 session was working in the same tree; check `git status` before committing.
+
+## 40. Fisko Finance FN4: receipts, cash custody and remittance (round 40)
+
+Builds FR-FN-25 to 32 (FR-FN-33, key handover, is not built). New file `src/js/66e-fin-fn4.js`; two Finance tabs, F5 `recv` and F6 `cash`, and a page `#cashcount` with no menu entry (reached from tasks and notifications; listed in the router's `extra` crumbs).
+
+- **Receipts** (`S.receipts`, `RC-2570-nnnn`): book and number (`S.rbooks`; the officer's current-year book), date, payer, item, amount, method (`cash`, `cheque`, `epay`), kind (`revenue`, `nonbudget`, `refund`, `advback`), `recorded` (GFMIS document number), `remit`, `cancelled` (reason; the receipt stays in the register). `rcIssue()` makes one. `rcClass()` turns the kind into a money type: revenue, non-budget, over-drawn money returned (on or before `FY_END`) or prior-year balance returned (after it), per clause 100.
+- **Recording:** "Record in the system" stamps every unrecorded receipt and says how many were late (clause 81).
+- **Remittance** (`S.remits`, `RM-2570-nnn`): `rcDue()` gives each receipt its clause-101 date: cheque next working day; refunds 15 working days; cash revenue within 3 working days when that day's cash revenue is over the M10 limit (10,000), otherwise month end; non-budget cash month end; e-Payment revenue month end (level C, the Ministry's rule isn't read). Remitting is per money type, needs the receipts recorded first, and late items are counted and sent to `finhead`.
+- **Unspent advance cash** (from FN3 `cashBack`) gets a "receipt" button; the seeded AD-003 refund points at an old-year receipt.
+- **Receipt-book register:** current and prior-year books, used ranges, old-year books not returned, and the yearly report (`S.rbookReports`) with a clock to 31 October (clause 74).
+- **Tax and penalties:** a table of paid vouchers with withholding tax or penalties and their 50 ทวิ status (FR-FN-30).
+- **Cash committee** (`S.cashCmte`: order, members, substitutes): `finhead` re-appoints (at least 2). Rank isn't checked (users have no rank); the page says so.
+- **Daily cash report** (`S.dailyCash`): `fin` prepares it when there was cash or cheques that day (`dcNeeded`); the system figures are cash and cheques in the safe at day end by money type (`dcSys`, `inSafe`). Each member enters what they counted; SD-13 refuses anyone who took or paid out money that day. When all have counted, it is `signed` or `diff` (reported to exec, finhead and audit, clause 95). The executive acknowledges (clause 94).
+- **Clocks, badges, tasks:** unrecorded receipts, remittance per money type, today's report, the yearly book report; tasks for committee members (link `cashcount`), `fin` and `exec`.
+- **Seed** (`seedFinanceFN4`): committee = Planning user and division director (order 15/2569); books 1/2570, 7/2569 (returned), 8/2569 (held by a division, not returned); five October receipts (one remitted, a cheque refund one day overdue, two today not recorded); signed reports for 14 and 15 October. `DATA_V` is 32.
+- **Tested:** full sweep 6,547 checks passing; by hand: issue, record, remit (late item flagged), the 3-working-day rule when today's cash passes 10,000, the daily report with one member counting short (diff and report), acknowledgement; 375 px width for F5, F6 and the count page.
+

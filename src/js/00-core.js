@@ -44,7 +44,7 @@ function resetDemo() { store.del(key()); S = SEEDS[ORG].seed(); save(); resetUi(
 function resetUi() {
   CUR_REQ = null; REQ_TAB = "main"; VER_A = VER_B = null; CMP_REQ = null; CHAIN_P = null; CMT_OPEN = null;
   DRILL_U = DRILL_P = null; PLAN_UNIT = ""; ALLOC_FY = 2570; WI.locks = null; STAGED = null;
-  OPEN_PROG.clear(); OPEN_UNIT.clear(); IDEA_OPEN = null; PASTE_ROWS = []; PLAN_REQ = null; PLAN_SPLIT = false; CT_FROM = null; PAY_FORM = null; CASE_OPEN = null; OCDS_JSON = ""; AI_CASE = null; AI_RES = {}; AI_TOR = ""; AI_Q = ""; TOR_OPEN = null; PACK_FOR = null; BL_ROWS = null; REP_MONTH = null; DOSSIER_FOR = null; DOC_OPEN = null; WIP = null; WI_LOCK.clear(); WI_NAME = ""; FC_CUT = null; RUN_OPEN = null; FN_PO = null; VC_OPEN = null; VC_NEW = false; GF_OUT = null; ADV_OPEN = null;
+  OPEN_PROG.clear(); OPEN_UNIT.clear(); IDEA_OPEN = null; PASTE_ROWS = []; PLAN_REQ = null; PLAN_SPLIT = false; CT_FROM = null; PAY_FORM = null; CASE_OPEN = null; OCDS_JSON = ""; AI_CASE = null; AI_RES = {}; AI_TOR = ""; AI_Q = ""; TOR_OPEN = null; PACK_FOR = null; BL_ROWS = null; REP_MONTH = null; DOSSIER_FOR = null; DOC_OPEN = null; WIP = null; WI_LOCK.clear(); WI_NAME = ""; FC_CUT = null; RUN_OPEN = null; FN_PO = null; VC_OPEN = null; VC_NEW = false; GF_OUT = null; ADV_OPEN = null; RC_NEW = false;
 }
 
 // ---------- roles ----------
@@ -114,7 +114,7 @@ function route() {
   CUR = v;
   const n = NAV.find(x => x.id === v) || (v === "request" ? NAV.find(x => x.id === "requests") : null);
   appSync(n);
-  const extra = { demo: ["คู่มือการสาธิต", "Demo guide"], delegation: ["การมอบอำนาจ", "Delegation of authority"] };
+  const extra = { demo: ["คู่มือการสาธิต", "Demo guide"], delegation: ["การมอบอำนาจ", "Delegation of authority"], cashcount: ["ตรวจนับเงินประจำวัน", "Daily cash count"] };
   const tabL = n && n.tabs ? (n.tabs.find(t => t[0] === n.tabGet()) || [])[1] : null;
   $("#crumb").innerHTML = `${esc(tx(S.org))} · ${n ? (tabL ? `${esc(tx(APPS[n.app] ? APPS[n.app].name : n.label))} · <b>${tx(tabL)}</b>` : `<b>${tx(n.label)}</b>`) : `<b>${extra[v] ? tx(extra[v]) : ""}</b>`}`;
   const view = $("#view");
