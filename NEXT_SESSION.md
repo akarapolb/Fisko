@@ -119,3 +119,7 @@ Start the next session by reading this file, then `HANDOFF.md` sections 3, 4, 11
 
 Built on branch `procurement-ia` (worktree `..\Fisko-proc`). Procurement now has 13 pages in 5 groups declared in `src/js/74-proc-pages.js` (see `HANDOFF.md` section 44 and design chapter 19). Next for Procurement: the follow-ups listed at the end of section 44.
 
+## Round 45 (Procurement polish and Finance demo steps)
+
+`main` now carries rounds 43 to 45. The round-44 follow-ups are done (`HANDOFF.md` section 45). Still open: the Finance decisions D-FN-01 to D-FN-09, FR-FN-33 and exports, a full end-to-end rehearsal of the demo, then Fisko Assets or the real-AI plan.
+

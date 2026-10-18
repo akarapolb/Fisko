@@ -63,7 +63,7 @@ PROC.plan = () => {
     <div class="kpi"><span class="l">${L("ทำสัญญาแล้ว", "Contracted")}</span><span class="v">${P.filter(p => p.status === "contracted").length}</span></div>
   </section>
   <section class="panel"><header><h2>${L("แผนจัดซื้อจัดจ้าง", "Procurement plan")} · ${fyLabel(FAM_FY)}</h2><span class="sp"></span><span class="sub">${L("ทุกรายการผูกกับรายการจัดสรรของ M06 · วิธีจัดซื้อตามวงเงินเป็นค่าตัวอย่าง", "Every item links to an M06 allocation line · the method by amount is a sample rule")}</span></header>
-    <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("รายการ", "Item")}</th><th>${L("วิธี", "Method")}</th><th class="n">${L("ประมาณการ (ลบ.)", "Estimate (M)")}</th><th>${L("กำหนด", "Planned")}</th><th>${L("สถานะ", "Status")}</th><th>e-GP</th><th></th></tr></thead>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th style="min-width:240px">${L("รายการ", "Item")}</th><th style="min-width:110px">${L("วิธี", "Method")}</th><th class="n">${L("ประมาณการ (ลบ.)", "Estimate (M)")}</th><th>${L("กำหนด", "Planned")}</th><th>${L("สถานะ", "Status")}</th><th style="min-width:110px">e-GP</th><th></th></tr></thead>
       <tbody>${P.map(p => { const l = famLine(p.line), mine = ROLE === "div" && l.unit === me().unit;
         return `<tr><td class="mono">${p.id}</td><td><b style="font-weight:600">${esc(tx(p.name))}</b><div class="sub">${esc(lineLabel(l))} · <span class="mono">${l.id}</span> · ${catName(p.cat)}${planTag(p)}</div></td><td class="sub">${tx(PMETHOD[p.method])}</td>
           <td class="n">${mb(p.est)}</td><td class="sub">${fdate(p.month)}</td><td>${stTag(PLAN_ST, p.status)}</td>
@@ -88,7 +88,7 @@ PROC.reqn = () => {
   return `
   ${auth && viaTxt ? `<div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("คุณกำลังอนุมัติแทนผู้บริหาร", "You are approving on the executive's behalf")}</b><p>${viaTxt.replace(/^ · /, "")} · ${L("ระบบตรวจกฎแยกหน้าที่กับตัวคุณและกับผู้มอบอำนาจ", "Duty-separation rules are checked against you and against the person who delegated")}</p></div></div>` : ""}
   <section class="panel"><header><h2>${L("ใบขอซื้อขอจ้าง", "Requisitions")}</h2><span class="sp"></span><span class="sub">${L("อนุมัติได้เมื่อไม่เกินวงเงินคงเหลือของรายการจัดสรร และผู้ขอไม่ใช่ผู้อนุมัติ (SD-01)", "Approved only within the room left on the line, and never by the requester (SD-01)")}</span></header>
-    <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("รายการในแผน", "Plan item")}</th><th>${L("ผู้ขอ", "Requester")}</th><th class="n">${L("วงเงิน (ลบ.)", "Amount (M)")}</th><th class="n">${L("คงเหลือบนรายการ (ลบ.)", "Room on line (M)")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th style="min-width:220px">${L("รายการในแผน", "Plan item")}</th><th style="min-width:130px">${L("ผู้ขอ", "Requester")}</th><th class="n">${L("วงเงิน (ลบ.)", "Amount (M)")}</th><th class="n">${L("คงเหลือบนรายการ (ลบ.)", "Room on line (M)")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
       <tbody>${R.slice().reverse().map(r => { const p = famPlan(r.plan);
         return `<tr><td class="mono">${r.id}</td><td><b style="font-weight:600">${esc(tx(p.name))}</b><div class="sub"><span class="mono">${p.id}</span> · ${esc(tx(r.why))}</div></td><td>${esc(userName(r.by))}<div class="sub">${fdate(r.t, true)}</div></td>
           <td class="n">${mb(r.amount)}</td><td class="n">${mb(famHeadroom(p.line))}</td>

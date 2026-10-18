@@ -664,3 +664,14 @@ The Procurement menu had 20 pages (P1 to P20) in build order and every role saw 
 - **Built in a separate worktree** (`..\Fisko-proc`, branch `proc-ia-r44` from `origin/procurement-ia`) because other sessions share `D:\Claude\Fisko`.
 - **Follow-ups not done yet:** wide tables at about 1080 px (plan item column), tabs inside the opened contract (phases, changes, supervision, guarantee and warranty, letters, drawings and BOQ), one-row forms instead of inputs on every row, demo-script steps 50 to 57 in `Fisko_Demo_Script.html`, PO number and voucher status on contract phases.
 
+## 45. Procurement polish and the Finance demo steps (round 45)
+
+The round-44 follow-ups. No rule or data change; `DATA_V` stays 35. `main` was fast-forwarded to round 44 (`c8acec3`) before this round.
+
+- **Contract tabs:** `conPanel(c, part)` (63) returns named parts `head`, `guar`, `phases`, `vars`; with no part it is the full panel as before (`PROC.conAll` and anything else still get the whole thing). 72-t3's wrapper passes the part through. `PROC.conDetail` (74) shows the head, a tab bar (`CON_TAB`, `CON_TABS`) and one body: phases and acceptance, changes (badge for pending changes), supervision (the first two `CON_PANELS` of 63b: supervision and termination), guarantee and warranty (`guar` + the warranty panel), letters, drawings and BOQ (`t3Panel`, its own section). Tabs with nothing in them are hidden. `conLate(c, tab)` maps `CON_PANELS` by order (supervision, termination, warranty, letters) unless a panel sets `f.tab`.
+- **Finance on the contract:** `conPoTag(c)` shows the GFMIS PO number next to the supplier, or "No GFMIS PO yet" with a link to Finance commitments; `phVoucher(c, ph)` shows the voucher state on the phase, with a button that opens the voucher in Finance (`VC_OPEN`, `fnc-pay`) for roles that can use Finance.
+- **Wide tables:** minimum widths on the plan item (240 px), method and e-GP columns, the requisition item and requester, and the supplier name. At 1080 px plan rows went from about 300 px to about 100 px tall; the tables scroll sideways inside their wrappers.
+- **One form row at a time:** `PR_ROW`, `prRowBtn`, `prRowForm` (74, bound through `data-prow`) for portal invoice returns (71-t2) and bid security extend/return/forfeit (71-t2, case file). Finance uses its existing `rowBtn`/`rowForm` for audit answers (66f) and reconciliation explanations (62).
+- **Demo script:** `Fisko_Demo_Script.html` gains "ส่วนเสริม 3: Fisko Finance เชิงลึก" with steps 50 to 55 (52:00 to 57:00), generated from the in-app steps in 66g; step 46 and the in-app step 48 follow the new contract tabs.
+- **Tests:** the sweep opens every contract on every contract tab. Full sweep 8,343 checks passing.
+

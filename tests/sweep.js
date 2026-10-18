@@ -57,8 +57,8 @@
       // Procurement pages that show one item at a time (round 44): every contract opened, every AI tool picked
       if (o.suites.includes("render") && typeof PROC_PAGES !== "undefined") for (const lang of o.langs) { LANG = lang; for (const role of ["proc", "prochead", "div", "fin", "audit"].filter(r => o.roles.includes(r))) {
         ROLE = role; safe("shell", renderShell);
-        for (const c of S.contracts || []) safe(`${org}/${lang}/${role}/contract ${c.id}`, () => { CON_OPEN = c.id; procSet("contracts:main"); go2("procurement"); chk(`${org}/${lang}/${role}/contract ${c.id}`); });
-        CON_OPEN = null;
+        for (const c of S.contracts || []) for (const [k] of (typeof CON_TABS !== "undefined" ? CON_TABS : [["phases"]])) safe(`${org}/${lang}/${role}/contract ${c.id}/${k}`, () => { CON_OPEN = c.id; CON_TAB = k; procSet("contracts:main"); go2("procurement"); chk(`${org}/${lang}/${role}/contract ${c.id}/${k}`); });
+        CON_OPEN = null; CON_TAB = "phases";
         if (prSees(prPage("ai"))) for (const [k] of AI_TOOLS) safe(`${org}/${lang}/${role}/ai ${k}`, () => { AI_TOOL = k; procSet("ai:assist"); go2("procurement"); chk(`${org}/${lang}/${role}/ai ${k}`); });
         AI_TOOL = "AI-01"; await tick();
       } }

@@ -45,7 +45,7 @@ const accPct = k => Math.round(sumv(k.phases.filter(phaseAccepted).map(ph => (ph
 // ---------- panels on the contracts page ----------
 {
   const base = conPanel;
-  conPanel = c => base(c) + t3Panel(c);
+  conPanel = (c, part) => (part ? base(c, part) : base(c) + t3Panel(c));
 }
 function t3Panel(c) {
   const ed = isProcRole(), drw = drwReq(c), D = c.drw || { rounds: [] }, B = c.boq || [], cd = capDate(c), lr = c.supervision ? lastReport(c) : null, erp = feat("erpRef"), x = c.xref || {};

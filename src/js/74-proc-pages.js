@@ -4,7 +4,10 @@
 // sets PROC_TAB to that key, so the binders added by rounds 11 to T4 (guards such as PROC_TAB === "gantt"),
 // CASE_OPEN, jump("case:...") and old `prc-<key>` links keep working. A pair [a, b] puts two sections side by side.
 // Moving something to another page means editing this table.
-let PROC_PAGE = "today", CON_OPEN = null;
+let PROC_PAGE = "today", CON_OPEN = null, PR_ROW = null;
+// One form row at a time instead of inputs on every row (round 45), like rowBtn / rowForm in Finance.
+const prRowBtn = (key, label) => `<button class="btn ghost" type="button" data-prow="${esc(key)}" aria-expanded="${PR_ROW === key}">${label}</button>`;
+const prRowForm = (cols, inner) => `<tr class="fn-rowform"><td colspan="${cols}"><div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">${inner}<button class="btn ghost" type="button" data-prow="">${L("ปิด", "Close")}</button></div></td></tr>`;
 PROC_TAB = "today";
 const PROC_ST = {};
 const PR_ALL = ["proc", "prochead", "div", "divhead", "plan", "exec", "fin", "finhead", "audit"];
@@ -172,10 +175,46 @@ PROC.conList = () => {
           <td>${nx ? `${tx(nx.name)} <div class="sub">${dueText(nx.due)}</div>` : `<span class="sub">${L("ครบทุกงวด", "All accepted")}</span>`}</td><td>${flags || `<span class="sub">—</span>`}</td>
           <td><button class="btn" type="button" data-conopen="${c.id}">${L("เปิด", "Open")}</button></td></tr>`; }).join("")}</tbody></table></div></section>`;
 };
+// One contract, in tabs (round 45): phases and acceptance · changes · supervision · guarantee and warranty · letters ·
+// drawings and BOQ. The parts come from conPanel(c, part) (63), the late-stage panels (CON_PANELS, 63b) and t3Panel (72).
+let CON_TAB = "phases";
+const CON_TABS = [
+  ["phases", ["งวดงานและตรวจรับ", "Phases and acceptance"]], ["vars", ["การแก้ไขสัญญา", "Changes"]], ["supervise", ["ควบคุมงาน", "Supervision"]],
+  ["guar", ["หลักประกันและรับประกัน", "Guarantee and warranty"]], ["letters", ["หนังสือ", "Letters"]], ["boq", ["แบบและ BOQ", "Drawings and BOQ"]],
+];
+// The late-stage panels in the order 63b registers them: supervision, termination, warranty and defects, letters.
+const conLate = (c, tab) => CON_PANELS.filter((f, i) => (f.tab || ["supervise", "supervise", "guar", "letters"][i] || "supervise") === tab).map(f => f(c)).join("");
+function conTabBody(c, k) {
+  if (k === "phases") return conPanel(c, "phases");
+  if (k === "vars") return conPanel(c, "vars");
+  if (k === "supervise") return conLate(c, "supervise");
+  if (k === "guar") return conPanel(c, "guar") + conLate(c, "guar");
+  if (k === "letters") return conLate(c, "letters");
+  if (k === "boq") return typeof t3Panel === "function" ? t3Panel(c) : "";
+  return "";
+}
 PROC.conDetail = () => {
-  const c = famCon(CON_OPEN);
-  return `<div class="row" style="margin:0 0 10px"><button class="btn ghost" type="button" data-conback>← ${L("สัญญาทั้งหมด", "All contracts")}</button></div>${conPanel(c)}${prSec("conInvoices")}`;
+  const c = famCon(CON_OPEN), bodies = CON_TABS.map(([k, l]) => [k, l, conTabBody(c, k)]).filter(([k, , h]) => k === "phases" || h.replace(/<[^>]+>/g, "").trim());
+  if (!bodies.some(x => x[0] === CON_TAB)) CON_TAB = "phases";
+  const cur = bodies.find(x => x[0] === CON_TAB), pend = (c.vars || []).filter(v => v.status === "pending").length;
+  const bar = `<div class="tabs fn-tabs" role="tablist" aria-label="${esc(c.id)}" style="margin:0 16px">${bodies.map(([k, l]) => `<button class="tab ${k === CON_TAB ? "on" : ""}" type="button" role="tab" aria-selected="${k === CON_TAB}" data-ctab="${k}">${tx(l)}${k === "vars" && pend ? ` <span class="badge">${pend}</span>` : ""}</button>`).join("")}</div>`;
+  // drawings and BOQ are a panel of their own (72-t3); the other tabs sit inside the contract panel
+  const inPanel = CON_TAB !== "boq";
+  return `<div class="row" style="margin:0 0 10px"><button class="btn ghost" type="button" data-conback>← ${L("สัญญาทั้งหมด", "All contracts")}</button></div>
+    <section class="panel">${conPanel(c, "head")}${bar}${inPanel ? cur[2] : ""}</section>${inPanel ? "" : cur[2]}${prSec("conInvoices")}`;
 };
+// Fisko Finance on the contract (round 45): the GFMIS PO next to the supplier, and the voucher on each phase.
+function conPoTag(c) {
+  if (typeof fcfg !== "function") return "";
+  if (c.gfPo) return `<span class="sub">·</span><span class="mono sub">PO ${esc(c.gfPo.no)}</span>`;
+  if (c.amount < fcfg().poMin) return "";
+  return `<span class="sub">·</span>${tag(L("ยังไม่มี PO ใน GFMIS", "No GFMIS PO yet"), "p-warn")}${allowed("finance") ? ` <button class="btn ghost" type="button" data-jump="fnc-chain">${L("บันทึก PO", "Record the PO")}</button>` : ""}`;
+}
+function phVoucher(c, ph) {
+  const v = (S.vouchers || []).find(x => x.contract === c.id && x.phase === ph.n && x.state !== "cancelled");
+  if (!v || typeof vTag !== "function") return "";
+  return `<div>${vTag(v)} ${allowed("finance") ? `<button class="btn ghost" type="button" data-vcgo="${v.id}">${v.id}</button>` : `<span class="mono sub">${v.id}</span>`}</div>`;
+}
 
 // ---------- the page ----------
 VIEWS.procurement = () => {
@@ -196,8 +235,11 @@ VIEWS.procurement = () => {
   BIND.procurement = () => {
     bind();
     $$("[data-psub]").forEach(b => (b.onclick = () => { procSet(`${PROC_PAGE}:${b.dataset.psub}`); route(); }));
-    $$("[data-conopen]").forEach(b => (b.onclick = () => { CON_OPEN = b.dataset.conopen; procSet("contracts:main"); route(); }));
+    $$("[data-conopen]").forEach(b => (b.onclick = () => { CON_OPEN = b.dataset.conopen; CON_TAB = "phases"; procSet("contracts:main"); route(); }));
     $$("[data-conback]").forEach(b => (b.onclick = () => { CON_OPEN = null; route(); }));
+    $$("[data-ctab]").forEach(b => (b.onclick = () => { CON_TAB = b.dataset.ctab; route(); }));
+    $$("[data-prow]").forEach(b => (b.onclick = () => { PR_ROW = b.dataset.prow && PR_ROW !== b.dataset.prow ? b.dataset.prow : null; route(); const f = PR_ROW && $(".fn-rowform input"); if (f) f.focus(); }));
+    $$("[data-vcgo]").forEach(b => (b.onclick = () => { VC_OPEN = b.dataset.vcgo; jump("fnc-pay"); }));
     $$("#view [data-jump]").forEach(b => { if (!b.onclick) b.onclick = () => jump(b.dataset.jump); });
   };
 }
