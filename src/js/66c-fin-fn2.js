@@ -138,25 +138,26 @@ function vcDetail(v) {
     </div></section>`;
 }
 
-FIN.pay = () => {
-  const V = S.vouchers || [], fin = isFinRole(), maker = ROLE === "fin", acc = famAcceptedUnpaid(), c = fcfg();
-  const groups = { open: ["draft", "returned", "check", "approve"], gf: ["ready", "posted"], paid: ["paid"], all: null };
-  const GL = { open: L("กำลังดำเนินการ", "In progress"), gf: L("อยู่กับ GFMIS", "With GFMIS"), paid: L("จ่ายแล้ว", "Paid"), all: L("ทั้งหมด", "All") };
-  const list = V.filter(v => !groups[VC_F] || groups[VC_F].includes(v.state)).slice().reverse();
-  const ready = V.filter(v => v.state === "ready"), posted = V.filter(v => v.state === "posted"), out = (S.gfOut || []).filter(f => f.state === "sent");
-  const agencyDue = V.filter(v => v.state === "posted" && vRoute(v).r === "agency" && v.funded && v.method === "epay");
-  const today = V.filter(v => v.state === "paid" && !v.dayCheck);
-  const open = VC_OPEN && vcOf(VC_OPEN);
-  const fcs = (S.fcommit || []).filter(m => fcLeft(finCommits().find(y => y.id === m.id)) > 0);
+// The open voucher shows in the side panel of whichever Payments tab is open.
+FS.vcDetail = () => { const open = VC_OPEN && vcOf(VC_OPEN); return open ? vcDetail(open) : ""; };
+FS.vcAccepted = () => {
+  const maker = ROLE === "fin", acc = famAcceptedUnpaid(), c = fcfg();
   return `
-  ${open ? vcDetail(open) : ""}
   ${maker && acc.length ? `<section class="panel"><header><h2>${L("งวดที่ตรวจรับแล้ว รอทำใบขอเบิก", "Accepted phases waiting for a voucher")}</h2><span class="sp"></span><span class="sub">${L("ต้องส่งขอเบิกเข้า GFMIS ภายใน", "Must reach GFMIS within")} ${c.reqDays} ${L("วันทำการหลังตรวจรับ (ข้อ 28)", "working days of acceptance (clause 28)")}</span></header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("สัญญา / งวด", "Contract / phase")}</th><th class="n">${L("ยอดงวด (บาท)", "Phase (baht)")}</th><th>${L("ตรวจรับ", "Accepted")}</th><th>${L("ครบกำหนด", "Due")}</th><th>${L("ประตู R-11", "Gate R-11")}</th><th></th></tr></thead>
       <tbody>${acc.map(({ c: k, ph }) => { const g = payGate(k, ph); return `<tr><td><span class="mono">${k.id}</span> ${tx(ph.name)}<div class="sub">${esc(tx(k.vendor))}</div></td><td class="n">${fmt(ph.amount)}</td><td class="sub">${fdate(accDate(ph))}</td><td>${dotI(clockDot(reqDue(ph)))}${clockTxt(reqDue(ph))}</td>
         <td>${g.ok ? tag(L("ผ่าน", "Passed"), "p-ok") : `${tag(L("ไม่ผ่าน", "Not passed"), "p-bad")}<div class="sub">${g.checks.filter(x => !x.ok).map(x => esc(x.label)).join(" · ")}</div>`}</td>
-        <td><button class="btn ${g.ok ? "primary" : ""}" type="button" data-vcmk="${k.id}|${ph.n}">${L("ทำใบขอเบิก", "Make voucher")}</button></td></tr>`; }).join("")}</tbody></table></div></section>` : ""}
+        <td><button class="btn ${g.ok ? "primary" : ""}" type="button" data-vcmk="${k.id}|${ph.n}">${L("ทำใบขอเบิก", "Make voucher")}</button></td></tr>`; }).join("")}</tbody></table></div></section>` : ""}`;
+};
+const VC_GROUPS = { open: ["draft", "returned", "check", "approve"], gf: ["ready", "posted"], paid: ["paid"], all: null };
+FS.vouchers = () => {
+  const V = S.vouchers || [], maker = ROLE === "fin", groups = VC_GROUPS;
+  const GL = { open: L("กำลังดำเนินการ", "In progress"), gf: L("อยู่กับ GFMIS", "With GFMIS"), paid: L("จ่ายแล้ว", "Paid"), all: L("ทั้งหมด", "All") };
+  const list = V.filter(v => !groups[VC_F] || groups[VC_F].includes(v.state)).slice().reverse();
+  const fcs = (S.fcommit || []).filter(m => fcLeft(finCommits().find(y => y.id === m.id)) > 0);
+  return `
   <section class="panel"><header><h2>${L("ใบขอเบิก", "Vouchers")}</h2><span class="sp"></span>
-    <div class="row" style="gap:6px;flex-wrap:wrap">${Object.keys(groups).map(k => `<button class="btn ${VC_F === k ? "primary" : "ghost"}" type="button" data-vcf="${k}">${GL[k]} (${V.filter(v => !groups[k] || groups[k].includes(v.state)).length})</button>`).join("")}
+    <div class="row" style="gap:8px;flex-wrap:wrap">${segBar(Object.keys(groups).map(k => [k, `${GL[k]} (${V.filter(v => !groups[k] || groups[k].includes(v.state)).length})`]), VC_F, "vcf")}
     ${maker ? `<button class="btn" type="button" id="vc-new">${VC_NEW ? L("ปิดแบบฟอร์ม", "Close form") : L("ใบขอเบิกอื่น", "Other voucher")}</button>` : ""}</div></header>
     ${maker && VC_NEW ? `<div class="body"><form class="inline-form" id="vc-form">
       <div class="f" style="flex:1 1 200px"><label for="vf-type">${L("ประเภท", "Type")}</label><select id="vf-type">${["service", "utility", "comp", "travel", "refund"].map(k => `<option value="${k}">${tx(VT[k].name)}</option>`).join("")}</select></div>
@@ -176,8 +177,12 @@ FIN.pay = () => {
     <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("ประเภท / ผู้รับเงิน", "Type / payee")}</th><th class="n">${L("จ่ายสุทธิ (บาท)", "Net (baht)")}</th><th>${L("ทางจ่าย", "Route")}</th><th>${L("นาฬิกา", "Clock")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
       <tbody>${list.map(v => `<tr${VC_OPEN === v.id ? ' style="background:var(--tint)"' : ""}><td class="mono">${v.id}</td><td>${esc(tx(v.payee.name))}<div class="sub">${tx(VT[v.type].name)} · ${esc(tx(v.desc))}</div></td><td class="n">${fmt(vCalc(v).net, 2)}</td><td class="sub">${tx(ROUTE[vRoute(v).r])}</td>
         <td>${v.due && !["paid", "cancelled"].includes(v.state) ? `${dotI(clockDot(v.due))}<span class="sub">${clockTxt(v.due)}</span>` : "—"}</td><td>${vTag(v)}</td><td><button class="btn ghost" type="button" data-vcopen="${v.id}">${L("เปิด", "Open")}</button></td></tr>`).join("")
-        || `<tr><td colspan="7" class="sub">${L("ไม่มีใบขอเบิกในกลุ่มนี้", "No vouchers in this group")}</td></tr>`}</tbody></table></div></section>
-  <div class="grid2">
+        || `<tr><td colspan="7" class="sub">${L("ไม่มีใบขอเบิกในกลุ่มนี้", "No vouchers in this group")}</td></tr>`}</tbody></table></div></section>`;
+};
+FS.gfSend = () => {
+  const V = S.vouchers || [], maker = ROLE === "fin";
+  const ready = V.filter(v => v.state === "ready"), posted = V.filter(v => v.state === "posted"), out = (S.gfOut || []).filter(f => f.state === "sent");
+  return `
     <section class="panel"><header><h2>${L("ส่งข้อมูลเข้า GFMIS", "Send to GFMIS")}</h2><span class="sp"></span><span class="sub">${L("ไฟล์จำลอง (ประเด็น D-F05, D-FN-07)", "Simulated files (decisions D-F05, D-FN-07)")}</span></header>
       <div class="body">
         <p>${dotI(ready.length ? "warn" : "ok")}${ready.filter(v => !v.gfFile).length} ${L("ใบพร้อมส่ง", "ready to send")} · ${ready.filter(v => v.gfFile).length} ${L("ใบส่งแล้วรอผลบันทึก", "sent, waiting for the posting result")} · ${posted.length} ${L("ใบรอผลการจ่าย", "waiting for the payment result")}</p>
@@ -186,22 +191,31 @@ FIN.pay = () => {
           <button class="btn" type="button" id="gf-post" ${out.length ? "" : "disabled"}>${L("นำเข้าผลบันทึก (ตัวอย่าง)", "Import posting result (sample)")}</button>
           <button class="btn" type="button" id="gf-paid" ${posted.some(v => vRoute(v).r === "direct" || !v.funded) ? "" : "disabled"}>${L("นำเข้าผลการจ่าย (ตัวอย่าง)", "Import payment result (sample)")}</button></div>` : `<p class="sub">${L("เจ้าหน้าที่การเงินส่งไฟล์และนำเข้าผล", "Finance officers send files and import results")}</p>`}
         ${GF_OUT ? `<pre class="mono" style="white-space:pre-wrap;font-size:12px;background:var(--tint);padding:8px;border-radius:8px;margin-top:8px">${esc(GF_OUT)}</pre>` : ""}
-      </div></section>
+      </div></section>`;
+};
+FS.agencyPay = () => {
+  const V = S.vouchers || [], maker = ROLE === "fin", c = fcfg();
+  const agencyDue = V.filter(v => v.state === "posted" && vRoute(v).r === "agency" && v.funded && v.method === "epay");
+  return `
     <section class="panel"><header><h2>${L("จ่ายจากบัญชีหน่วยงาน", "Pay from the agency account")}</h2><span class="sp"></span><span class="sub">${L("ข้อ 28 (2), 29 · ไม่ได้จ่ายภายใน", "Clauses 28 (2), 29 · unpaid within")} ${c.refundDays} ${L("วันทำการต้องส่งคืน (ข้อ 99)", "working days must be returned (clause 99)")}</span></header>
       <div class="body">
         ${V.filter(v => v.state === "posted" && vRoute(v).r === "agency" && v.funded).map(v => { const due = addWorkdays(v.funded.t.slice(0, 10), c.refundDays); return `<div style="margin:3px 0">${dotI(clockDot(due))}<span class="mono">${v.id}</span> ${esc(tx(v.payee.name))} · ${fmt(vCalc(v).net, 2)} · ${tx(METHOD[v.method])} · <span class="sub">${L("ต้องจ่ายหรือส่งคืนภายใน", "pay or return by")} ${clockTxt(due)}</span></div>`; }).join("") || `<p class="sub">${L("ไม่มีเงินรอจ่ายในบัญชีหน่วยงาน", "No money waiting in the agency account")}</p>`}
         ${maker && agencyDue.length ? `<button class="btn primary" type="button" id="ep-batch" style="margin-top:8px">${L("สร้างไฟล์ e-Payment และจ่าย", "Create the e-Payment file and pay")} (${agencyDue.length})</button>` : ""}
-      </div></section>
-  </div>
+      </div></section>`;
+};
+// The head of finance (and the auditor, to read) see the daily payment check.
+FS.dayCheck = () => {
+  const today = (S.vouchers || []).filter(v => v.state === "paid" && !v.dayCheck);
+  return `
   ${ROLE === "finhead" || ROLE === "audit" ? `<section class="panel"><header><h2>${L("ตรวจการจ่ายประจำวัน (ข้อ 43)", "Daily payment check (clause 43)")}</h2><span class="sp"></span><span class="sub">${L("หัวหน้าการเงินตรวจการจ่ายกับหลักฐานทุกสิ้นวัน", "The head of finance checks payments against evidence every day")}</span></header>
     <div class="body">${today.length ? `${today.map(v => `<div style="margin:2px 0">${dotI("warn")}<span class="mono">${v.id}</span> ${esc(tx(v.payee.name))} · ${fmt(vCalc(v).net, 2)} · ${fdate(v.paid.t)} · ${tx(METHOD[v.method])}</div>`).join("")}
-      ${ROLE === "finhead" ? `<button class="btn primary" type="button" id="day-check" style="margin-top:8px">${L("ตรวจกับหลักฐานแล้ว ลงนาม", "Checked against evidence · sign")} (${today.length})</button>` : ""}` : `<p class="sub">${dotI("ok")}${L("ตรวจการจ่ายครบแล้ว", "All payments checked")}${(S.payChecks || [])[0] ? ` · ${L("ล่าสุด", "last")} ${fdate(S.payChecks[0].t, true)} ${esc(userName(S.payChecks[0].by))}` : ""}</p>`}</div></section>` : ""}
-  ${vendorPanel()}`;
+      ${ROLE === "finhead" ? `<button class="btn primary" type="button" id="day-check" style="margin-top:8px">${L("ตรวจกับหลักฐานแล้ว ลงนาม", "Checked against evidence · sign")} (${today.length})</button>` : ""}` : `<p class="sub">${dotI("ok")}${L("ตรวจการจ่ายครบแล้ว", "All payments checked")}${(S.payChecks || [])[0] ? ` · ${L("ล่าสุด", "last")} ${fdate(S.payChecks[0].t, true)} ${esc(userName(S.payChecks[0].by))}` : ""}</p>`}</div></section>` : ""}`;
 };
 
 // ---------- supplier bank-account changes (FR-FN-17) ----------
 const BANKS = ["ธนาคารกรุงไทย", "ธนาคารออมสิน", "ธนาคารเพื่อการเกษตรและสหกรณ์การเกษตร", "ธนาคารกรุงเทพ", "ธนาคารกสิกรไทย"];
 const maskAcct = a => (a ? `xxx-x-x${String(a).slice(-4, -1)}-${String(a).slice(-1)}` : "—");
+FS.vendors = () => vendorPanel();
 function vendorPanel() {
   if (!isFinRole() && ROLE !== "audit") return "";
   const C = S.vendorChanges || [], maker = ROLE === "fin";
@@ -278,9 +292,7 @@ function vPaid(v, ref) {
 }
 
 {
-  const bind = BIND.finance;
-  BIND.finance = () => {
-    bind();
+  FIN_BINDS.push(() => {
     $$("[data-vcf]").forEach(b => (b.onclick = () => { VC_F = b.dataset.vcf; route(); }));
     $$("[data-vcopen]").forEach(b => (b.onclick = () => { VC_OPEN = b.dataset.vcopen; route(); }));
     const cl = $("#vc-close"); if (cl) cl.onclick = () => { VC_OPEN = null; route(); };
@@ -354,7 +366,7 @@ function vPaid(v, ref) {
       const acct = $("#vc-acct").value.trim(); if (!/^\d{10}$/.test(acct)) { toast(L("เลขที่บัญชีต้องเป็นตัวเลข 10 หลัก", "The account number must be 10 digits")); return; }
       const ch = { id: `VB-${FAM_FY}-${String((S.vendorChanges || []).length + 1).padStart(2, "0")}`, vendor: $("#vc-vendor").value, bank: $("#vc-bank").value, acct, by: me().id, t: nowIso(), status: "pending", done: null };
       (S.vendorChanges = S.vendorChanges || []).push(ch);
-      audit(["ขอแก้บัญชีธนาคารผู้ขาย", "Asked to change a supplier bank account"], `${ch.id} · ${ch.vendor}`); notify(["finhead"], [`คำขอแก้บัญชีธนาคารผู้ขาย ${ch.id} รอยืนยัน`, `Supplier bank change ${ch.id} is waiting to be confirmed`], "fnc-pay");
+      audit(["ขอแก้บัญชีธนาคารผู้ขาย", "Asked to change a supplier bank account"], `${ch.id} · ${ch.vendor}`); notify(["finhead"], [`คำขอแก้บัญชีธนาคารผู้ขาย ${ch.id} รอยืนยัน`, `Supplier bank change ${ch.id} is waiting to be confirmed`], "fnc-reg:vendors");
       commit(); renderShell(); route(); toast(L("ส่งคำขอแล้ว · คนที่สองต้องยืนยัน", "Requested · a second person must confirm"));
     };
     $$("[data-vdok]").forEach(b => (b.onclick = () => {
@@ -364,7 +376,7 @@ function vPaid(v, ref) {
       ch.status = "confirmed"; ch.done = { by: me().id, t: nowIso() };
       audit(["ยืนยันการแก้บัญชีธนาคารผู้ขาย", "Confirmed a supplier bank change"], ch.id); commit(); renderShell(); route(); toast(L("ยืนยันแล้ว · ส่งข้อมูลให้กรมบัญชีกลาง", "Confirmed · sent to the Comptroller General"));
     }));
-  };
+  });
 }
 
 // ---------- clocks, badges, tasks ----------
@@ -375,7 +387,7 @@ function vPaid(v, ref) {
     (S.vouchers || []).forEach(v => {
       if (v.type === "proc" && ["draft", "returned", "check", "approve", "ready"].includes(v.state)) out.push({ due: v.due, title: `${L("ส่งขอเบิกเข้า GFMIS", "Send to GFMIS")} ${v.id}`, sub: `${tx(v.payee.name)} · ${VST[v.state][2]} ${tx(VST[v.state][0])}`, link: "fnc-pay", src: L("ข้อ 28", "cl. 28") });
       else if (v.type !== "proc" && v.due && ["draft", "returned", "check", "approve", "ready"].includes(v.state)) out.push({ due: v.due, title: `${L("ครบกำหนดจ่าย", "Due")} ${v.id}`, sub: `${tx(v.payee.name)} · ${tx(VT[v.type].name)}`, link: "fnc-pay", src: v.type === "utility" ? L("ข้อ 31", "cl. 31") : L("ข้อ 22", "cl. 22") });
-      if (v.state === "posted" && v.funded) out.push({ due: addWorkdays(v.funded.t.slice(0, 10), c.refundDays), title: `${L("จ่ายต่อหรือส่งคืน", "Pay on or return")} ${v.id}`, sub: tx(v.payee.name), link: "fnc-pay", src: L("ข้อ 99", "cl. 99") });
+      if (v.state === "posted" && v.funded) out.push({ due: addWorkdays(v.funded.t.slice(0, 10), c.refundDays), title: `${L("จ่ายต่อหรือส่งคืน", "Pay on or return")} ${v.id}`, sub: tx(v.payee.name), link: "fnc-pay:gfmis", src: L("ข้อ 99", "cl. 99") });
     });
     return out.sort((a, b) => (a.due < b.due ? -1 : 1));
   };
@@ -385,7 +397,7 @@ function vPaid(v, ref) {
       const V = S.vouchers || [];
       let n = 0;
       if (ROLE === "fin") n = famAcceptedUnpaid().length + V.filter(v => v.state === "returned" || (v.state === "ready" && !v.gfFile)).length;
-      if (ROLE === "finhead") n = V.filter(v => v.state === "check").length + V.filter(v => v.state === "paid" && !v.dayCheck).length + (S.vendorChanges || []).filter(x => x.status === "pending").length;
+      if (ROLE === "finhead") n = V.filter(v => v.state === "check").length + V.filter(v => v.state === "paid" && !v.dayCheck).length;
       if (ROLE !== "fin" && ROLE !== "finhead" && canSpend()) n = V.filter(v => v.state === "approve").length;
       return n ? `<span class="badge">${n}</span>` : "";
     }
@@ -396,12 +408,12 @@ function vPaid(v, ref) {
     const t = mt.apply(this, arguments), V = S.vouchers || [], R = (title, sub, due, link, cls) => t.unshift({ title, sub, due, link, cls });
     if (ROLE === "fin") {
       V.filter(v => v.state === "returned").forEach(v => R(`${L("แก้ไขใบขอเบิก", "Fix voucher")} ${v.id}`, esc(tx(v.payee.name)), v.due || TODAY, "fnc-pay", "p-bad"));
-      if (V.some(v => v.state === "ready" && !v.gfFile)) R(L("ส่งใบขอเบิกที่อนุมัติแล้วเข้า GFMIS", "Send approved vouchers to GFMIS"), `${V.filter(v => v.state === "ready" && !v.gfFile).length} ${L("ใบ", "vouchers")}`, TODAY, "fnc-pay", "p-warn");
+      if (V.some(v => v.state === "ready" && !v.gfFile)) R(L("ส่งใบขอเบิกที่อนุมัติแล้วเข้า GFMIS", "Send approved vouchers to GFMIS"), `${V.filter(v => v.state === "ready" && !v.gfFile).length} ${L("ใบ", "vouchers")}`, TODAY, "fnc-pay:gfmis", "p-warn");
     }
     if (ROLE === "finhead") {
       V.filter(v => v.state === "check").forEach(v => R(`${L("ตรวจหลักฐานใบขอเบิก", "Check voucher evidence")} ${v.id}`, `${esc(tx(v.payee.name))} · ${fmt(vCalc(v).net, 2)}`, v.due || TODAY, "fnc-pay", "p-info"));
-      (S.vendorChanges || []).filter(x => x.status === "pending").forEach(x => R(`${L("ยืนยันการแก้บัญชีผู้ขาย", "Confirm a supplier bank change")} ${x.id}`, "", TODAY, "fnc-pay", "p-warn"));
-      if (V.some(v => v.state === "paid" && !v.dayCheck)) R(L("ตรวจการจ่ายประจำวัน (ข้อ 43)", "Daily payment check (clause 43)"), `${V.filter(v => v.state === "paid" && !v.dayCheck).length} ${L("รายการ", "payments")}`, TODAY, "fnc-pay", "p-warn");
+      (S.vendorChanges || []).filter(x => x.status === "pending").forEach(x => R(`${L("ยืนยันการแก้บัญชีผู้ขาย", "Confirm a supplier bank change")} ${x.id}`, "", TODAY, "fnc-reg:vendors", "p-warn"));
+      if (V.some(v => v.state === "paid" && !v.dayCheck)) R(L("ตรวจการจ่ายประจำวัน (ข้อ 43)", "Daily payment check (clause 43)"), `${V.filter(v => v.state === "paid" && !v.dayCheck).length} ${L("รายการ", "payments")}`, TODAY, "fnc-pay:check", "p-warn");
     }
     if (canSpend() && ROLE !== "fin" && ROLE !== "finhead") V.filter(v => v.state === "approve").forEach(v => R(`${L("อนุมัติจ่าย", "Approve payment")} ${v.id}`, `${esc(tx(v.payee.name))} · ${fmt(vCalc(v).net, 2)} ${L("บาท", "baht")}`, v.due || TODAY, "fnc-pay", "p-warn"));
     return t.filter(x => !(x.cls === "p-mute" && t.length > 1));

@@ -45,7 +45,7 @@ function famTasks(R) {
   if (ROLE === "div") S.pplan.filter(p => p.status === "planned" && famLine(p.line).unit === me().unit).forEach(p => R(`${L("ขอซื้อขอจ้างตามแผน", "Raise a requisition")} ${p.id}`, tx(p.name), p.month, "prc-plan", "p-info"));
   if (ROLE === "fin") {
     famAcceptedUnpaid().forEach(x => R(`${L("ขออนุมัติเบิกจ่าย", "Request a payment")} ${x.c.id} ${tx(x.ph.name)}`, `${mb(x.ph.amount)} ${L("ลบ.", "M")}`, TODAY, "fnc-pay", "p-info"));
-    S.payreqs.filter(p => p.recon && p.recon.state === "diff").forEach(p => R(`${L("ชี้แจงผลต่างจากไฟล์ GFMIS", "Explain a GFMIS file difference")} ${p.id}`, "", TODAY, "fnc-recon", "p-warn"));
+    S.payreqs.filter(p => p.recon && p.recon.state === "diff").forEach(p => R(`${L("ชี้แจงผลต่างจากไฟล์ GFMIS", "Explain a GFMIS file difference")} ${p.id}`, "", TODAY, "fnc-recon:payfile", "p-warn"));
   }
   S.contracts.filter(c => c.inspectors.includes(me().id)).forEach(c => c.phases.filter(ph => !phaseAccepted(ph) && ph.due <= addDays(TODAY, 30) && !ph.signs.some(s => s.by === me().id))
     .forEach(ph => R(`${L("ลงนามตรวจรับงาน", "Sign the acceptance")} ${c.id} ${tx(ph.name)}`, `${mb(ph.amount)} ${L("ลบ.", "M")}`, ph.due, "prc-contracts", "p-info")));

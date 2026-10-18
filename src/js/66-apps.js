@@ -18,8 +18,8 @@ function ensureApp() {
 function appOfLink(l) {
   if (!l) return "budget";
   if (l.startsWith("prc-") || l.startsWith("case:") || l === "procurement") return "procurement";
-  if (l.startsWith("fnc-") || l === "finance" || l === "advances") return "finance";
-  if (l.startsWith("admin") || l === "home" || l === "delegation") return "all";
+  if (l.startsWith("fnc-") || l === "finance") return "finance";
+  if (l.startsWith("admin") || l === "home" || l === "delegation" || l === "advances" || l === "cashcount") return "all";
   return "budget";
 }
 const appChip = l => { const a = appOfLink(l); return a === "budget" || a === "all" ? "" : `<span class="appchip" style="--c:${APPS[a].color}">${esc(tx(APPS[a].name))}</span> `; };
@@ -63,9 +63,12 @@ function renderNav() {
   groups.forEach(g => {
     const items = NAV.filter(n => n.group === g && n.roles.includes(ROLE) && (n.app === "all" || n.app === APP));
     if (!items.length) return;
-    html += `<div class="nav-h">${tx(GROUPS[g])}</div>`;
+    // An app whose pages carry their own groups (Finance) shows those headings instead of the app's one.
+    const own = items.length === 1 && items[0].tabs && items[0].tabs[0][3];
+    if (!own) html += `<div class="nav-h">${tx(GROUPS[g])}</div>`;
     items.forEach(n => {
-      if (n.tabs) n.tabs.forEach(([id, label, code]) => (html += `<a href="#${n.id}" data-v="${n.id}" data-tab="${id}" title="${code}"><span class="ni">${svgI(NAV_ICON[id] || "dot")}</span><span class="code">${code}</span><span class="nl">${tx(label)}</span>${tabBadge(n.id, id)}</a>`));
+      let sub = null;
+      if (n.tabs) n.tabs.filter(t => !t[4] || t[4].includes(ROLE)).forEach(([id, label, code, grp]) => (html += `${grp && grp !== sub ? `<div class="nav-h">${tx((sub = grp))}</div>` : ""}<a href="#${n.id}" data-v="${n.id}" data-tab="${id}" title="${code}"><span class="ni">${svgI(NAV_ICON[id] || "dot")}</span><span class="code">${code}</span><span class="nl">${tx(label)}</span>${tabBadge(n.id, id)}</a>`));
       else html += `<a href="#${n.id}" data-v="${n.id}" title="${n.code}"><span class="ni">${svgI(NAV_ICON[n.id] || "dot")}</span><span class="code">${n.code}</span><span class="nl">${tx(n.label)}</span>${n.soon ? `<span class="soon">${L("รอบ", "R")} ${n.soon}</span>` : navBadge(n.id)}</a>`;
     });
   });
@@ -137,7 +140,7 @@ STYPE.app = ["แอป", "App"];
   searchItems = () => {
     const out = base();
     APP_IDS.filter(appAllowed).forEach(id => out.push({ type: "app", label: tx(APPS[id].name), sub: tx(APPS[id].desc), run: () => switchApp(id), hay: (APPS[id].name.join(" ") + " " + APPS[id].desc.join(" ") + " switch app สลับแอป").toLowerCase() }));
-    NAV.filter(n => n.tabs && n.roles.includes(ROLE)).forEach(n => n.tabs.forEach(([id, label]) => out.push({ type: "page", label: `${tx(APPS[n.app].name)} › ${tx(label)}`, sub: n.code, run: () => jump(`${n.jumpPrefix}-${id}`), hay: (label.join(" ") + " " + APPS[n.app].name[0]).toLowerCase() })));
+    NAV.filter(n => n.tabs && n.roles.includes(ROLE)).forEach(n => n.tabs.filter(t => !t[4] || t[4].includes(ROLE)).forEach(([id, label]) => out.push({ type: "page", label: `${tx(APPS[n.app].name)} › ${tx(label)}`, sub: n.code, run: () => jump(`${n.jumpPrefix}-${id}`), hay: (label.join(" ") + " " + APPS[n.app].name[0]).toLowerCase() })));
     return out;
   };
 }

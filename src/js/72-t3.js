@@ -206,7 +206,7 @@ VP_TABS.push(["bank", ["บัญชีธนาคาร", "Bank account"], "V4
     bb();
     const f = $("#vb-form"); if (f) f.onsubmit = e => { e.preventDefault(); const acct = $("#vb-acct").value.trim(), v = vpMe(); if (!/^\d{10}$/.test(acct)) { toast(L("เลขที่บัญชีต้องเป็นตัวเลข 10 หลัก", "The account number must be 10 digits")); return; }
       const ch = { id: `VB-${FAM_FY}-${String((S.vendorChanges || []).length + 1).padStart(2, "0")}`, vendor: v.id, bank: $("#vb-bank").value, acct, by: me().id, t: nowIso(), status: "pending", done: null, via: "portal" }; (S.vendorChanges = S.vendorChanges || []).push(ch);
-      notify(["finhead", "fin"], [`ผู้ขาย ${v.name} ขอแก้บัญชีธนาคาร ${ch.id} รอยืนยัน`, `${v.name} asks to change its bank account ${ch.id}`], "fnc-pay"); audit(["ผู้ขายขอแก้บัญชีธนาคารผ่านพอร์ทัล (จำลอง)", "A supplier asked to change its bank account in the portal (simulated)"], `${ch.id} ${v.id}`); commit(); route(); toast(L("ส่งคำขอแล้ว", "Request sent")); };
+      notify(["finhead", "fin"], [`ผู้ขาย ${v.name} ขอแก้บัญชีธนาคาร ${ch.id} รอยืนยัน`, `${v.name} asks to change its bank account ${ch.id}`], "fnc-reg:vendors"); audit(["ผู้ขายขอแก้บัญชีธนาคารผ่านพอร์ทัล (จำลอง)", "A supplier asked to change its bank account in the portal (simulated)"], `${ch.id} ${v.id}`); commit(); route(); toast(L("ส่งคำขอแล้ว", "Request sent")); };
   };
 }
 

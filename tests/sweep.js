@@ -46,7 +46,12 @@
       // every menu tab of the Procurement and Finance apps (the render pass above only sees the current tab)
       if (o.suites.includes("render")) for (const lang of o.langs) { LANG = lang; for (const role of o.roles) {
         ROLE = role; safe("shell", renderShell);
-        for (const nv of NAV.filter(x => x.tabs && x.roles.includes(role))) for (const [tb] of nv.tabs) safe(`${org}/${lang}/${role}/${nv.id}/${tb}`, () => { nv.tabSet(tb); go2(nv.id); chk(`${org}/${lang}/${role}/${nv.id}/${tb}`); });
+        for (const nv of NAV.filter(x => x.tabs && x.roles.includes(role))) for (const [tb, , , , rs] of nv.tabs) if (!rs || rs.includes(role)) safe(`${org}/${lang}/${role}/${nv.id}/${tb}`, () => {
+          nv.tabSet(tb); go2(nv.id); chk(`${org}/${lang}/${role}/${nv.id}/${tb}`);
+          // tabs inside the page (Finance pages have their own)
+          const k = document.querySelectorAll("#view [role=tab]").length;
+          for (let i = 0; i < k; i++) { const b = document.querySelectorAll("#view [role=tab]")[i]; if (!b) break; b.click(); chk(`${org}/${lang}/${role}/${nv.id}/${tb}/tab${i}`); }
+        });
         await tick();
       } }
       // Finance F9 sub-pages and every finance agent run

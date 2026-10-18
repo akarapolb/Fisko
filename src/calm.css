@@ -241,3 +241,16 @@ ul.plain { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-di
 .fcband .band { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--ch-1) 35%, transparent); border-radius: 99px; }
 .fcband .mid { position: absolute; top: -4px; bottom: -4px; width: 3px; background: var(--ch-1); }
 .fcband .tgt { position: absolute; top: -6px; bottom: -6px; width: 2px; background: var(--bad); }
+
+/* Finance pages (round 43): tabs inside a page, pickers, and the side panel that opens a voucher or an advance */
+.fn-tabs { margin: 0 0 14px; }
+.fn-tabs .badge { margin-left: 6px; }
+.fn-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: 0 0 12px; }
+.fn-filter > .sub:not(:first-child) { margin-left: 8px; }
+.fn-scrim { position: fixed; inset: 0; background: rgba(10, 11, 34, .32); z-index: 14; }
+.fn-drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(780px, 100vw); overflow-y: auto; background: var(--bg); border-left: 1px solid var(--line); box-shadow: -16px 0 40px rgba(10, 11, 34, .2); z-index: 15;
+  padding: max(16px, env(safe-area-inset-top, 0px)) 16px max(16px, env(safe-area-inset-bottom, 0px)); }
+.fn-drawer > .panel { margin: 0; }
+.fn-drawer h2:focus { outline: none; }
+@media (max-width: 860px) { .fn-drawer { border-left: 0; } }
+.fn-rowform > td { background: var(--surface-2); }

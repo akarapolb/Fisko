@@ -186,12 +186,7 @@ function fSignals() {
 const SIG_ST = { new: [["ใหม่", "New"], "p-warn"], asked: [["ขอคำชี้แจงแล้ว", "Explanation asked"], "p-info"], explained: [["ชี้แจงแล้ว", "Explained"], "p-info"], issue: [["ยืนยันเป็นประเด็น", "Confirmed issue"], "p-bad"], fp: [["ผลบวกลวง", "False positive"], "p-mute"] };
 const sigSt = k => ((S.fSig || {})[k] || { status: "new" });
 
-// ---------- F9 page ----------
-FIN_SUB.ai = () => L("Agent การเงิน พยากรณ์ จำลองสถานการณ์ ตัวชี้วัด และสัญญาณเตือน", "Finance agents, forecasts, what-ifs, KPIs and warning signals");
-FIN.ai = () => {
-  const tabs = [["agents", L("Agent การเงิน", "Finance agents")], ["fc", L("พยากรณ์", "Forecasts")], ["wi", L("จำลองสถานการณ์", "What-if")], ["kpi", L("ตัวชี้วัดและสัญญาณ", "KPIs and signals")]];
-  return `<div class="row" style="gap:6px;flex-wrap:wrap;margin:0 0 12px">${tabs.map(([k, l]) => `<button class="btn ${FAI_TAB === k ? "primary" : "ghost"}" type="button" data-fai="${k}">${l}</button>`).join("")}</div>${FAI[FAI_TAB]()}`;
-};
+// ---------- F9 sections (the page's tabs are agents, fc, wi and kpi; FAI_TAB holds the open one) ----------
 const FAI = {};
 FAI.agents = () => {
   const runs = (S.fRuns || []).slice().reverse(), open = runs.find(r => r.id === F_RUN_OPEN) || runs[0];
@@ -274,13 +269,8 @@ FAI.kpi = () => {
 
 // ---------- bindings ----------
 {
-  const bind = BIND.finance;
-  BIND.finance = () => {
-    bind();
-    if (FIN_TAB !== "ai") return;
+  FIN_BINDS.push(() => {
     const done = msg => { commit(); renderShell(); route(); if (msg) toast(msg); };
-    $$("[data-fai]").forEach(b => (b.onclick = () => { FAI_TAB = b.dataset.fai; route(); }));
-    $$("[data-jump]").forEach(b => (b.onclick = () => jump(b.dataset.jump)));
     $$("[data-fstart]").forEach(b => (b.onclick = () => { fStart(b.dataset.fstart); audit(["เริ่มงาน Agent การเงิน", "Started a finance agent"], b.dataset.fstart); done(); }));
     $$("[data-fopen]").forEach(s => (s.onchange = () => { F_RUN_OPEN = s.value; route(); }));
     $$("[data-fok]").forEach(b => (b.onclick = () => { const r = S.fRuns.find(x => x.id === b.dataset.fok), s = r.steps[r.ptr]; fApply(r, s); s.status = "approved"; s.by = me().id; audit(["อนุมัติขั้นตอนของ Agent", "Approved an agent step"], `${r.id} ${s.tool}`); r.ptr++; r.status = "running"; fAdvance(r); done(); }));
@@ -292,21 +282,18 @@ FAI.kpi = () => {
     if (ws) ws.onclick = () => { const w = FWI || WI_DEF(), name = $("#wi-name").value.trim() || L(`สถานการณ์ ${(S.fWhatifs || []).length + 1}`, `Scenario ${(S.fWhatifs || []).length + 1}`); (S.fWhatifs = S.fWhatifs || []).push({ name, w, r: wiCalc(w), by: me().id, t: nowIso() }); audit(["บันทึกสถานการณ์จำลองการเงิน", "Saved a finance what-if scenario"], name); done(L("บันทึกแล้ว", "Saved")); };
     $$("[data-sg]").forEach(b => (b.onclick = () => {
       const k = b.dataset.sgk, a = b.dataset.sg, cur = sigSt(k); S.fSig = S.fSig || {};
-      if (a === "explain") { const el = $("#sgn-" + k.replace(/[^\w-]/g, "_")), note = el ? el.value.trim() : ""; if (note.length < 5) { toast(L("พิมพ์คำชี้แจง", "Type the explanation")); return; } S.fSig[k] = Object.assign({}, cur, { status: "explained", note, by: me().id, t: nowIso() }); notify(["audit", "finhead"], [`ชี้แจงสัญญาณ ${k} แล้ว`, `Signal ${k} has been explained`], "fnc-ai"); }
-      else { S.fSig[k] = Object.assign({}, cur, { status: a === "ask" ? "asked" : a, by: me().id, t: nowIso() }); if (a === "ask") notify(["fin"], [`ขอคำชี้แจงสัญญาณ ${k}`, `Please explain signal ${k}`], "fnc-ai"); }
+      if (a === "explain") { const el = $("#sgn-" + k.replace(/[^\w-]/g, "_")), note = el ? el.value.trim() : ""; if (note.length < 5) { toast(L("พิมพ์คำชี้แจง", "Type the explanation")); return; } S.fSig[k] = Object.assign({}, cur, { status: "explained", note, by: me().id, t: nowIso() }); notify(["audit", "finhead"], [`ชี้แจงสัญญาณ ${k} แล้ว`, `Signal ${k} has been explained`], "fnc-ai:kpi"); }
+      else { S.fSig[k] = Object.assign({}, cur, { status: a === "ask" ? "asked" : a, by: me().id, t: nowIso() }); if (a === "ask") notify(["fin"], [`ขอคำชี้แจงสัญญาณ ${k}`, `Please explain signal ${k}`], "fnc-ai:kpi"); }
       audit(["คัดกรองสัญญาณเตือนการเงิน", "Triaged a finance warning signal"], `${k} · ${a}`); done();
     }));
-  };
+  });
 }
 
 // ---------- menu, overview, tasks, demo ----------
 NAV_ICON.ai = NAV_ICON.ai || "sparkle";
 {
-  const n = NAV.find(x => x.id === "finance");
-  n.tabs.splice(n.tabs.findIndex(t => t[0] === "close") + 1, 0, ["ai", ["AI และ Analytics", "AI and analytics"], "F9"]);
   // F1 shows the KPIs that are off target.
-  const home = FIN.home;
-  FIN.home = () => { const k = kpiF().filter(x => !x[5]); return home() + (k.length ? `<section class="panel"><header><h2>${L("ตัวชี้วัดที่ยังไม่ถึงเป้า", "KPIs off target")}</h2><span class="sp"></span><button class="btn ghost" type="button" data-jump="fnc-ai">F9</button></header><div class="body">${k.map(([id, nm, v]) => `<div style="margin:2px 0">${dotI("warn")}<span class="mono">${id}</span> ${nm} · <b>${v}</b></div>`).join("")}</div></section>` : ""); };
+  FS.kpiOff = () => { const k = kpiF().filter(x => !x[5]); return k.length ? `<section class="panel"><header><h2>${L("ตัวชี้วัดที่ยังไม่ถึงเป้า", "KPIs off target")}</h2><span class="sp"></span><button class="btn ghost" type="button" data-jump="fnc-ai:kpi">${L("ดูทั้งหมด", "See all")}</button></header><div class="body">${k.map(([id, nm, v]) => `<div style="margin:2px 0">${dotI("warn")}<span class="mono">${id}</span> ${nm} · <b>${v}</b></div>`).join("")}</div></section>` : ""; };
   const tb = tabBadge;
   tabBadge = function (nid, tab) {
     if (nid === "finance" && tab === "ai") { const k = (S.fRuns || []).filter(r => r.status === "waiting" && F_AG[r.agent].who.includes(ROLE)).length + ((ROLE === "audit" || ROLE === "finhead") ? fSignals().filter(g => sigSt(g.key).status === "new").length : ROLE === "fin" ? fSignals().filter(g => sigSt(g.key).status === "asked").length : 0); return k ? `<span class="badge">${k}</span>` : ""; }
@@ -316,7 +303,7 @@ NAV_ICON.ai = NAV_ICON.ai || "sparkle";
   myTasks = function () {
     const t = mt.apply(this, arguments), R = (title, sub, due, link, cls) => t.unshift({ title, sub, due, link, cls });
     (S.fRuns || []).filter(r => r.status === "waiting" && F_AG[r.agent].who.includes(ROLE)).forEach(r => R(`${L("อนุมัติขั้นตอนของ", "Approve a step of")} ${tx(F_AG[r.agent].name)}`, `${r.id} · ${r.steps[r.ptr].tool}`, TODAY, "fnc-ai", "p-warn"));
-    if (ROLE === "fin") fSignals().filter(g => sigSt(g.key).status === "asked").forEach(g => R(`${L("ชี้แจงสัญญาณ", "Explain signal")} ${g.id}`, g.text, TODAY, "fnc-ai", "p-warn"));
+    if (ROLE === "fin") fSignals().filter(g => sigSt(g.key).status === "asked").forEach(g => R(`${L("ชี้แจงสัญญาณ", "Explain signal")} ${g.id}`, g.text, TODAY, "fnc-ai:kpi", "p-warn"));
     return t.filter(x => !(x.cls === "p-mute" && t.length > 1));
   };
 }

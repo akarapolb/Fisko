@@ -136,27 +136,33 @@ VIEWS.advances = () => {
 };
 
 // ---------- F4 register (finance) ----------
-FIN_SUB.adv = () => L("ทะเบียนคุมเงินยืม อนุมัติ จ่าย ตรวจใบสำคัญ และเรียกชดใช้", "Advance register: approve, pay, check clearings and demand repayment");
-FIN.adv = () => {
+FS.advDetail = () => { const det = ADV_OPEN && advOf(ADV_OPEN); return det ? advDetail(det, "fin") : ""; };
+FS.advKpis = () => {
   const A = S.advances || [], open = A.filter(a => OPEN_ADV.includes(a.state)), over = A.filter(advOverdue);
-  const groups = { open: ["request", "approved", "paid", "clearing", "objected"], over: null, done: ["cleared", "rejected", "cancelled"], all: null };
-  const GL = { open: L("กำลังดำเนินการ", "In progress"), over: L("เลยกำหนด", "Overdue"), done: L("ปิดแล้ว", "Closed"), all: L("ทั้งหมด", "All") };
-  const pick = k => (k === "over" ? over : groups[k] ? A.filter(a => groups[k].includes(a.state)) : A);
-  const det = ADV_OPEN && advOf(ADV_OPEN);
-  const byAge = Object.keys(AGE).map(k => { const xs = open.filter(a => advAge(a) === k); return [k, xs.length, sumv(xs.map(advAmt))]; });
   return `
-  ${det ? advDetail(det, "fin") : ""}
   <section class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
     <div class="kpi"><span class="l">${L("เงินยืมค้างส่งใช้", "Open advances")}</span><span class="v">${open.length}</span><span class="d sub">${fmt(sumv(open.map(advAmt)))} ${L("บาท", "baht")}</span></div>
     <div class="kpi hl"><span class="l">${L("เลยกำหนด", "Overdue")}</span><span class="v">${over.length}</span><span class="d" style="color:var(--rail-ink)">${over.filter(a => !a.demand).length} ${L("ยังไม่เรียกชดใช้", "without a demand")}</span></div>
     <div class="kpi"><span class="l">${L("รออนุมัติ / รอจ่าย", "To approve / to pay")}</span><span class="v">${A.filter(a => a.state === "request").length} / ${A.filter(a => a.state === "approved").length}</span></div>
     <div class="kpi"><span class="l">${L("ใบสำคัญรอตรวจ", "Clearings to check")}</span><span class="v">${A.filter(a => a.state === "clearing").length}</span></div>
-  </section>
+  </section>`;
+};
+FS.advRegister = () => {
+  const A = S.advances || [], over = A.filter(advOverdue);
+  const groups = { open: ["request", "approved", "paid", "clearing", "objected"], over: null, done: ["cleared", "rejected", "cancelled"], all: null };
+  const GL = { open: L("กำลังดำเนินการ", "In progress"), over: L("เลยกำหนด", "Overdue"), done: L("ปิดแล้ว", "Closed"), all: L("ทั้งหมด", "All") };
+  const pick = k => (k === "over" ? over : groups[k] ? A.filter(a => groups[k].includes(a.state)) : A);
+  return `
   <section class="panel"><header><h2>${L("ทะเบียนคุมเงินยืม", "Advance register")}</h2><span class="sp"></span>
-    <div class="row" style="gap:6px;flex-wrap:wrap">${Object.keys(GL).map(k => `<button class="btn ${ADV_F === k ? "primary" : "ghost"}" type="button" data-advf="${k}">${GL[k]} (${pick(k).length})</button>`).join("")}</div></header>
+    ${segBar(Object.keys(GL).map(k => [k, `${GL[k]} (${pick(k).length})`]), ADV_F, "advf")}</header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("ผู้ยืม / วัตถุประสงค์", "Borrower / purpose")}</th><th class="n">${L("ยอด (บาท)", "Amount (baht)")}</th><th>${L("ส่งใช้ภายใน", "Clear by")}</th><th>${L("อายุหนี้", "Age")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
       <tbody>${pick(ADV_F).slice().reverse().map(a => `<tr${ADV_OPEN === a.id ? ' style="background:var(--tint)"' : ""}><td class="mono">${a.id}</td><td>${esc(userName(a.borrower))} <span class="sub">${unitName(a.unit)}</span><div class="sub">${esc(tx(a.purpose))} · ${tx(ADV_T[a.type])}</div></td><td class="n">${fmt(advAmt(a))}</td><td>${advDueTxt(a)}</td><td class="sub">${advAge(a) ? tx(AGE[advAge(a)]) : "—"}</td><td>${advTag(a)}${a.demand ? `<div class="sub">${L("เรียกชดใช้แล้ว", "Demand issued")}</div>` : ""}</td><td><button class="btn ghost" type="button" data-advopen="${a.id}">${L("เปิด", "Open")}</button></td></tr>`).join("")
-        || `<tr><td colspan="7" class="sub">${L("ไม่มีรายการในกลุ่มนี้", "Nothing in this group")}</td></tr>`}</tbody></table></div></section>
+        || `<tr><td colspan="7" class="sub">${L("ไม่มีรายการในกลุ่มนี้", "Nothing in this group")}</td></tr>`}</tbody></table></div></section>`;
+};
+FS.advAge = () => {
+  const open = (S.advances || []).filter(a => OPEN_ADV.includes(a.state));
+  const byAge = Object.keys(AGE).map(k => { const xs = open.filter(a => advAge(a) === k); return [k, xs.length, sumv(xs.map(advAmt))]; });
+  return `
   <section class="panel"><header><h2>${L("อายุหนี้เงินยืมค้าง", "Ageing of open advances")}</h2><span class="sp"></span><span class="sub">${L("นับจากวันครบกำหนดส่งใช้", "From the clearing due date")}</span></header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("ช่วง", "Band")}</th><th class="n">${L("จำนวน", "Count")}</th><th class="n">${L("ยอด (บาท)", "Amount (baht)")}</th></tr></thead>
       <tbody>${byAge.map(([k, n, s]) => `<tr><td>${dotI(k === "ok" ? "ok" : k === "d15" ? "warn" : "bad")}${tx(AGE[k])}</td><td class="n">${n}</td><td class="n">${fmt(s)}</td></tr>`).join("")}</tbody></table></div></section>`;
@@ -254,16 +260,15 @@ BIND.advances = () => {
   };
 };
 {
-  const bind = BIND.finance;
-  BIND.finance = () => { bind(); if (FIN_TAB !== "adv") return; bindAdvShared(); $$("[data-advf]").forEach(b => (b.onclick = () => { ADV_F = b.dataset.advf; route(); })); };
+  FIN_BINDS.push(() => { bindAdvShared(); $$("[data-advf]").forEach(b => (b.onclick = () => { ADV_F = b.dataset.advf; route(); })); });
 }
 
 // ---------- menu, clocks, badges, tasks ----------
-NAV.push({ id: "advances", code: "F5", group: "finance", app: "finance", roles: Object.keys(ROLES), label: ["เงินยืมของฉัน", "My advances"] });
+// Everyone borrows, so My advances sits in My Workspace, not in the finance officer's menu.
+NAV.push({ id: "advances", code: "", group: "overview", app: "all", roles: Object.keys(ROLES), label: ["เงินยืมของฉัน", "My advances"] });
 NAV_ICON.advances = "wallet"; NAV_ICON.adv = "wallet";
 {
   const n = NAV.find(x => x.id === "finance");
-  n.tabs.splice(n.tabs.findIndex(t => t[0] === "pay") + 1, 0, ["adv", ["เงินยืม", "Advances"], "F4"]);
   const base = finClocks;
   finClocks = function () {
     const out = base();

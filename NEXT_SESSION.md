@@ -1,6 +1,6 @@
 # Fisko: handoff for the next session
 
-Written 18 October 2026, after round 35 (commit `e969601` on `main`). This is the short version: where things stand, how to work, and what to do next. The full record of every round is in `HANDOFF.md`, sections 1 to 35.
+Written 18 October 2026, after round 35; updated after round 43 (Finance information architecture, branch `finance-ia`). This is the short version: where things stand, how to work, and what to do next. The full record of every round is in `HANDOFF.md`, sections 1 to 43.
 
 ## 1. Where things stand
 
@@ -8,7 +8,7 @@ Fisko is a discussion prototype of a Thai government budgeting platform with thr
 
 - **Fisko Budget:** M01 to M10, now built to its own design (`Fisko_Budget_Design.html` v0.2, rounds B1 to B6).
 - **Fisko Procurement:** P1 to P18, built to its design (`Fisko_Procurement_Design.html` v0.2, rounds P0 to P4 and Q1 to Q6).
-- **Fisko Finance:** still the "light" version from round 11 in the prototype. Its detailed design v0.1 (`Fisko_Finance_Design.html`, round 36) is written and waits for approval; build rounds FN1 to FN6.
+- **Fisko Finance:** F1 to F10, built to its design (`Fisko_Finance_Design.html` v0.3, rounds FN1 to FN6) and reorganised around the work in round 43. The page layout is declared in one file, `src/js/66h-fin-pages.js` (see section 4).
 
 All three share My Workspace, M10 System Administration, the AI co-work chat (round 27) and one data set.
 
@@ -16,7 +16,7 @@ All three share My Workspace, M10 System Administration, the AI co-work chat (ro
 |---|---|
 | Repository | `D:\Claude\Fisko`, branch `main`, remote `https://github.com/akarapolb/Fisko.git` |
 | Last commit | `e969601` Round 35: demo guide, Budget design v0.2, test runner (working tree clean) |
-| Published prototype | https://claude.ai/artifact/5pZpV5JDgdLNBdnwHtYFuy (private, from round 37). The old link https://claude.ai/artifact/K8TJFETX7GMftoZYb9zFZR (version 43) belongs to another organisation's account and can't be updated from this one. |
+| Published prototype | https://claude.ai/artifact/STW3X8Ytx3VVLV7VHLXse9 (private, from round 43, published from a cloud session). Earlier: https://claude.ai/artifact/5pZpV5JDgdLNBdnwHtYFuy (private, from round 37). The old link https://claude.ai/artifact/K8TJFETX7GMftoZYb9zFZR (version 43) belongs to another organisation's account and can't be updated from this one. |
 | Published Budget design | https://claude.ai/artifact/EFs3q62eP5tVTZWMSFQkX9 (version 2, private) |
 | Published Finance design | https://claude.ai/artifact/G4Sx84KthvJWcLJMAWPKD1 (version 1, private; `Fisko_Finance_Design.html` v0.1, round 36) |
 | Data version | `DATA_V = 35` in `src/js/00-core.js` (bump it whenever the seed shape changes) |
@@ -68,6 +68,7 @@ python -m http.server 8787 --bind 127.0.0.1
 - **Use the test hook for routing.** Browsers ignore `history.replaceState` and hash changes after a few hundred calls in 10 seconds. Ad-hoc test loops must set `window.FISKO_ROUTE = "#page"` and call `route()`, as `tests/sweep.js` does.
 - **Shell quoting.** Heredocs with Thai text or apostrophes break bash on this Windows machine. Write Python or JS patch scripts to the scratchpad and run them.
 - **Long browser scripts.** The Browser pane's `javascript_tool` times out at 45 s. Start long runs, then poll in a second call.
+- **Finance pages are declared, not wrapped.** Since round 43 a Finance round adds sections to `FS` and wiring to `FIN_BINDS`, then places the sections in `FIN_PAGES` (`66h-fin-pages.js`). Don't redefine `VIEWS.finance` or `BIND.finance`. Deep links are `fnc-<page>` or `fnc-<page>:<tab>`.
 - **Seeds.** Seed extensions are `seedBudgetB1`…`seedBudgetB6` and the `seed*` functions called from `06-seedhelp.js`. Bump `DATA_V` when they change, or saved demo state hides the change.
 
 ## 5. Map of the newer code (rounds 26 to 35)

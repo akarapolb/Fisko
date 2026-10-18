@@ -7,52 +7,51 @@ const RECON_ST = { matched: [["ตรงกับ GFMIS", "Matches GFMIS"], "p-o
 const payPaid = lineId => sumv(S.payreqs.filter(p => p.status === "approved" && famCon(p.contract).line === lineId).map(p => p.amount));
 const acceptedValue = lineId => sumv(S.contracts.filter(c => c.line === lineId).flatMap(c => c.phases.filter(phaseAccepted).map(ph => ph.amount)));
 const reconState = p => (p.recon ? p.recon.state : "none");
-const FIN = {};
+// Finance sections: each entry renders one or more panels. 66h-fin-pages.js arranges them into pages and tabs,
+// so where a section shows is decided in one place. FIN_BINDS wire events after every Finance render; they look
+// elements up by selector, so they are safe on any page.
+const FS = {}, FIN_BINDS = [];
+// A row action that needs input (release, cancel) opens one form row under its row: "<kind>:<id>".
+let FIN_ROW = null;
+const rowBtn = (key, label) => `<button class="btn ghost" type="button" data-frow="${esc(key)}" aria-expanded="${FIN_ROW === key}">${label}</button>`;
+const rowForm = (cols, inner) => `<tr class="fn-rowform"><td colspan="${cols}"><div class="row" style="gap:8px;flex-wrap:wrap;align-items:center">${inner}<button class="btn ghost" type="button" data-frow="">${L("ปิด", "Close")}</button></div></td></tr>`;
 
-FIN.chain = () => {
+// The chain from allocation to payment, by allocation line that has a procurement plan or a contract.
+function chainData() {
   const ids = [...new Set([...S.pplan.map(p => p.line), ...S.contracts.map(c => c.line)])];
   const rows = ids.map(id => ({ l: famLine(id), planned: sumv(S.pplan.filter(p => p.line === id).map(p => p.est)), com: famCommitted(id), acc: acceptedValue(id), paid: payPaid(id) }));
   const T = k => sumv(rows.map(r => r[k])), alloc = sumv(rows.map(r => r.l.amount));
   const overdue = S.contracts.flatMap(c => c.phases.filter(ph => !phaseAccepted(ph) && ph.due < TODAY).map(ph => ({ c, ph })));
-  const top = rows.slice().sort((a, b) => b.com - a.com)[0];
+  return { rows, T, alloc, overdue, top: rows.slice().sort((a, b) => b.com - a.com)[0] };
+}
+FS.chainKpis = () => {
+  const { T, alloc } = chainData();
   return `
   <section class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
     <div class="kpi"><span class="l">${L("วงเงินจัดสรร (รายการที่มีแผนจัดซื้อ)", "Allocated (lines with a plan)")}</span><span class="v">${mb(alloc)}<small>${L("ลบ.", "M")}</small></span></div>
     <div class="kpi"><span class="l">${L("ผูกพันแล้ว (สัญญา)", "Committed (contracts)")}</span><span class="v">${mb(T("com"))}</span><span class="d sub">${fmt(alloc ? T("com") / alloc * 100 : 0, 1)}%</span></div>
     <div class="kpi"><span class="l">${L("ตรวจรับแล้ว", "Accepted")}</span><span class="v">${mb(T("acc"))}</span></div>
     <div class="kpi hl"><span class="l">${L("อนุมัติเบิกจ่ายแล้ว", "Payments approved")}</span><span class="v">${mb(T("paid"))}</span><span class="d" style="color:var(--rail-ink)">${fmt(T("com") ? T("paid") / T("com") * 100 : 0, 1)}% ${L("ของวงเงินผูกพัน", "of committed")}</span></div>
-  </section>
+  </section>`;
+};
+FS.chain = () => {
+  const { rows, T, alloc, overdue, top } = chainData();
+  return `
   <section class="panel"><header><h2>${L("สายจากวงเงินจัดสรรถึงการเบิกจ่าย", "From allocation to payment")} · ${fyLabel(FAM_FY)}</h2><span class="sp"></span><span class="sub">${L("ล้านบาท · ทุกขั้นอ้างรหัสรายการจัดสรร (M06) เดียวกัน", "M baht · every step refers to the same M06 allocation line")}</span></header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("รายการจัดสรร", "Allocation line")}</th><th class="n">${L("จัดสรร", "Allocated")}</th><th class="n">${L("ในแผนจัดซื้อ", "Planned")}</th><th class="n">${L("ผูกพัน", "Committed")}</th><th class="n">${L("ตรวจรับ", "Accepted")}</th><th class="n">${L("เบิกจ่าย", "Paid")}</th><th style="width:150px">${L("ผูกพันของจัดสรร", "Committed / allocated")}</th><th class="n">${L("ยังไม่ผูกพัน", "Not committed")}</th></tr></thead>
       <tbody>${rows.map(r => `<tr><td><b style="font-weight:600">${esc(tx(r.l.name))}</b><div class="sub">${unitName(r.l.unit)} · <span class="mono">${r.l.id}</span></div></td><td class="n">${mb(r.l.amount)}</td><td class="n">${mb(r.planned)}</td><td class="n">${mb(r.com)}</td><td class="n">${mb(r.acc)}</td><td class="n">${mb(r.paid)}</td>
         <td><div class="bar"><i style="width:${Math.min(100, r.l.amount ? r.com / r.l.amount * 100 : 0)}%"></i></div><span class="sub">${fmt(r.l.amount ? r.com / r.l.amount * 100 : 0, 0)}%</span></td><td class="n">${mb(famHeadroom(r.l.id))}</td></tr>`).join("")}</tbody>
       <tfoot><tr><td>${L("รวม", "Total")}</td><td class="n">${mb(alloc)}</td><td class="n">${mb(T("planned"))}</td><td class="n">${mb(T("com"))}</td><td class="n">${mb(T("acc"))}</td><td class="n">${mb(T("paid"))}</td><td></td><td class="n">${mb(sumv(rows.map(r => famHeadroom(r.l.id))))}</td></tr></tfoot></table></div>
-    ${top ? `<div class="body"><div class="callout" style="margin:0"><b>${L("ตอบได้ในที่เดียว", "Answered in one place")}</b> ${esc(tx(top.l.name))}: ${L("จัดสรร", "allocated")} ${mb(top.l.amount)} · ${L("ผูกพัน", "committed")} ${mb(top.com)} · ${L("จ่ายแล้ว", "paid")} ${mb(top.paid)} · ${L("ยังไม่ผูกพัน", "not committed")} ${mb(famHeadroom(top.l.id))} ${L("ล้านบาท", "M baht")} · ${overdue.length ? `${overdue.length} ${L("งวดเลยกำหนดและยังไม่ตรวจรับ", "overdue phases are not accepted yet")}` : L("ไม่มีงวดเลยกำหนด", "no overdue phases")}</div></div>` : ""}</section>
-  ${overdue.length ? `<section class="panel"><header><h2>${L("งวดที่เลยกำหนดและยังไม่ตรวจรับ", "Overdue phases not yet accepted")}</h2></header><div class="tbl-wrap"><table><thead><tr><th>${L("สัญญา", "Contract")}</th><th>${L("งวด", "Phase")}</th><th>${L("กำหนด", "Due")}</th><th class="n">${L("วงเงิน (ลบ.)", "Amount (M)")}</th></tr></thead>
+    ${top ? `<div class="body"><div class="callout" style="margin:0"><b>${L("ตอบได้ในที่เดียว", "Answered in one place")}</b> ${esc(tx(top.l.name))}: ${L("จัดสรร", "allocated")} ${mb(top.l.amount)} · ${L("ผูกพัน", "committed")} ${mb(top.com)} · ${L("จ่ายแล้ว", "paid")} ${mb(top.paid)} · ${L("ยังไม่ผูกพัน", "not committed")} ${mb(famHeadroom(top.l.id))} ${L("ล้านบาท", "M baht")} · ${overdue.length ? `${overdue.length} ${L("งวดเลยกำหนดและยังไม่ตรวจรับ", "overdue phases are not accepted yet")}` : L("ไม่มีงวดเลยกำหนด", "no overdue phases")}</div></div>` : ""}</section>`;
+};
+FS.chainOverdue = () => {
+  const { overdue } = chainData();
+  return `${overdue.length ? `<section class="panel"><header><h2>${L("งวดที่เลยกำหนดและยังไม่ตรวจรับ", "Overdue phases not yet accepted")}</h2></header><div class="tbl-wrap"><table><thead><tr><th>${L("สัญญา", "Contract")}</th><th>${L("งวด", "Phase")}</th><th>${L("กำหนด", "Due")}</th><th class="n">${L("วงเงิน (ลบ.)", "Amount (M)")}</th></tr></thead>
     <tbody>${overdue.map(x => `<tr><td><span class="mono">${x.c.id}</span> ${esc(tx(famPlan(x.c.plan).name))}</td><td>${tx(x.ph.name)}</td><td>${dueText(x.ph.due)}</td><td class="n">${mb(x.ph.amount)}</td></tr>`).join("")}</tbody></table></div></section>` : ""}`;
 };
 
-FIN.pay = () => {
-  const accepted = famAcceptedUnpaid(), viaTxt = onBehalf("exec", "spend"), auth = canSpend(), isFin = ROLE === "fin";
-  return `
-  ${auth && viaTxt ? `<div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("คุณกำลังอนุมัติแทนผู้บริหาร", "You are approving on the executive's behalf")}</b><p>${viaTxt.replace(/^ · /, "")} · ${L("ผู้ขอเบิกจ่ายและกรรมการตรวจรับของรายการนั้นอนุมัติไม่ได้ (SD-03, SD-04)", "The payment's requester and the contract's committee members can't approve it (SD-03, SD-04)")}</p></div></div>` : ""}
-  ${isFin ? `<section class="panel"><header><h2>${L("ขออนุมัติเบิกจ่าย", "Request a payment")}</h2><span class="sp"></span><span class="sub">${L("ขอได้เฉพาะงวดที่คณะกรรมการตรวจรับครบแล้ว", "Only for phases the committee has fully accepted")}</span></header>
-    ${accepted.length ? `<div class="body"><form class="inline-form" id="py-form">
-      <div class="f" style="flex:2 1 280px"><label for="py-ph">${L("งวดที่ตรวจรับแล้ว", "Accepted phase")}</label><select id="py-ph">${accepted.map(x => `<option value="${x.c.id}|${x.ph.n}" ${PAY_FORM === x.c.id + "|" + x.ph.n ? "selected" : ""}>${x.c.id} · ${esc(tx(x.c.vendor))} · ${tx(x.ph.name)} · ${mb(x.ph.amount)}</option>`).join("")}</select></div>
-      <div class="f" style="flex:0 1 170px"><label for="py-amt">${L("ยอดที่ขอ (บาท)", "Amount (baht)")}</label><input type="number" id="py-amt" min="1" step="1" required></div>
-      <div id="py-gate" style="flex:1 1 100%"></div>
-      <button class="btn primary" type="submit">${L("ส่งขออนุมัติ", "Send for approval")}</button></form></div>`
-      : `<div class="body sub">${L("ไม่มีงวดที่ตรวจรับแล้วและยังไม่ได้ขอเบิก", "No accepted phase is waiting for a payment request")}</div>`}</section>` : ""}
-  <section class="panel"><header><h2>${L("คำขออนุมัติเบิกจ่าย", "Payment requests")}</h2></header>
-    <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("สัญญา / งวด", "Contract / phase")}</th><th class="n">${L("วงเงิน (ลบ.)", "Amount (M)")}</th><th>${L("ผู้ขอ", "Requested by")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
-      <tbody>${S.payreqs.slice().reverse().map(p => { const c = famCon(p.contract), ph = c.phases.find(x => x.n === p.phase);
-        return `<tr><td class="mono">${p.id}</td><td><span class="mono">${c.id}</span> ${esc(tx(c.vendor))}<div class="sub">${tx(ph.name)} · ${esc(tx(famPlan(c.plan).name))}</div></td><td class="n">${mb(p.amount)}</td><td>${esc(userName(p.by))}<div class="sub">${fdate(p.t, true)}</div></td>
-          <td>${stTag(PAY_ST, p.status)}${p.decided ? `<div class="sub">${esc(userName(p.decided.by))}${p.decided.via ? ` · ${L("แทน", "for")} ${esc(userName(p.decided.holder))} (${p.decided.via})` : ""}</div>` : ""}</td>
-          <td><div class="row" style="flex-wrap:nowrap">${p.status === "pending" && auth ? `<button class="btn primary" type="button" data-pyok="${p.id}">${viaTxt ? L("อนุมัติแทน", "Approve on behalf") : L("อนุมัติ", "Approve")}</button><button class="btn danger" type="button" data-pyno="${p.id}">${L("ไม่อนุมัติ", "Reject")}</button>` : ""}${historyBtn(p.id, p.id)}</div></td></tr>`; }).join("")
-        || `<tr><td colspan="6" class="sub">${L("ยังไม่มีคำขอ", "No requests yet")}</td></tr>`}</tbody></table></div></section>`;
-};
-
-FIN.recon = () => {
+// Round-11 matching of approved payments with a GFMIS report file.
+FS.payfile = () => {
   const appr = S.payreqs.filter(p => p.status === "approved"), isFin = ROLE === "fin", files = S.gfmisFiles || [];
   const open = appr.filter(p => reconState(p) === "none" || reconState(p) === "diff").length;
   return `
@@ -79,18 +78,7 @@ FIN.recon = () => {
     <tbody>${files.map(g => `<tr><td class="mono">${g.id}</td><td class="sub">${fdate(g.t, true)}</td><td>${esc(userName(g.by))}</td><td class="n">${g.rows.length}</td><td class="n">${g.rows.filter(r => r.state !== "matched").length}</td></tr>`).join("")}</tbody></table></div></section>` : ""}`;
 };
 
-VIEWS.finance = () => {
-  if (!FIN[FIN_TAB]) FIN_TAB = "chain";
-  const pend = S.payreqs.filter(p => p.status === "pending").length;
-  const tabs = [["chain", L("สายงบประมาณถึงการจ่าย", "Allocation to payment")], ["pay", `${L("ขออนุมัติเบิกจ่าย", "Payments")}${pend ? ` (${pend})` : ""}`], ["recon", L("กระทบยอด GFMIS", "GFMIS reconciliation")]];
-  return `
-  <div class="head"><div><div class="eyebrow">Fisko Finance · ${L("วงเงินผูกพันและการเบิกจ่าย", "Commitments and payments")}</div><h1>${(tabs.find(t => t[0] === FIN_TAB) || tabs[0])[1]}</h1>
-    <p>${L("ควบคุมวงเงินผูกพันจากสัญญา และกระทบยอดกับ GFMIS การบันทึกบัญชีและการจ่ายเงินทางการยังทำใน GFMIS", "Control commitments from contracts and match results with GFMIS. Official recording and payment stay in GFMIS.")} · ${fyLabel(FAM_FY)}</p></div></div>
-  ${FIN[FIN_TAB]()}`;
-};
-
-BIND.finance = () => {
-  $$("[data-fntab]").forEach(b => (b.onclick = () => { FIN_TAB = b.dataset.fntab; route(); }));
+FIN_BINDS.push(() => {
   const pf = $("#py-form");
   if (pf) {
     const fill = () => { const [cid, n] = $("#py-ph").value.split("|"), c = famCon(cid), ph = c.phases.find(x => x.n === Number(n)); $("#py-amt").value = payGate(c, ph).net; $("#py-gate").innerHTML = gateBox(c, ph); };
@@ -120,7 +108,7 @@ BIND.finance = () => {
     }
     p.status = ok ? "approved" : "rejected"; p.decided = { by: me().id, holder: au.holder, via: au.via, t: nowIso() };
     audit(ok ? ["อนุมัติเบิกจ่าย", "Approved a payment"] : ["ไม่อนุมัติเบิกจ่าย", "Rejected a payment"], `${p.id} ${c.id}${onBehalf("exec", "spend")}`);
-    notify(["fin"], ok ? [`${p.id} อนุมัติแล้ว บันทึกใน GFMIS และนำเข้าไฟล์กระทบยอด`, `${p.id} is approved; record it in GFMIS and import the file to reconcile`] : [`${p.id} ไม่ได้รับอนุมัติ`, `${p.id} was not approved`], "fnc-recon");
+    notify(["fin"], ok ? [`${p.id} อนุมัติแล้ว บันทึกใน GFMIS และนำเข้าไฟล์กระทบยอด`, `${p.id} is approved; record it in GFMIS and import the file to reconcile`] : [`${p.id} ไม่ได้รับอนุมัติ`, `${p.id} was not approved`], "fnc-recon:payfile");
     commit(); renderShell(); route(); toast(ok ? L("อนุมัติเบิกจ่ายแล้ว", "Payment approved") : L("ไม่อนุมัติ", "Rejected"));
   };
   $$("[data-pyok]").forEach(b => (b.onclick = () => decide(b.dataset.pyok, true)));
@@ -150,4 +138,4 @@ BIND.finance = () => {
     audit(["ชี้แจงผลต่างจากการกระทบยอด", "Explained a reconciliation difference"], `${p.id} · ${note}`);
     commit(); route(); toast(L("บันทึกคำชี้แจงแล้ว", "Explanation saved"));
   }));
-};
+});
