@@ -1,6 +1,6 @@
 # Fisko: project handoff
 
-State as of 18 October 2026, branch `main`. Round 38 (Fisko Finance FN2) is the latest; see sections 36 to 38. This note is for whoever picks the work up next: what exists, how to run and change it, what was decided, and what is still open.
+State as of 18 October 2026, branch `main`. Round 39 (Fisko Finance FN3) is the latest; see sections 36 to 39. This note is for whoever picks the work up next: what exists, how to run and change it, what was decided, and what is still open.
 
 ## 1. What this is
 
@@ -536,4 +536,20 @@ Builds FR-FN-07 to 17 of the Finance design. New file `src/js/66c-fin-fn2.js`; i
 - **Demo:** step 22 (app and `Fisko_Demo_Script.html`) now makes a voucher for CT-2570-002 phase 1.
 - **Tested:** full sweep 6,501 checks passing; by hand: the full procurement path (make, check, approve, file, post, pay, certificate), the agency path with the e-Payment batch, the checker blocked by a missing PO, the daily check, a cheque without a reason refused, SD-14 refusing the requester.
 - **Not done:** advances (FN3) and receipts (FN4); the GFMIS user register (FR-FN-34) is not yet checked when making files.
+
+## 39. Fisko Finance FN3: advances (round 39)
+
+Builds FR-FN-18 to 24. New file `src/js/66d-fin-fn3.js`.
+
+- **Data** (`S.advances`, `AD-2570-nnn`): borrower and unit, type (`travel`, `station`, `other`), purpose, dates, actual return date, items (`ADV_ITEMS`; equipment is listed only so the clause-63 check can be shown), amount and `approvedAmt`, source (`budget` or `nonbudget`) and line, `temp` and collateral, a loan contract number (`สย.nnn/2570`), payment, clearing, objection, receipt (`RB-2570-nnn`), cash back or a top-up voucher, demand, report and a log.
+- **States:** `request` A1, `approved` A2, `paid` A3, `clearing` and `objected` A4, `cleared` A5, plus `rejected` and `cancelled`. Overdue and ageing are worked out each time (`advDue()`, `advOverdue()`, `advAge()`), never stored.
+- **Rules** (`advChecks()`): clause 59 (no open advance; the request form is closed with the reason), 63 (items), 64 (travel days ≤ 90), 62 (days into next year ≤ 90 or 30), 60 (non-budget source), 58 (collateral when the borrower has no salary to deduct from), 18 (line headroom). Approval also checks SD-12 (borrower ≠ approver, including delegation) and asks for a reason when less than requested is approved. Checking a clearing checks SD-12 too.
+- **Pages:** `#advances` "My advances" (new `NAV` entry in the overview group, app `all`, every role) with the request form, travel calculator (`perDiem`, `hotel`, `kmRate` added to `fcfg()` and M10 → Finance rules) and the clearing form. F4 "Advances" (`FIN.adv`) holds the register with filters, KPIs, ageing bands and the detail with every action.
+- **Flow:** the executive (or a `spend` delegate) approves; `fin` pays (simulated e-Payment); the borrower clears (return date, amount spent, receipts tick); `fin` or `finhead` accepts or objects (15-day fix clock); an accepted clearing gets an evidence receipt, records cash back when less was spent, or creates a draft travel voucher for the top-up; `finhead` issues a demand once overdue (due 30 days after the clearing due date) and reports to the executive once the demand date passes.
+- **Budget effect:** `famOther` (60) now adds `famAdv` (budget advances: the amount lent until cleared, then the smaller of spent and lent) and `famVc` (approved vouchers with no contract or commitment). `vRules` R-FN-01 allows for a voucher's own spend once approved.
+- **Clocks, badges, tasks:** clearing and objection clocks and demand dates in F1; badges on F4 and "My advances"; tasks for borrowers, `fin`, `finhead` and approvers. Duty rule SD-12 is pushed into `SOD_RULES`.
+- **`FIN_SUB`** (66b) now holds each Finance page's subtitle, so later rounds add their own.
+- **Seed** (`seedFinanceFN3`): AD-001 (division user, travel, paid, due 21 Oct; it blocks their new requests), AD-002 (Planning, workshop, 6 days overdue, for the demand), AD-003 (division director, cleared with 1,250 baht back), AD-004 (procurement officer, waiting for approval), AD-005 (division director, clearing waiting to be checked). `DATA_V` is 31.
+- **Tested:** full sweep 6,545 checks passing; by hand: the clause-59 block, approval, payment, objection and fix, a clearing over the amount creating a top-up voucher, the demand, and a request with equipment flagged under clause 63; 375 px width.
+- **Not done:** the cash returned is recorded on the advance; it joins the receipts and the daily cash report in FN4. Agent AG-19 comes in FN6.
 

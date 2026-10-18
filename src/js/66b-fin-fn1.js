@@ -13,6 +13,7 @@ let FN_PO = null;
 // ---------- finance rules (M10) ----------
 const FCFG_DEFAULT = () => ({
   poMin: 5000, whtMin: 10000, whtPct: 1, carryMin: 100000, carryBy: "2027-09-30", aheadDays: 10,
+  perDiem: 240, hotel: 1500, kmRate: 4,
   reqDays: 5, monthlyDay: 15, advTravel: 15, advOther: 30, advFix: 15, demandDays: 30, remitCash: 10000, remitDays: 3, refundDays: 15,
   auth: [
     { id: "A1", pos: ["หัวหน้าส่วนราชการระดับกรม", "Head of the department"], role: "exec", max: 0 },
@@ -32,6 +33,11 @@ const FCFG_ROWS = {
     ["whtPct", ["อัตราภาษีหัก ณ ที่จ่าย ซื้อและจ้างทำของ", "Withholding rate, goods and works"], ["%", "%"], "B", "S2"],
     ["carryMin", ["กันเงินเหลื่อมปีได้เมื่อวงเงินผูกพันตั้งแต่", "Carry-over allowed from a commitment of"], ["บาท", "baht"], "A", "ข้อ 105"],
     ["remitCash", ["นำส่งเร็วเมื่อรายได้แผ่นดินเงินสดในวันใดเกิน", "Remit early when cash revenue held in a day exceeds"], ["บาท", "baht"], "A", "ข้อ 101 (2)"],
+  ],
+  travel: [
+    ["perDiem", ["เบี้ยเลี้ยงเดินทาง ต่อวัน", "Per diem, per day"], ["บาท", "baht"], "C", "—"],
+    ["hotel", ["ค่าที่พัก ต่อคืน (เหมาจ่ายสูงสุด)", "Accommodation, per night (cap)"], ["บาท", "baht"], "C", "—"],
+    ["kmRate", ["ค่ารถส่วนตัว ต่อกิโลเมตร", "Private car, per km"], ["บาท", "baht"], "C", "—"],
   ],
   clocks: [
     ["reqDays", ["ขอเบิกค่าซื้อ จ้าง เช่า หลังตรวจรับ ภายใน", "Request payment after acceptance within"], ["วันทำการ", "working days"], "A", "ข้อ 28"],
@@ -54,6 +60,7 @@ ADMIN.fcfg = () => {
   return `${ed ? "" : `<div class="alert"><div class="ic">i</div><div><b>${L("ดูอย่างเดียว", "View only")}</b><p>${L("ผู้ดูแลระบบเป็นผู้แก้ไข การเงินและผู้ตรวจสอบเห็นค่าที่ระบบใช้", "The administrator edits these; finance and audit see the values the system uses")}</p></div></div>`}
     ${sec(L("วงเงินและเกณฑ์", "Amounts and thresholds"), L("ระเบียบกระทรวงการคลังว่าด้วยการเบิกเงินจากคลังฯ พ.ศ. 2562", "Finance Ministry regulation on treasury withdrawals, 2562"), rows(FCFG_ROWS.limits) +
       `<tr><td>${L("วันสุดท้ายที่ขอกันเงินไว้เบิกเหลื่อมปีใน GFMIS", "Last day to file carry-over in GFMIS")}</td><td class="n"><input type="date" data-fcd="carryBy" value="${c.carryBy}" ${ds} aria-label="${L("วันสุดท้ายที่ขอกันเงิน", "Carry-over filing date")}"></td><td>${lvl("B")}</td><td class="sub">ข้อ 106 · S5</td></tr>`)}
+    ${sec(L("อัตราช่วยคำนวณค่าเดินทาง (FR-FN-24)", "Travel rates for the calculator (FR-FN-24)"), L("ค่าตัวอย่าง ต้องยืนยันกับอัตราที่ใช้จริงของหน่วยงาน", "Sample values; confirm with the agency's actual rates"), rows(FCFG_ROWS.travel))}
     ${sec(L("นาฬิกาตามระเบียบ", "Regulation clocks"), L("วันทำการไม่นับเสาร์ อาทิตย์ และวันหยุดใน กฎจัดซื้อจัดจ้าง", "Working days skip weekends and the holidays in Procurement rules"), rows(FCFG_ROWS.clocks))}
     <section class="panel"><header><h2>${L("ผู้มีอำนาจอนุมัติจ่าย (ข้อ 36)", "Payment approval authority (clause 36)")}</h2><span class="sp"></span><span class="sub">${L("ใช้ตรวจผู้อนุมัติใบขอเบิกและเงินยืม", "Used to check who approves vouchers and advances")}</span></header>
       <div class="tbl-wrap"><table><thead><tr><th>${L("ตำแหน่ง", "Position")}</th><th>${L("บทบาทในระบบ", "Role in Fisko")}</th><th class="n">${L("อนุมัติได้ไม่เกิน (บาท · 0 = ไม่จำกัด)", "Up to (baht · 0 = no limit)")}</th><th>${L("ระดับ", "Level")}</th></tr></thead>
@@ -177,14 +184,18 @@ FIN.home = () => {
 }
 
 // ---------- page and bindings ----------
+// Subtitle of each Finance page; later rounds add their own.
+const FIN_SUB = {
+  home: () => L("งานที่มีกำหนดเวลาตามระเบียบ สิ่งที่รออนุมัติ และวงเงินผูกพัน", "Work on a regulation clock, what is waiting, and commitments"),
+  chain: () => L("วงเงินผูกพันทุกแหล่ง ใบสั่งซื้อใน GFMIS และรายการกันเงินเหลื่อมปี", "Every commitment, GFMIS purchase orders and carry-over candidates"),
+  pay: () => L("ใบขอเบิกทุกประเภท ภาษี ณ ที่จ่าย การอนุมัติ และการจ่าย", "Vouchers of every type, withholding tax, approval and payment"),
+  recon: () => L("กระทบยอดการจ่ายกับไฟล์รายงานจาก GFMIS", "Match payments with GFMIS report files"),
+};
 VIEWS.finance = () => {
   const n = NAV.find(x => x.id === "finance");
   if (!FIN[FIN_TAB] || !n.tabs.some(t => t[0] === FIN_TAB)) FIN_TAB = "home";
   const t = n.tabs.find(x => x[0] === FIN_TAB);
-  const sub = { home: L("งานที่มีกำหนดเวลาตามระเบียบ สิ่งที่รออนุมัติ และวงเงินผูกพัน", "Work on a regulation clock, what is waiting, and commitments"),
-    chain: L("วงเงินผูกพันทุกแหล่ง ใบสั่งซื้อใน GFMIS และรายการกันเงินเหลื่อมปี", "Every commitment, GFMIS purchase orders and carry-over candidates"),
-    pay: L("ขอเบิกงวดที่ตรวจรับแล้ว และอนุมัติเบิกจ่าย", "Request accepted phases and approve payments"),
-    recon: L("กระทบยอดการจ่ายกับไฟล์รายงานจาก GFMIS", "Match payments with GFMIS report files") }[FIN_TAB];
+  const sub = (FIN_SUB[FIN_TAB] || (() => ""))();
   return `
   <div class="head"><div><div class="eyebrow">Fisko Finance · ${t[2]}</div><h1>${tx(t[1])}</h1>
     <p>${sub} · ${L("GFMIS เป็นระบบบันทึกบัญชีและจ่ายเงินทางการ", "GFMIS stays the official books and payment channel")} · ${fyLabel(FAM_FY)}</p></div></div>

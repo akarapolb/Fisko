@@ -18,6 +18,7 @@ function seedT2(s) {
   s.vendors.forEach((v, i) => { v.mit = i % 3 === 1; v.mitCert = v.mit ? "2027-06-30" : ""; v.smeCert = v.sme ? "2027-03-31" : ""; });
   const own = s.contracts.length ? s.vendors.find(v => normName(v.name) === normName(tx(s.contracts[0].vendor))) : null, sv = own || s.vendors[0];
   s.users.push({ id: "u90", role: "vendor", unit: "", vendor: sv.id, primary: true, mfa: true, active: true, name: [sv.name, sv.name] });
+  seedT3(s);
 }
 const P2 = () => S.prof.p2;
 const norm = normName;

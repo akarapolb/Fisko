@@ -70,7 +70,7 @@ function vRules(v) {
   const out = [], c = fcfg(), rt = vRoute(v), m = vcCommit(v), x = vCalc(v), add = (id, ok, text, warn) => out.push({ id, ok, text, warn: !!warn });
   if (v.type === "proc") add("R-FN-01", true, L("ผูกพันตามสัญญาแล้ว ไม่เกินวงเงินสัญญา", "Within the contract commitment"));
   else if (m) add("R-FN-01", x.spend <= fcLeft(finCommits().find(y => y.id === m.id)) + (v.state === "paid" ? x.spend : 0), L(`ไม่เกินยอดผูกพันคงค้างของ ${m.id}`, `Within what is left on ${m.id}`));
-  else add("R-FN-01", x.spend <= famHeadroom(v.line), L("ไม่เกินวงเงินคงเหลือของรายการจัดสรร (ข้อ 18)", "Within the line's free amount (clause 18)"));
+  else add("R-FN-01", x.spend <= famHeadroom(v.line) + (["ready", "posted", "paid"].includes(v.state) ? x.spend : 0), L("ไม่เกินวงเงินคงเหลือของรายการจัดสรร (ข้อ 18)", "Within the line's free amount (clause 18)"));
   if (v.due && daysUntil(v.due) > c.aheadDays && !["paid", "cancelled"].includes(v.state)) add("R-FN-01", false, L(`ขอเบิกก่อนถึงกำหนดจ่ายเกิน ${c.aheadDays} วัน (ข้อ 22)`, `Requested more than ${c.aheadDays} days before due (clause 22)`), true);
   add("R-FN-02", !rt.po || vHasPo(v), rt.po ? (vHasPo(v) ? L("มีใบสั่งซื้อใน GFMIS · จ่ายตรงเจ้าหนี้", "GFMIS PO recorded · paid straight to the payee") : L("ต้องมีใบสั่งซื้อใน GFMIS ก่อน (ข้อ 28 (1))", "Needs a GFMIS PO first (clause 28 (1))")) : `${tx(ROUTE[rt.r])} (${rt.src})`);
   if (v.method !== "epay") add("R-FN-02", !!(v.methodWhy || "").trim(), L("จ่ายเช็คหรือเงินสดต้องมีเหตุผล (ข้อ 52)", "Cheque or cash needs a reason (clause 52)"));

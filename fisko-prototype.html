@@ -1402,7 +1402,7 @@ const fyLabel = fy => L(`ปีงบประมาณ พ.ศ. ${fy}`, `FY${fy
 
 // ---------- organizations and state ----------
 const SEEDS = {}; // id -> { name: [th, en], seed: () => state }, registered by data files
-const DATA_V = 30; // bump when the seed shape changes so saved demo state is reseeded
+const DATA_V = 32; // bump when the seed shape changes so saved demo state is reseeded
 let ORG = "sample";
 let S = null;
 const key = () => "fisko-v1-" + ORG;
@@ -1418,7 +1418,7 @@ function resetDemo() { store.del(key()); S = SEEDS[ORG].seed(); save(); resetUi(
 function resetUi() {
   CUR_REQ = null; REQ_TAB = "main"; VER_A = VER_B = null; CMP_REQ = null; CHAIN_P = null; CMT_OPEN = null;
   DRILL_U = DRILL_P = null; PLAN_UNIT = ""; ALLOC_FY = 2570; WI.locks = null; STAGED = null;
-  OPEN_PROG.clear(); OPEN_UNIT.clear(); IDEA_OPEN = null; PASTE_ROWS = []; PLAN_REQ = null; PLAN_SPLIT = false; CT_FROM = null; PAY_FORM = null; CASE_OPEN = null; OCDS_JSON = ""; AI_CASE = null; AI_RES = {}; AI_TOR = ""; AI_Q = ""; TOR_OPEN = null; PACK_FOR = null; BL_ROWS = null; REP_MONTH = null; DOSSIER_FOR = null; DOC_OPEN = null; WIP = null; WI_LOCK.clear(); WI_NAME = ""; FC_CUT = null; RUN_OPEN = null; FN_PO = null; VC_OPEN = null; VC_NEW = false; GF_OUT = null;
+  OPEN_PROG.clear(); OPEN_UNIT.clear(); IDEA_OPEN = null; PASTE_ROWS = []; PLAN_REQ = null; PLAN_SPLIT = false; CT_FROM = null; PAY_FORM = null; CASE_OPEN = null; OCDS_JSON = ""; AI_CASE = null; AI_RES = {}; AI_TOR = ""; AI_Q = ""; TOR_OPEN = null; PACK_FOR = null; BL_ROWS = null; REP_MONTH = null; DOSSIER_FOR = null; DOC_OPEN = null; WIP = null; WI_LOCK.clear(); WI_NAME = ""; FC_CUT = null; RUN_OPEN = null; FN_PO = null; VC_OPEN = null; VC_NEW = false; GF_OUT = null; ADV_OPEN = null;
 }
 
 // ---------- roles ----------
@@ -1979,6 +1979,7 @@ function buildOrg(cfg) {
   seedBudgetB6(s);
   seedFinanceFN1(s);
   seedFinanceFN2(s);
+  seedFinanceFN3(s);
   s.audit.unshift(
     { t: "2026-10-15T10:00", user: EX, role: "exec", action: ["อนุมัติเบิกจ่าย", "Approved a payment"], target: "PY-2570-001 CT-2570-001" },
     { t: "2026-10-14T15:00", user: FN, role: "fin", action: ["ขออนุมัติเบิกจ่าย", "Requested a payment approval"], target: "PY-2570-001 CT-2570-001" },
@@ -7589,7 +7590,11 @@ const famCon = id => S.contracts.find(c => c.id === id);
 const famCommitted = lineId => sumv(S.contracts.filter(c => c.line === lineId).map(c => c.amount));
 const famReserved = lineId => sumv(S.reqn.filter(r => r.status === "approved" && famPlan(r.plan).line === lineId).map(r => r.amount));
 // Non-procurement commitments kept by Fisko Finance (round FN1): utilities, rent, service agreements, travel orders.
-const famOther = lineId => sumv((S.fcommit || []).filter(c => c.line === lineId).map(c => c.amount - (c.released || 0)));
+// Advances drawn from the budget count as spending of the line (clause 62): the amount lent until cleared, then what was spent (round FN3).
+const famAdv = lineId => sumv((S.advances || []).filter(a => a.line === lineId && a.source === "budget" && ["approved", "paid", "clearing", "objected", "cleared"].includes(a.state)).map(a => (a.state === "cleared" ? Math.min(a.clearing.spent, a.approvedAmt || a.amount) : a.approvedAmt || a.amount)));
+// Approved vouchers with no contract or commitment behind them (round FN2) spend the line directly.
+const famVc = lineId => sumv((S.vouchers || []).filter(v => v.line === lineId && !v.contract && !v.commit && ["ready", "posted", "paid"].includes(v.state)).map(v => v.gross - (v.penalty || 0)));
+const famOther = lineId => sumv((S.fcommit || []).filter(c => c.line === lineId).map(c => c.amount - (c.released || 0))) + famAdv(lineId) + famVc(lineId);
 const famHeadroom = lineId => famLine(lineId).amount - famCommitted(lineId) - famReserved(lineId) - famOther(lineId);
 const phaseAccepted = ph => ph.signs.length >= PHASE_SIGNS;
 const phaseSigners = c => c.phases.flatMap(ph => ph.signs.map(s => s.by));
@@ -10412,6 +10417,7 @@ let FN_PO = null;
 // ---------- finance rules (M10) ----------
 const FCFG_DEFAULT = () => ({
   poMin: 5000, whtMin: 10000, whtPct: 1, carryMin: 100000, carryBy: "2027-09-30", aheadDays: 10,
+  perDiem: 240, hotel: 1500, kmRate: 4,
   reqDays: 5, monthlyDay: 15, advTravel: 15, advOther: 30, advFix: 15, demandDays: 30, remitCash: 10000, remitDays: 3, refundDays: 15,
   auth: [
     { id: "A1", pos: ["หัวหน้าส่วนราชการระดับกรม", "Head of the department"], role: "exec", max: 0 },
@@ -10431,6 +10437,11 @@ const FCFG_ROWS = {
     ["whtPct", ["อัตราภาษีหัก ณ ที่จ่าย ซื้อและจ้างทำของ", "Withholding rate, goods and works"], ["%", "%"], "B", "S2"],
     ["carryMin", ["กันเงินเหลื่อมปีได้เมื่อวงเงินผูกพันตั้งแต่", "Carry-over allowed from a commitment of"], ["บาท", "baht"], "A", "ข้อ 105"],
     ["remitCash", ["นำส่งเร็วเมื่อรายได้แผ่นดินเงินสดในวันใดเกิน", "Remit early when cash revenue held in a day exceeds"], ["บาท", "baht"], "A", "ข้อ 101 (2)"],
+  ],
+  travel: [
+    ["perDiem", ["เบี้ยเลี้ยงเดินทาง ต่อวัน", "Per diem, per day"], ["บาท", "baht"], "C", "—"],
+    ["hotel", ["ค่าที่พัก ต่อคืน (เหมาจ่ายสูงสุด)", "Accommodation, per night (cap)"], ["บาท", "baht"], "C", "—"],
+    ["kmRate", ["ค่ารถส่วนตัว ต่อกิโลเมตร", "Private car, per km"], ["บาท", "baht"], "C", "—"],
   ],
   clocks: [
     ["reqDays", ["ขอเบิกค่าซื้อ จ้าง เช่า หลังตรวจรับ ภายใน", "Request payment after acceptance within"], ["วันทำการ", "working days"], "A", "ข้อ 28"],
@@ -10453,6 +10464,7 @@ ADMIN.fcfg = () => {
   return `${ed ? "" : `<div class="alert"><div class="ic">i</div><div><b>${L("ดูอย่างเดียว", "View only")}</b><p>${L("ผู้ดูแลระบบเป็นผู้แก้ไข การเงินและผู้ตรวจสอบเห็นค่าที่ระบบใช้", "The administrator edits these; finance and audit see the values the system uses")}</p></div></div>`}
     ${sec(L("วงเงินและเกณฑ์", "Amounts and thresholds"), L("ระเบียบกระทรวงการคลังว่าด้วยการเบิกเงินจากคลังฯ พ.ศ. 2562", "Finance Ministry regulation on treasury withdrawals, 2562"), rows(FCFG_ROWS.limits) +
       `<tr><td>${L("วันสุดท้ายที่ขอกันเงินไว้เบิกเหลื่อมปีใน GFMIS", "Last day to file carry-over in GFMIS")}</td><td class="n"><input type="date" data-fcd="carryBy" value="${c.carryBy}" ${ds} aria-label="${L("วันสุดท้ายที่ขอกันเงิน", "Carry-over filing date")}"></td><td>${lvl("B")}</td><td class="sub">ข้อ 106 · S5</td></tr>`)}
+    ${sec(L("อัตราช่วยคำนวณค่าเดินทาง (FR-FN-24)", "Travel rates for the calculator (FR-FN-24)"), L("ค่าตัวอย่าง ต้องยืนยันกับอัตราที่ใช้จริงของหน่วยงาน", "Sample values; confirm with the agency's actual rates"), rows(FCFG_ROWS.travel))}
     ${sec(L("นาฬิกาตามระเบียบ", "Regulation clocks"), L("วันทำการไม่นับเสาร์ อาทิตย์ และวันหยุดใน กฎจัดซื้อจัดจ้าง", "Working days skip weekends and the holidays in Procurement rules"), rows(FCFG_ROWS.clocks))}
     <section class="panel"><header><h2>${L("ผู้มีอำนาจอนุมัติจ่าย (ข้อ 36)", "Payment approval authority (clause 36)")}</h2><span class="sp"></span><span class="sub">${L("ใช้ตรวจผู้อนุมัติใบขอเบิกและเงินยืม", "Used to check who approves vouchers and advances")}</span></header>
       <div class="tbl-wrap"><table><thead><tr><th>${L("ตำแหน่ง", "Position")}</th><th>${L("บทบาทในระบบ", "Role in Fisko")}</th><th class="n">${L("อนุมัติได้ไม่เกิน (บาท · 0 = ไม่จำกัด)", "Up to (baht · 0 = no limit)")}</th><th>${L("ระดับ", "Level")}</th></tr></thead>
@@ -10576,14 +10588,18 @@ FIN.home = () => {
 }
 
 // ---------- page and bindings ----------
+// Subtitle of each Finance page; later rounds add their own.
+const FIN_SUB = {
+  home: () => L("งานที่มีกำหนดเวลาตามระเบียบ สิ่งที่รออนุมัติ และวงเงินผูกพัน", "Work on a regulation clock, what is waiting, and commitments"),
+  chain: () => L("วงเงินผูกพันทุกแหล่ง ใบสั่งซื้อใน GFMIS และรายการกันเงินเหลื่อมปี", "Every commitment, GFMIS purchase orders and carry-over candidates"),
+  pay: () => L("ใบขอเบิกทุกประเภท ภาษี ณ ที่จ่าย การอนุมัติ และการจ่าย", "Vouchers of every type, withholding tax, approval and payment"),
+  recon: () => L("กระทบยอดการจ่ายกับไฟล์รายงานจาก GFMIS", "Match payments with GFMIS report files"),
+};
 VIEWS.finance = () => {
   const n = NAV.find(x => x.id === "finance");
   if (!FIN[FIN_TAB] || !n.tabs.some(t => t[0] === FIN_TAB)) FIN_TAB = "home";
   const t = n.tabs.find(x => x[0] === FIN_TAB);
-  const sub = { home: L("งานที่มีกำหนดเวลาตามระเบียบ สิ่งที่รออนุมัติ และวงเงินผูกพัน", "Work on a regulation clock, what is waiting, and commitments"),
-    chain: L("วงเงินผูกพันทุกแหล่ง ใบสั่งซื้อใน GFMIS และรายการกันเงินเหลื่อมปี", "Every commitment, GFMIS purchase orders and carry-over candidates"),
-    pay: L("ขอเบิกงวดที่ตรวจรับแล้ว และอนุมัติเบิกจ่าย", "Request accepted phases and approve payments"),
-    recon: L("กระทบยอดการจ่ายกับไฟล์รายงานจาก GFMIS", "Match payments with GFMIS report files") }[FIN_TAB];
+  const sub = (FIN_SUB[FIN_TAB] || (() => ""))();
   return `
   <div class="head"><div><div class="eyebrow">Fisko Finance · ${t[2]}</div><h1>${tx(t[1])}</h1>
     <p>${sub} · ${L("GFMIS เป็นระบบบันทึกบัญชีและจ่ายเงินทางการ", "GFMIS stays the official books and payment channel")} · ${fyLabel(FAM_FY)}</p></div></div>
@@ -10772,7 +10788,7 @@ function vRules(v) {
   const out = [], c = fcfg(), rt = vRoute(v), m = vcCommit(v), x = vCalc(v), add = (id, ok, text, warn) => out.push({ id, ok, text, warn: !!warn });
   if (v.type === "proc") add("R-FN-01", true, L("ผูกพันตามสัญญาแล้ว ไม่เกินวงเงินสัญญา", "Within the contract commitment"));
   else if (m) add("R-FN-01", x.spend <= fcLeft(finCommits().find(y => y.id === m.id)) + (v.state === "paid" ? x.spend : 0), L(`ไม่เกินยอดผูกพันคงค้างของ ${m.id}`, `Within what is left on ${m.id}`));
-  else add("R-FN-01", x.spend <= famHeadroom(v.line), L("ไม่เกินวงเงินคงเหลือของรายการจัดสรร (ข้อ 18)", "Within the line's free amount (clause 18)"));
+  else add("R-FN-01", x.spend <= famHeadroom(v.line) + (["ready", "posted", "paid"].includes(v.state) ? x.spend : 0), L("ไม่เกินวงเงินคงเหลือของรายการจัดสรร (ข้อ 18)", "Within the line's free amount (clause 18)"));
   if (v.due && daysUntil(v.due) > c.aheadDays && !["paid", "cancelled"].includes(v.state)) add("R-FN-01", false, L(`ขอเบิกก่อนถึงกำหนดจ่ายเกิน ${c.aheadDays} วัน (ข้อ 22)`, `Requested more than ${c.aheadDays} days before due (clause 22)`), true);
   add("R-FN-02", !rt.po || vHasPo(v), rt.po ? (vHasPo(v) ? L("มีใบสั่งซื้อใน GFMIS · จ่ายตรงเจ้าหนี้", "GFMIS PO recorded · paid straight to the payee") : L("ต้องมีใบสั่งซื้อใน GFMIS ก่อน (ข้อ 28 (1))", "Needs a GFMIS PO first (clause 28 (1))")) : `${tx(ROUTE[rt.r])} (${rt.src})`);
   if (v.method !== "epay") add("R-FN-02", !!(v.methodWhy || "").trim(), L("จ่ายเช็คหรือเงินสดต้องมีเหตุผล (ข้อ 52)", "Cheque or cash needs a reason (clause 52)"));
@@ -11134,6 +11150,328 @@ function seedFinanceFN2(s) {
   s.epay = []; s.payChecks = [{ t: "2026-10-16T16:30", by: FH, ids: ["VC-2570-001"] }];
   s.vendorChanges = [];
   ["SD-11", "SD-14"].forEach(id => { if (!s.sod.rules.some(r => r.id === id)) s.sod.rules.push({ id, on: true }); });
+}
+
+/* ---- 66d-fin-fn3.js ---- */
+// Fisko Finance round FN3 (Finance design v0.1, chapter 6.3): advances (เงินยืม), clauses 55 to 68.
+// - Every user asks for and clears their own advances from My Workspace → My advances (FR-FN-18, 21).
+// - Checks before approval (FR-FN-19, R-FN-05): no open advance (clause 59), items the budget may lend for
+//   (clause 63), travel at most 90 days (64), cross-year limits (62), non-budget money (60), collateral (58), SD-12.
+// - Approval by the payment authority (56) and payment by e-Payment (57); the clock starts on payment (FR-FN-20).
+// - Clearing with objections and a 15-day fix clock (65), a receipt for the evidence (66), cash back or a top-up voucher.
+// - Overdue → demand within 30 days (68) → report to the head of the agency (FR-FN-22). Register with ageing (FR-FN-23).
+// - Travel calculator from the M10 rates (FR-FN-24).
+// States: request A1 → approved A2 → paid A3 → clearing A4 (objected loops back) → cleared A5; rejected, cancelled.
+let ADV_OPEN = null, ADV_F = "open";
+const ADV_T = { travel: ["เดินทางไปราชการ", "Official travel"], station: ["ไปประจำต่างสำนักงาน ต่างประเทศ หรือกลับภูมิลำเนา", "Posting elsewhere, abroad or returning home"], other: ["ปฏิบัติราชการอื่น", "Other official work"] };
+const ADV_ST = {
+  request: [["รออนุมัติ", "Awaiting approval"], "p-warn", "A1"], approved: [["อนุมัติแล้ว รอจ่าย", "Approved, to be paid"], "p-info", "A2"], paid: [["จ่ายแล้ว รอส่งใช้", "Paid, to be cleared"], "p-info", "A3"],
+  clearing: [["ส่งใบสำคัญแล้ว รอตรวจ", "Evidence sent, being checked"], "p-info", "A4"], objected: [["ถูกทักท้วง รอแก้", "Objection to fix"], "p-bad", "A4"], cleared: [["ส่งใช้ครบ", "Cleared"], "p-ok", "A5"],
+  rejected: [["ไม่อนุมัติ", "Not approved"], "p-mute", "—"], cancelled: [["ยกเลิก", "Cancelled"], "p-mute", "—"],
+};
+// Items the budget may lend for (clause 63); equipment is listed only so the check can be shown.
+const ADV_ITEMS = { perdiem: [["เบี้ยเลี้ยง", "Per diem"], true], hotel: [["ค่าที่พัก", "Accommodation"], true], transport: [["ค่าพาหนะ", "Transport"], true], material: [["ค่าใช้สอยและวัสดุ", "Services and materials"], true], temp: [["ค่าจ้างชั่วคราว", "Temporary hire"], true], fee: [["ค่าตอบแทน", "Compensation"], true], asset: [["ครุภัณฑ์", "Equipment"], false] };
+const OPEN_ADV = ["paid", "clearing", "objected"];
+const advOf = id => (S.advances || []).find(a => a.id === id);
+const advAmt = a => a.approvedAmt || a.amount;
+const advLeft = a => (a.state === "cleared" ? 0 : OPEN_ADV.includes(a.state) ? advAmt(a) : 0);
+const nextAdv = () => `AD-${FAM_FY}-${String(Math.max(0, ...(S.advances || []).map(a => Number(a.id.split("-")[2]) || 0)) + 1).padStart(3, "0")}`;
+const fyStart = fy => `${fy - 544}-10-01`;
+// Due date to clear (R-FN-05, clause 65).
+function advDue(a) {
+  if (!a.paid) return null;
+  const c = fcfg();
+  if (a.type === "travel") return addDays(a.returned || a.end, c.advTravel);
+  return addDays(a.paid.t.slice(0, 10), c.advOther);
+}
+const advOverdue = a => ["paid", "objected"].includes(a.state) && advDue(a) && daysUntil(advDue(a)) < 0;
+function advAge(a) {
+  if (!OPEN_ADV.includes(a.state)) return null;
+  const d = -daysUntil(advDue(a));
+  return d <= 0 ? "ok" : d <= 15 ? "d15" : d <= 30 ? "d30" : "d30p";
+}
+const AGE = { ok: ["ยังไม่ครบกำหนด", "Not yet due"], d15: ["เลย 1–15 วัน", "1–15 days late"], d30: ["เลย 16–30 วัน", "16–30 days late"], d30p: ["เลยเกิน 30 วัน", "Over 30 days late"] };
+// Checks before approval (R-FN-05). "warn" never blocks.
+function advChecks(a) {
+  const out = [], add = (id, ok, text) => out.push({ id, ok, text });
+  const open = (S.advances || []).filter(x => x.borrower === a.borrower && x.id !== a.id && OPEN_ADV.includes(x.state));
+  add("ข้อ 59", !open.length, open.length ? L(`ยังมีเงินยืมค้าง ${open.map(x => x.id).join(", ")} ต้องส่งใช้ให้ครบก่อน`, `Still owes ${open.map(x => x.id).join(", ")}; clear it first`) : L("ไม่มีเงินยืมค้าง", "No open advance"));
+  const bad = a.items.filter(i => !(ADV_ITEMS[i.k] || [0, false])[1]);
+  add("ข้อ 63", !bad.length, bad.length ? L(`ยืมสำหรับ ${bad.map(i => tx(ADV_ITEMS[i.k][0])).join(", ")} ไม่ได้`, `Can't lend for ${bad.map(i => tx(ADV_ITEMS[i.k][0])).join(", ")}`) : L("ทุกรายการอยู่ในงบที่ยืมได้", "Every item is one the budget may lend for"));
+  const days = dayDiff(a.start, a.end) + 1;
+  if (a.type === "travel") add("ข้อ 64", days <= 90, L(`เดินทาง ${days} วัน (ไม่เกิน 90)`, `${days} travel days (at most 90)`));
+  const nfy = fyStart(FAM_FY + 1);
+  if (a.end >= nfy) { const into = dayDiff(nfy, a.end) + 1, lim = a.type === "travel" ? 90 : 30; add("ข้อ 62", into <= lim, L(`ใช้ในปีงบประมาณถัดไป ${into} วัน (ไม่เกิน ${lim})`, `${into} days into next year (at most ${lim})`)); }
+  if (a.source === "nonbudget") add("ข้อ 60", true, L("เงินนอกงบประมาณ: หัวหน้าส่วนราชการอนุมัติ", "Non-budget money: the head of the agency approves"));
+  if (a.temp) add("ข้อ 58", !!(a.collateral || "").trim(), (a.collateral || "").trim() ? L(`หลักประกัน: ${a.collateral}`, `Collateral: ${a.collateral}`) : L("ผู้ยืมไม่มีเงินที่หักได้ ต้องมีหลักทรัพย์หรือผู้ค้ำประกัน", "The borrower has no pay to deduct from; needs collateral or a guarantor"));
+  if (a.source === "budget") add("ข้อ 18", a.amount <= famHeadroom(a.line) + (["approved", ...OPEN_ADV].includes(a.state) ? advAmt(a) : 0), L("ไม่เกินวงเงินคงเหลือของรายการจัดสรร", "Within the line's free amount"));
+  return out;
+}
+const advLog = (a, act, note) => (a.log = a.log || []).push({ t: nowIso(), by: me().id, act, note: note || "" });
+const advTag = a => tag(`${ADV_ST[a.state][2]} · ${tx(ADV_ST[a.state][0])}`, advOverdue(a) ? "p-bad" : ADV_ST[a.state][1]);
+const advDueTxt = a => { const d = advDue(a); return d && OPEN_ADV.includes(a.state) ? `${dotI(clockDot(d))}${clockTxt(d)}` : "—"; };
+
+SOD_RULES.push(["SD-12", ["ผู้ยืมอนุมัติเงินยืมของตนไม่ได้ และตรวจใบสำคัญส่งใช้ของตนไม่ได้", "A borrower can't approve their own advance or check their own clearing"]]);
+SOD_STEPS.push([["ยืมเงิน", "Borrow"], ["อนุมัติหรือตรวจใบสำคัญของเงินยืมนั้น", "Approve the advance or check its clearing"], "SD-12"]);
+
+// ---------- detail (shared by My advances and F4) ----------
+function advDetail(a, where) {
+  const mine = a.borrower === me().id, fin = isFinRole(), ch = advChecks(a), act = [], due = advDue(a);
+  if (where === "fin" && canSpend() && a.state === "request") act.push(`<button class="btn primary" type="button" data-adv="approve">${L("อนุมัติ", "Approve")}</button>`, `<button class="btn danger" type="button" data-adv="reject">${L("ไม่อนุมัติ", "Reject")}</button>`);
+  if (where === "fin" && ROLE === "fin" && a.state === "approved") act.push(`<button class="btn primary" type="button" data-adv="pay">${L("จ่ายเงินยืม (e-Payment)", "Pay the advance (e-Payment)")}</button>`);
+  if (where === "fin" && fin && a.state === "clearing") act.push(`<button class="btn primary" type="button" data-adv="accept">${L("ตรวจผ่าน รับใบสำคัญ", "Accept the clearing")}</button>`, `<button class="btn danger" type="button" data-adv="object">${L("ทักท้วง", "Object")}</button>`);
+  if (where === "fin" && ROLE === "finhead" && advOverdue(a) && !a.demand) act.push(`<button class="btn primary" type="button" data-adv="demand">${L("ออกหนังสือเรียกชดใช้ (ข้อ 68)", "Issue a demand (clause 68)")}</button>`);
+  if (where === "fin" && ROLE === "finhead" && a.demand && !a.reported && OPEN_ADV.includes(a.state) && daysUntil(a.demand.due) < 0) act.push(`<button class="btn danger" type="button" data-adv="report">${L("รายงานหัวหน้าส่วนราชการ", "Report to the head of the agency")}</button>`);
+  if (mine && a.state === "request") act.push(`<button class="btn ghost" type="button" data-adv="cancel">${L("ยกเลิกคำขอ", "Cancel the request")}</button>`);
+  const why = act.some(x => /data-adv="(reject|object|cancel|approve)"/.test(x));
+  const cl = a.clearing;
+  return `<section class="panel" id="adv-detail"><header><h2><span class="mono">${a.id}</span> · ${esc(tx(a.purpose))}</h2><span class="sp"></span>${advTag(a)}${historyBtn(a.id, a.id)}<button class="btn ghost" type="button" id="adv-close">${L("ปิด", "Close")}</button></header>
+    <div class="body">
+      <div class="grid2" style="gap:16px">
+        <div>
+          <p style="margin:0 0 4px"><b style="font-weight:600">${esc(userName(a.borrower))}</b> <span class="sub">${unitName(a.unit)} · ${tx(ADV_T[a.type])}</span></p>
+          <p class="sub" style="margin:0 0 4px">${fdate(a.start)} – ${fdate(a.end)}${a.returned ? ` · ${L("กลับถึง", "back on")} ${fdate(a.returned)}` : ""} · ${a.source === "budget" ? `<span class="mono">${a.line}</span> ${esc(lineLabel(famLine(a.line)))}` : L("เงินนอกงบประมาณ", "Non-budget money")}</p>
+          <p class="sub" style="margin:0">${L("สัญญายืมเงิน", "Loan contract")} <span class="mono">${a.contract ? a.contract.no : "—"}</span> ${L("(2 ฉบับ ข้อ 61)", "(2 copies, clause 61)")}${a.paid ? ` · ${L("จ่าย", "paid")} ${fdate(a.paid.t)} <span class="mono">${esc(a.paid.ref)}</span>` : ""}</p>
+          ${due && OPEN_ADV.includes(a.state) ? `<p style="margin:6px 0 0">${L("ส่งใช้ภายใน", "Clear by")} ${advDueTxt(a)} <span class="sub">(${a.type === "travel" ? L("15 วันนับจากวันกลับ", "15 days from return") : L("30 วันนับจากวันรับเงิน", "30 days from payment")}, ${L("ข้อ 65", "clause 65")})</span></p>` : ""}
+          ${a.objection && a.state === "objected" ? `<p style="margin:6px 0 0;color:var(--bad)">${L("ข้อทักท้วง", "Objection")}: ${esc(a.objection.why)} · ${L("แก้ภายใน", "fix by")} ${clockTxt(a.objection.due)}</p>` : ""}
+          ${a.demand ? `<p class="sub" style="margin:6px 0 0">${L("หนังสือเรียกชดใช้", "Demand")} ${fdate(a.demand.t)} · ${L("ชดใช้ภายใน", "repay by")} ${fdate(a.demand.due)}${a.reported ? ` · ${L("รายงานหัวหน้าส่วนราชการแล้ว", "reported to the head of the agency")} ${fdate(a.reported.t)}` : ""}</p>` : ""}
+        </div>
+        <div>
+          <table style="width:100%"><tbody>${a.items.map(i => `<tr><td>${tx(ADV_ITEMS[i.k][0])}</td><td class="n">${fmt(i.amt)}</td></tr>`).join("")}
+            <tr><td><b>${L("ยอดขอยืม", "Requested")}</b></td><td class="n"><b>${fmt(a.amount)}</b></td></tr>
+            ${a.approvedAmt && a.approvedAmt !== a.amount ? `<tr><td>${L("อนุมัติเท่าที่จำเป็น", "Approved as needed")}</td><td class="n">${fmt(a.approvedAmt)}</td></tr>` : ""}
+            ${cl ? `<tr><td>${L("ใช้จ่ายจริง", "Actually spent")}</td><td class="n">${fmt(cl.spent)}</td></tr><tr><td>${cl.spent < advAmt(a) ? L("เงินเหลือคืน", "Cash returned") : L("จ่ายเพิ่ม", "Top-up due")}</td><td class="n">${fmt(Math.abs(advAmt(a) - cl.spent))}</td></tr>` : ""}
+          </tbody></table>
+          ${a.receipt ? `<div class="sub">${L("ใบรับใบสำคัญ", "Evidence receipt")} <span class="mono">${a.receipt.no}</span> · ${fdate(a.receipt.t)}${a.topup ? ` · ${L("ใบขอเบิกจ่ายเพิ่ม", "top-up voucher")} <span class="mono">${a.topup}</span>` : ""}</div>` : ""}
+        </div>
+      </div>
+      ${["request", "approved"].includes(a.state) ? `<h3 style="margin:12px 0 6px;font-size:15px">${L("ตรวจก่อนอนุมัติ", "Checks before approval")}</h3>${ch.map(k => `<div style="margin:2px 0">${dotI(k.ok ? "ok" : "bad")}<span class="mono">${k.id}</span> ${esc(k.text)}</div>`).join("")}` : ""}
+      ${(a.log || []).length ? `<details style="margin-top:8px"><summary class="sub">${L("ประวัติ", "History")} (${a.log.length})</summary>${a.log.slice().reverse().map(l => `<div class="sub">${fdate(l.t, true)} · ${esc(userName(l.by))} · ${esc(tx(l.act))}${l.note ? ` · ${esc(l.note)}` : ""}</div>`).join("")}</details>` : ""}
+      ${act.length ? `<div class="row" style="margin-top:12px;flex-wrap:wrap">${act.join("")}${canSpend() && a.state === "request" && where === "fin" ? `<input type="number" id="adv-amt" value="${a.amount}" min="1" max="${a.amount}" step="1" style="width:120px" aria-label="${L("อนุมัติ (บาท)", "Approve (baht)")}">` : ""}${why ? `<input type="text" id="adv-why" placeholder="${L("เหตุผล", "Reason")}" style="min-width:220px;flex:1" aria-label="${L("เหตุผล", "Reason")}">` : ""}</div>` : ""}
+      ${mine && ["paid", "objected"].includes(a.state) ? clearForm(a) : ""}
+    </div></section>`;
+}
+function clearForm(a) {
+  return `<form class="inline-form" id="adv-clear" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px">
+    <div class="f" style="flex:1 1 100%"><b>${L("ส่งใช้เงินยืม", "Clear this advance")}</b> <span class="sub">${L("ส่งใบสำคัญและเงินเหลือ (ถ้ามี) ข้อ 65", "Send the evidence and any cash left (clause 65)")}</span></div>
+    ${a.type === "travel" ? `<div class="f" style="flex:0 1 170px"><label for="ac-back">${L("วันกลับถึง", "Back on")}</label><input type="date" id="ac-back" value="${a.returned || a.end}" required></div>` : ""}
+    <div class="f" style="flex:0 1 160px"><label for="ac-spent">${L("ใช้จ่ายจริง (บาท)", "Spent (baht)")}</label><input type="number" id="ac-spent" min="0" step="1" value="${a.clearing ? a.clearing.spent : advAmt(a)}" required></div>
+    <div class="f" style="flex:1 1 260px"><label for="ac-note">${L("หมายเหตุ", "Note")}</label><input type="text" id="ac-note" value="${esc(a.clearing ? a.clearing.note : "")}"></div>
+    <div class="f" style="flex:1 1 100%"><label><input type="checkbox" id="ac-rcpt" required> ${L("แนบใบเสร็จหรือใบรับรองการจ่ายเงินครบแล้ว (ข้อ 46–48)", "Receipts or payment certificates are attached (clauses 46–48)")}</label></div>
+    <button class="btn primary" type="submit">${L("ส่งใบสำคัญ", "Send the evidence")}</button></form>`;
+}
+
+// ---------- My advances (every user) ----------
+VIEWS.advances = () => {
+  const mine = (S.advances || []).filter(a => a.borrower === me().id), open = mine.filter(a => OPEN_ADV.includes(a.state)), c = fcfg();
+  const det = ADV_OPEN && advOf(ADV_OPEN), showDet = det && det.borrower === me().id;
+  const lines = famLines().filter(l => l.type === "ope" && (l.unit === me().unit || !famLines().some(x => x.type === "ope" && x.unit === me().unit)));
+  const itemRow = (n, k, amt) => `<div class="f" style="flex:1 1 180px"><label for="ai-k${n}">${L("รายการ", "Item")} ${n + 1}</label><select id="ai-k${n}"><option value="">—</option>${Object.keys(ADV_ITEMS).map(x => `<option value="${x}" ${x === k ? "selected" : ""}>${tx(ADV_ITEMS[x][0])}</option>`).join("")}</select></div><div class="f" style="flex:0 1 130px"><label for="ai-a${n}">${L("บาท", "Baht")}</label><input type="number" id="ai-a${n}" min="0" step="1" value="${amt || ""}"></div>`;
+  return `
+  <div class="head"><div><div class="eyebrow">${L("พื้นที่ทำงานของฉัน", "My Workspace")}</div><h1>${L("เงินยืมของฉัน", "My advances")}</h1>
+    <p>${L("ขอยืมเงินเพื่อปฏิบัติราชการ และส่งใช้ภายในกำหนด ตามระเบียบกระทรวงการคลังฯ พ.ศ. 2562 หมวด 5", "Borrow for official work and clear it on time, under chapter 5 of the Finance Ministry regulation of 2562")}</p></div></div>
+  ${showDet ? advDetail(det, "me") : ""}
+  <section class="panel"><header><h2>${L("เงินยืมของฉัน", "My advances")}</h2><span class="sp"></span><span class="sub">${open.length ? `${L("ค้างส่งใช้", "Open")} ${fmt(sumv(open.map(advAmt)))} ${L("บาท", "baht")}` : L("ไม่มีเงินยืมค้าง", "Nothing open")}</span></header>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("วัตถุประสงค์", "Purpose")}</th><th class="n">${L("ยอด (บาท)", "Amount (baht)")}</th><th>${L("ส่งใช้ภายใน", "Clear by")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
+      <tbody>${mine.slice().reverse().map(a => `<tr><td class="mono">${a.id}</td><td>${esc(tx(a.purpose))}<div class="sub">${tx(ADV_T[a.type])} · ${fdate(a.start)}–${fdate(a.end)}</div></td><td class="n">${fmt(advAmt(a))}</td><td>${advDueTxt(a)}</td><td>${advTag(a)}</td><td><button class="btn ${["paid", "objected"].includes(a.state) ? "primary" : "ghost"}" type="button" data-advopen="${a.id}">${["paid", "objected"].includes(a.state) ? L("ส่งใช้", "Clear") : L("เปิด", "Open")}</button></td></tr>`).join("")
+        || `<tr><td colspan="6" class="sub">${L("ยังไม่เคยยืม", "No advances yet")}</td></tr>`}</tbody></table></div></section>
+  <section class="panel"><header><h2>${L("ขอยืมเงิน", "Ask for an advance")}</h2><span class="sp"></span><span class="sub">${L("ระบบสร้างสัญญายืมเงินตามแบบ (ข้อ 55)", "The system draws up the loan contract in the set form (clause 55)")}</span></header>
+    ${open.length ? `<div class="body"><div class="alert" style="margin:0"><div class="ic" style="background:var(--warn-soft);color:var(--warn)">!</div><div><b>${L("ยังขอยืมใหม่ไม่ได้", "You can't ask for a new advance yet")}</b><p>${L(`มีเงินยืมค้าง ${open.map(a => a.id).join(", ")} ต้องส่งใช้ให้ครบก่อน (ข้อ 59)`, `${open.map(a => a.id).join(", ")} is still open; clear it first (clause 59)`)}</p></div></div></div>` : `<div class="body"><form class="inline-form" id="adv-form">
+      <div class="f" style="flex:1 1 220px"><label for="af-type">${L("ประเภท", "Type")}</label><select id="af-type">${Object.keys(ADV_T).map(k => `<option value="${k}">${tx(ADV_T[k])}</option>`).join("")}</select></div>
+      <div class="f" style="flex:2 1 260px"><label for="af-purpose">${L("วัตถุประสงค์", "Purpose")}</label><input type="text" id="af-purpose" required></div>
+      <div class="f" style="flex:0 1 160px"><label for="af-start">${L("ตั้งแต่", "From")}</label><input type="date" id="af-start" value="${addDays(TODAY, 7)}" required></div>
+      <div class="f" style="flex:0 1 160px"><label for="af-end">${L("ถึง", "To")}</label><input type="date" id="af-end" value="${addDays(TODAY, 9)}" required></div>
+      <div class="f" style="flex:0 1 170px"><label for="af-src">${L("แหล่งเงิน", "Source")}</label><select id="af-src"><option value="budget">${L("เงินงบประมาณ", "Budget")}</option><option value="nonbudget">${L("เงินนอกงบประมาณ", "Non-budget")}</option></select></div>
+      <div class="f" style="flex:2 1 240px"><label for="af-line">${L("รายการจัดสรร", "Allocation line")}</label><select id="af-line">${lines.map(l => `<option value="${l.id}">${esc(lineLabel(l))}</option>`).join("")}</select></div>
+      ${itemRow(0, "perdiem")}${itemRow(1, "hotel")}${itemRow(2, "transport")}
+      <div class="f" style="flex:1 1 100%"><button class="btn ghost" type="button" id="af-calc">${L("คำนวณเบี้ยเลี้ยงและที่พักจากจำนวนวัน", "Work out per diem and accommodation from the dates")}</button> <span class="sub">${L("อัตรา", "Rates")}: ${fmt(c.perDiem)} ${L("บาท/วัน", "baht/day")} · ${fmt(c.hotel)} ${L("บาท/คืน", "baht/night")} (M10)</span></div>
+      <div class="f" style="flex:1 1 100%"><label><input type="checkbox" id="af-temp"> ${L("ผู้ยืมไม่มีเงินเดือนที่หักส่งใช้ได้ (เช่น ลูกจ้างชั่วคราว)", "The borrower has no salary to deduct from (e.g. temporary staff)")}</label></div>
+      <div class="f" style="flex:1 1 280px"><label for="af-coll">${L("หลักประกันหรือผู้ค้ำประกัน (ข้อ 58)", "Collateral or guarantor (clause 58)")}</label><input type="text" id="af-coll"></div>
+      <button class="btn primary" type="submit">${L("ส่งคำขอยืม", "Send the request")}</button></form></div>`}</section>`;
+};
+
+// ---------- F4 register (finance) ----------
+FIN_SUB.adv = () => L("ทะเบียนคุมเงินยืม อนุมัติ จ่าย ตรวจใบสำคัญ และเรียกชดใช้", "Advance register: approve, pay, check clearings and demand repayment");
+FIN.adv = () => {
+  const A = S.advances || [], open = A.filter(a => OPEN_ADV.includes(a.state)), over = A.filter(advOverdue);
+  const groups = { open: ["request", "approved", "paid", "clearing", "objected"], over: null, done: ["cleared", "rejected", "cancelled"], all: null };
+  const GL = { open: L("กำลังดำเนินการ", "In progress"), over: L("เลยกำหนด", "Overdue"), done: L("ปิดแล้ว", "Closed"), all: L("ทั้งหมด", "All") };
+  const pick = k => (k === "over" ? over : groups[k] ? A.filter(a => groups[k].includes(a.state)) : A);
+  const det = ADV_OPEN && advOf(ADV_OPEN);
+  const byAge = Object.keys(AGE).map(k => { const xs = open.filter(a => advAge(a) === k); return [k, xs.length, sumv(xs.map(advAmt))]; });
+  return `
+  ${det ? advDetail(det, "fin") : ""}
+  <section class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+    <div class="kpi"><span class="l">${L("เงินยืมค้างส่งใช้", "Open advances")}</span><span class="v">${open.length}</span><span class="d sub">${fmt(sumv(open.map(advAmt)))} ${L("บาท", "baht")}</span></div>
+    <div class="kpi hl"><span class="l">${L("เลยกำหนด", "Overdue")}</span><span class="v">${over.length}</span><span class="d" style="color:var(--rail-ink)">${over.filter(a => !a.demand).length} ${L("ยังไม่เรียกชดใช้", "without a demand")}</span></div>
+    <div class="kpi"><span class="l">${L("รออนุมัติ / รอจ่าย", "To approve / to pay")}</span><span class="v">${A.filter(a => a.state === "request").length} / ${A.filter(a => a.state === "approved").length}</span></div>
+    <div class="kpi"><span class="l">${L("ใบสำคัญรอตรวจ", "Clearings to check")}</span><span class="v">${A.filter(a => a.state === "clearing").length}</span></div>
+  </section>
+  <section class="panel"><header><h2>${L("ทะเบียนคุมเงินยืม", "Advance register")}</h2><span class="sp"></span>
+    <div class="row" style="gap:6px;flex-wrap:wrap">${Object.keys(GL).map(k => `<button class="btn ${ADV_F === k ? "primary" : "ghost"}" type="button" data-advf="${k}">${GL[k]} (${pick(k).length})</button>`).join("")}</div></header>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("ผู้ยืม / วัตถุประสงค์", "Borrower / purpose")}</th><th class="n">${L("ยอด (บาท)", "Amount (baht)")}</th><th>${L("ส่งใช้ภายใน", "Clear by")}</th><th>${L("อายุหนี้", "Age")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
+      <tbody>${pick(ADV_F).slice().reverse().map(a => `<tr${ADV_OPEN === a.id ? ' style="background:var(--tint)"' : ""}><td class="mono">${a.id}</td><td>${esc(userName(a.borrower))} <span class="sub">${unitName(a.unit)}</span><div class="sub">${esc(tx(a.purpose))} · ${tx(ADV_T[a.type])}</div></td><td class="n">${fmt(advAmt(a))}</td><td>${advDueTxt(a)}</td><td class="sub">${advAge(a) ? tx(AGE[advAge(a)]) : "—"}</td><td>${advTag(a)}${a.demand ? `<div class="sub">${L("เรียกชดใช้แล้ว", "Demand issued")}</div>` : ""}</td><td><button class="btn ghost" type="button" data-advopen="${a.id}">${L("เปิด", "Open")}</button></td></tr>`).join("")
+        || `<tr><td colspan="7" class="sub">${L("ไม่มีรายการในกลุ่มนี้", "Nothing in this group")}</td></tr>`}</tbody></table></div></section>
+  <section class="panel"><header><h2>${L("อายุหนี้เงินยืมค้าง", "Ageing of open advances")}</h2><span class="sp"></span><span class="sub">${L("นับจากวันครบกำหนดส่งใช้", "From the clearing due date")}</span></header>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("ช่วง", "Band")}</th><th class="n">${L("จำนวน", "Count")}</th><th class="n">${L("ยอด (บาท)", "Amount (baht)")}</th></tr></thead>
+      <tbody>${byAge.map(([k, n, s]) => `<tr><td>${dotI(k === "ok" ? "ok" : k === "d15" ? "warn" : "bad")}${tx(AGE[k])}</td><td class="n">${n}</td><td class="n">${fmt(s)}</td></tr>`).join("")}</tbody></table></div></section>`;
+};
+
+// ---------- actions ----------
+function advAct(a, k) {
+  const why = ($("#adv-why") || { value: "" }).value.trim(), done = (msg, roles, text, link) => { if (roles) notify(roles, text, link || "fnc-adv"); commit(); renderShell(); route(); toast(msg); };
+  if (["reject", "object", "cancel"].includes(k) && why.length < 5) { toast(L("ระบุเหตุผลอย่างน้อย 5 ตัวอักษร", "Give a reason of at least 5 characters")); return; }
+  if (k === "approve") {
+    if (!sodCheck("SD-12", sodActors("exec", "spend"), [a.borrower], a.id)) return;
+    const bad = advChecks(a).filter(c => !c.ok); if (bad.length) { toast(`${L("ยังอนุมัติไม่ได้", "Can't approve yet")}: ${bad.map(c => c.id).join(", ")}`); return; }
+    const amt = Math.round(Number(($("#adv-amt") || { value: a.amount }).value));
+    if (!(amt > 0) || amt > a.amount) { toast(L("ยอดอนุมัติต้องมากกว่าศูนย์และไม่เกินยอดขอ", "The approved amount must be above zero and within the request")); return; }
+    if (amt < a.amount && why.length < 5) { toast(L("อนุมัติน้อยกว่ายอดขอต้องระบุเหตุผล (ข้อ 59 เท่าที่จำเป็น)", "Approving less needs a reason (clause 59, only what is needed)")); return; }
+    const au = famAuth(); a.state = "approved"; a.approvedAmt = amt; a.approver = { by: me().id, holder: au.holder, via: au.via, t: nowIso() };
+    advLog(a, ["อนุมัติเงินยืม", "Approved"], amt < a.amount ? `${fmt(amt)} · ${why}` : fmt(amt)); audit(["อนุมัติเงินยืม", "Approved an advance"], `${a.id} · ${fmt(amt)}${onBehalf("exec", "spend")}`);
+    notify([S.users.find(u => u.id === a.borrower).role], [`เงินยืม ${a.id} อนุมัติแล้ว ${fmt(amt)} บาท`, `Advance ${a.id} approved: ${fmt(amt)} baht`], "advances");
+    return done(L("อนุมัติแล้ว · การเงินจ่ายผ่าน e-Payment", "Approved · Finance pays by e-Payment"), ["fin"], [`เงินยืม ${a.id} อนุมัติแล้ว รอจ่าย`, `Advance ${a.id} is approved and waiting to be paid`]);
+  }
+  if (k === "reject") { a.state = "rejected"; advLog(a, ["ไม่อนุมัติ", "Rejected"], why); audit(["ไม่อนุมัติเงินยืม", "Rejected an advance"], `${a.id} · ${why}`); return done(L("บันทึกแล้ว", "Saved"), [S.users.find(u => u.id === a.borrower).role], [`เงินยืม ${a.id} ไม่ได้รับอนุมัติ: ${why}`, `Advance ${a.id} was not approved: ${why}`], "advances"); }
+  if (k === "cancel") { a.state = "cancelled"; advLog(a, ["ยกเลิกคำขอ", "Cancelled"], why); audit(["ยกเลิกคำขอยืมเงิน", "Cancelled an advance request"], a.id); ADV_OPEN = null; return done(L("ยกเลิกแล้ว", "Cancelled")); }
+  if (k === "pay") {
+    a.state = "paid"; a.paid = { t: nowIso(), ref: `EP-ADV-${a.id.slice(-3)}` };
+    advLog(a, ["จ่ายเงินยืมผ่าน e-Payment", "Paid by e-Payment"], a.paid.ref); audit(["จ่ายเงินยืม", "Paid an advance"], `${a.id} · ${fmt(advAmt(a))}`);
+    return done(L(`จ่ายแล้ว · ต้องส่งใช้ภายใน ${fdate(advDue(a))}`, `Paid · to be cleared by ${fdate(advDue(a))}`), [S.users.find(u => u.id === a.borrower).role], [`ได้รับเงินยืม ${a.id} แล้ว ส่งใช้ภายใน ${fdate(advDue(a))}`, `Advance ${a.id} paid; clear it by ${fdate(advDue(a))}`], "advances");
+  }
+  if (k === "accept" || k === "object") {
+    if (!sodCheck("SD-12", [me().id], [a.borrower], a.id)) return;
+    if (k === "object") {
+      a.state = "objected"; a.objection = { t: nowIso(), by: me().id, why, due: addDays(TODAY, fcfg().advFix) };
+      advLog(a, ["ทักท้วงใบสำคัญ", "Objected"], why); audit(["ทักท้วงใบสำคัญส่งใช้เงินยืม", "Objected to an advance clearing"], `${a.id} · ${why}`);
+      return done(L("ทักท้วงแล้ว · ผู้ยืมต้องแก้ภายใน 15 วัน", "Objection sent · the borrower fixes it within 15 days"), [S.users.find(u => u.id === a.borrower).role], [`ใบสำคัญเงินยืม ${a.id} ถูกทักท้วง: ${why} แก้ภายใน ${fdate(a.objection.due)}`, `Your clearing of ${a.id} has an objection: ${why}. Fix it by ${fdate(a.objection.due)}`], "advances");
+    }
+    const cl = a.clearing, amt = advAmt(a);
+    S.advSeq = (S.advSeq || 0) + 1; a.receipt = { no: `RB-${FAM_FY}-${String(S.advSeq).padStart(3, "0")}`, t: nowIso(), by: me().id };
+    if (cl.spent > amt) {
+      const v = { id: nextVc(), type: "travel", contract: null, phase: null, commit: null, line: a.line, desc: [`จ่ายเพิ่มจากการส่งใช้เงินยืม ${a.id}`, `Top-up after clearing ${a.id}`], payee: { name: S.users.find(u => u.id === a.borrower).name, kind: "person", taxId: "" },
+        gross: cl.spent - amt, vat: false, penalty: 0, other: 0, method: "epay", methodWhy: "", due: addDays(TODAY, 7), ev: { order: true, report: true, rcpt: true }, state: "draft", maker: (S.users.find(u => u.role === "fin") || me()).id, t: nowIso(), log: [], adv: a.id };
+      vLog(v, ["สร้างจากการส่งใช้เงินยืม", "Created from an advance clearing"], a.id); S.vouchers.push(v); a.topup = v.id;
+    } else if (cl.spent < amt) a.cashBack = { amount: amt - cl.spent, t: nowIso(), receipt: a.receipt.no };
+    a.state = "cleared"; advLog(a, ["ตรวจผ่าน รับใบสำคัญ", "Clearing accepted"], a.receipt.no);
+    audit(["รับใบสำคัญส่งใช้เงินยืม", "Accepted an advance clearing"], `${a.id} · ${a.receipt.no}${a.topup ? ` · ${a.topup}` : ""}`);
+    return done(a.topup ? L(`รับใบสำคัญแล้ว · สร้างใบขอเบิกจ่ายเพิ่ม ${a.topup}`, `Accepted · top-up voucher ${a.topup} created`) : a.cashBack ? L(`รับใบสำคัญและเงินเหลือคืน ${fmt(a.cashBack.amount)} บาทแล้ว`, `Accepted with ${fmt(a.cashBack.amount)} baht returned`) : L("รับใบสำคัญแล้ว", "Clearing accepted"),
+      [S.users.find(u => u.id === a.borrower).role], [`เงินยืม ${a.id} ส่งใช้ครบแล้ว ใบรับใบสำคัญ ${a.receipt.no}`, `Advance ${a.id} is cleared; evidence receipt ${a.receipt.no}`], "advances");
+  }
+  if (k === "demand") {
+    a.demand = { t: nowIso(), by: me().id, due: addDays(advDue(a), fcfg().demandDays) };
+    advLog(a, ["ออกหนังสือเรียกชดใช้", "Demand issued"], fdate(a.demand.due)); audit(["ออกหนังสือเรียกชดใช้เงินยืม", "Issued an advance repayment demand"], `${a.id} · ${a.demand.due}`);
+    return done(L("ออกหนังสือเรียกชดใช้แล้ว", "Demand issued"), [S.users.find(u => u.id === a.borrower).role], [`หนังสือเรียกชดใช้เงินยืม ${a.id} ภายใน ${fdate(a.demand.due)}`, `Repayment demand for ${a.id}: repay by ${fdate(a.demand.due)}`], "advances");
+  }
+  if (k === "report") {
+    a.reported = { t: nowIso(), by: me().id }; advLog(a, ["รายงานหัวหน้าส่วนราชการ", "Reported to the head of the agency"]); audit(["รายงานเงินยืมค้างต่อหัวหน้าส่วนราชการ", "Reported an unpaid advance to the head of the agency"], a.id);
+    return done(L("รายงานแล้ว", "Reported"), ["exec"], [`เงินยืม ${a.id} ไม่ชดใช้ตามหนังสือเรียก พิจารณาสั่งการตามสัญญายืมเงิน (ข้อ 68)`, `Advance ${a.id} was not repaid after the demand; decide action under the loan contract (clause 68)`]);
+  }
+}
+function bindAdvShared() {
+  $$("[data-advopen]").forEach(b => (b.onclick = () => { ADV_OPEN = b.dataset.advopen; route(); }));
+  const cl = $("#adv-close"); if (cl) cl.onclick = () => { ADV_OPEN = null; route(); };
+  const a = ADV_OPEN && advOf(ADV_OPEN);
+  if (!a) return;
+  $$("[data-adv]").forEach(b => (b.onclick = () => advAct(a, b.dataset.adv)));
+  const cf = $("#adv-clear");
+  if (cf) cf.onsubmit = e => {
+    e.preventDefault();
+    const spent = Math.round(Number($("#ac-spent").value)); if (!(spent >= 0)) return;
+    if (a.type === "travel") { const back = $("#ac-back").value; if (back < a.start) { toast(L("วันกลับต้องไม่ก่อนวันเริ่มเดินทาง", "The return date can't be before the start")); return; } a.returned = back; }
+    a.clearing = { t: nowIso(), spent, note: $("#ac-note").value.trim(), receipts: true };
+    a.state = "clearing"; advLog(a, ["ส่งใบสำคัญ", "Sent the evidence"], `${fmt(spent)}`);
+    audit(["ส่งใบสำคัญส่งใช้เงินยืม", "Sent an advance clearing"], `${a.id} · ${fmt(spent)}`);
+    notify(["fin"], [`ใบสำคัญส่งใช้เงินยืม ${a.id} รอตรวจ`, `Clearing of ${a.id} is waiting to be checked`], "fnc-adv");
+    commit(); renderShell(); route(); toast(spent < advAmt(a) ? L(`ส่งแล้ว · นำเงินเหลือ ${fmt(advAmt(a) - spent)} บาทคืนการเงิน`, `Sent · return ${fmt(advAmt(a) - spent)} baht to Finance`) : L("ส่งใบสำคัญแล้ว", "Evidence sent"));
+  };
+}
+BIND.advances = () => {
+  bindAdvShared();
+  const f = $("#adv-form");
+  if (!f) return;
+  const c = fcfg();
+  $("#af-calc").onclick = () => { const d = Math.max(1, dayDiff($("#af-start").value, $("#af-end").value) + 1); $("#ai-k0").value = "perdiem"; $("#ai-a0").value = d * c.perDiem; $("#ai-k1").value = "hotel"; $("#ai-a1").value = Math.max(0, d - 1) * c.hotel; };
+  f.onsubmit = e => {
+    e.preventDefault();
+    const items = [0, 1, 2].map(n => ({ k: $("#ai-k" + n).value, amt: Math.round(Number($("#ai-a" + n).value)) })).filter(i => i.k && i.amt > 0);
+    if (!items.length) { toast(L("ใส่อย่างน้อยหนึ่งรายการ", "Add at least one item")); return; }
+    const start = $("#af-start").value, end = $("#af-end").value; if (end < start) { toast(L("วันสิ้นสุดต้องไม่ก่อนวันเริ่ม", "The end can't be before the start")); return; }
+    const p = $("#af-purpose").value.trim(), src = $("#af-src").value;
+    const a = { id: nextAdv(), borrower: me().id, unit: me().unit, type: $("#af-type").value, purpose: [p, p], start, end, returned: null, items, amount: sumv(items.map(i => i.amt)), approvedAmt: null,
+      source: src, line: $("#af-line").value, temp: $("#af-temp").checked, collateral: $("#af-coll").value.trim(), state: "request", t: nowIso(), log: [] };
+    S.advSeqC = (S.advSeqC || 0) + 1; a.contract = { no: `สย.${String(S.advSeqC).padStart(3, "0")}/2570`, t: nowIso() };
+    advLog(a, ["ขอยืมเงิน", "Requested"], fmt(a.amount)); (S.advances = S.advances || []).push(a); ADV_OPEN = a.id;
+    const bad = advChecks(a).filter(k => !k.ok);
+    audit(["ขอยืมเงิน", "Asked for an advance"], `${a.id} · ${fmt(a.amount)}`);
+    notify(["exec"], [`คำขอยืมเงิน ${a.id} ${fmt(a.amount)} บาท รออนุมัติ`, `Advance request ${a.id} (${fmt(a.amount)} baht) is waiting for approval`], "fnc-adv");
+    commit(); renderShell(); route(); toast(bad.length ? L(`ส่งแล้ว แต่ยังติด ${bad.map(k => k.id).join(", ")} ผู้อนุมัติจะอนุมัติไม่ได้จนกว่าจะแก้`, `Sent, but ${bad.map(k => k.id).join(", ")} is not met; it can't be approved until fixed`) : L("ส่งคำขอแล้ว · สร้างสัญญายืมเงินแล้ว", "Request sent · loan contract drawn up"));
+  };
+};
+{
+  const bind = BIND.finance;
+  BIND.finance = () => { bind(); if (FIN_TAB !== "adv") return; bindAdvShared(); $$("[data-advf]").forEach(b => (b.onclick = () => { ADV_F = b.dataset.advf; route(); })); };
+}
+
+// ---------- menu, clocks, badges, tasks ----------
+NAV.push({ id: "advances", code: "WS", group: "overview", app: "all", roles: Object.keys(ROLES), label: ["เงินยืมของฉัน", "My advances"] });
+NAV_ICON.advances = "wallet"; NAV_ICON.adv = "wallet";
+{
+  const n = NAV.find(x => x.id === "finance");
+  n.tabs.splice(n.tabs.findIndex(t => t[0] === "pay") + 1, 0, ["adv", ["เงินยืม", "Advances"], "F4"]);
+  const base = finClocks;
+  finClocks = function () {
+    const out = base();
+    (S.advances || []).forEach(a => {
+      if (["paid", "objected"].includes(a.state) && !a.demand) out.push({ due: a.state === "objected" ? a.objection.due : advDue(a), title: `${a.state === "objected" ? L("ผู้ยืมแก้ข้อทักท้วง", "Borrower fixes the objection") : L("ส่งใช้เงินยืม", "Advance to be cleared")} ${a.id}`, sub: `${userName(a.borrower)} · ${fmt(advAmt(a))} ${L("บาท", "baht")}`, link: "fnc-adv", src: L("ข้อ 65", "cl. 65") });
+      if (a.demand && OPEN_ADV.includes(a.state) && !a.reported) out.push({ due: a.demand.due, title: `${L("ครบกำหนดตามหนังสือเรียกชดใช้", "Demand falls due")} ${a.id}`, sub: userName(a.borrower), link: "fnc-adv", src: L("ข้อ 68", "cl. 68") });
+    });
+    return out.sort((x, y) => (x.due < y.due ? -1 : 1));
+  };
+  const tb = tabBadge;
+  tabBadge = function (nid, tab) {
+    if (nid === "finance" && tab === "adv") {
+      const A = S.advances || []; let k = 0;
+      if (ROLE === "fin") k = A.filter(a => a.state === "approved" || a.state === "clearing").length;
+      else if (ROLE === "finhead") k = A.filter(a => (advOverdue(a) && !a.demand) || (a.demand && !a.reported && OPEN_ADV.includes(a.state) && daysUntil(a.demand.due) < 0)).length;
+      else if (canSpend()) k = A.filter(a => a.state === "request").length;
+      return k ? `<span class="badge">${k}</span>` : "";
+    }
+    return tb(nid, tab);
+  };
+  const nb = navBadge;
+  navBadge = function (id) {
+    if (id === "advances") { const k = (S.advances || []).filter(a => a.borrower === me().id && (a.state === "objected" || (a.state === "paid" && daysUntil(advDue(a)) <= 3))).length; return k ? `<span class="badge">${k}</span>` : ""; }
+    return nb(id);
+  };
+  const mt = myTasks;
+  myTasks = function () {
+    const t = mt.apply(this, arguments), A = S.advances || [], R = (title, sub, due, link, cls) => t.unshift({ title, sub, due, link, cls });
+    A.filter(a => a.borrower === me().id && ["paid", "objected"].includes(a.state)).forEach(a => R(`${a.state === "objected" ? L("แก้ข้อทักท้วงเงินยืม", "Fix the objection on advance") : L("ส่งใช้เงินยืม", "Clear advance")} ${a.id}`, `${fmt(advAmt(a))} ${L("บาท", "baht")} · ${esc(tx(a.purpose))}`, a.state === "objected" ? a.objection.due : advDue(a), "advances", advOverdue(a) ? "p-bad" : "p-warn"));
+    if (ROLE === "fin") A.filter(a => a.state === "approved" || a.state === "clearing").forEach(a => R(`${a.state === "approved" ? L("จ่ายเงินยืม", "Pay advance") : L("ตรวจใบสำคัญเงินยืม", "Check the clearing of")} ${a.id}`, userName(a.borrower), TODAY, "fnc-adv", "p-info"));
+    if (ROLE === "finhead") A.filter(a => advOverdue(a) && !a.demand).forEach(a => R(`${L("เรียกชดใช้เงินยืม", "Demand repayment of")} ${a.id}`, `${userName(a.borrower)} · ${L("เลยกำหนด", "overdue since")} ${fdate(advDue(a))}`, advDue(a), "fnc-adv", "p-bad"));
+    if (canSpend() && ROLE !== "fin" && ROLE !== "finhead") A.filter(a => a.state === "request").forEach(a => R(`${L("อนุมัติเงินยืม", "Approve advance")} ${a.id}`, `${userName(a.borrower)} · ${fmt(a.amount)} ${L("บาท", "baht")}`, a.start, "fnc-adv", "p-warn"));
+    return t.filter(x => !(x.cls === "p-mute" && t.length > 1));
+  };
+}
+
+// ---------- seed (called from the shared seed builder) ----------
+function seedFinanceFN3(s) {
+  const U = r => s.users.find(u => u.role === r && u.primary) || s.users.find(u => u.role === r) || {}, FN = U("fin").id, FH = U("finhead").id, EX = U("exec").id;
+  const ope = s.allocs[2570].lines.filter(l => l.type === "ope"), lineOfUnit = u => (ope.find(l => l.unit === u) || ope[0]).id;
+  const ap = t => ({ by: EX, holder: EX, via: null, t });
+  const mk = (n, u, o) => Object.assign({ id: `AD-2570-00${n}`, borrower: u.id, unit: u.unit, returned: null, approvedAmt: null, source: "budget", line: lineOfUnit(u.unit), temp: false, collateral: "", contract: { no: `สย.00${n}/2570`, t: o.t }, log: [{ t: o.t, by: u.id, act: ["ขอยืมเงิน", "Requested"], note: "" }] }, o);
+  const dv = U("div"), pl = U("plan"), dh = U("divhead"), pr = U("proc");
+  s.advances = [
+    mk(1, dv, { type: "travel", purpose: ["ตรวจติดตามโครงการพื้นที่ภาคเหนือ", "Project monitoring in the north"], start: "2026-10-03", end: "2026-10-06", returned: "2026-10-06", items: [{ k: "perdiem", amt: 960 }, { k: "hotel", amt: 4500 }, { k: "transport", amt: 13140 }], amount: 18600, approvedAmt: 18600, state: "paid", t: "2026-09-25T10:00", approver: ap("2026-09-26T09:00"), paid: { t: "2026-10-01T10:00", ref: "EP-ADV-001" } }),
+    mk(2, pl, { type: "other", purpose: ["จัดประชุมเชิงปฏิบัติการจัดทำแผนปฏิบัติราชการ", "Workshop on the agency action plan"], start: "2026-09-15", end: "2026-09-16", items: [{ k: "material", amt: 22000 }, { k: "fee", amt: 6000 }], amount: 28000, approvedAmt: 28000, state: "paid", t: "2026-09-05T10:00", approver: ap("2026-09-07T09:00"), paid: { t: "2026-09-10T10:00", ref: "EP-ADV-002" } }),
+    mk(3, dh, { type: "travel", purpose: ["ประชุมชี้แจงงบประมาณ จังหวัดขอนแก่น", "Budget briefing in Khon Kaen"], start: "2026-08-20", end: "2026-08-22", returned: "2026-08-22", items: [{ k: "perdiem", amt: 720 }, { k: "hotel", amt: 3000 }, { k: "transport", amt: 6280 }], amount: 10000, approvedAmt: 10000, state: "cleared", t: "2026-08-10T10:00", approver: ap("2026-08-12T09:00"), paid: { t: "2026-08-15T10:00", ref: "EP-ADV-003" }, clearing: { t: "2026-09-01T10:00", spent: 8750, note: "", receipts: true }, receipt: { no: "RB-2570-001", t: "2026-09-02T10:00", by: FN }, cashBack: { amount: 1250, t: "2026-09-02T10:00", receipt: "RB-2570-001" } }),
+    mk(4, pr, { type: "travel", purpose: ["ตรวจรับงานติดตั้งระบบ สำนักงานสาขาเชียงใหม่", "Acceptance of the system installation, Chiang Mai branch"], start: "2026-10-26", end: "2026-10-28", items: [{ k: "perdiem", amt: 720 }, { k: "hotel", amt: 3000 }, { k: "transport", amt: 3680 }], amount: 7400, state: "request", t: "2026-10-15T14:00" }),
+    mk(5, dh, { type: "travel", purpose: ["ติดตามการเบิกจ่าย จังหวัดนครราชสีมา", "Spending follow-up in Nakhon Ratchasima"], start: "2026-10-07", end: "2026-10-09", returned: "2026-10-09", items: [{ k: "perdiem", amt: 720 }, { k: "hotel", amt: 3000 }, { k: "transport", amt: 8280 }], amount: 12000, approvedAmt: 12000, state: "clearing", t: "2026-10-02T10:00", approver: ap("2026-10-03T09:00"), paid: { t: "2026-10-05T10:00", ref: "EP-ADV-005" }, clearing: { t: "2026-10-14T10:00", spent: 9850, note: "", receipts: true } }),
+  ];
+  s.advSeq = 1; s.advSeqC = 5;
+  if (!s.sod.rules.some(r => r.id === "SD-12")) s.sod.rules.push({ id: "SD-12", on: true });
+  void FH;
 }
 
 /* ---- 67-procai.js ---- */
@@ -12502,6 +12840,7 @@ function seedT2(s) {
   s.vendors.forEach((v, i) => { v.mit = i % 3 === 1; v.mitCert = v.mit ? "2027-06-30" : ""; v.smeCert = v.sme ? "2027-03-31" : ""; });
   const own = s.contracts.length ? s.vendors.find(v => normName(v.name) === normName(tx(s.contracts[0].vendor))) : null, sv = own || s.vendors[0];
   s.users.push({ id: "u90", role: "vendor", unit: "", vendor: sv.id, primary: true, mfa: true, active: true, name: [sv.name, sv.name] });
+  seedT3(s);
 }
 const P2 = () => S.prof.p2;
 const norm = normName;
@@ -12739,6 +13078,239 @@ const vendorHome = () => { const v = vpMe(), R = v ? vpRfqs(v).filter(o => !o.x.
       ph.invoice = { no: x.no, amount: x.amount, date: x.date, vendor: tx(k.vendor), contract: k.no, by: me().id, via: "portal" }; x.status = "confirmed"; audit(["ยืนยันใบแจ้งหนี้จากพอร์ทัลผู้ขาย", "Confirmed an invoice from the supplier portal"], `${k.id} ${x.no}`); commit(); route(); toast(L("ยืนยันแล้ว เข้าตรวจสามทางได้", "Confirmed; it feeds the three-way check")); }));
     $$("[data-vinvno]").forEach(b => (b.onclick = () => { const why = ($("#vinv-n-" + b.dataset.vinvno).value || "").trim(); if (why.length < 3) { toast(L("ระบุเหตุผลอย่างน้อย 3 ตัวอักษร", "Give a reason of at least 3 characters")); return; } const x = S.vinv.find(y => y.id === b.dataset.vinvno); x.status = "returned"; x.note = why;
       audit(["ส่งคืนใบแจ้งหนี้ของผู้ขาย", "Returned a supplier invoice"], `${x.contract} ${x.no}`); commit(); route(); }));
+  };
+}
+
+/* ---- 72-t3.js ---- */
+// Fisko Procurement round 39 (T3 of design v0.3, chapter 18): drawing approval (FR-PR-75, R-23), serial numbers and BOQ
+// (FR-PR-76, 77), extra contract data and ERP reference codes (FR-PR-77), and committee fees (FR-PR-78, R-24).
+// FR-PR-79 (supplier bank-account change) is covered by Fisko Finance round 38 (S.vendorChanges, SD-14); here the supplier
+// portal gets a request form that feeds that same list. Every part sits behind a profile switch (70-profile.js).
+// Committee fees prepare and check claims only; nothing is paid from here.
+
+["drawing", "commFee"].forEach(k => { const f = PROF_FEATS.find(x => x.k === k); if (f) f.built = true; });
+DOC_TYPES.mn = ["หนังสือแจ้งผลอนุมัติแบบ (MN)", "Drawing approval letter (MN)"];
+DOC_TYPES.fee = ["ใบเบิกค่าตอบแทนกรรมการ", "Committee fee claim"];
+COMMITTEES.accept = ["คณะกรรมการตรวจรับพัสดุ", "Acceptance committee"];
+
+function seedT3(s) {
+  s.prof.p3 = { drawingReplyDays: 45, feeMonthCap: 6000, feeLadder: 20000, feeCasePct: 1, feeMinAttendPct: 50, feeHolidayOk: false,
+    fee: { tor: [1500, 1200], eval: [1500, 1200], buy: [1500, 1200], accept: [1000, 800] } };
+  s.prof.drawCats = []; s.fees = [];
+  s.docno.fmt.mn = { pfx: "MN", pad: 3, unit: false }; s.docno.fmt.fee = { pfx: "คต", pad: 3, unit: false };
+  const k = s.contracts[0]; if (k) k.boq = [{ item: ["หม้อแปลงไฟฟ้า 500 kVA", "Transformer 500 kVA"], unit: ["เครื่อง", "unit"], qty: 20, price: 1000000, serial: true, kind: "material" }, { item: ["ค่าติดตั้งและทดสอบ", "Installation and testing"], unit: ["งาน", "job"], qty: 1, price: 4000000, serial: false, kind: "labour" }];
+}
+const P3 = () => S.prof.p3;
+Object.assign(CASE_EV, {});
+const conOf = id => S.contracts.find(k => k.id === id);
+
+// ---------- drawing approval ----------
+const drwReq = k => feat("drawing") && !!((k.drw && k.drw.on) || (S.prof.drawCats || []).includes(famPlan(k.plan).cat));
+const drwApproved = k => !!(k.drw && (k.drw.rounds || []).some(r => r.status === "approved"));
+const drwOpen = k => (k.drw && k.drw.rounds || []).find(r => r.status === "submitted");
+const drwDue = r => addDays(r.recv, P3().drawingReplyDays);
+const DRW_KIND = { loose: ["ชิ้นส่วนแยก (Loose Part)", "Loose part"], turnkey: ["Turnkey", "Turnkey"] };
+const DRW_ST = { submitted: [["รอตอบ", "Waiting"], "p-info"], approved: [["อนุมัติ", "Approved"], "p-ok"], rejected: [["ส่งกลับแก้", "Sent back"], "p-warn"] };
+
+// ---------- BOQ and serial numbers ----------
+const boqTotal = k => sumv((k.boq || []).map(b => b.qty * b.price));
+const serialsOf = (k, i) => (k.serials || []).filter(x => x.i === i);
+const allSerials = () => new Set(S.contracts.flatMap(k => (k.serials || []).map(x => x.no.toUpperCase())));
+
+// ---------- contract figures ----------
+function capDate(k) {
+  const cap = S.pcfg.penaltyCapPct / 100 * k.amount, pen = conPenalty(k); if (pen >= cap) return { passed: true };
+  const daily = sumv(k.phases.filter(ph => !ph.delivered && !phaseAccepted(ph) && !ph.cancelled && phDue(ph) < TODAY).map(ph => S.pcfg.penaltyPct / 100 * ph.amount)); if (!daily) return null;
+  return { date: addDays(TODAY, Math.ceil((cap - pen) / daily)), daily };
+}
+const accPct = k => Math.round(sumv(k.phases.filter(phaseAccepted).map(ph => (ph.result === "partial" ? ph.okAmount : ph.amount))) / k.amount * 100);
+
+// ---------- panels on the contracts page ----------
+{
+  const base = conPanel;
+  conPanel = c => base(c) + t3Panel(c);
+}
+function t3Panel(c) {
+  const ed = isProcRole(), drw = drwReq(c), D = c.drw || { rounds: [] }, B = c.boq || [], cd = capDate(c), lr = c.supervision ? lastReport(c) : null, erp = feat("erpRef"), x = c.xref || {};
+  const showDrw = feat("drawing"), open = drwOpen(c), reply = P3().drawingReplyDays;
+  const drwHtml = showDrw ? `<details ${drw ? "open" : ""}><summary><b>${L("อนุมัติแบบ", "Drawing approval")}</b> ${drw ? (drwApproved(c) ? tag(L("อนุมัติแล้ว", "Approved"), "p-ok") : tag(L("ยังไม่อนุมัติ ตรวจรับงวดแรกไม่ได้", "Not approved: the first phase can't be accepted"), "p-warn")) : tag(L("ไม่ต้องส่งแบบ", "Not required"), "p-mute")} <span class="mono sub">FR-PR-75 · R-23</span></summary>
+    <div class="body">${ed ? `<form class="inline-form" data-drwcfg="${c.id}"><label class="field-inline"><input type="checkbox" name="on" ${(c.drw && c.drw.on) || (S.prof.drawCats || []).includes(famPlan(c.plan).cat) ? "checked" : ""}> ${L("สัญญานี้ต้องส่งแบบ", "This contract needs drawings")}</label>
+        <div class="f" style="flex:0 1 220px"><select name="kind">${Object.keys(DRW_KIND).map(k => `<option value="${k}" ${D.kind === k ? "selected" : ""}>${tx(DRW_KIND[k])}</option>`).join("")}</select></div>
+        <div class="f" style="flex:0 1 170px"><label>${L("กำหนดส่งแบบครั้งแรก", "First drawing due")}</label><input type="date" name="first" value="${D.first || ""}"></div><button class="btn" type="submit">${L("บันทึก", "Save")}</button></form>` : ""}
+      ${(D.rounds || []).length ? `<div class="tbl-wrap"><table><thead><tr><th>${L("ครั้งที่", "Round")}</th><th>${L("ได้รับแบบ", "Received")}</th><th>${L("หนังสือ MN", "Letter MN")}</th><th>${L("ตอบภายใน", "Reply by")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead><tbody>${D.rounds.map(r => `<tr><td>${r.n}</td><td class="sub">${fdate(r.recv)}</td><td class="mono sub">${esc(r.mn)}</td><td class="sub">${fdate(drwDue(r))}${r.status === "submitted" && drwDue(r) < TODAY ? ` ${tag(L("เลยกำหนด", "Overdue"), "p-bad")}` : ""}</td><td>${tag(tx(DRW_ST[r.status][0]), DRW_ST[r.status][1])}${r.note ? `<div class="sub">${esc(r.note)}</div>` : ""}${r.replied ? `<div class="sub">${fdate(r.replied)}</div>` : ""}</td>
+        <td>${ed && r.status === "submitted" ? `<div class="row"><input type="text" id="dn-${c.id}-${r.n}" placeholder="${L("หมายเหตุ", "Note")}" style="width:140px"><button class="btn primary" type="button" data-drwdec="${c.id}|${r.n}|approved">${L("อนุมัติ", "Approve")}</button><button class="btn" type="button" data-drwdec="${c.id}|${r.n}|rejected">${L("ส่งกลับแก้", "Send back")}</button></div>` : ""}</td></tr>`).join("")}</tbody></table></div>` : `<div class="sub">${L("ยังไม่ได้รับแบบ", "No drawings received yet")}</div>`}
+      ${ed && drw && !open && !drwApproved(c) ? `<form class="inline-form" data-drwadd="${c.id}" style="margin-top:6px"><div class="f" style="flex:0 1 170px"><label>${L("วันที่ได้รับแบบ", "Received on")}</label><input type="date" name="d" value="${TODAY}" required></div><button class="btn" type="submit">${L("บันทึกการรับแบบ ออกเลข MN", "Record receipt, issue MN no.")}</button></form>` : ""}
+      <div class="sub" style="margin-top:6px">${L("ตอบภายใน", "Reply within")} ${reply} ${L("วันนับจากวันที่ได้รับ เลยกำหนดแล้วแจ้งเตือนคณะกรรมการตรวจรับ ตรวจรับงวดแรกไม่ได้จนกว่าแบบจะอนุมัติ", "days of receipt; overdue replies alert the acceptance committee; the first phase can't be accepted until a drawing is approved")}</div></div></details>` : "";
+  const bqHtml = `<details><summary><b>${L("BOQ และหมายเลขเครื่อง (Serial Number)", "BOQ and serial numbers")}</b> ${B.length ? tag(`${B.length} ${L("รายการ", "items")}`, "p-info") : tag(L("ยังไม่มี BOQ", "No BOQ"), "p-mute")} <span class="mono sub">FR-PR-76, 77</span></summary>
+    <div class="body">${B.length ? `<div class="tbl-wrap"><table><thead><tr><th>${L("รายการ", "Item")}</th><th>${L("ชนิด", "Kind")}</th><th class="n">${L("จำนวน", "Qty")}</th><th class="n">${L("ราคาต่อหน่วย", "Unit price")}</th><th class="n">${L("รวม", "Total")}</th><th>${L("หมายเลขเครื่อง", "Serial numbers")}</th></tr></thead><tbody>${B.map((b, i) => { const S_ = serialsOf(c, i);
+      return `<tr><td>${tx(b.item)}</td><td class="sub">${b.kind === "labour" ? L("ค่าแรง", "Labour") : L("วัสดุ", "Material")}</td><td class="n">${b.qty} ${tx(b.unit)}</td><td class="n">${fmt(b.price)}</td><td class="n">${fmt(b.qty * b.price)}</td>
+        <td>${b.serial ? `<div>${tag(`${S_.length}/${b.qty}`, S_.length === b.qty ? "p-ok" : "p-warn")} ${S_.length ? `<span class="sub mono">${S_.slice(0, 3).map(x => esc(x.no)).join(", ")}${S_.length > 3 ? " …" : ""}</span>` : ""}</div>
+          ${ed && S_.length < b.qty ? `<form class="inline-form" data-serf="${c.id}|${i}" style="margin-top:4px"><div class="f" style="flex:2 1 220px"><textarea name="no" rows="2" placeholder="${L("วางหมายเลขเครื่อง บรรทัดละ 1 หมายเลข (วางจาก Excel ได้)", "Paste serial numbers, one per line (from Excel works)")}" style="width:100%"></textarea></div><button class="btn" type="submit">${L("บันทึก", "Save")}</button></form>` : ""}` : `<span class="sub">—</span>`}</td></tr>`; }).join("")}</tbody></table></div>
+      <div class="sub">${L("รวม BOQ", "BOQ total")} ${fmt(boqTotal(c))} ${L("บาท", "baht")} · ${L("วงเงินสัญญา", "contract amount")} ${fmt(c.amount)} ${boqTotal(c) === c.amount ? tag(L("ตรงกัน", "Match"), "p-ok") : tag(L("ต่างกัน", "Differs"), "p-warn")} · ${L("บันทึกหมายเลขได้เมื่อมีการแจ้งส่งมอบแล้ว ซ้ำกับสัญญาใดก็บันทึกไม่ได้ พร้อมส่งต่อ Fisko Assets (ภายหลัง)", "serials can be saved once a delivery is noted; a number used on any contract is refused; ready to pass on to Fisko Assets later")}</div>` : ""}
+      ${ed ? `<form class="inline-form" data-boqadd="${c.id}" style="margin-top:6px"><div class="f" style="flex:2 1 200px"><label>${L("รายการ", "Item")}</label><input type="text" name="item" required></div><div class="f" style="flex:0 1 110px"><label>${L("หน่วย", "Unit")}</label><input type="text" name="unit" value="${L("ชุด", "set")}" required></div><div class="f" style="flex:0 1 100px"><label>${L("จำนวน", "Qty")}</label><input type="number" name="qty" min="1" step="1" required></div><div class="f" style="flex:0 1 150px"><label>${L("ราคาต่อหน่วย", "Unit price")}</label><input type="number" name="price" min="0" step="1" required></div>
+        <div class="f" style="flex:0 1 140px"><label>${L("ชนิด", "Kind")}</label><select name="kind"><option value="material">${L("วัสดุ", "Material")}</option><option value="labour">${L("ค่าแรง", "Labour")}</option></select></div><label class="field-inline"><input type="checkbox" name="serial"> ${L("มี Serial", "Has serials")}</label><button class="btn" type="submit">+ ${L("เพิ่ม", "Add")}</button></form>` : ""}</div></details>`;
+  const exHtml = `<details><summary><b>${L("ข้อมูลเพิ่มเติมของสัญญา", "Extra contract data")}</b> <span class="mono sub">FR-PR-77</span></summary><div class="body">
+      <div class="row"><span>${L("ร้อยละผลงานสะสม", "Cumulative progress")}: ${lr ? `<b>${lr.actual != null ? lr.actual : "—"}%</b> ${L("(รายงานผู้ควบคุมงานล่าสุด)", "(latest supervisor report)")}` : `<span class="sub">${L("ยังไม่มีรายงาน", "no report yet")}</span>`}</span><span class="sub">·</span><span>${L("ตรวจรับแล้วตามวงเงิน", "Accepted by value")}: <b>${accPct(c)}%</b></span></div>
+      <div class="sub" style="margin-top:4px">${cd ? (cd.passed ? tag(L("ค่าปรับสะสมถึงเพดานแล้ว", "Penalties have reached the cap"), "p-bad") : `${L("ที่อัตราค่าปรับปัจจุบัน ค่าปรับจะครบเพดาน", "At the current rate, penalties reach the cap on")} ${S.pcfg.penaltyCapPct}% ${L("ในวันที่", "on")} <b>${fdate(cd.date)}</b> (${fmt(Math.round(cd.daily))} ${L("บาทต่อวัน", "baht a day")})`) : L("ไม่มีงวดเลยกำหนด จึงยังไม่คาดวันครบเพดานค่าปรับ", "No overdue phase, so no cap date is projected")}</div>
+      ${erp ? `<form class="inline-form" data-xref="${c.id}" style="margin-top:8px">${[["wbs", "WBS", "WBS"], ["po", "เลขที่ใบสั่งซื้อ (ERP)", "PO no. (ERP)"], ["fund", "ที่มาของเงิน", "Source of funds"], ["asset", "รหัสครุภัณฑ์", "Asset code"]].map(([k, th, en]) => `<div class="f" style="flex:1 1 160px"><label>${L(th, en)}</label><input type="text" name="${k}" value="${esc(x[k] || "")}" ${ed ? "" : "disabled"}></div>`).join("")}${ed ? `<button class="btn" type="submit">${L("บันทึก", "Save")}</button>` : ""}</form>` : ""}</div></details>`;
+  return `<section class="panel"><header><h2>${L("เพิ่มเติม (รอบ T3)", "More (round T3)")} · <span class="mono">${c.id}</span></h2></header><div class="body">${drwHtml}${bqHtml}${exHtml}</div></section>`;
+}
+
+// ---------- tasks ----------
+{
+  const base = famTasks;
+  famTasks = R => {
+    base(R);
+    if (!S.contracts) return;
+    if (isProcRole() && feat("drawing")) S.contracts.forEach(k => { const o = drwOpen(k); if (o && drwDue(o) <= addDays(TODAY, 7)) R(`${L("ตอบอนุมัติแบบ", "Reply on the drawings")} ${k.id}`, `${o.mn} · ${L("ตอบภายใน", "by")} ${fdate(drwDue(o))}`, drwDue(o), "prc-contracts", drwDue(o) < TODAY ? "p-bad" : "p-warn"); });
+    if (feat("commFee") && (S.fees || []).length) (S.fees || []).filter(f => f.status === "pending").forEach(f => { if ((f.total <= P3().feeLadder && ROLE === "prochead") || (f.total > P3().feeLadder && canSpend())) R(`${L("อนุมัติค่าตอบแทนกรรมการ", "Approve a committee fee claim")} ${f.id}`, `${fmt(f.total)} ${L("บาท", "baht")}`, TODAY, "prc-fees", "p-warn"); });
+  };
+}
+
+// ---------- binders for the contracts page ----------
+{
+  const bb = BIND.procurement;
+  BIND.procurement = () => {
+    bb();
+    const redo = msg => { commit(); renderShell(); route(); if (msg) toast(msg); };
+    $$("[data-drwcfg]").forEach(f => (f.onsubmit = e => { e.preventDefault(); const k = conOf(f.dataset.drwcfg), fd = new FormData(f); k.drw = Object.assign(k.drw || { rounds: [] }, { on: fd.get("on") === "on", kind: fd.get("kind"), first: fd.get("first") || "" });
+      audit(["ตั้งค่าการอนุมัติแบบของสัญญา", "Set the drawing approval for a contract"], `${k.id} ${k.drw.on ? "on" : "off"}`); redo(L("บันทึกแล้ว", "Saved")); }));
+    $$("[data-drwadd]").forEach(f => (f.onsubmit = e => { e.preventDefault(); const k = conOf(f.dataset.drwadd), d = new FormData(f).get("d"); k.drw = k.drw || { on: true, kind: "loose", rounds: [] };
+      const r = { n: k.drw.rounds.length + 1, recv: d, mn: docNo("mn", "", k.id), status: "submitted", note: "", replied: null, by: me().id }; k.drw.rounds.push(r);
+      notify(k.inspectors || [], [`สัญญา ${k.id} ได้รับแบบ ${r.mn} ตอบภายใน ${fdate(drwDue(r))}`, `Contract ${k.id}: drawings ${r.mn} received; reply by ${fdate(drwDue(r))}`], "prc-contracts"); audit(["บันทึกการรับแบบ", "Recorded receipt of drawings"], `${k.id} ${r.mn}`); redo(`${L("ออกเลข", "Issued")} ${r.mn}`); }));
+    $$("[data-drwdec]").forEach(b => (b.onclick = () => { const [id, n, st] = b.dataset.drwdec.split("|"), k = conOf(id), r = k.drw.rounds.find(x => x.n === Number(n)), note = ($(`#dn-${id}-${n}`).value || "").trim();
+      if (st === "rejected" && note.length < 3) { toast(L("ระบุเหตุผลที่ส่งกลับอย่างน้อย 3 ตัวอักษร", "Give a reason of at least 3 characters")); return; }
+      r.status = st; r.note = note; r.replied = TODAY; audit([st === "approved" ? "อนุมัติแบบ" : "ส่งแบบกลับแก้", st === "approved" ? "Approved drawings" : "Sent drawings back"], `${k.id} ${r.mn}`); redo(L("บันทึกแล้ว", "Saved")); }));
+    $$("[data-boqadd]").forEach(f => (f.onsubmit = e => { e.preventDefault(); const k = conOf(f.dataset.boqadd), fd = new FormData(f), it = String(fd.get("item")).trim(); (k.boq = k.boq || []).push({ item: [it, it], unit: [String(fd.get("unit")).trim(), String(fd.get("unit")).trim()], qty: Math.round(Number(fd.get("qty"))), price: Math.round(Number(fd.get("price"))), serial: fd.get("serial") === "on", kind: fd.get("kind") });
+      audit(["เพิ่มรายการ BOQ", "Added a BOQ item"], `${k.id} ${it}`); redo(L("เพิ่มแล้ว", "Added")); }));
+    $$("[data-serf]").forEach(f => (f.onsubmit = e => { e.preventDefault(); const [id, i] = f.dataset.serf.split("|"), k = conOf(id), idx = Number(i), b = k.boq[idx];
+      if (!k.phases.some(ph => ph.delivered)) { toast(L("ต้องมีการแจ้งส่งมอบก่อนจึงบันทึกหมายเลขได้", "A delivery must be noted before serial numbers can be saved")); return; }
+      const lines = String(new FormData(f).get("no")).split(/[\n\r\t,;]+/).map(x => x.trim()).filter(Boolean), have = allSerials(), seen = new Set(), dup = [];
+      lines.forEach(n => { const u = n.toUpperCase(); if (have.has(u) || seen.has(u)) dup.push(n); seen.add(u); });
+      if (!lines.length) { toast(L("ไม่มีหมายเลข", "No serial numbers")); return; }
+      if (dup.length) { toast(`${L("หมายเลขซ้ำ ไม่บันทึก", "Duplicates, nothing saved")}: ${dup.slice(0, 3).join(", ")}${dup.length > 3 ? " …" : ""}`); return; }
+      if (serialsOf(k, idx).length + lines.length > b.qty) { toast(L(`เกินจำนวนที่สั่ง (${b.qty})`, `More than the quantity ordered (${b.qty})`)); return; }
+      const ph = k.phases.filter(p => p.delivered).slice(-1)[0]; lines.forEach(n => (k.serials = k.serials || []).push({ i: idx, no: n, phase: ph.n, t: nowIso(), by: me().id }));
+      audit(["บันทึกหมายเลขเครื่อง", "Recorded serial numbers"], `${k.id} ${lines.length}`); redo(`${lines.length} ${L("หมายเลข บันทึกแล้ว", "serial numbers saved")}`); }));
+    $$("[data-xref]").forEach(f => (f.onsubmit = e => { e.preventDefault(); const k = conOf(f.dataset.xref), fd = new FormData(f); k.xref = { wbs: fd.get("wbs").trim(), po: fd.get("po").trim(), fund: fd.get("fund").trim(), asset: fd.get("asset").trim() }; audit(["บันทึกรหัสอ้างอิง ERP ของสัญญา", "Saved ERP references on a contract"], k.id); redo(L("บันทึกแล้ว", "Saved")); }));
+    // R-23: the first phase can't be accepted until a drawing is approved
+    S.contracts.filter(k => drwReq(k) && !drwApproved(k)).forEach(k => { const f = document.querySelector(`[data-sgform="${k.id}|1"]`); if (f) f.outerHTML = `<div class="sub" style="color:var(--bad)">${L("ตรวจรับไม่ได้ ยังไม่มีการอนุมัติแบบ (R-23)", "Can't accept: no drawing is approved yet (R-23)")}</div>`; });
+  };
+}
+
+// ---------- committee fees ----------
+{
+  const nav = NAV.find(n => n.id === "procurement");
+  nav.tabs.push(["fees", ["ค่าตอบแทนกรรมการ", "Committee fees"], "P18"]);
+}
+const feeOn = () => feat("commFee");
+const isOff = d => { const g = new Date(d + "T00:00:00").getDay(); return g === 0 || g === 6 || (S.holidays || []).includes(d); };
+const feeCommittees = c => ({ tor: c.committees && c.committees.tor, eval: c.committees && c.committees.eval, buy: c.committees && c.committees.buy });
+function feeMembers(c, kind) {
+  if (kind === "accept") { const k = S.contracts.find(x => x.plan === c.plan); return k ? k.inspectors.map(u => ({ u, pos: "member" })) : []; }
+  const cm = (c.committees || {})[kind]; return cm ? [{ u: cm.chair, pos: "chair" }, ...cm.members.map(u => ({ u, pos: "member" }))] : [];
+}
+const feeUsed = (u, month, skip) => sumv((S.fees || []).filter(f => f.id !== skip && f.status !== "rejected" && f.dates[0].slice(0, 7) === month).flatMap(f => f.rows.filter(r => r.u === u).map(r => r.net)));
+function feeCalc(d) {
+  const c = caseOf(d.caseId), P = P3(), month = d.dates[0].slice(0, 7), rates = P.fee[d.kind], out = [], estimate = planEst(c);
+  d.members.forEach(m => {
+    const att = d.dates.filter(dt => (d.att[m.u] || {})[dt]), notes = [], paid = [];
+    att.forEach(dt => { if (isOff(dt) && !P.feeHolidayOk) notes.push(`${fdate(dt)}: ${L("วันหยุด ไม่จ่ายตามค่าตั้ง", "day off, not paid by the settings")}`);
+      else if ((S.fees || []).some(f => f.status !== "rejected" && f.case === c.id && f.kind === d.kind && f.dates.includes(dt) && f.rows.some(r => r.u === m.u && r.dates.includes(dt)))) notes.push(`${fdate(dt)}: ${L("เบิกซ้ำ ตัดออก", "already claimed, removed")}`); else paid.push(dt); });
+    const rate = rates[m.pos === "chair" ? 0 : 1], needN = Math.ceil(d.dates.length * P.feeMinAttendPct / 100), under = att.length < needN;
+    if (under) notes.push(`${L("เข้าประชุมน้อยกว่าเกณฑ์", "Below the attendance rule")} ${att.length}/${d.dates.length} (${P.feeMinAttendPct}%)`);
+    const gross = under ? 0 : paid.length * rate, room = Math.max(0, P.feeMonthCap - feeUsed(m.u, month)), net = Math.min(gross, room); if (net < gross) notes.push(`${L("เกินเพดานรายเดือน ลดเหลือ", "Over the monthly cap, cut to")} ${fmt(net)}`);
+    out.push({ u: m.u, pos: m.pos, n: paid.length, dates: paid, rate, gross, net, notes });
+  });
+  const total = sumv(out.map(r => r.net)), caseUsed = sumv((S.fees || []).filter(f => f.case === c.id && f.status !== "rejected").map(f => f.total)), caseCap = Math.round(P.feeCasePct / 100 * estimate);
+  return { rows: out, total, caseUsed, caseCap, over: caseUsed + total > caseCap };
+}
+let FEE_DRAFT = null;
+const FEE_ST = { pending: [["รออนุมัติ", "Pending"], "p-info"], approved: [["อนุมัติ", "Approved"], "p-ok"], rejected: [["ไม่อนุมัติ", "Rejected"], "p-bad"] };
+PROC.fees = () => {
+  if (!feeOn()) return `<div class="panel"><div class="body"><h2 style="margin:0 0 6px">${L("ค่าตอบแทนกรรมการปิดอยู่", "Committee fees are off")}</h2><p class="sub">${L("เปิดได้ที่ M10 → โปรไฟล์จัดซื้อ", "It can be switched on in M10, Procurement profile")}</p></div></div>`;
+  const ed = isProcRole(), F = S.fees || [], P = P3(), d = FEE_DRAFT, pend = F.filter(f => f.status === "pending"), month = TODAY.slice(0, 7), mthTot = sumv(F.filter(f => f.status === "approved" && f.dates[0].slice(0, 7) === month).map(f => f.total));
+  const cases = S.cases.filter(c => !c.cancelled && (["tor", "eval", "buy"].some(k => (c.committees || {})[k]) || S.contracts.some(x => x.plan === c.plan)));
+  const prev = d && d.preview;
+  return `<div class="kpis"><div class="kpi"><span class="l">${L("รออนุมัติ", "Pending")}</span><span class="v">${pend.length}</span></div><div class="kpi"><span class="l">${L("อนุมัติเดือนนี้ (บาท)", "Approved this month (baht)")}</span><span class="v">${fmt(mthTot)}</span></div><div class="kpi"><span class="l">${L("เพดานต่อคนต่อเดือน", "Cap per person a month")}</span><span class="v">${fmt(P.feeMonthCap)}</span></div></div>
+  <div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("เตรียมและตรวจรายการเบิกเท่านั้น ไม่จ่ายเงินจากที่นี่", "This prepares and checks claims; nothing is paid from here")}</b><p>${L("อัตรา เพดาน และเกณฑ์เข้าประชุมเป็นค่าตั้งใน M10 → โปรไฟล์จัดซื้อ (ระดับ C ต้องยืนยันกับระเบียบของหน่วยงาน) ตัวเลขทั้งหมดเป็นตัวอย่าง", "Rates, caps and the attendance rule are settings in M10, Procurement profile (level C, confirm against the agency's rules). All figures are samples.")}</p></div></div>
+  ${ed ? `<section class="panel"><header><h2>${L("เบิกค่าตอบแทนใหม่", "New claim")}</h2><span class="sp"></span><span class="mono sub">FR-PR-78 · R-24</span></header><div class="body">
+    <form class="inline-form" id="fee-start"><div class="f" style="flex:2 1 260px"><label for="fee-c">${L("แฟ้มจัดซื้อ", "Case")}</label><select id="fee-c">${cases.map(c => `<option value="${c.id}" ${d && d.caseId === c.id ? "selected" : ""}>${c.id} · ${esc(caseName(c))}</option>`).join("")}</select></div>
+      <div class="f" style="flex:0 1 250px"><label for="fee-k">${L("คณะกรรมการ", "Committee")}</label><select id="fee-k">${["tor", "eval", "buy", "accept"].map(k => `<option value="${k}" ${d && d.kind === k ? "selected" : ""}>${tx(COMMITTEES[k])}</option>`).join("")}</select></div>
+      <div class="f" style="flex:1 1 200px"><label for="fee-d">${L("วันที่ประชุม (บรรทัดละ 1 วัน)", "Meeting dates (one per line)")}</label><textarea id="fee-d" rows="2" style="width:100%">${d ? d.dates.join("\n") : TODAY}</textarea></div><button class="btn" type="submit">${L("สร้างตารางเข้าประชุม", "Build the attendance grid")}</button></form>
+    ${d ? `<div class="tbl-wrap" style="margin-top:10px"><table><thead><tr><th>${L("กรรมการ", "Member")}</th>${d.dates.map(x => `<th class="c">${fdate(x)}${isOff(x) ? `<div class="sub">${L("วันหยุด", "day off")}</div>` : ""}</th>`).join("")}</tr></thead><tbody>${d.members.map(m => `<tr><td>${esc(userName(m.u))} <span class="sub">${m.pos === "chair" ? L("ประธาน", "chair") : L("กรรมการ", "member")}</span></td>${d.dates.map(x => `<td class="c"><input type="checkbox" data-fatt="${m.u}|${x}" ${(d.att[m.u] || {})[x] ? "checked" : ""} aria-label="${esc(userName(m.u))} ${x}"></td>`).join("")}</tr>`).join("")}</tbody></table></div>
+      <div class="row" style="margin-top:8px"><button class="btn" type="button" id="fee-calc">${L("คำนวณ", "Calculate")}</button>${prev ? `<button class="btn primary" type="button" id="fee-send" ${prev.over || !prev.total ? "disabled" : ""}>${L("ส่งขออนุมัติ", "Send for approval")}</button>` : ""}</div>` : ""}
+    ${prev ? `<div class="tbl-wrap" style="margin-top:10px"><table><thead><tr><th>${L("กรรมการ", "Member")}</th><th class="n">${L("ครั้งที่เบิกได้", "Paid meetings")}</th><th class="n">${L("อัตรา", "Rate")}</th><th class="n">${L("ก่อนเพดาน", "Before cap")}</th><th class="n">${L("ยอดเบิก", "Claim")}</th><th>${L("หมายเหตุ", "Notes")}</th></tr></thead><tbody>${prev.rows.map(r => `<tr><td>${esc(userName(r.u))}</td><td class="n">${r.n}</td><td class="n">${fmt(r.rate)}</td><td class="n">${fmt(r.gross)}</td><td class="n"><b>${fmt(r.net)}</b></td><td class="sub">${r.notes.map(esc).join("<br>") || "—"}</td></tr>`).join("")}</tbody><tfoot><tr><td colspan="4"><b>${L("รวม", "Total")}</b></td><td class="n"><b>${fmt(prev.total)}</b></td><td class="sub">${L("เบิกแล้วของแฟ้มนี้", "Already claimed on this case")} ${fmt(prev.caseUsed)} / ${L("เพดาน", "cap")} ${fmt(prev.caseCap)} ${prev.over ? tag(L("เกินเพดานของแฟ้ม ส่งไม่ได้", "Over the case cap: can't be sent"), "p-bad") : ""}</td></tr></tfoot></table></div>` : ""}</div></section>` : ""}
+  <section class="panel"><header><h2>${L("รายการเบิก", "Claims")}</h2></header>${F.length ? `<div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("แฟ้ม", "Case")}</th><th>${L("คณะกรรมการ", "Committee")}</th><th class="n">${L("ยอดรวม (บาท)", "Total")}</th><th>${L("ผู้อนุมัติตามวงเงิน", "Approver by amount")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead><tbody>${F.map(f => { const who = f.total <= P.feeLadder ? "prochead" : "exec", can = f.status === "pending" && ((who === "prochead" && ROLE === "prochead") || (who === "exec" && canSpend()));
+    return `<tr><td class="mono">${esc(f.docNo)}</td><td class="sub">${f.case}</td><td class="sub">${tx(COMMITTEES[f.kind])}<div>${f.dates.map(fdate).join(", ")}</div></td><td class="n">${fmt(f.total)}</td><td class="sub">${who === "prochead" ? L("หัวหน้าพัสดุ", "Head of procurement") : L("ผู้บริหาร", "Executive")}</td><td>${tag(tx(FEE_ST[f.status][0]), FEE_ST[f.status][1])}${f.decided ? `<div class="sub">${esc(userName(f.decided.by))}${f.decided.note ? " · " + esc(f.decided.note) : ""}</div>` : ""}</td>
+      <td>${can ? `<div class="row"><input type="text" id="fn-${f.id}" placeholder="${L("หมายเหตุ", "Note")}" style="width:120px"><button class="btn primary" type="button" data-fok="${f.id}">${L("อนุมัติ", "Approve")}</button><button class="btn" type="button" data-fno="${f.id}">${L("ไม่อนุมัติ", "Reject")}</button></div>` : ""}</td></tr>`; }).join("")}</tbody></table></div>` : `<div class="body sub">${L("ยังไม่มีรายการเบิก", "No claims yet")}</div>`}</section>`;
+};
+{
+  const bb = BIND.procurement;
+  BIND.procurement = () => {
+    bb();
+    const redo = msg => { commit(); renderShell(); route(); if (msg) toast(msg); };
+    const fs = $("#fee-start"); if (fs) fs.onsubmit = e => { e.preventDefault(); const caseId = $("#fee-c").value, kind = $("#fee-k").value, c = caseOf(caseId), dates = [...new Set($("#fee-d").value.split(/[\n\r,;]+/).map(x => x.trim()).filter(Boolean))].sort();
+      if (!dates.length || dates.some(x => !/^\d{4}-\d{2}-\d{2}$/.test(x))) { toast(L("วันที่ต้องเป็นรูปแบบ YYYY-MM-DD", "Dates must be YYYY-MM-DD")); return; }
+      if (new Set(dates.map(x => x.slice(0, 7))).size > 1) { toast(L("หนึ่งใบเบิกครอบคลุมเดือนเดียว", "One claim covers one month")); return; }
+      const members = feeMembers(c, kind); if (!members.length) { toast(L("แฟ้มนี้ยังไม่มีคณะกรรมการชุดนี้", "This case has no such committee")); return; }
+      FEE_DRAFT = { caseId, kind, dates, members, att: Object.fromEntries(members.map(m => [m.u, Object.fromEntries(dates.map(x => [x, true]))])), preview: null }; route(); };
+    $$("[data-fatt]").forEach(b => (b.onchange = () => { const [u, dt] = b.dataset.fatt.split("|"); FEE_DRAFT.att[u][dt] = b.checked; FEE_DRAFT.preview = null; route(); }));
+    const fc = $("#fee-calc"); if (fc) fc.onclick = () => { FEE_DRAFT.preview = feeCalc(FEE_DRAFT); route(); };
+    const fsd = $("#fee-send"); if (fsd) fsd.onclick = () => { const d = FEE_DRAFT, pv = feeCalc(d); if (pv.over || !pv.total) { toast(L("ส่งไม่ได้", "Can't send")); return; }
+      const f = { id: `FC-${FAM_FY}-${String((S.fees || []).length + 1).padStart(3, "0")}`, docNo: docNo("fee", "", d.caseId), case: d.caseId, kind: d.kind, dates: d.dates, rows: pv.rows, total: pv.total, by: me().id, t: nowIso(), status: "pending", decided: null };
+      (S.fees = S.fees || []).push(f); FEE_DRAFT = null; notify([f.total <= P3().feeLadder ? "prochead" : "exec"], [`ใบเบิกค่าตอบแทนกรรมการ ${f.docNo} รออนุมัติ ${fmt(f.total)} บาท`, `Committee fee claim ${f.docNo} is waiting: ${fmt(f.total)} baht`], "prc-fees");
+      audit(["ส่งใบเบิกค่าตอบแทนกรรมการ", "Sent a committee fee claim"], `${f.id} ${fmt(f.total)}`); redo(`${L("ส่งแล้ว เลขที่", "Sent, no.")} ${f.docNo}`); };
+    const decide = (id, ok) => { const f = S.fees.find(x => x.id === id), note = ($("#fn-" + id).value || "").trim(); if (f.by === me().id) { toast(L("ผู้เบิกกับผู้อนุมัติต้องเป็นคนละคน", "The person who raised the claim cannot approve it")); return; }
+      if (!ok && note.length < 3) { toast(L("ระบุเหตุผลอย่างน้อย 3 ตัวอักษร", "Give a reason of at least 3 characters")); return; }
+      f.status = ok ? "approved" : "rejected"; f.decided = { by: me().id, t: nowIso(), note }; audit([ok ? "อนุมัติใบเบิกค่าตอบแทนกรรมการ" : "ไม่อนุมัติใบเบิกค่าตอบแทนกรรมการ", ok ? "Approved a committee fee claim" : "Rejected a committee fee claim"], `${f.id} ${fmt(f.total)}`); redo(L("บันทึกแล้ว", "Saved")); };
+    $$("[data-fok]").forEach(b => (b.onclick = () => decide(b.dataset.fok, true))); $$("[data-fno]").forEach(b => (b.onclick = () => decide(b.dataset.fno, false)));
+  };
+}
+
+// ---------- supplier portal: ask for a bank-account change (FR-PR-79, feeds Finance's list) ----------
+VP_TABS.push(["bank", ["บัญชีธนาคาร", "Bank account"], "V4"]);
+{
+  const base = VIEWS.vportal;
+  VIEWS.vportal = () => {
+    if (VP_TAB !== "bank" || !vpMe() || !vpOn()) return base();
+    const v = vpMe(), C = (S.vendorChanges || []).filter(x => x.vendor === v.id), B = typeof BANKS !== "undefined" ? BANKS : ["ธนาคารกรุงไทย"];
+    return `<div class="head"><div><div class="eyebrow">Fisko Procurement · ${L("พอร์ทัลผู้ขาย (จำลอง)", "Supplier portal (simulated)")}</div><h1>${L("บัญชีธนาคาร", "Bank account")}</h1><p>${esc(v.name)}</p></div></div>
+    <section class="panel"><header><h2>${L("บัญชีปัจจุบัน", "Current account")}</h2></header><div class="body">${v.bank ? `${esc(v.bank.bank)} · <span class="mono">${esc(v.bank.acct)}</span> <span class="sub">${fdate(v.bank.t)}</span>` : `<span class="sub">${L("ยังไม่มีข้อมูล", "None on record")}</span>`}</div></section>
+    <section class="panel"><header><h2>${L("ขอเปลี่ยนบัญชี", "Ask to change the account")}</h2><span class="sp"></span><span class="mono sub">FR-PR-79</span></header><div class="body"><form class="inline-form" id="vb-form"><div class="f" style="flex:1 1 220px"><label for="vb-bank">${L("ธนาคาร", "Bank")}</label><select id="vb-bank">${B.map(b => `<option>${b}</option>`).join("")}</select></div><div class="f" style="flex:0 1 200px"><label for="vb-acct">${L("เลขที่บัญชี (10 หลัก)", "Account no. (10 digits)")}</label><input type="text" id="vb-acct" inputmode="numeric" required></div>
+      <div class="f" style="flex:1 1 100%"><label class="field-inline"><input type="checkbox" id="vb-book" required> ${L("แนบสำเนาหน้าสมุดบัญชี (จำลอง)", "Copy of the bank book attached (simulated)")}</label></div><button class="btn primary" type="submit">${L("ส่งคำขอ", "Send the request")}</button></form>
+      <div class="sub" style="margin-top:6px">${L("เจ้าหน้าที่การเงินอีกคนต้องยืนยันก่อนบัญชีใหม่มีผล (SD-14)", "A second person in Finance must confirm before the new account takes effect (SD-14)")}</div></div></section>
+    <section class="panel"><header><h2>${L("คำขอที่ส่งแล้ว", "Requests sent")}</h2></header><div class="tbl-wrap"><table><tbody>${C.map(x => `<tr><td class="mono">${esc(x.id)}</td><td>${esc(x.bank)} · ${esc(x.acct)}</td><td>${tag(x.status === "confirmed" ? L("ยืนยันแล้ว", "Confirmed") : L("รอยืนยัน", "Waiting"), x.status === "confirmed" ? "p-ok" : "p-info")}</td></tr>`).join("") || `<tr><td class="sub">—</td></tr>`}</tbody></table></div></section>`;
+  };
+  const bb = BIND.vportal;
+  BIND.vportal = () => {
+    bb();
+    const f = $("#vb-form"); if (f) f.onsubmit = e => { e.preventDefault(); const acct = $("#vb-acct").value.trim(), v = vpMe(); if (!/^\d{10}$/.test(acct)) { toast(L("เลขที่บัญชีต้องเป็นตัวเลข 10 หลัก", "The account number must be 10 digits")); return; }
+      const ch = { id: `VB-${FAM_FY}-${String((S.vendorChanges || []).length + 1).padStart(2, "0")}`, vendor: v.id, bank: $("#vb-bank").value, acct, by: me().id, t: nowIso(), status: "pending", done: null, via: "portal" }; (S.vendorChanges = S.vendorChanges || []).push(ch);
+      notify(["finhead", "fin"], [`ผู้ขาย ${v.name} ขอแก้บัญชีธนาคาร ${ch.id} รอยืนยัน`, `${v.name} asks to change its bank account ${ch.id}`], "fnc-pay"); audit(["ผู้ขายขอแก้บัญชีธนาคารผ่านพอร์ทัล (จำลอง)", "A supplier asked to change its bank account in the portal (simulated)"], `${ch.id} ${v.id}`); commit(); route(); toast(L("ส่งคำขอแล้ว", "Request sent")); };
+  };
+}
+
+// ---------- M10: T3 settings ----------
+{
+  const base = ADMIN.procprof, bb = BIND_ADMIN.procprof;
+  ADMIN.procprof = () => {
+    const ad = isAdmin(), p = P3(), num = (id, lbl, val, hint) => `<div class="f" style="flex:0 1 190px"><label for="${id}">${lbl}</label><input type="number" id="${id}" min="0" step="any" value="${val}" ${ad ? "" : "disabled"}><span class="sub">${hint}</span></div>`;
+    return base() + `<section class="panel"><header><h2>${L("ค่าตั้งรอบ T3", "Round T3 settings")}</h2></header><div class="body inline-form">
+      ${num("p3-drawingReplyDays", L("ตอบอนุมัติแบบภายใน (วัน)", "Reply on drawings within (days)"), p.drawingReplyDays, CONF_TAG("C"))}${num("p3-feeMonthCap", L("เพดานค่าตอบแทนต่อคนต่อเดือน (บาท)", "Fee cap per person a month (baht)"), p.feeMonthCap, CONF_TAG("C"))}${num("p3-feeLadder", L("ถึงวงเงินนี้ หัวหน้าพัสดุอนุมัติ (บาท)", "Up to this the head approves (baht)"), p.feeLadder, CONF_TAG("C"))}
+      ${num("p3-feeCasePct", L("เพดานค่าตอบแทนต่อแฟ้ม (ร้อยละของวงเงิน)", "Fee cap per case (% of value)"), p.feeCasePct, CONF_TAG("C"))}${num("p3-feeMinAttendPct", L("เกณฑ์เข้าประชุมขั้นต่ำ (ร้อยละ)", "Minimum attendance (%)"), p.feeMinAttendPct, CONF_TAG("C"))}
+      <div class="f" style="flex:1 1 100%"><label class="field-inline"><input type="checkbox" id="p3-feeHolidayOk" ${p.feeHolidayOk ? "checked" : ""} ${ad ? "" : "disabled"}> ${L("จ่ายค่าตอบแทนสำหรับวันหยุดได้", "Allow fees for meetings on days off")}</label></div></div>
+      <div class="tbl-wrap"><table><thead><tr><th>${L("คณะกรรมการ", "Committee")}</th><th class="n">${L("ประธาน (บาทต่อครั้ง)", "Chair (baht a meeting)")}</th><th class="n">${L("กรรมการ (บาทต่อครั้ง)", "Member (baht a meeting)")}</th></tr></thead><tbody>${["tor", "eval", "buy", "accept"].map(k => `<tr><td>${tx(COMMITTEES[k])}</td><td class="n"><input type="number" id="p3-fee-${k}-0" min="0" value="${p.fee[k][0]}" style="width:110px" ${ad ? "" : "disabled"}></td><td class="n"><input type="number" id="p3-fee-${k}-1" min="0" value="${p.fee[k][1]}" style="width:110px" ${ad ? "" : "disabled"}></td></tr>`).join("")}</tbody></table></div>
+      <div class="body"><div class="sub" style="margin-bottom:6px">${L("หมวดพัสดุที่ต้องส่งแบบ (เมื่อเปิดสวิตช์ “อนุมัติแบบ”)", "Categories that need drawings (when the drawing switch is on)")}</div><div class="row" style="flex-wrap:wrap">${(S.pcat || []).map(k => `<label class="field-inline" style="min-width:230px"><input type="checkbox" name="p3-cat" value="${k.id}" ${S.prof.drawCats.includes(k.id) ? "checked" : ""} ${ad ? "" : "disabled"}> ${tx(k.name)}</label>`).join("")}</div></div>
+      ${ad ? `<div class="body"><button class="btn primary" type="button" id="p3-save">${L("บันทึก", "Save")}</button></div>` : ""}</section>`;
+  };
+  BIND_ADMIN.procprof = () => {
+    bb();
+    const sv = $("#p3-save"); if (sv) sv.onclick = () => { const v = {}; for (const k of ["drawingReplyDays", "feeMonthCap", "feeLadder", "feeCasePct", "feeMinAttendPct"]) v[k] = Number($("#p3-" + k).value);
+      const fee = {}; for (const k of ["tor", "eval", "buy", "accept"]) fee[k] = [Number($(`#p3-fee-${k}-0`).value), Number($(`#p3-fee-${k}-1`).value)];
+      if (Object.values(v).some(x => !(x >= 0)) || v.feeMinAttendPct > 100 || Object.values(fee).flat().some(x => !(x >= 0))) { toast(L("ค่าไม่ถูกต้อง", "Check the values")); return; }
+      Object.assign(S.prof.p3, v, { fee, feeHolidayOk: $("#p3-feeHolidayOk").checked }); S.prof.drawCats = $$("[name=p3-cat]:checked").map(x => x.value);
+      audit(["แก้ค่าตั้งโปรไฟล์จัดซื้อ (รอบ T3)", "Changed profile settings (T3)"], Object.entries(v).map(([k, x]) => `${k}=${x}`).join(" ") + ` drawCats=${S.prof.drawCats.join(",")}`); commit(); route(); toast(L("บันทึกแล้ว", "Saved")); };
   };
 }
 
