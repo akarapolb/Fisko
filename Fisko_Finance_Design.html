@@ -188,7 +188,7 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
 <body>
 <div class="layout">
 <nav class="toc" id="toc" aria-label="สารบัญ">
-  <div class="brand">Fisko Finance<small>Detailed Design · v0.1</small></div>
+  <div class="brand">Fisko Finance<small>Detailed Design · v0.2</small></div>
   <div class="tools"><button type="button" id="toc-toggle" aria-expanded="false">สารบัญ</button><button type="button" id="theme">ธีม</button></div>
   <ol>
     <li><a href="#s1"><span class="n">01</span>วัตถุประสงค์และวิธีค้นคว้า</a></li>
@@ -217,12 +217,13 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
   <h1>Fisko Finance<br><span style="font-size:.55em;color:var(--accent)">ออกแบบเชิงลึก: การเบิกจ่าย เงินยืม การรับและนำส่งเงิน และการปิดงวด ตามระเบียบกระทรวงการคลัง</span></h1>
   <p class="th">ต่อยอดจาก Fisko Finance ฉบับเบา (ต้นแบบรอบ 11) และรูปแบบที่ใช้ในการออกแบบ Fisko Budget และ Fisko Procurement</p>
   <div class="meta">
-    <div><span>เวอร์ชัน</span><b>0.1 ฉบับร่างเพื่อการหารือ</b></div>
+    <div><span>เวอร์ชัน</span><b>0.2 ฉบับร่างเพื่อการหารือ</b></div>
     <div><span>วันที่</span><b>18 ตุลาคม 2569</b></div>
     <div><span>จัดทำโดย</span><b>Avalant</b></div>
     <div><span>ต่อยอดจาก</span><b>Product Family Concept v0.2 · Budget Design v0.2 · Procurement Design v0.2</b></div>
   </div>
   <div class="callout" style="margin-top:14px"><b>ขอบเขตที่ตกลงกัน</b> ครอบคลุม 4 เรื่อง: (1) วงเงินผูกพันและใบสั่งซื้อ (2) การขอเบิก การจ่าย และภาษีหัก ณ ที่จ่าย (3) เงินยืมและการส่งใช้ (4) การรับเงิน การนำส่งเงิน การกระทบยอดกับ GFMIS การปิดงวดสิ้นเดือนและสิ้นปี และ Agent ด้านการเงิน ยึดระเบียบกระทรวงการคลังว่าด้วยการเบิกเงินจากคลัง การรับเงิน การจ่ายเงิน การเก็บรักษาเงิน และการนำเงินส่งคลัง พ.ศ. 2562 เขียนเอกสารนี้ก่อน แล้วสร้างต้นแบบเป็นรอบ ๆ ตามบทที่ 12</div>
+  <div class="callout"><b>สิ่งที่เปลี่ยนในฉบับ 0.2</b> สร้างต้นแบบครบทั้ง 6 รอบ (FN1 ถึง FN6 คือรอบ 37 ถึง 42 ของต้นแบบ) ตามตารางสถานะในบทที่ 12.1 · ข้อกำหนดที่ยังไม่สร้างคือ FR-FN-33 (บันทึกส่งมอบกุญแจ) และการส่งออกทะเบียนเป็น Excel หรือ PDF ใน FR-FN-41 · ประเด็น D-FN-01 ถึง 09 ยังเปิด ต้นแบบใช้ทางเลือกที่เสนอเป็นค่าทำงาน · “เงินยืมของฉัน” ย้ายเข้าเมนูของ Fisko Finance ให้ทุกบทบาท (เดิมออกแบบไว้ใน My Workspace)</div>
   <div class="notice"><b>สถานะเอกสาร:</b> เป็นร่างเพื่อตัดสินใจ ไม่ใช่ความเห็นทางกฎหมาย ข้อระเบียบมาจากตัวบทที่ประกาศในราชกิจจานุเบกษา (13 พฤษภาคม 2562) ซึ่งอาจมีฉบับแก้ไขภายหลัง และหลายข้อให้ปฏิบัติ “ตามที่กระทรวงการคลังกำหนด” ซึ่งยังไม่ได้เปิดอ่าน ต้องตรวจกับฉบับปัจจุบันและหนังสือเวียนของกรมบัญชีกลางก่อนใช้งานจริง ตัวเลขทั้งหมดในตัวอย่างเป็นข้อมูลสมมติ AI และการอ่านเอกสารในต้นแบบเป็นการจำลอง (ตามประเด็น D-P09 และ D-P10) ต้นแบบไม่จ่ายเงินจริงและไม่เชื่อมต่อ GFMIS หรือธนาคาร</div>
 </header>
 
@@ -857,6 +858,18 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
     <tr><td class="id">FN4</td><td>รับเงิน เก็บรักษา และนำส่ง: ใบเสร็จ ทะเบียนคุม ประเภทเงินรับ นาฬิกานำส่ง กรรมการเก็บรักษาเงิน รายงานเงินคงเหลือประจำวัน SD-13</td><td>FR-FN-25 ถึง 33</td><td>รับเงินสดเกิน 10,000 บาท นาฬิกา 3 วันทำการเริ่ม กรรมการนับได้ไม่ตรงและรายงาน</td></tr>
     <tr><td class="id">FN5</td><td>กระทบยอดและปิดงวด: ทะเบียนผู้มีสิทธิ GFMIS ไฟล์ 5 ชนิด จับคู่สามทาง งบพิสูจน์ยอดเงินฝาก ปิดวัน ปิดเดือน ปิดปี ข้อทักท้วง ส่งยอดเบิกจ่ายให้ M06 และ M07 SD-15 และ SD-16</td><td>FR-FN-34 ถึง 41</td><td>ปิดเดือนไม่ได้เพราะงบพิสูจน์ยอดมีผลต่าง ชี้แจงแล้วปิดได้ และ M07 แสดงยอดจาก Finance</td></tr>
     <tr><td class="id">FN6</td><td>AI และ Analytics: AG-18 ถึง AG-22 พยากรณ์ F-FN-01 ถึง 04 What-if W-FN-01 ถึง 04 KPI-F01 ถึง 10 สัญญาณ SG-F01 ถึง 07 ขั้นสาธิตในคู่มือสาธิต และกรณีทดสอบใน <code>tests/sweep.js</code></td><td>บทที่ 10–11</td><td>Agent ปิดงวดบอกสิ่งที่ค้าง และพยากรณ์บอกบรรทัดที่ต้องกันเงิน</td></tr>
+  </tbody>
+</table></div>
+<h3><span class="num">12.1</span>สถานะการสร้าง (ฉบับ 0.2)</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รอบ</th><th>รอบต้นแบบ</th><th>ไฟล์</th><th>สถานะ</th><th>หมายเหตุ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FN1</td><td>37</td><td class="mono">66b-fin-fn1.js</td><td><span class="tag t-must">สร้างแล้ว</span></td><td>กฎการเงินใน M10 บทบาทหัวหน้าการเงิน F1 และ F2 ตรวจ PO ในประตูเบิกจ่าย</td></tr>
+    <tr><td class="id">FN2</td><td>38</td><td class="mono">66c-fin-fn2.js</td><td><span class="tag t-must">สร้างแล้ว</span></td><td>ใบขอเบิก 6 ประเภท ภาษีและ 50 ทวิ ไฟล์ GFMIS จำลอง จ่ายจากบัญชีหน่วยงาน ตรวจการจ่ายประจำวัน บัญชีธนาคารผู้ขาย SD-11 SD-14</td></tr>
+    <tr><td class="id">FN3</td><td>39</td><td class="mono">66d-fin-fn3.js</td><td><span class="tag t-must">สร้างแล้ว</span></td><td>เงินยืมทั้งวงจร ข้อ 55–68 SD-12 ทะเบียนและอายุหนี้</td></tr>
+    <tr><td class="id">FN4</td><td>40</td><td class="mono">66e-fin-fn4.js</td><td><span class="tag t-must">สร้างแล้ว</span></td><td>ใบเสร็จ ทะเบียนคุม นำส่งตามข้อ 101 กรรมการเก็บรักษาเงิน รายงานเงินคงเหลือ SD-13 · FR-FN-33 <span class="tag t-could">ยังไม่สร้าง</span></td></tr>
+    <tr><td class="id">FN5</td><td>41</td><td class="mono">66f-fin-fn5.js</td><td><span class="tag t-must">สร้างแล้ว</span></td><td>ผู้มีสิทธิ GFMIS งบพิสูจน์ยอดเงินฝาก ปิดวัน ปิดเดือน ข้อทักท้วง ส่งยอดเบิกจ่ายให้ M06 M07 SD-15 SD-16 · ส่งออก Excel/PDF <span class="tag t-could">ยังไม่สร้าง</span></td></tr>
+    <tr><td class="id">FN6</td><td>42</td><td class="mono">66g-fin-fn6.js</td><td><span class="tag t-must">สร้างแล้ว</span></td><td>AG-18 ถึง AG-22 F-FN-01 ถึง 04 W-FN-01 ถึง 04 KPI-F01 ถึง 10 SG-F01 ถึง 07 ขั้นสาธิต 6 ขั้น และชุดทดสอบเปิดทุกแท็บ</td></tr>
   </tbody>
 </table></div>
 <div class="callout"><b>วิธีทำงานแต่ละรอบ</b> สร้าง ทดสอบด้วยชุดทดสอบเต็ม (ทุกหน้า ทุกบทบาท ทุกภาษา) ตรวจความกว้างโทรศัพท์และโหมดมืด ปรับ README และ HANDOFF เผยแพร่ต้นแบบที่ลิงก์เดิม แล้วจึงขออนุญาตบันทึกและส่งขึ้น repository เหมือนรอบ Budget และ Procurement</div>

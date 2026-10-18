@@ -1,6 +1,6 @@
 # Fisko: project handoff
 
-State as of 18 October 2026, branch `main`. Round 41 (Fisko Finance FN5) is the latest; see sections 36 to 41. This note is for whoever picks the work up next: what exists, how to run and change it, what was decided, and what is still open.
+State as of 18 October 2026, branch `main`. Round 42 (Fisko Finance FN6) is the latest; see sections 36 to 42. This note is for whoever picks the work up next: what exists, how to run and change it, what was decided, and what is still open.
 
 ## 1. What this is
 
@@ -615,3 +615,18 @@ Builds FR-FN-34 to 41. New file `src/js/66f-fin-fn5.js`; it wraps `FIN.recon` (F
 - **Data version** `DATA_V` is 33. **Demo guide** steps 48 and 49.
 - **Tested:** full sweep 6,547 checks passed. By hand: a memo got `บก-05/001/2570`; a winner letter refused with no winner; the invitation letter couldn't be e-mailed before it was signed, the head signed it, then it went to the supplier's address; an announcement was signed by the executive and recorded as published on e-GP; an overdue RFQ produced a reminder and a second one was blocked; the COI page listed three members, a report was prepared, sent, approved by the head (the officer had no approve button) and could then be exported; the entity check set a status. Not checked: phone width, dark mode, the CSV file opening in Excel, English wording beyond the sweep, and the wording of each template against MEA's real forms.
 - **Not done:** not committed or published. FR-PR-85 remains deferred. Procurement chapter 18 is otherwise built. Next in the larger TOR picture are the designs that don't exist yet: AP and payment on the MEA side, ECM, the workflow and form designer, and the SAP integration.
+
+## 42. Fisko Finance FN6: AI and analytics (round 42)
+
+Builds chapters 10 and 11 of the Finance design. New file `src/js/66g-fin-fn6.js`; F9 tab `ai` with four sub-pages (`FAI_TAB`: agents, fc, wi, kpi).
+
+- **Agents** (`F_AG`, `F_TOOL`, `F_EXEC`, runs in `S.fRuns`, `FRUN-nnn`): the same pattern as the Budget agents in `69-budget-ai.js`. Steps run read or draft work on real data; a `write` step waits (`await`) for a person in the agent's `who` roles, and `fApply()` makes the change only when approved. AG-18 checks unapproved vouchers (evidence, rules, duplicates) and flags makers. AG-19 ranks open advances (F-FN-02), reminds borrowers and drafts demands (draft only). AG-20 needs this month's statement (it stops otherwise), proposes notes with a confidence and records them (`S.recNotes`). AG-21 runs the daily and last month's close checks, says who must act and drafts the memo. AG-22 forecasts and creates tasks for lines short of target (`S.agentTasks`). The agents are registered in `S.agents`, so the M09 switches apply; each step is logged in `S.aiLog`.
+- **Forecasts:** `fcMonths(o)` (F-FN-01: paid by month from `paidByMonth()`, plus unpaid contract phases at due + lag, commitments spread to their end, and free allocation times the M10 probabilities, weighted toward year end; the range widens with the horizon), `fcAdvRisk()` (F-FN-02: days left, late history, open objection), `fcCarry()` (F-FN-03), `fcLoad()` (F-FN-04, six weeks).
+- **What-if** (`WI_DEF`, `wiCalc`, saved in `S.fWhatifs`): W-FN-01 days from acceptance to payment, W-FN-02 delivery slip, W-FN-03 year-end target, W-FN-04 on-time clearing share. Nothing in the data changes.
+- **KPIs** (`kpiF()`, KPI-F01 to 10 with target and pass flag) show on F9; those off target also show on F1. **Signals** (`fSignals()`, SG-F01 to 07) with triage in `S.fSig`: audit or finhead ask, fin explains, audit or finhead decide (issue or false positive); false positives are counted.
+- **Seed** (`seedFinanceFN6`): agents in `S.agents`; VC-2570-008 (a water bill keyed twice, for SG-F01); AD-2569-041 (a Planning advance cleared late last year, so SG-F04 fires with AD-2570-002). `nextAdv()` (66d) now numbers within the current year only. `DATA_V` is 35.
+- **Demo guide:** six Finance steps (52:00 to 57:00) are appended to `DEMO` from 66g, so this round leaves `52-demo.js` to the Procurement session. `Fisko_Demo_Script.html` is not updated for them (the other session has uncommitted changes there).
+- **Tests:** `tests/sweep.js` now opens every menu tab of the Procurement and Finance apps for each role and language (before, only the current tab was rendered), starts every finance agent and renders the F9 sub-pages. Full sweep: 7,487 checks passing in about 46 s.
+- **Design document:** `Fisko_Finance_Design.html` is v0.2 with a "what changed" note and a build-status table (12.1). Not built: FR-FN-33 (key handover) and the Excel or PDF export in FR-FN-41.
+- **With this round, rounds FN1 to FN6 of the Finance design are all in the prototype.**
+

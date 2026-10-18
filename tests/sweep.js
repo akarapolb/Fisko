@@ -6,7 +6,8 @@
 //   render  every page, every tab clicked, for every role × language × organisation, plus request steps,
 //           allocation tabs for each fiscal year and quarterly-report rounds for each unit
 //   chat    the AI co-work answer engine for every agent against sample questions
-//   agents  every budget agent started and its run shown
+//   agents  every budget and finance agent started and its run shown; Finance F9 sub-pages
+//   (render also opens every menu tab of the Procurement and Finance apps for each role)
 //   demo    every step of the in-app demo guide
 // A check fails when the page text contains undefined, NaN, [object, Infinity or Invalid, or when code throws.
 // The sweep reseeds data in memory; at the end it clears the saved demo state so the next load starts fresh.
@@ -42,6 +43,19 @@
         if (NAV.find(x => x.id === "requests").roles.includes(role)) for (const r of S.requests) for (const tb of ["main", "plan", "ready", "docs", "years", "equip", "payroll", "versions"]) safe(`req ${r.id}/${tb}`, () => { CUR_REQ = r.id; REQ_TAB = tb; go2("request"); chk(`${org}/${lang}/${role}/req ${r.id}/${tb}`); });
         report(`render ${org}/${lang}/${role}`); await tick();
       } }
+      // every menu tab of the Procurement and Finance apps (the render pass above only sees the current tab)
+      if (o.suites.includes("render")) for (const lang of o.langs) { LANG = lang; for (const role of o.roles) {
+        ROLE = role; safe("shell", renderShell);
+        for (const nv of NAV.filter(x => x.tabs && x.roles.includes(role))) for (const [tb] of nv.tabs) safe(`${org}/${lang}/${role}/${nv.id}/${tb}`, () => { nv.tabSet(tb); go2(nv.id); chk(`${org}/${lang}/${role}/${nv.id}/${tb}`); });
+        await tick();
+      } }
+      // Finance F9 sub-pages and every finance agent run
+      if (o.suites.includes("agents") && typeof F_AG !== "undefined") {
+        LANG = "en"; ROLE = "finhead"; renderShell();
+        for (const id of Object.keys(F_AG)) safe(`fagent ${org}/${id}`, () => { fStart(id); FIN_TAB = "ai"; FAI_TAB = "agents"; go2("finance"); chk(`fagent ${org}/${id}`); });
+        for (const ft of ["fc", "wi", "kpi"]) safe(`fai ${org}/${ft}`, () => { FIN_TAB = "ai"; FAI_TAB = ft; go2("finance"); chk(`fai ${org}/${ft}`); });
+        S.fRuns = []; FAI_TAB = "agents"; report(`finance agents ${org}`); await tick();
+      }
       if (o.suites.includes("chat") && typeof cwAnswer === "function") for (const role of ["plan", "proc", "fin", "exec"].filter(r => o.roles.includes(r))) {
         ROLE = role;
         for (const a of cwAgents()) for (const q of QS) safe(`chat ${org}/${role}/${a.id}/${q}`, () => { const r = cwAnswer(a.id, q, [], []), d = document.createElement("div"); d.innerHTML = r.html; n++; const m = d.innerText.match(BAD); if (m) errs.push(`chat ${org}/${role}/${a.id}/${q}: ${d.innerText.slice(Math.max(0, m.index - 40), m.index + 20)}`); });

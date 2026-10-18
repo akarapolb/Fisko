@@ -20,7 +20,7 @@ const OPEN_ADV = ["paid", "clearing", "objected"];
 const advOf = id => (S.advances || []).find(a => a.id === id);
 const advAmt = a => a.approvedAmt || a.amount;
 const advLeft = a => (a.state === "cleared" ? 0 : OPEN_ADV.includes(a.state) ? advAmt(a) : 0);
-const nextAdv = () => `AD-${FAM_FY}-${String(Math.max(0, ...(S.advances || []).map(a => Number(a.id.split("-")[2]) || 0)) + 1).padStart(3, "0")}`;
+const nextAdv = () => `AD-${FAM_FY}-${String(Math.max(0, ...(S.advances || []).filter(a => a.id.startsWith(`AD-${FAM_FY}-`)).map(a => Number(a.id.split("-")[2]) || 0)) + 1).padStart(3, "0")}`;
 const fyStart = fy => `${fy - 544}-10-01`;
 // Due date to clear (R-FN-05, clause 65).
 function advDue(a) {
