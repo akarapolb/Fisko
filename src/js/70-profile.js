@@ -46,6 +46,7 @@ function seedProfile(s) {
     { k: "cu", name: ["ทองแดง LME (ดอลลาร์/ตัน)", "LME copper (USD/tonne)"], date: "2026-09-30", value: 9480 }, { k: "cu", name: ["ทองแดง LME (ดอลลาร์/ตัน)", "LME copper (USD/tonne)"], date: "2026-10-15", value: 9710 },
     { k: "fx", name: ["อัตราแลกเปลี่ยน USD/THB", "USD/THB"], date: "2026-09-30", value: 34.9 }, { k: "fx", name: ["อัตราแลกเปลี่ยน USD/THB", "USD/THB"], date: "2026-10-15", value: 35.2 },
   ];
+  seedT2(s);
 }
 
 // ---------- case helpers ----------
@@ -122,7 +123,7 @@ CASE_PANELS.push(c => {
   return `<section class="panel"><header><h2>${L("ข้อมูลเพิ่มเติมของรายการ", "Item details")}</h2><span class="sp"></span><span class="mono sub">FR-PR-67</span></header>
     <div class="body"><form class="inline-form" id="ex-form">
       <div class="f" style="flex:1 1 100%"><label class="field-inline"><input type="checkbox" id="ex-hear" ${x.hearing ? "checked" : ""} ${ed ? "" : "disabled"}> ${L("ติดธงรับฟังความคิดเห็น", "Flag for public hearing")}</label>
-        <label class="field-inline"><input type="checkbox" id="ex-sme" ${x.sme ? "checked" : ""} ${ed ? "" : "disabled"}> ${L("เน้นผู้ประกอบการ SME", "Favour SMEs")}</label><label class="field-inline"><input type="checkbox" id="ex-mit" ${x.mit ? "checked" : ""} ${ed ? "" : "disabled"}> ${L("สินค้าผลิตในประเทศ (MiT)", "Made in Thailand (MiT)")}</label></div>
+        <label class="field-inline"><input type="checkbox" id="ex-sme" ${x.sme ? "checked" : ""} ${ed ? "" : "disabled"}> ${L("เน้นผู้ประกอบการ SME", "Favour SMEs")}</label><label class="field-inline"><input type="checkbox" id="ex-mit" ${x.mit ? "checked" : ""} ${ed ? "" : "disabled"}> ${L("สินค้าผลิตในประเทศ (MiT)", "Made in Thailand (MiT)")}</label>${feat("bidSec") ? `<label class="field-inline"><input type="checkbox" id="ex-bs" ${x.bs ? "checked" : ""} ${ed ? "" : "disabled"}> ${L("ต้องมีหลักประกันการเสนอราคา", "Bid security required")}</label>` : ""}${feat("sampleTest") ? `<label class="field-inline"><input type="checkbox" id="ex-test" ${x.test ? "checked" : ""} ${ed ? "" : "disabled"}> ${L("ต้องทดสอบตัวอย่าง", "Sample test required")}</label>` : ""}</div>
       ${inp("ex-std", L("มาตรฐานคุณภาพ (มอก. ISO)", "Quality standard"), x.std)}${inp("ex-spec", L("เลขอ้างอิง Spec / Drawing", "Spec or drawing no."), x.spec)}
       ${inp("ex-short", L("ผู้ขายที่ควรสอบถาม (Short list)", "Short list of suppliers"), x.short, "text", "2 1 260px")}
       ${inp("ex-deliv", L("กำหนดส่งมอบ", "Delivery date"), x.deliv, "date", "0 1 170px")}${inp("ex-place", L("สถานที่ส่งมอบ", "Delivery place"), x.place)}
@@ -181,7 +182,7 @@ CASE_BINDS.push((c, done) => {
     done(pr && !needsCompetition(c) ? L("บันทึกแล้ว และเพิ่มเป็นใบเสนอราคา", "Recorded and added as a quotation") : L("บันทึกแล้ว", "Recorded")); }));
 
   const ef = $("#ex-form"); if (ef) ef.onsubmit = e => { e.preventDefault(); const g = id => ($("#" + id) ? $("#" + id).value.trim() : "");
-    c.extra = { hearing: $("#ex-hear").checked, sme: $("#ex-sme").checked, mit: $("#ex-mit").checked, std: g("ex-std"), spec: g("ex-spec"), short: g("ex-short"), deliv: g("ex-deliv"), place: g("ex-place"), vatMode: $("#ex-vat").value, wbs: g("ex-wbs"), pr: g("ex-pr"), po: g("ex-po") };
+    c.extra = { hearing: $("#ex-hear").checked, sme: $("#ex-sme").checked, mit: $("#ex-mit").checked, bs: $("#ex-bs") ? $("#ex-bs").checked : !!(c.extra && c.extra.bs), test: $("#ex-test") ? $("#ex-test").checked : !!(c.extra && c.extra.test), std: g("ex-std"), spec: g("ex-spec"), short: g("ex-short"), deliv: g("ex-deliv"), place: g("ex-place"), vatMode: $("#ex-vat").value, wbs: g("ex-wbs"), pr: g("ex-pr"), po: g("ex-po") };
     caseLog(c, "extra", ""); audit(["แก้ข้อมูลเพิ่มเติมของรายการจัดซื้อ", "Edited item details"], c.id); done(L("บันทึกแล้ว", "Saved")); };
 
   const sm = $("#ix-smp"); if (sm) sm.onclick = () => { $("#ix-t").value = "ราคาน้ำมันดีเซล (บาท/ลิตร), 2026-10-16, 32.4\nทองแดง LME (ดอลลาร์/ตัน), 2026-10-16, 9740\nอัตราแลกเปลี่ยน USD/THB, 2026-10-16, 35.1"; };
