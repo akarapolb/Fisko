@@ -1,6 +1,6 @@
 # Fisko: project handoff
 
-State as of 17 October 2026, branch `main`, last commit `5d1c164`. This note is for whoever picks the work up next: what exists, how to run and change it, what was decided, and what is still open.
+State as of 18 October 2026, branch `main`. Round 36 (Fisko Finance design) is the latest; see section 36. This note is for whoever picks the work up next: what exists, how to run and change it, what was decided, and what is still open.
 
 ## 1. What this is
 
@@ -463,3 +463,12 @@ The user found the interface unimpressive and chose a clean enterprise direction
   - **What fails a check:** page text containing undefined, NaN, [object, Infinity or Invalid; code that throws; or a page other than the one asked for.
   - **Found while building it:** browsers ignore `history.replaceState` (and hash changes) after a few hundred calls within 10 seconds. The ad-hoc sweeps in earlier rounds used it, so late in a long run some pages re-rendered the previous view. The router now honours a test hook, `window.FISKO_ROUTE` (`00-core.js` `route()`), which the sweep sets instead of touching history, and every page check confirms `CUR` is the page asked for. The full sweep with this check passes, so the earlier results stand.
   - The sweep reseeds data in memory and clears the saved demo state at the end, so the next load of the prototype starts fresh.
+
+## 36. Fisko Finance design v0.1 (round 36)
+
+- **What:** `Fisko_Finance_Design.html`, the detailed design for Fisko Finance in Thai, in the same layout as the Budget and Procurement designs (15 chapters). Scope agreed with the user: commitments and POs; vouchers, payments and withholding tax; advances (เงินยืม); receipts, remittance, GFMIS reconciliation, month-end and year-end close, and finance agents. Nothing in the prototype changed this round.
+- **Grounding:** the Finance Ministry regulation on treasury withdrawals, receipts, payments, keeping and remitting money, B.E. 2562 (Royal Gazette, 13 May 2562), was read in full, so clause numbers are level A. Key facts used: PO in GFMIS from 5,000 baht and request within 5 working days of acceptance (ข้อ 28); payment routes (ข้อ 28–29); approver authority (ข้อ 36); e-Payment first (ข้อ 52); advances: no new loan while one is open (ข้อ 59), clearing in 15 days after return for travel or 30 days after payment otherwise (ข้อ 65), demand within 30 days (ข้อ 68); same-day recording of receipts (ข้อ 81); cash committee and daily cash report (ข้อ 86–95); remit cash revenue at least monthly, within 3 working days when over 10,000 baht in a day (ข้อ 101); carry-over from 100,000 baht (ข้อ 105). The 1% withholding tax from 10,000 baht comes from Revenue Department rulings (level B). Amendments after 2562 and the "as the Ministry sets" circulars are not read yet.
+- **Contents:** FR-FN-01 to 41, rules R-FN-01 to 06 (budget check, payment route table, tax and net amount, regulation clocks, advances, remittance and the month-end checklist), duty rules SD-11 to SD-16, a new role `finhead` (proposed, D-FN-02), screens F1 to F9 plus "My advances" in My Workspace, agents AG-18 to AG-22, forecasts F-FN-01 to 04, what-ifs W-FN-01 to 04, KPI-F01 to 10, signals SG-F01 to 07, build rounds FN1 to FN6, decisions D-FN-01 to 09 (all open). Fisko stays a workbench in front of GFMIS and does not keep a general ledger (D-FN-01).
+- **Published:** https://claude.ai/artifact/G4Sx84KthvJWcLJMAWPKD1 (version 1, private).
+- **Next:** get the user's approval of the design and answers to D-FN-01 to 09, then build round FN1.
+

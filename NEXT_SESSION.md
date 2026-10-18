@@ -8,7 +8,7 @@ Fisko is a discussion prototype of a Thai government budgeting platform with thr
 
 - **Fisko Budget:** M01 to M10, now built to its own design (`Fisko_Budget_Design.html` v0.2, rounds B1 to B6).
 - **Fisko Procurement:** P1 to P18, built to its design (`Fisko_Procurement_Design.html` v0.2, rounds P0 to P4 and Q1 to Q6).
-- **Fisko Finance:** still the "light" version from round 11. It has no detailed design yet.
+- **Fisko Finance:** still the "light" version from round 11 in the prototype. Its detailed design v0.1 (`Fisko_Finance_Design.html`, round 36) is written and waits for approval; build rounds FN1 to FN6.
 
 All three share My Workspace, M10 System Administration, the AI co-work chat (round 27) and one data set.
 
@@ -18,6 +18,7 @@ All three share My Workspace, M10 System Administration, the AI co-work chat (ro
 | Last commit | `e969601` Round 35: demo guide, Budget design v0.2, test runner (working tree clean) |
 | Published prototype | https://claude.ai/artifact/K8TJFETX7GMftoZYb9zFZR (version 43, built from `fisko-prototype.html`) |
 | Published Budget design | https://claude.ai/artifact/EFs3q62eP5tVTZWMSFQkX9 (version 2, private) |
+| Published Finance design | https://claude.ai/artifact/G4Sx84KthvJWcLJMAWPKD1 (version 1, private; `Fisko_Finance_Design.html` v0.1, round 36) |
 | Data version | `DATA_V = 28` in `src/js/00-core.js` (bump it whenever the seed shape changes) |
 
 ## 2. How the user likes to work
@@ -104,16 +105,7 @@ Roles now: `div`, `divhead`, `plan`, `committee`, `exec`, `fin`, `audit`, `admin
 
 ## 7. Suggested next steps
 
-1. **Fisko Finance design (recommended next).**
-   - Ask scoping questions, then write `Fisko_Finance_Design.html` in Thai, grounded in the Comptroller General's rules, and build in rounds like Budget and Procurement.
-   - Likely scope:
-     - commitments and purchase orders
-     - payment vouchers and withholding tax
-     - advances (เงินยืม) and their clearing
-     - revenue and remittance
-     - GFMIS posting and reconciliation
-     - month-end close
-     - Finance agents
+1. **Fisko Finance (recommended next).** Design v0.1 is done (round 36). Get approval and answers to D-FN-01 to 09, then build FN1 to FN6.
 2. **Fisko Assets design (D-P11):** stock and assets, fed by Procurement acceptances.
 3. **From simulated to real AI:** a plan to swap the planner and answer writer for a real model, keeping the same tools, approvals and audit log.
 4. **Small polish:** BR-11 exception flags; splitting the request form's first steps; moving the forecast probabilities by unit or type history into data.

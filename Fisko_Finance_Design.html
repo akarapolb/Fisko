@@ -1,0 +1,958 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fisko Finance Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: sticky chapter index on the left, one reading column (~72ch prose, full-width tables and diagrams) on the right */
+:root {
+  --bg: #FFFFFF; --paper: #FFFFFF; --tint: #F4F5FA; --tint-2: #EEF0F7; --line: #DDDEE9;
+  --ink: #1C1D3F; --ink-2: #45465C; --muted: #7A7B92;
+  --navy: #1A1B50; --navy-2: #232366; --navy-ink: #C9CADF;
+  --accent: #1B9E29; --accent-2: #2AD03D; --accent-soft: #E4FBE7;
+  --warn: #A86A0C; --warn-soft: #FCF1DB; --bad: #B9381D; --bad-soft: #FBE3DA; --info: #3A3B9A; --info-soft: #E6E7F7;
+  --font: "IBM Plex Sans Thai", "Leelawadee UI", Tahoma, system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0F1029; --paper: #13153A; --tint: #1A1C44; --tint-2: #20224D; --line: #2D2F5E;
+  --ink: #ECEDF7; --ink-2: #C3C4D8; --muted: #8E90AE;
+  --navy: #0A0B22; --navy-2: #232366; --navy-ink: #B6B8D3;
+  --accent: #3DD552; --accent-2: #2AD03D; --accent-soft: #163A24;
+  --warn: #E7AA45; --warn-soft: #3A2C12; --bad: #F2805F; --bad-soft: #42201A; --info: #A9ABF5; --info-soft: #262862; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0F1029; --paper: #13153A; --tint: #1A1C44; --tint-2: #20224D; --line: #2D2F5E;
+  --ink: #ECEDF7; --ink-2: #C3C4D8; --muted: #8E90AE;
+  --navy: #0A0B22; --navy-2: #232366; --navy-ink: #B6B8D3;
+  --accent: #3DD552; --accent-2: #2AD03D; --accent-soft: #163A24;
+  --warn: #E7AA45; --warn-soft: #3A2C12; --bad: #F2805F; --bad-soft: #42201A; --info: #A9ABF5; --info-soft: #262862; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 20px; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.75 var(--font); }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.mono, code { font-family: var(--mono); font-size: .85em; }
+code { background: var(--tint-2); padding: 1px 5px; border-radius: 4px; }
+
+.layout { display: grid; grid-template-columns: 290px minmax(0, 1fr); }
+.toc { position: sticky; top: 0; height: 100vh; overflow: auto; background: var(--navy); color: var(--navy-ink); padding: 28px 18px 40px; font-size: 14px; }
+.toc .brand { color: #fff; font-weight: 700; font-size: 17px; line-height: 1.3; }
+.toc .brand small { display: block; color: var(--navy-ink); font-weight: 400; font-size: 12.5px; margin-top: 2px; }
+.toc ol { list-style: none; margin: 22px 0 0; padding: 0; counter-reset: c; }
+.toc li { margin: 1px 0; }
+.toc a { display: grid; grid-template-columns: 28px 1fr; gap: 6px; color: var(--navy-ink); text-decoration: none; padding: 6px 8px; border-radius: 7px; line-height: 1.4; }
+.toc a:hover { background: var(--navy-2); color: #fff; }
+.toc a.on { background: var(--navy-2); color: #fff; }
+.toc a .n { font-family: var(--mono); font-size: 11.5px; color: #8A8CB5; padding-top: 2px; }
+.toc a.on .n { color: var(--accent-2); }
+.toc .tools { margin-top: 22px; display: flex; gap: 8px; }
+.toc button { background: var(--navy-2); color: #fff; border: 1px solid #3A3B77; border-radius: 7px; padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+
+main { min-width: 0; padding-block: 0 80px; padding-left: max(28px, env(safe-area-inset-left, 0px)); padding-right: max(28px, env(safe-area-inset-right, 0px)); }
+.doc { max-width: 1080px; margin: 0 auto; }
+.prose { max-width: 74ch; }
+
+.cover { padding: 64px 0 40px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.eyebrow { font-size: 12.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+.cover h1 { font-size: clamp(30px, 4.2vw, 46px); line-height: 1.2; margin: 10px 0 8px; text-wrap: balance; }
+.cover .th { font-size: 20px; color: var(--ink-2); margin: 0; }
+.meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: 30px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.meta div { padding: 12px 16px; border-right: 1px solid var(--line); }
+.meta div:last-child { border-right: 0; }
+.meta span { display: block; font-size: 12px; color: var(--muted); letter-spacing: .04em; }
+.meta b { font-weight: 600; font-size: 15px; }
+.notice { margin-top: 18px; background: var(--warn-soft); color: var(--ink); border-radius: 10px; padding: 12px 16px; font-size: 14.5px; }
+.notice b { color: var(--warn); }
+
+section.ch { padding-top: 56px; }
+h2 { font-size: 28px; line-height: 1.3; margin: 0 0 6px; display: flex; gap: 14px; align-items: baseline; text-wrap: balance; }
+h2 .num { font-family: var(--mono); font-size: 15px; color: var(--accent); font-weight: 600; }
+.lede { color: var(--ink-2); margin: 0 0 22px; max-width: 74ch; }
+h3 { font-size: 19px; margin: 34px 0 10px; line-height: 1.4; }
+h3 .num { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-right: 8px; font-weight: 500; }
+h4 { font-size: 16px; margin: 22px 0 6px; }
+p { margin: 0 0 14px; }
+ul, ol { margin: 0 0 14px; padding-left: 22px; }
+li { margin: 3px 0; }
+.small { font-size: 13.5px; color: var(--muted); }
+
+.tbl { overflow-x: auto; margin: 10px 0 18px; border: 1px solid var(--line); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.55; }
+th { background: var(--tint); text-align: left; font-size: 12.5px; letter-spacing: .03em; color: var(--ink-2); font-weight: 600; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: bottom; }
+td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.id, th.id { white-space: nowrap; font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); }
+td.c, th.c { text-align: center; }
+td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.tag { display: inline-block; border-radius: 99px; padding: 1px 9px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.t-must { background: var(--accent-soft); color: var(--accent); }
+.t-should { background: var(--info-soft); color: var(--info); }
+.t-could { background: var(--tint-2); color: var(--muted); }
+.t-new { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+.t-warn { background: var(--warn-soft); color: var(--warn); }
+.t-bad { background: var(--bad-soft); color: var(--bad); }
+
+.callout { border-radius: 10px; padding: 14px 18px; margin: 14px 0 18px; background: var(--tint); }
+.callout.dark { background: var(--navy); color: #fff; }
+.callout.dark b { color: var(--accent-2); }
+.callout b:first-child { display: block; margin-bottom: 2px; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 12px 0 20px; }
+.card { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; background: var(--paper); }
+.card b { display: block; font-size: 15px; margin-bottom: 2px; }
+.card span { font-size: 13.5px; color: var(--ink-2); line-height: 1.6; display: block; }
+.card .k { font-family: var(--mono); font-size: 12px; color: var(--accent); margin-bottom: 4px; }
+
+/* layered architecture diagram */
+.arch { display: grid; grid-template-columns: minmax(0, 1fr) 210px; gap: 10px; margin: 14px 0 20px; }
+.layers { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.layer { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 10px; align-items: stretch; }
+.layer .lb { background: var(--navy-2); color: #fff; border-radius: 8px; padding: 10px 12px; font-weight: 600; font-size: 14px; line-height: 1.35; }
+.layer .lb small { display: block; color: var(--navy-ink); font-weight: 400; font-size: 12px; }
+.layer.top .lb { background: var(--accent); }
+.layer .chips { display: flex; flex-wrap: wrap; gap: 6px; align-content: center; background: var(--tint); border-radius: 8px; padding: 8px; }
+.chip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; font-size: 13px; }
+.chip.g { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.gov { background: var(--navy); color: #fff; border-radius: 8px; padding: 12px 14px; font-size: 13px; }
+.gov b { color: var(--accent-2); display: block; margin-bottom: 6px; font-size: 14px; }
+.gov ul { padding-left: 16px; margin: 0; }
+.gov li { color: var(--navy-ink); }
+
+/* flow */
+.flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0 20px; }
+.flow .st { background: var(--tint); border-radius: 8px; padding: 8px 12px; font-size: 13.5px; line-height: 1.4; }
+.flow .st b { display: block; font-family: var(--mono); font-size: 11.5px; color: var(--accent); }
+.flow .ar { color: var(--muted); }
+
+/* integration hub */
+.hub { display: grid; grid-template-columns: 1fr minmax(180px, 240px) 1fr; gap: 14px; align-items: center; margin: 14px 0 20px; }
+.hub .side { display: flex; flex-direction: column; gap: 8px; }
+.hub .ext { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 13.5px; background: var(--paper); }
+.hub .ext b { display: block; font-size: 14px; }
+.hub .core { background: var(--navy); color: #fff; border-radius: 12px; padding: 18px; text-align: center; }
+.hub .core b { color: var(--accent-2); font-size: 18px; display: block; }
+.hub .core span { font-size: 12.5px; color: var(--navy-ink); display: block; margin-top: 6px; }
+
+.matrix td.c { font-family: var(--mono); font-size: 12.5px; font-weight: 600; }
+.mx-a { color: var(--accent); } .mx-r { color: var(--muted); } .mx-u { color: var(--info); }
+
+footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+
+@media (max-width: 980px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .toc { position: static; height: auto; padding: 16px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px)); }
+  .toc ol { display: none; }
+  .toc.open ol { display: block; }
+  main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .meta div:nth-child(2) { border-right: 0; }
+  .meta div:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+  .arch { grid-template-columns: minmax(0, 1fr); }
+  .layer { grid-template-columns: minmax(0, 1fr); }
+  .hub { grid-template-columns: minmax(0, 1fr); }
+}
+@media (min-width: 981px) { #toc-toggle { display: none; } }
+@media print {
+  .toc { display: none; }
+  .layout { display: block; }
+  main { padding: 0; }
+  section.ch { break-before: page; padding-top: 0; }
+  .tbl { overflow: visible; }
+  tr, .card, .callout { break-inside: avoid; }
+}
+</style>
+<style>pre.logic { background: var(--tint); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-family: var(--mono); font-size: 12.5px; line-height: 1.65; margin: 12px 0 18px; white-space: pre; }</style>
+<style>
+.wf { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin: 12px 0 20px; background: var(--paper); font-size: 13.5px; }
+.wf-top { background: var(--tint); padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.wf-body { display: grid; grid-template-columns: 200px minmax(0, 1fr) 220px; gap: 0; }
+.wf-steps { list-style: none; margin: 0; padding: 10px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; }
+.wf-steps li { padding: 6px 8px; border-radius: 6px; color: var(--muted); }
+.wf-steps li::before { content: "○ "; }
+.wf-steps li.ok { color: var(--ink-2); } .wf-steps li.ok::before { content: "● "; color: var(--accent); }
+.wf-steps li.now { background: var(--tint-2); color: var(--ink); font-weight: 600; } .wf-steps li.now::before { content: "◐ "; color: var(--info); }
+.wf-main { padding: 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.wf-bars { display: flex; gap: 14px; align-items: flex-end; height: 110px; border-bottom: 1px solid var(--line); padding: 0 8px; }
+.wf-bars i { flex: 1; background: var(--accent); border-radius: 4px 4px 0 0; opacity: .85; }
+.wf-main span, .wf-side span { color: var(--ink-2); font-size: 13px; }
+.wf-side { padding: 14px; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; background: var(--tint); }
+@media (max-width: 760px) { .wf-body { grid-template-columns: minmax(0, 1fr); } .wf-steps, .wf-side { border: 0; } }
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="toc" id="toc" aria-label="สารบัญ">
+  <div class="brand">Fisko Finance<small>Detailed Design · v0.1</small></div>
+  <div class="tools"><button type="button" id="toc-toggle" aria-expanded="false">สารบัญ</button><button type="button" id="theme">ธีม</button></div>
+  <ol>
+    <li><a href="#s1"><span class="n">01</span>วัตถุประสงค์และวิธีค้นคว้า</a></li>
+    <li><a href="#s2"><span class="n">02</span>ผลการค้นคว้าและสิ่งที่นำไปออกแบบ</a></li>
+    <li><a href="#s3"><span class="n">03</span>หลักการออกแบบ</a></li>
+    <li><a href="#s4"><span class="n">04</span>จังหวะงานการเงินและสถานะ</a></li>
+    <li><a href="#s5"><span class="n">05</span>สิ่งที่มีแล้วและช่องว่าง</a></li>
+    <li><a href="#s6"><span class="n">06</span>ฟังก์ชันรายขั้นตอน</a></li>
+    <li><a href="#s7"><span class="n">07</span>กฎและตรรกะ</a></li>
+    <li><a href="#s8"><span class="n">08</span>ข้อมูล บทบาท และการเชื่อมต่อ</a></li>
+    <li><a href="#s9"><span class="n">09</span>ออกแบบหน้าจอและประสบการณ์ใช้งาน</a></li>
+    <li><a href="#s10"><span class="n">10</span>AI, Agent, พยากรณ์ และ What-if</a></li>
+    <li><a href="#s11"><span class="n">11</span>Analytics และตัวชี้วัด</a></li>
+    <li><a href="#s12"><span class="n">12</span>ลำดับการสร้างต้นแบบ</a></li>
+    <li><a href="#s13"><span class="n">13</span>ความเสี่ยงและประเด็นที่ต้องตัดสินใจ</a></li>
+    <li><a href="#s14"><span class="n">14</span>ขอบเขตกับผลิตภัณฑ์อื่น</a></li>
+    <li><a href="#s15"><span class="n">15</span>แหล่งอ้างอิง</a></li>
+  </ol>
+</nav>
+
+<main>
+<div class="doc">
+
+<header class="cover">
+  <div class="eyebrow">Fisko Finance · Detailed Design</div>
+  <h1>Fisko Finance<br><span style="font-size:.55em;color:var(--accent)">ออกแบบเชิงลึก: การเบิกจ่าย เงินยืม การรับและนำส่งเงิน และการปิดงวด ตามระเบียบกระทรวงการคลัง</span></h1>
+  <p class="th">ต่อยอดจาก Fisko Finance ฉบับเบา (ต้นแบบรอบ 11) และรูปแบบที่ใช้ในการออกแบบ Fisko Budget และ Fisko Procurement</p>
+  <div class="meta">
+    <div><span>เวอร์ชัน</span><b>0.1 ฉบับร่างเพื่อการหารือ</b></div>
+    <div><span>วันที่</span><b>18 ตุลาคม 2569</b></div>
+    <div><span>จัดทำโดย</span><b>Avalant</b></div>
+    <div><span>ต่อยอดจาก</span><b>Product Family Concept v0.2 · Budget Design v0.2 · Procurement Design v0.2</b></div>
+  </div>
+  <div class="callout" style="margin-top:14px"><b>ขอบเขตที่ตกลงกัน</b> ครอบคลุม 4 เรื่อง: (1) วงเงินผูกพันและใบสั่งซื้อ (2) การขอเบิก การจ่าย และภาษีหัก ณ ที่จ่าย (3) เงินยืมและการส่งใช้ (4) การรับเงิน การนำส่งเงิน การกระทบยอดกับ GFMIS การปิดงวดสิ้นเดือนและสิ้นปี และ Agent ด้านการเงิน ยึดระเบียบกระทรวงการคลังว่าด้วยการเบิกเงินจากคลัง การรับเงิน การจ่ายเงิน การเก็บรักษาเงิน และการนำเงินส่งคลัง พ.ศ. 2562 เขียนเอกสารนี้ก่อน แล้วสร้างต้นแบบเป็นรอบ ๆ ตามบทที่ 12</div>
+  <div class="notice"><b>สถานะเอกสาร:</b> เป็นร่างเพื่อตัดสินใจ ไม่ใช่ความเห็นทางกฎหมาย ข้อระเบียบมาจากตัวบทที่ประกาศในราชกิจจานุเบกษา (13 พฤษภาคม 2562) ซึ่งอาจมีฉบับแก้ไขภายหลัง และหลายข้อให้ปฏิบัติ “ตามที่กระทรวงการคลังกำหนด” ซึ่งยังไม่ได้เปิดอ่าน ต้องตรวจกับฉบับปัจจุบันและหนังสือเวียนของกรมบัญชีกลางก่อนใช้งานจริง ตัวเลขทั้งหมดในตัวอย่างเป็นข้อมูลสมมติ AI และการอ่านเอกสารในต้นแบบเป็นการจำลอง (ตามประเด็น D-P09 และ D-P10) ต้นแบบไม่จ่ายเงินจริงและไม่เชื่อมต่อ GFMIS หรือธนาคาร</div>
+</header>
+
+<!-- ============================== 01 ============================== -->
+<section class="ch" id="s1">
+<h2><span class="num">01</span>วัตถุประสงค์และวิธีค้นคว้า</h2>
+<p class="lede">ทำให้ Fisko Finance เป็นโต๊ะทำงานของกองคลังที่อยู่หน้า GFMIS: เตรียม ตรวจ ควบคุม และติดตามทุกรายการให้ถูกระเบียบก่อนบันทึกในระบบทางการ แล้วนำผลกลับมากระทบยอด</p>
+<div class="prose">
+<p>Fisko Finance ฉบับเบาจากรอบ 11 มี 3 หน้า: สายจากวงเงินจัดสรรถึงการเบิกจ่าย คำขออนุมัติเบิกจ่ายของงวดสัญญาที่ตรวจรับแล้ว และการกระทบยอดกับไฟล์รายงาน GFMIS ทั้งหมดเป็นการจ่ายตามสัญญาจัดซื้อเท่านั้น งานส่วนใหญ่ของกองคลังจริงยังไม่มี เช่น ค่าสาธารณูปโภค ค่าเดินทาง ค่าตอบแทน เงินยืม การรับเงินและออกใบเสร็จ รายงานเงินคงเหลือประจำวัน การนำเงินส่งคลัง การหักภาษี และการปิดงวด</p>
+<p>เอกสารนี้ออกแบบงานเหล่านี้ให้ต่อกับข้อมูลที่มีอยู่แล้ว คือบรรทัดจัดสรร (M06) ของ Fisko Budget และสัญญากับงวดตรวจรับของ Fisko Procurement โดยถือหลักว่า GFMIS (New GFMIS Thai) ยังเป็นสมุดบัญชีและช่องทางจ่ายเงินทางการ Fisko ไม่ทำบัญชีแยกประเภทซ้ำ (ประเด็น D-FN-01)</p>
+<p>การค้นคว้าเปิดอ่านตัวบทระเบียบกระทรวงการคลังฯ พ.ศ. 2562 ทั้งฉบับ (ข้อ 1 ถึง 111) จากสำเนาราชกิจจานุเบกษา ข้อหารือของกรมสรรพากรเรื่องการหักภาษี ณ ที่จ่ายของส่วนราชการ และข่าวเรื่องการกันเงินผ่าน New GFMIS Thai เพื่อดูแนวปฏิบัติปีปัจจุบัน</p>
+</div>
+<h3><span class="num">1.1</span>ระดับความมั่นใจของข้อมูล</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ระดับ</th><th>ความหมาย</th><th>วิธีใช้ในการออกแบบ</th></tr></thead>
+  <tbody>
+    <tr><td><span class="tag t-must">A</span></td><td>เปิดอ่านจากตัวบทโดยตรง (ระเบียบฯ พ.ศ. 2562 ระบุเลขข้อ)</td><td>ใช้เป็นค่าเริ่มต้นในระบบได้ แต่ยังเป็นค่าที่ตั้งได้ใน M10 เพราะระเบียบมีฉบับแก้ไขและหนังสือเวียนเพิ่มได้</td></tr>
+    <tr><td><span class="tag t-should">B</span></td><td>มาจากข้อหารือ ข่าว หรือเอกสารรอง ยังไม่ได้ตรวจกับประกาศหรือหนังสือเวียนฉบับปัจจุบัน</td><td>ใช้เป็นค่าตั้งต้นที่มีป้าย “ต้องยืนยัน”</td></tr>
+    <tr><td><span class="tag t-could">C</span></td><td>ข้อเสนอการออกแบบหรือแนวปฏิบัติทั่วไป ไม่ใช่ข้อกำหนด</td><td>ตัดสินใจร่วมกับหน่วยงาน</td></tr>
+  </tbody>
+</table></div>
+<div class="callout"><b>สิ่งที่ยังไม่ได้ยืนยัน</b> ฉบับแก้ไขของระเบียบฯ หลังปี 2562 (ถ้ามี) · หลักเกณฑ์ที่ “กระทรวงการคลังกำหนด” ซึ่งหลายข้ออ้างถึง เช่น กำหนดเวลานำส่งเงินที่รับผ่าน e-Payment (ข้อ 101 (3)) และวิธีจ่ายผ่านระบบอิเล็กทรอนิกส์ (ข้อ 52) · รูปแบบไฟล์นำเข้าและส่งออกของ New GFMIS Thai · ประกาศอธิบดีกรมสรรพากรที่เป็นฐานของอัตราหักภาษีร้อยละ 1 · ระเบียบว่าด้วยเงินทดรองราชการ พ.ศ. 2562 · กำหนดส่งรายงานการเงินประจำปีตามกฎหมายวินัยการเงินการคลัง · อัตราค่าใช้จ่ายเดินทางไปราชการ</div>
+</section>
+
+<!-- ============================== 02 ============================== -->
+<section class="ch" id="s2">
+<h2><span class="num">02</span>ผลการค้นคว้าและสิ่งที่นำไปออกแบบ</h2>
+<p class="lede">แต่ละข้อค้นพบผูกกับการตัดสินใจออกแบบ “ข้อ” หมายถึงข้อของระเบียบฯ พ.ศ. 2562 (S1) รหัส S อ้างถึงแหล่งในบทที่ 15</p>
+<h3><span class="num">2.1</span>การเบิกเงินจากคลังและการจ่ายเงิน</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ข้อค้นพบ</th><th>ระดับ</th><th>สิ่งที่นำไปออกแบบ</th></tr></thead>
+  <tbody>
+    <tr><td>หัวหน้าหน่วยงานผู้เบิกเป็นผู้มีสิทธิใช้งานระบบ หรือมอบหมายเป็นลายลักษณ์อักษร โดยกำหนดผู้ได้รับมอบหมาย หน้าที่ และการควบคุม (ข้อ 10–13)</td><td><span class="tag t-must">A</span></td><td>ทะเบียนผู้มีสิทธิใช้งาน GFMIS และคำสั่งมอบหมายใน M10 ระบบเตือนเมื่อผู้ส่งข้อมูลไม่มีคำสั่งรองรับ (FR-FN-34)</td></tr>
+    <tr><td>เงินที่ขอเบิกเพื่อการใดใช้ได้เฉพาะการนั้น (ข้อ 17) จ่ายหรือก่อหนี้ได้เฉพาะที่กฎหมาย ระเบียบ หรือมติ ครม. ให้จ่ายได้ (ข้อ 18) ค่าใช้จ่ายปีใดเบิกจากงบปีนั้น (ข้อ 23)</td><td><span class="tag t-must">A</span></td><td>ทุกใบขอเบิกผูกกับบรรทัดจัดสรรและวัตถุประสงค์ ตรวจวงเงินคงเหลือและปีงบประมาณก่อนส่ง (R-FN-01)</td></tr>
+    <tr><td>หน่วยงานที่มีหน้าที่หักภาษี ณ ที่จ่าย ต้องบันทึกภาษีเป็นรายได้แผ่นดินไว้ในคำขอเบิกนั้นด้วย (ข้อ 19)</td><td><span class="tag t-must">A</span></td><td>ภาษีที่หักเป็นรายการหักในใบขอเบิก และเป็นรายได้แผ่นดินที่ต้องกระทบยอด (FR-FN-10, R-FN-03)</td></tr>
+    <tr><td>เปิดบัญชีเงินฝากธนาคารของรัฐ 2 บัญชี (งบประมาณ และนอกงบประมาณ) ส่งข้อมูลเจ้าหนี้ให้กรมบัญชีกลางสร้างข้อมูลหลักผู้ขาย ตรวจความถูกต้องก่อนส่งคำขอเบิก และตรวจการจ่ายจากรายงานในระบบ (ข้อ 20)</td><td><span class="tag t-must">A</span></td><td>คำขอสร้างหรือแก้ข้อมูลหลักผู้ขายที่ต้องมีผู้ยืนยันคนที่สอง (FR-FN-17, SD-14) รายการตรวจก่อนส่ง และการจับคู่ผลการจ่ายกับรายงาน GFMIS</td></tr>
+    <tr><td>ห้ามขอเบิกเงินก่อนถึงกำหนดหรือใกล้ถึงกำหนดจ่าย (ข้อ 22)</td><td><span class="tag t-must">A</span></td><td>ใบขอเบิกต้องมีวันครบกำหนดจ่ายหรือวันตรวจรับ ระบบเตือนเมื่อขอเบิกล่วงหน้าเกินช่วงที่ตั้งไว้</td></tr>
+    <tr><td>ซื้อ จ้าง เช่าตามกฎหมายจัดซื้อ: ใบสั่งซื้อ สัญญา หรือข้อตกลงที่มีวงเงินตั้งแต่ 5,000 บาท ให้ลงใบสั่งซื้อในระบบเพื่อจองงบประมาณ และกรมบัญชีกลางจ่ายตรงเจ้าหนี้ ต่ำกว่านั้นจ่ายผ่านบัญชีส่วนราชการหรือจ่ายตรงก็ได้ ต้องขอเบิกไม่เกิน 5 วันทำการนับแต่ตรวจรับถูกต้องหรือได้รับแจ้งจากหน่วยงานย่อย (ข้อ 28)</td><td><span class="tag t-must">A</span></td><td>วงเงิน 5,000 บาทเป็นค่าตั้งได้ ใบสั่งซื้อที่ถึงเกณฑ์ต้องมีเลขที่ PO ใน GFMIS ก่อนขอเบิก (FR-FN-02) ทางจ่ายเลือกตามตาราง R-FN-02 และนาฬิกา 5 วันทำการเริ่มเมื่อ Procurement ตรวจรับครบ (R-FN-04)</td></tr>
+    <tr><td>รายจ่ายที่ไม่ใช่การจัดซื้อ กรมบัญชีกลางจ่ายตรงเจ้าหนี้ ยกเว้นค่าไฟฟ้า ประปา โทรศัพท์ สื่อสารที่มีเงินสมทบจากผู้อื่น และเงินสวัสดิการหรือค่าตอบแทน ที่เข้าบัญชีส่วนราชการแล้วจ่ายต่อผ่าน e-Payment (ข้อ 29)</td><td><span class="tag t-must">A</span></td><td>ประเภทใบขอเบิกกำหนดทางจ่ายเอง และการจ่ายจากบัญชีหน่วยงานสร้างไฟล์ e-Payment ให้ธนาคาร (FR-FN-15)</td></tr>
+    <tr><td>เงินที่ต้องจ่ายประจำเดือนในวันทำการสิ้นเดือน ส่งคำขอเบิกภายในวันที่ 15 ของเดือน (ข้อ 31)</td><td><span class="tag t-must">A</span></td><td>ปฏิทินการเงินและนาฬิกาวันที่ 15 สำหรับรายการประจำเดือน</td></tr>
+    <tr><td>การจ่ายเงินทำได้เฉพาะที่มีกฎหมายให้จ่ายและผู้มีอำนาจอนุมัติแล้ว (ข้อ 35) ผู้มีอำนาจคือหัวหน้าส่วนราชการระดับกรมหรือผู้ได้รับมอบหมายที่ดำรงตำแหน่งตามที่กำหนด (ข้อ 36) และต้องลงลายมือชื่อในหลักฐาน (ข้อ 38)</td><td><span class="tag t-must">A</span></td><td>ตารางผู้มีอำนาจอนุมัติจ่ายใน M10 ตรวจตำแหน่งและการมอบอำนาจทุกครั้งที่อนุมัติ (FR-FN-12)</td></tr>
+    <tr><td>การจ่ายต้องมีหลักฐาน (ข้อ 39) ห้ามเรียกหลักฐานก่อนจ่ายจริง (ข้อ 40) ประทับ “จ่ายเงินแล้ว” พร้อมผู้จ่ายและวันที่ (ข้อ 42) ทุกการจ่ายบันทึกในระบบ และหัวหน้าตรวจกับหลักฐานทุกสิ้นวัน (ข้อ 43)</td><td><span class="tag t-must">A</span></td><td>สถานะ “จ่ายเงินแล้ว” ตั้งได้เมื่อมีผลจ่ายจาก GFMIS หรือธนาคารเท่านั้น และหน้าตรวจการจ่ายประจำวันให้หัวหน้าการเงินลงนาม (FR-FN-16)</td></tr>
+    <tr><td>หลักฐานการจ่ายคือใบเสร็จรับเงิน ใบสำคัญรับเงิน รายงานการจ่ายจาก e-Payment หรือใบรับรองการจ่ายเงิน (ข้อ 44–45) ใบเสร็จต้องมีอย่างน้อย 5 รายการ (ข้อ 46) ถ้าเรียกใบเสร็จไม่ได้ใช้ใบสำคัญรับเงินหรือใบรับรองการจ่าย (ข้อ 47–48) และเก็บรักษาจนกว่าสำนักงานการตรวจเงินแผ่นดินตรวจแล้ว (ข้อ 51)</td><td><span class="tag t-must">A</span></td><td>รายการหลักฐานที่ต้องมีตามประเภทใบขอเบิก ตรวจ 5 รายการของใบเสร็จได้ด้วยการอ่านเอกสารจำลอง (FR-FN-08) และระยะเก็บรักษาผูกกับสถานะ “สตง. ตรวจแล้ว”</td></tr>
+    <tr><td>จ่ายผ่านระบบอิเล็กทรอนิกส์ (e-Payment) เป็นหลัก จ่ายเป็นเช็คหรือเงินสดได้เฉพาะเมื่อมีเหตุขัดข้องหรือจำเป็นเร่งด่วน (ข้อ 52–54)</td><td><span class="tag t-must">A</span></td><td>วิธีจ่ายเริ่มต้นเป็น e-Payment เลือกเช็คหรือเงินสดต้องระบุเหตุผลและนับในตัวชี้วัด</td></tr>
+  </tbody>
+</table></div>
+<h3><span class="num">2.2</span>เงินยืม</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ข้อค้นพบ</th><th>ระดับ</th><th>สิ่งที่นำไปออกแบบ</th></tr></thead>
+  <tbody>
+    <tr><td>สัญญายืมเงินตามแบบที่กระทรวงการคลังกำหนด (ข้อ 55) ผู้มีอำนาจอนุมัติจ่ายเป็นผู้อนุมัติเงินยืม (ข้อ 56) จ่ายได้เมื่อทำสัญญาและอนุมัติแล้วเท่านั้น โดยจ่ายผ่าน e-Payment (ข้อ 57) และทำสัญญา 2 ฉบับ (ข้อ 61)</td><td><span class="tag t-must">A</span></td><td>คำขอยืมเงินสร้างสัญญาตามแบบ ระบบไม่ยอมให้จ่ายก่อนอนุมัติ (FR-FN-18, FR-FN-20)</td></tr>
+    <tr><td>ผู้ยืมที่ไม่มีเงินที่หักส่งใช้ได้ ต้องวางหลักทรัพย์หรือมีผู้ค้ำประกัน (ข้อ 58)</td><td><span class="tag t-must">A</span></td><td>ช่องหลักประกันในคำขอ ใช้กับผู้ยืมที่ไม่ใช่ข้าราชการหรือพนักงานประจำ</td></tr>
+    <tr><td>อนุมัติให้ยืมเฉพาะเท่าที่จำเป็น และห้ามอนุมัติรายใหม่เมื่อผู้ยืมยังไม่ชำระรายเก่าให้เสร็จสิ้น (ข้อ 59)</td><td><span class="tag t-must">A</span></td><td>กฎห้ามแบบเด็ดขาด ไม่มีปุ่มข้ามกฎ (R-FN-05)</td></tr>
+    <tr><td>ยืมจากเงินนอกงบประมาณได้เฉพาะตามวัตถุประสงค์ของเงินนั้น หรือจำเป็นเร่งด่วนและหัวหน้าส่วนราชการอนุมัติ (ข้อ 60)</td><td><span class="tag t-must">A</span></td><td>แหล่งเงินของเงินยืมเป็นช่องบังคับ แหล่งนอกงบประมาณต้องให้หัวหน้าส่วนราชการอนุมัติ</td></tr>
+    <tr><td>ยืมคาบเกี่ยวปีงบประมาณ: เบิกจากงบปีปัจจุบัน ใช้จ่ายในปีถัดไปได้ไม่เกิน 90 วัน (เดินทาง) หรือ 30 วัน (อื่น ๆ) นับแต่ต้นปีใหม่ (ข้อ 62)</td><td><span class="tag t-must">A</span></td><td>ตรวจช่วงวันที่ของงานที่ยืมเทียบกับ 1 ตุลาคม</td></tr>
+    <tr><td>เบิกเงินมาให้ยืมได้เฉพาะงบหรือรายการ: ค่าจ้างชั่วคราว ค่าตอบแทน ใช้สอยและวัสดุ งบกลางบางรายการ และรายจ่ายอื่นลักษณะเดียวกัน (ข้อ 63) เดินทางในราชอาณาจักรยืมได้ไม่เกิน 90 วันของการเดินทาง (ข้อ 64)</td><td><span class="tag t-must">A</span></td><td>รายการที่ยืมได้เป็นรายการปิดใน M10</td></tr>
+    <tr><td>ส่งใบสำคัญและเงินเหลือ: (1) ไปประจำต่างสำนักงาน ต่างประเทศ หรือกลับภูมิลำเนา 30 วันนับแต่ได้รับเงิน (2) เดินทางไปราชการอื่น 15 วันนับแต่กลับมาถึง (3) ปฏิบัติราชการอื่น 30 วันนับแต่ได้รับเงิน ถ้ามีข้อทักท้วง ผู้ยืมต้องแก้ภายใน 15 วันนับแต่ได้รับคำทักท้วง (ข้อ 65)</td><td><span class="tag t-must">A</span></td><td>วันครบกำหนดคำนวณจากประเภทเงินยืม (R-FN-05) และวงจรทักท้วงมีนาฬิกา 15 วันของตัวเอง</td></tr>
+    <tr><td>รับคืนแล้วบันทึกในสัญญาและออกใบรับใบสำคัญ (ข้อ 66) เก็บสัญญาที่ยังไม่ชำระไว้อย่างปลอดภัย (ข้อ 67)</td><td><span class="tag t-must">A</span></td><td>ทะเบียนคุมเงินยืม และใบรับใบสำคัญออกจากระบบ</td></tr>
+    <tr><td>ถ้าไม่ชำระตามกำหนด ผู้อำนวยการกองคลังเรียกให้ชดใช้ภายใน 30 วันนับแต่วันครบกำหนด ถ้าไม่ได้ให้รายงานหัวหน้าส่วนราชการ (ข้อ 68)</td><td><span class="tag t-must">A</span></td><td>ขั้น “เรียกชดใช้” เป็นงานของหัวหน้าการเงิน Agent ร่างหนังสือได้แต่ไม่ส่งเอง (AG-19)</td></tr>
+  </tbody>
+</table></div>
+<h3><span class="num">2.3</span>การรับเงิน การเก็บรักษา และการนำส่ง</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ข้อค้นพบ</th><th>ระดับ</th><th>สิ่งที่นำไปออกแบบ</th></tr></thead>
+  <tbody>
+    <tr><td>ใบเสร็จรับเงินตามแบบที่กำหนด มีเลขเล่มและเลขที่เรียงกัน มีทะเบียนคุม ใช้ได้ภายในปีงบประมาณเดียว ห้ามขูดลบ แก้โดยขีดฆ่าหรือยกเลิกทั้งฉบับ และรายงานใบเสร็จคงเหลือภายใน 31 ตุลาคมของปีถัดไป (ข้อ 69–77)</td><td><span class="tag t-must">A</span></td><td>ใบเสร็จอิเล็กทรอนิกส์ที่ระบบให้เลขเอง ยกเลิกได้แต่ลบไม่ได้ และรายงานใบเสร็จประจำปี (FR-FN-25, FR-FN-26)</td></tr>
+    <tr><td>รับเงินผ่าน e-Payment เป็นหลัก (ข้อ 78) บันทึกการรับเงินในระบบภายในวันที่ได้รับ (ข้อ 81) สิ้นเวลารับจ่ายผู้รับเงินส่งเงินและสำเนาใบเสร็จให้เจ้าหน้าที่การเงิน และหัวหน้าตรวจกับรายการที่บันทึก (ข้อ 82–83)</td><td><span class="tag t-must">A</span></td><td>นาฬิกา “บันทึกภายในวัน” และขั้นส่งมอบเงินสิ้นวันจากผู้รับเงินถึงการเงิน (FR-FN-27)</td></tr>
+    <tr><td>เก็บเงินในตู้นิรภัย มีกุญแจอย่างน้อย 2 สำรับ (ข้อ 84–85) แต่งตั้งกรรมการเก็บรักษาเงินอย่างน้อย 2 คน ตำแหน่งตามที่กำหนด ถือกุญแจคนละดอก ห้ามมอบกุญแจให้ผู้อื่น (ข้อ 86–91)</td><td><span class="tag t-must">A</span></td><td>ทะเบียนกรรมการเก็บรักษาเงินและผู้ทำหน้าที่แทน ตรวจตำแหน่งตามข้อ 86 (FR-FN-31)</td></tr>
+    <tr><td>ทำรายงานเงินคงเหลือประจำวันทุกวันที่มีการรับเงินสด เช็ค หรือเอกสารแทนตัวเงิน กรรมการตรวจนับตัวเงินกับรายงานและลงนามทุกคน ถ้าไม่ตรงให้บันทึกยอดที่นับได้และรายงานหัวหน้าทันที (ข้อ 92–95)</td><td><span class="tag t-must">A</span></td><td>รายงานเงินคงเหลือประจำวันที่ระบบจัดทำ กรรมการแต่ละคนยืนยันยอดนับของตน และผลต่างเปิดเป็นเหตุการณ์ที่ต้องรายงาน (FR-FN-32)</td></tr>
+    <tr><td>เงินที่เบิกมาแต่ไม่ได้จ่าย ส่งคืนภายใน 15 วันทำการนับแต่วันรับเงินจากคลัง (ข้อ 99) ส่งคืนก่อนสิ้นปีเป็น “เงินเบิกเกินส่งคืน” หลังสิ้นปีเป็น “เงินเหลือจ่ายปีเก่าส่งคืน” (ข้อ 100)</td><td><span class="tag t-must">A</span></td><td>ระบบจัดประเภทการส่งคืนเองตามวันที่ และนาฬิกา 15 วันทำการ (R-FN-06)</td></tr>
+    <tr><td>กำหนดนำส่ง: เช็คนำส่งในวันที่ได้รับหรือวันทำการถัดไป · รายได้แผ่นดินเงินสด อย่างน้อยเดือนละครั้ง แต่ถ้าวันใดเกิน 10,000 บาท ต้องนำส่งภายใน 3 วันทำการ · รายได้ผ่าน e-Payment ตามที่กระทรวงการคลังกำหนด · เงินเบิกเกินหรือเหลือจ่ายปีเก่า 15 วันทำการ · เงินนอกงบประมาณที่เป็นเงินสด ฝากคลังอย่างน้อยเดือนละครั้ง (ข้อ 101)</td><td><span class="tag t-must">A</span></td><td>ตารางนาฬิกานำส่ง R-FN-06 ผูกกับยอดในตู้นิรภัยรายวัน</td></tr>
+    <tr><td>หัวหน้าหน่วยงานหรือผู้ได้รับมอบหมายเป็นผู้นำเงินส่งคลัง ผ่าน e-Payment หรือใบนำฝากเข้าบัญชีกรมบัญชีกลางหรือคลังจังหวัด (ข้อ 102–104)</td><td><span class="tag t-must">A</span></td><td>ใบนำส่งในระบบ เก็บเลขอ้างอิงจากธนาคารหรือ GFMIS เพื่อกระทบยอด (FR-FN-29)</td></tr>
+  </tbody>
+</table></div>
+<h3><span class="num">2.4</span>การกันเงิน การควบคุม และการตรวจสอบ</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ข้อค้นพบ</th><th>ระดับ</th><th>สิ่งที่นำไปออกแบบ</th></tr></thead>
+  <tbody>
+    <tr><td>ก่อหนี้ผูกพันก่อนสิ้นปีและมีวงเงินตั้งแต่ 100,000 บาท ขอกันเงินไว้เบิกเหลื่อมปีได้ไม่เกิน 6 เดือน ขยายได้อีกไม่เกิน 6 เดือนเมื่อตกลงกับกระทรวงการคลัง และต้องขอก่อนสิ้นปีงบประมาณ (ข้อ 105–106)</td><td><span class="tag t-must">A</span></td><td>รายการที่เข้าเกณฑ์กันเงินคำนวณจากวงเงินผูกพันที่ยังไม่จ่าย ส่งต่อให้หน้ากันเงินใน M06 (FR-FN-06) สอดคล้องกับ BR-17 ของ Fisko Budget</td></tr>
+    <tr><td>กรมบัญชีกลางกำหนดให้ยื่นขอกันเงินปี 2569 ผ่าน New GFMIS Thai ภายในวันทำการสุดท้ายของเดือนกันยายน 2569 (S5)</td><td><span class="tag t-should">B</span></td><td>กำหนดวันขอกันเงินเป็นค่าตั้งได้ต่อปีใน M10</td></tr>
+    <tr><td>ทุกสิ้นวันทำการ เจ้าหน้าที่การเงินตรวจเงินสดและเช็คคงเหลือกับรายงานเงินคงเหลือประจำวัน และตรวจการรับจ่ายผ่าน e-Payment กับรายงานในระบบ (ข้อ 108)</td><td><span class="tag t-must">A</span></td><td>การปิดวัน (Daily close) เป็นรายการตรวจที่ต้องผ่านก่อนเริ่มวันถัดไป (FR-FN-38)</td></tr>
+    <tr><td>เมื่อสำนักงานการตรวจเงินแผ่นดินทักท้วง หน่วยงานที่ไม่เห็นด้วยต้องชี้แจงต่อเจ้าของงบประมาณภายใน 15 วัน และมีขั้นต่อไปที่มีกำหนดเวลา (ข้อ 109) ถ้าปฏิบัติไม่ถูกต้องหรือเงินขาดบัญชี ต้องสั่งแก้หรือรายงานโดยด่วน (ข้อ 110–111)</td><td><span class="tag t-must">A</span></td><td>ทะเบียนข้อทักท้วงพร้อมนาฬิกาตามข้อ 109 และเหตุการณ์เงินขาดบัญชีที่แจ้งหัวหน้าส่วนราชการ (FR-FN-40)</td></tr>
+    <tr><td>ระเบียบฯ ออกเพื่อรองรับการเปลี่ยน GFMIS เป็น New GFMIS Thai และแผน National e-Payment (คำปรารภ)</td><td><span class="tag t-must">A</span></td><td>ชื่อระบบในหน้าจอใช้ “GFMIS” เป็นชื่อกลาง รูปแบบไฟล์เป็นค่าตั้งได้ (ประเด็น D-F05)</td></tr>
+  </tbody>
+</table></div>
+<h3><span class="num">2.5</span>ภาษีหัก ณ ที่จ่ายและการบัญชี</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ข้อค้นพบ</th><th>ระดับ</th><th>สิ่งที่นำไปออกแบบ</th></tr></thead>
+  <tbody>
+    <tr><td>ใบสั่งซื้อหรือใบสั่งจ้างของส่วนราชการที่มีราคาตั้งแต่ 10,000 บาท ต้องหักภาษี ณ ที่จ่ายร้อยละ 1 ต่ำกว่านั้นไม่ต้องหัก (S2) กรณีจ่ายให้บุคคลธรรมดา เกณฑ์นับรวมยอดที่จ่ายให้ผู้รับรายเดียวกันแม้แบ่งจ่ายหลายครั้ง (S3)</td><td><span class="tag t-should">B</span></td><td>อัตราและเกณฑ์อยู่ในตารางภาษีใน M10 ตัดสินจากยอดของใบสั่งซื้อทั้งใบ ไม่ใช่ยอดงวด (R-FN-03)</td></tr>
+    <tr><td>เมื่อกรมบัญชีกลางโอนเงินให้ผู้ขายผ่าน GFMIS ผู้ขายถูกหักร้อยละ 1 และพิมพ์รายงานการโอนจากเว็บไซต์ได้ แต่มีปัญหาที่หน่วยงานไม่ออกหนังสือรับรองการหักภาษีให้ทันที (S4)</td><td><span class="tag t-should">B</span></td><td>ระบบออกหนังสือรับรองการหักภาษี ณ ที่จ่าย (50 ทวิ) ทันทีที่มีผลการจ่าย และส่งให้ผู้ขายทางอีเมลเป็นปุ่มที่คนกด (FR-FN-10)</td></tr>
+    <tr><td>ฐานภาษีหัก ณ ที่จ่ายคือราคาก่อนภาษีมูลค่าเพิ่ม และค่าตอบแทนบุคคลธรรมดาบางประเภทใช้อัตราตามประเภทเงินได้</td><td><span class="tag t-could">C</span></td><td>แยกยอดก่อน VAT และ VAT ในทุกใบขอเบิก ประเภทเงินได้อื่นเป็นแถวในตารางภาษีที่ต้องยืนยันกับหน่วยงาน</td></tr>
+    <tr><td>หน่วยงานจัดทำบัญชีตามมาตรฐานการบัญชีภาครัฐในระบบ GFMIS และส่งรายงานการเงินประจำปีตามกฎหมายวินัยการเงินการคลัง (ยังไม่ได้ตรวจกำหนดเวลา)</td><td><span class="tag t-could">C</span></td><td>Fisko ไม่ทำบัญชีแยกประเภท นำเข้างบทดลองจาก GFMIS เพื่อตรวจและเตรียมชุดเอกสารปิดปี (FR-FN-39, ประเด็น D-FN-01)</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 03 ============================== -->
+<section class="ch" id="s3">
+<h2><span class="num">03</span>หลักการออกแบบ</h2>
+<p class="lede">เจ็ดหลักที่ใช้ตัดสินเมื่อมีทางเลือก</p>
+<div class="cards">
+  <div class="card"><div class="k">P-F01</div><b>GFMIS คือสมุดบัญชีทางการ</b><span>Fisko เตรียม ตรวจ ควบคุม และติดตาม แล้วส่งข้อมูลเข้า GFMIS เป็นไฟล์ (D-F05) ผลการบันทึกและการจ่ายมาจาก GFMIS หรือธนาคารเสมอ Fisko ไม่ทำบัญชีแยกประเภทซ้ำ</span></div>
+  <div class="card"><div class="k">P-F02</div><b>สายเดียวจากบรรทัดจัดสรร</b><span>บรรทัดจัดสรร (M06) → วงเงินผูกพันหรือใบสั่งซื้อ → ใบขอเบิก → ผลการจ่าย → เลขที่เอกสาร GFMIS → การเบิกจ่ายใน M07 ทุกขั้นอ้างรหัสเดียวกัน</span></div>
+  <div class="card"><div class="k">P-F03</div><b>กฎเป็นข้อมูล</b><span>วงเงิน 5,000 / 10,000 / 100,000 บาท อัตราภาษี และจำนวนวันทุกนาฬิกาอยู่ใน M10 พร้อมเลขข้อระเบียบและระดับความมั่นใจ แก้ได้โดยไม่ต้องแก้โปรแกรม</span></div>
+  <div class="card"><div class="k">P-F04</div><b>ทุกกำหนดเวลาเป็นนาฬิกา</b><span>5 วันทำการหลังตรวจรับ 15 หรือ 30 วันส่งใช้เงินยืม 3 วันทำการนำส่งเงินเกิน 10,000 บาท แสดงเป็นนาฬิกาที่นับถอยหลังและส่งต่อเมื่อเลยกำหนด</span></div>
+  <div class="card"><div class="k">P-F05</div><b>สองคนเสมอ</b><span>ผู้จัดทำกับผู้อนุมัติ ผู้ยืมกับผู้ตรวจใบสำคัญ ผู้รับเงินกับกรรมการเก็บรักษาเงิน ผู้บันทึกกับผู้กระทบยอด เป็นคนละคน ตรวจรวมผู้ที่ได้รับมอบอำนาจด้วย (SD-11 ถึง SD-16)</span></div>
+  <div class="card"><div class="k">P-F06</div><b>หลักฐานครบก่อนส่ง</b><span>ใบขอเบิกแต่ละประเภทมีรายการหลักฐานที่ต้องมี ขาดข้อใดส่งต่อไม่ได้ ตัวเลขในหลักฐานต้องตรงกับใบขอเบิก</span></div>
+  <div class="card"><div class="k">P-F07</div><b>AI ตรวจ ไม่จ่ายเงิน</b><span>Agent ตรวจหลักฐาน จับคู่รายการ เตือน และร่างหนังสือ แต่ไม่อนุมัติ ไม่จ่าย ไม่แก้ยอดเงิน ไม่แก้บัญชีธนาคารผู้ขาย และไม่ส่งหนังสือออก ทุกการใช้บันทึกใน M09</span></div>
+</div>
+</section>
+
+<!-- ============================== 04 ============================== -->
+<section class="ch" id="s4">
+<h2><span class="num">04</span>จังหวะงานการเงินและสถานะ</h2>
+<p class="lede">งานการเงินมี 3 จังหวะซ้อนกัน: รายวัน รายเดือน และรายปี ทุกจังหวะจบด้วยการตรวจและลงนาม</p>
+<div class="flow">
+  <div class="st"><b>รายวัน</b>รับเงิน บันทึกภายในวัน รายงานเงินคงเหลือ ตรวจการจ่าย</div><span class="ar">·</span>
+  <div class="st"><b>รายเดือน</b>ขอเบิกรายการประจำเดือน นำส่งรายได้ กระทบยอดธนาคาร ปิดงวด</div><span class="ar">·</span>
+  <div class="st"><b>รายปี</b>กันเงินเหลื่อมปี รายงานใบเสร็จ เงินยืมคาบเกี่ยวปี ปิดปี</div>
+</div>
+<h3><span class="num">4.1</span>ปฏิทินการเงิน (ตัวอย่างปีงบประมาณ 2570)</h3>
+<p class="small">วันที่ที่มาจากระเบียบแสดงเลขข้อ วันที่อื่นเป็นตัวอย่างและเป็นค่าตั้งได้ใน M10 <span class="tag t-could">C</span></p>
+<div class="tbl"><table>
+  <thead><tr><th>เมื่อ</th><th>งาน</th><th>ผู้รับผิดชอบ</th><th>ที่มา</th></tr></thead>
+  <tbody>
+    <tr><td>ทุกวันที่มีรับจ่าย</td><td>บันทึกการรับเงินภายในวัน · ส่งมอบเงินสิ้นวัน · รายงานเงินคงเหลือประจำวัน กรรมการตรวจนับและลงนาม · ตรวจการจ่ายกับหลักฐาน</td><td>ผู้รับเงิน การเงิน กรรมการเก็บรักษาเงิน หัวหน้าการเงิน</td><td>ข้อ 43, 81–83, 92–94, 108</td></tr>
+    <tr><td>ภายใน 5 วันทำการหลังตรวจรับ</td><td>ขอเบิกเงินค่าซื้อ จ้าง เช่า</td><td>การเงิน</td><td>ข้อ 28</td></tr>
+    <tr><td>ภายในวันที่ 15 ของเดือน</td><td>ขอเบิกเงินที่ต้องจ่ายประจำเดือนในวันทำการสิ้นเดือน</td><td>การเงิน</td><td>ข้อ 31</td></tr>
+    <tr><td>อย่างน้อยเดือนละครั้ง</td><td>นำส่งรายได้แผ่นดินที่เป็นเงินสด · ฝากเงินนอกงบประมาณที่เป็นเงินสด</td><td>การเงิน หัวหน้าการเงิน</td><td>ข้อ 101 (2), (5)</td></tr>
+    <tr><td>วันทำการที่ 5 ของเดือนถัดไป (ตัวอย่าง)</td><td>ปิดงวดเดือน: นำเข้างบทดลองและรายงานจาก GFMIS กระทบยอดธนาคาร ทบทวนเงินยืมค้าง ลงนามปิดงวด</td><td>การเงิน หัวหน้าการเงิน</td><td>ข้อเสนอ <span class="tag t-could">C</span></td></tr>
+    <tr><td>ก่อนวันทำการสุดท้ายของกันยายน</td><td>ขอกันเงินไว้เบิกเหลื่อมปีในระบบ GFMIS</td><td>การเงิน (ร่วมกับกองแผนใน M06)</td><td>ข้อ 105–106, S5</td></tr>
+    <tr><td>1 ตุลาคม</td><td>เปิดปีใหม่: เล่มใบเสร็จใหม่ เงินยืมคาบเกี่ยวปีเริ่มนับ 90 หรือ 30 วัน</td><td>การเงิน</td><td>ข้อ 62, 75</td></tr>
+    <tr><td>ภายใน 31 ตุลาคม</td><td>รายงานใบเสร็จรับเงินที่ได้รับไปและที่ใช้ไปของปีที่ผ่านมา</td><td>หน่วยงานที่รับใบเสร็จไปใช้</td><td>ข้อ 74</td></tr>
+  </tbody>
+</table></div>
+<h3><span class="num">4.2</span>สถานะหลัก</h3>
+<h4>ใบขอเบิก (Voucher)</h4>
+<div class="flow">
+  <div class="st"><b>V1</b>ร่าง</div><span class="ar">→</span>
+  <div class="st"><b>V2</b>ตรวจหลักฐาน</div><span class="ar">→</span>
+  <div class="st"><b>V3</b>รออนุมัติ</div><span class="ar">→</span>
+  <div class="st"><b>V4</b>พร้อมส่ง GFMIS</div><span class="ar">→</span>
+  <div class="st"><b>V5</b>บันทึกใน GFMIS แล้ว</div><span class="ar">→</span>
+  <div class="st"><b>V6</b>จ่ายเงินแล้ว</div><span class="ar">→</span>
+  <div class="st"><b>V7</b>กระทบยอดแล้ว</div>
+</div>
+<h4>เงินยืม (Advance)</h4>
+<div class="flow">
+  <div class="st"><b>A1</b>ขอยืม</div><span class="ar">→</span>
+  <div class="st"><b>A2</b>อนุมัติ</div><span class="ar">→</span>
+  <div class="st"><b>A3</b>จ่ายแล้ว นาฬิกาเริ่ม</div><span class="ar">→</span>
+  <div class="st"><b>A4</b>ส่งใบสำคัญ</div><span class="ar">→</span>
+  <div class="st"><b>A5</b>ตรวจแล้ว ชำระครบ</div>
+</div>
+<p class="small">ทางแยก: A4 → ทักท้วง (นาฬิกา 15 วัน) → A4 · A3 เลยกำหนด → เรียกชดใช้ (ไม่เกิน 30 วัน) → รายงานหัวหน้าส่วนราชการ</p>
+<h4>เงินรับ (Receipt)</h4>
+<div class="flow">
+  <div class="st"><b>R1</b>รับเงิน ออกใบเสร็จ</div><span class="ar">→</span>
+  <div class="st"><b>R2</b>บันทึกในระบบ</div><span class="ar">→</span>
+  <div class="st"><b>R3</b>เก็บในตู้นิรภัย</div><span class="ar">→</span>
+  <div class="st"><b>R4</b>นำส่งหรือฝากคลัง</div><span class="ar">→</span>
+  <div class="st"><b>R5</b>ตรงกับ GFMIS</div>
+</div>
+<p class="small">เงินที่รับผ่าน e-Payment ข้าม R3 ไป R4 ตามกำหนดเวลาที่กระทรวงการคลังกำหนด</p>
+<h4>งวดบัญชี (Period)</h4>
+<div class="flow">
+  <div class="st"><b>P1</b>เปิด</div><span class="ar">→</span>
+  <div class="st"><b>P2</b>กำลังปิด (รายการตรวจ)</div><span class="ar">→</span>
+  <div class="st"><b>P3</b>ปิดแล้ว</div><span class="ar">→</span>
+  <div class="st"><b>P4</b>เปิดใหม่ (มีเหตุผล)</div>
+</div>
+<div class="tbl"><table>
+  <thead><tr><th>สถานะ</th><th>ใครเปลี่ยน</th><th>เก็บหรือคำนวณ</th><th>หมายเหตุ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">V1 → V2</td><td>เจ้าหน้าที่การเงิน (หรือระบบ เมื่อ Procurement ตรวจรับครบและผ่านประตูเบิกจ่าย R-11)</td><td>เก็บ</td><td>ใบขอเบิกค่าซื้อจ้างเกิดเองจากงวดที่ตรวจรับครบ ข้อมูลผู้ขาย ยอด และค่าปรับมาจาก Procurement</td></tr>
+    <tr><td class="id">V2 → V3</td><td>เจ้าหน้าที่การเงินคนที่ตรวจ (ไม่ใช่ผู้จัดทำ)</td><td>เก็บ</td><td>ส่งต่อได้เมื่อรายการหลักฐานครบและกฎ R-FN-01 ถึง 03 ผ่าน</td></tr>
+    <tr><td class="id">V3 → V4</td><td>ผู้มีอำนาจอนุมัติจ่าย (ข้อ 36) หรือผู้รับมอบ</td><td>เก็บ</td><td>ตรวจ SD-11 และตำแหน่งตามตารางผู้มีอำนาจ</td></tr>
+    <tr><td class="id">V4 → V5</td><td>นำเข้าไฟล์ผลจาก GFMIS</td><td>เก็บ</td><td>เลขที่เอกสารขอเบิกจาก GFMIS ผูกกับใบขอเบิก</td></tr>
+    <tr><td class="id">V5 → V6</td><td>นำเข้าไฟล์ผลการจ่าย (GFMIS หรือธนาคาร)</td><td>เก็บ</td><td>คนกดเป็น “จ่ายเงินแล้ว” เองไม่ได้ (ข้อ 40, 42)</td></tr>
+    <tr><td class="id">V7</td><td>ระบบ</td><td>คำนวณ</td><td>ยอดตรงกันทั้ง Fisko, GFMIS และธนาคาร หรือมีคำชี้แจงผลต่างที่ยอมรับแล้ว</td></tr>
+    <tr><td class="id">A3 เลยกำหนด</td><td>ระบบ</td><td>คำนวณ</td><td>จากวันจ่ายหรือวันกลับ และประเภทเงินยืม (R-FN-05) ไม่เก็บสถานะเพื่อไม่ให้คลาดเคลื่อน</td></tr>
+    <tr><td class="id">R2 → R3</td><td>กรรมการเก็บรักษาเงินลงนามรายงานเงินคงเหลือ</td><td>เก็บ</td><td>ลงนามครบทุกคนจึงถือว่าเก็บแล้ว</td></tr>
+    <tr><td class="id">P2 → P3</td><td>หัวหน้าการเงิน</td><td>เก็บ</td><td>รายการตรวจปิดงวดต้องผ่านหรือมีเหตุผลยกเว้นทุกข้อ</td></tr>
+    <tr><td class="id">P3 → P4</td><td>หัวหน้าการเงิน ไม่ใช่ผู้ที่ปิดงวดนั้น หรือผู้บริหาร</td><td>เก็บ</td><td>ต้องมีเหตุผล บันทึกใน M09 (SD-16)</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 05 ============================== -->
+<section class="ch" id="s5">
+<h2><span class="num">05</span>สิ่งที่มีแล้วและช่องว่าง</h2>
+<p class="lede">ฉบับเบาจากรอบ 11 พิสูจน์สายข้อมูลได้แล้ว แต่ครอบคลุมเพียงการจ่ายตามสัญญาจัดซื้อ</p>
+<div class="tbl"><table>
+  <thead><tr><th>เรื่อง</th><th>มีแล้วในต้นแบบ</th><th>ช่องว่าง</th><th>แก้ด้วย</th></tr></thead>
+  <tbody>
+    <tr><td>วงเงินผูกพัน</td><td>หน้า “สายงบประมาณถึงการจ่าย” อ่านวงเงินผูกพันจากสัญญา (<code>famCommitted</code>) และวงเงินคงเหลือของบรรทัด</td><td>ไม่มีใบสั่งซื้อใน GFMIS ไม่มีผูกพันที่ไม่ใช่สัญญา (สาธารณูปโภค ค่าเช่ารายปี) ไม่มีรายการเข้าเกณฑ์กันเงิน</td><td>FR-FN-01 ถึง 06</td></tr>
+    <tr><td>ขอเบิกและจ่าย</td><td>คำขออนุมัติเบิกจ่ายของงวดสัญญาที่ตรวจรับแล้ว ผ่านประตูเบิกจ่าย R-11 ของ Procurement ตรวจ SD-03 และ SD-04</td><td>มีประเภทเดียว ไม่มีหลักฐาน ไม่มีภาษีหัก ณ ที่จ่าย ไม่มีทางจ่าย ไม่มีนาฬิกา 5 วันทำการ ไม่มีสถานะหลังอนุมัติ ไม่ตรวจตำแหน่งผู้อนุมัติ</td><td>FR-FN-07 ถึง 17</td></tr>
+    <tr><td>เงินยืม</td><td>ไม่มี</td><td>ทั้งวงจร</td><td>FR-FN-18 ถึง 24</td></tr>
+    <tr><td>รับเงินและนำส่ง</td><td>ไม่มี</td><td>ใบเสร็จ ทะเบียนคุม การนำส่ง การจัดประเภทเงินส่งคืน</td><td>FR-FN-25 ถึง 30</td></tr>
+    <tr><td>เก็บรักษาเงิน</td><td>ไม่มี</td><td>กรรมการเก็บรักษาเงิน รายงานเงินคงเหลือประจำวัน</td><td>FR-FN-31 ถึง 33</td></tr>
+    <tr><td>GFMIS และกระทบยอด</td><td>นำเข้าไฟล์รายงาน GFMIS (ตัวอย่าง) เทียบรายการอนุมัติ ชี้แจงผลต่าง ตรวจ SD-05</td><td>ไฟล์ชนิดเดียว ไม่มีรายการเดินบัญชีธนาคาร ไม่มีงบพิสูจน์ยอดเงินฝาก ไม่มีทะเบียนผู้มีสิทธิใช้งาน</td><td>FR-FN-34 ถึง 37</td></tr>
+    <tr><td>ปิดงวดและรายงาน</td><td>ไม่มี</td><td>ปิดวัน ปิดเดือน ปิดปี ข้อทักท้วง สตง. และการส่งยอดเบิกจ่ายให้ M07</td><td>FR-FN-38 ถึง 41</td></tr>
+    <tr><td>AI และ Analytics</td><td>Agent ร่วมของ Procurement และ Budget (AG-01 ถึง AG-17) แชต AI co-work</td><td>ไม่มี Agent ด้านการเงิน ไม่มีตัวชี้วัดและสัญญาณเตือนด้านการเงิน</td><td>บทที่ 10 และ 11</td></tr>
+    <tr><td>บทบาท</td><td><code>fin</code> เจ้าหน้าที่การเงิน และ <code>exec</code> ผู้อนุมัติ</td><td>ไม่มีหัวหน้าการเงินที่ตรวจ ปิดงวด และเรียกชดใช้ ไม่มีกรรมการเก็บรักษาเงิน ผู้ยืมทั่วไปทำรายการเองไม่ได้</td><td>บทที่ 8.2 และประเด็น D-FN-02</td></tr>
+  </tbody>
+</table></div>
+<div class="callout"><b>สิ่งที่ต้องรักษาไว้</b> ข้อมูลเดิม <code>S.payreqs</code> และ <code>S.gfmisFiles</code> ย้ายเป็นใบขอเบิกประเภท “ซื้อ จ้าง เช่า” ได้โดยไม่เสีย ประตูเบิกจ่าย R-11 และกฎ SD-03 ถึง SD-05 ใช้ต่อ ขั้นที่ 10 ถึง 12 ของแฟ้มจัดซื้อยังคำนวณจากสถานะการจ่าย จึงต้องอ่านจากใบขอเบิกแบบใหม่</div>
+</section>
+
+<!-- ============================== 06 ============================== -->
+<section class="ch" id="s6">
+<h2><span class="num">06</span>ฟังก์ชันรายขั้นตอน</h2>
+<p class="lede">ข้อกำหนด FR-FN-01 ถึง 41 จัดตาม 7 กลุ่มงาน ป้ายบอกความสำคัญ: <span class="tag t-must">ต้องมี</span> <span class="tag t-should">ควรมี</span> <span class="tag t-could">อาจมี</span></p>
+
+<h3><span class="num">6.1</span>วงเงินผูกพันและใบสั่งซื้อ (F2)</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ฟังก์ชัน</th><th>รายละเอียด</th><th>ความสำคัญ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-FN-01</td><td>ทะเบียนวงเงินผูกพัน</td><td>รวมผูกพันทุกแหล่ง: สัญญาและใบสั่งซื้อจาก Procurement ผูกพันที่ไม่ใช่การจัดซื้อ (FR-FN-03) ต่อบรรทัดจัดสรร แสดงจัดสรร ผูกพัน ขอเบิก จ่ายแล้ว และคงเหลือ ตรวจไม่ให้ผูกพันเกินเงินจัดสรร (ข้อ 18)</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-02</td><td>ใบสั่งซื้อใน GFMIS</td><td>ใบสั่งซื้อ สัญญา หรือข้อตกลงตั้งแต่ 5,000 บาท ระบบเตรียมชุดข้อมูล PO (ผู้ขาย รหัสงบประมาณ ยอด งวด) ให้ลงใน GFMIS แล้วนำเลขที่ PO กลับมาผูก ใบขอเบิกที่ต้องมี PO ส่งต่อไม่ได้ถ้ายังไม่มีเลขที่ (ข้อ 28)</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-03</td><td>ผูกพันที่ไม่ใช่การจัดซื้อ</td><td>รายการรายปีหรือรายเดือน เช่น ค่าไฟฟ้า ประปา โทรศัพท์ ค่าเช่า และคำสั่งเดินทางไปราชการ กันวงเงินจากบรรทัดจัดสรรตามประมาณการ ปรับด้วยยอดจริงทุกเดือน</td><td><span class="tag t-should">ควรมี</span></td></tr>
+    <tr><td class="id">FR-FN-04</td><td>คืนวงเงินผูกพัน</td><td>เมื่อยกเลิก บอกเลิกสัญญา ค่าปรับ หรือจ่ายต่ำกว่าผูกพัน วงเงินคืนบรรทัดจัดสรรพร้อมเหตุผล และแจ้ง M06 เป็นเงินเหลือจ่าย</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-05</td><td>มุมมองวงเงินคงเหลือ</td><td>ทุกหน้าที่ใช้เงินแสดงวงเงินคงเหลือของบรรทัดแบบเดียวกัน (จัดสรร − ผูกพันที่ยังไม่จ่าย − จ่ายแล้ว) ใช้ฟังก์ชันเดียวกับ Fisko Budget</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-06</td><td>รายการเข้าเกณฑ์กันเงิน</td><td>ตั้งแต่ไตรมาส 4 ระบบคำนวณรายการที่ก่อหนี้แล้ว วงเงินตั้งแต่ 100,000 บาท และยังจ่ายไม่ครบ ส่งเป็นรายการเสนอให้หน้ากันเงินใน M06 พร้อมนาฬิกาถึงวันขอกันเงิน (ข้อ 105–106)</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.2</span>ขอเบิก จ่าย และภาษีหัก ณ ที่จ่าย (F3)</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ฟังก์ชัน</th><th>รายละเอียด</th><th>ความสำคัญ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-FN-07</td><td>ประเภทใบขอเบิก</td><td>6 ประเภท: ซื้อ จ้าง เช่า · สาธารณูปโภค · ค่าเดินทางและส่งใช้เงินยืม · ค่าตอบแทนและสวัสดิการ · คืนเงินหรือรายการอื่น · เงินเดือนและค่าจ้างประจำ (ไฟล์จากระบบบุคลากรเท่านั้น ประเด็น D-FN-03) แต่ละประเภทกำหนดทางจ่าย หลักฐาน และกฎ</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-08</td><td>รายการหลักฐาน</td><td>ตามประเภท: ใบแจ้งหนี้ ใบตรวจรับ ใบเสร็จ (5 รายการตามข้อ 46) ใบสำคัญรับเงิน ใบรับรองการจ่ายเงิน รายงานการเดินทาง คำสั่ง อ่านเอกสารแบบจำลองและเทียบยอดกับใบขอเบิก (ต่อยอด AG-14) ขาดข้อใดส่งต่อไม่ได้</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-09</td><td>ทางจ่าย</td><td>ระบบเลือกทางจ่ายตาม R-FN-02: กรมบัญชีกลางจ่ายตรงเจ้าหนี้ หรือเข้าบัญชีหน่วยงานแล้วจ่ายต่อ แสดงเหตุผลและเลขข้อ ผู้ใช้เปลี่ยนได้เฉพาะกรณีที่ระเบียบให้เลือก</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-10</td><td>ภาษีหัก ณ ที่จ่าย</td><td>คำนวณจากตาราง R-FN-03 บนฐานก่อน VAT บันทึกเป็นรายการหักและรายได้แผ่นดิน (ข้อ 19) ออกหนังสือรับรอง 50 ทวิ เลขเรียงต่อปี เมื่อมีผลการจ่าย ส่งให้ผู้ขายเป็นปุ่มที่คนกด</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-11</td><td>นาฬิกาขอเบิก</td><td>5 วันทำการนับแต่ตรวจรับครบ (ข้อ 28) วันที่ 15 สำหรับรายการประจำเดือน (ข้อ 31) เตือนผู้จัดทำ แล้วส่งต่อหัวหน้าการเงินเมื่อเหลือ 1 วัน และนับเป็นตัวชี้วัด KPI-F01</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-12</td><td>อนุมัติจ่าย</td><td>ผู้มีอำนาจตามข้อ 36 จากตารางใน M10 (ตำแหน่ง ระดับ วงเงิน) และการมอบอำนาจ ตรวจ SD-11 อนุมัติเป็นชุดได้เมื่อทุกใบผ่านกฎ ไม่อนุมัติต้องมีเหตุผล ส่งกลับไปขั้นร่าง</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-13</td><td>ส่งข้อมูลเข้า GFMIS</td><td>รวมใบขอเบิกที่อนุมัติแล้วเป็นไฟล์ตามรูปแบบที่ตั้งไว้ (ประเด็น D-F05) ดาวน์โหลดโดยผู้มีสิทธิตาม FR-FN-34 แล้วนำเข้าไฟล์ผลที่มีเลขที่เอกสาร GFMIS กลับมา แถวที่ไม่ตรงแสดงเป็นข้อผิดพลาด</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-14</td><td>ผลการจ่าย</td><td>นำเข้ารายงานการจ่ายจาก GFMIS หรือธนาคาร ใบขอเบิกเปลี่ยนเป็น “จ่ายเงินแล้ว” พร้อมวันที่และเลขอ้างอิง ยอดสุทธิที่จ่ายต้องตรงกับใบขอเบิก งวดสัญญาใน Procurement เปลี่ยนตาม</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-15</td><td>จ่ายจากบัญชีหน่วยงาน</td><td>เงินที่เข้าบัญชีหน่วยงาน (ข้อ 28 (2), 29) จ่ายต่อเป็นชุดผ่านไฟล์ e-Payment ให้ธนาคาร จ่ายเช็คหรือเงินสดต้องมีเหตุผล (ข้อ 52) เงินที่ไม่ได้จ่ายเข้านาฬิกาส่งคืน 15 วันทำการ (ข้อ 99)</td><td><span class="tag t-should">ควรมี</span></td></tr>
+    <tr><td class="id">FR-FN-16</td><td>ตรวจการจ่ายประจำวัน</td><td>รายการจ่ายของวันเทียบกับหลักฐาน หัวหน้าการเงินลงนามทุกสิ้นวัน (ข้อ 43) รายการที่ยังไม่ได้ตรวจค้างไปวันถัดไปและนับในการปิดวัน</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-17</td><td>ข้อมูลหลักผู้ขาย</td><td>ใช้ทะเบียนผู้ขายร่วมกับ Procurement คำขอสร้างหรือแก้บัญชีธนาคารต้องมีหลักฐานหน้าสมุดบัญชีและผู้ยืนยันคนที่สอง (SD-14) ส่งข้อมูลให้กรมบัญชีกลางสร้างข้อมูลหลักผู้ขาย (ข้อ 20 (2)) การจ่ายครั้งแรกหลังแก้บัญชีติดป้ายตรวจ</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.3</span>เงินยืม (F4)</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ฟังก์ชัน</th><th>รายละเอียด</th><th>ความสำคัญ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-FN-18</td><td>ขอยืมเงิน</td><td>พนักงานทุกคนขอยืมเองได้จาก My Workspace → “เงินยืมของฉัน” เลือกประเภท (เดินทาง ไปประจำต่างสำนักงาน ปฏิบัติราชการอื่น) ช่วงวันที่ ประมาณการรายการ บรรทัดจัดสรรหรือแหล่งเงิน ระบบสร้างสัญญายืมเงินตามแบบ (ข้อ 55, 61)</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-19</td><td>ตรวจก่อนอนุมัติ</td><td>ห้ามมีเงินยืมค้าง (ข้อ 59) รายการต้องอยู่ในงบที่ยืมได้ (ข้อ 63) เดินทางไม่เกิน 90 วัน (ข้อ 64) คาบเกี่ยวปีไม่เกิน 90 หรือ 30 วัน (ข้อ 62) แหล่งนอกงบประมาณต้องหัวหน้าส่วนราชการอนุมัติ (ข้อ 60) ผู้ไม่มีเงินที่หักได้ต้องมีหลักประกัน (ข้อ 58)</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-20</td><td>อนุมัติและจ่าย</td><td>ผู้มีอำนาจตามข้อ 36 อนุมัติเท่าที่จำเป็น (ปรับลดยอดได้พร้อมเหตุผล) จ่ายผ่าน e-Payment (ข้อ 57) วันจ่ายเริ่มนาฬิกา ตรวจ SD-12</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-21</td><td>ส่งใช้เงินยืม</td><td>ผู้ยืมส่งใบสำคัญและเงินเหลือ (ถ้ามี) ระบบเทียบยอดใช้จริงกับยอดยืม ใบสำคัญกลายเป็นใบขอเบิกประเภทส่งใช้เงินยืม เจ้าหน้าที่การเงินตรวจ ทักท้วงได้พร้อมเหตุผล ผู้ยืมแก้ภายใน 15 วัน (ข้อ 65) ออกใบรับใบสำคัญเมื่อครบ (ข้อ 66)</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-22</td><td>เลยกำหนดและเรียกชดใช้</td><td>เตือนผู้ยืม 7, 3 และ 1 วันก่อนครบกำหนด เลยกำหนดแล้วหัวหน้าการเงินออกหนังสือเรียกชดใช้ (นาฬิกาไม่เกิน 30 วันตามข้อ 68) ถ้าไม่ได้รายงานหัวหน้าส่วนราชการ ทุกขั้นเป็นปุ่มที่คนกด</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-23</td><td>ทะเบียนคุมเงินยืม</td><td>ทุกสัญญา ยอดยืม ส่งใช้ เงินเหลือ ค้าง วันครบกำหนด อายุหนี้ (ยังไม่ครบกำหนด เลย 1–15 วัน เลย 16–30 วัน เลยเกิน 30 วัน) แยกตามหน่วยงานและผู้ยืม</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-24</td><td>ช่วยคำนวณค่าเดินทาง</td><td>เบี้ยเลี้ยง ที่พัก และพาหนะจากตารางอัตราใน M10 (ค่าตั้งต้นต้องยืนยัน) ใช้ทั้งตอนประมาณการและตอนส่งใช้</td><td><span class="tag t-could">อาจมี</span></td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.4</span>รับเงินและนำส่ง (F5)</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ฟังก์ชัน</th><th>รายละเอียด</th><th>ความสำคัญ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-FN-25</td><td>ใบเสร็จรับเงิน</td><td>ใบเสร็จอิเล็กทรอนิกส์ มีเลขเล่มและเลขที่เรียงกันต่อปี (ข้อ 69–70) ช่องบังคับครบ 5 รายการ ยกเลิกได้ทั้งฉบับพร้อมเหตุผล แต่แก้หรือลบไม่ได้ (ข้อ 76) รับผ่าน e-Payment ใช้รายงานจากระบบเป็นหลักฐาน (ข้อ 79)</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-26</td><td>ทะเบียนคุมใบเสร็จ</td><td>เล่มที่จ่ายให้หน่วยงานย่อยหรือผู้ไปเก็บเงิน วันจ่าย เลขที่ใช้ไป เล่มที่คืน (ข้อ 71–73) รายงานประจำปีภายใน 31 ตุลาคม (ข้อ 74) ขึ้นปีใหม่ใช้เล่มใหม่ (ข้อ 75)</td><td><span class="tag t-should">ควรมี</span></td></tr>
+    <tr><td class="id">FR-FN-27</td><td>บันทึกและส่งมอบประจำวัน</td><td>บันทึกการรับเงินภายในวัน (ข้อ 81) รวมหลายใบเป็นรายการเดียวได้โดยเก็บช่วงเลขที่ สิ้นเวลารับจ่าย ผู้รับเงินส่งมอบเงินและสำเนาให้การเงิน และหัวหน้าตรวจ (ข้อ 82–83)</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-28</td><td>ประเภทเงินรับ</td><td>รายได้แผ่นดิน เงินนอกงบประมาณ เงินเบิกเกินส่งคืน เงินเหลือจ่ายปีเก่าส่งคืน ภาษีหัก ณ ที่จ่าย ค่าปรับ ระบบเสนอประเภทเงินส่งคืนจากวันที่ (ข้อ 100) และผูกเงินคืนกับใบขอเบิกเดิม</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-29</td><td>นำส่งและฝากคลัง</td><td>นาฬิกาตาม R-FN-06 รวมยอดที่ต้องนำส่งเป็นใบนำส่ง เก็บเลขอ้างอิงจากธนาคารหรือ GFMIS ผู้นำส่งตามข้อ 102 ยอดในตู้นิรภัยลดเมื่อนำส่ง</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-30</td><td>ติดตามภาษีและค่าปรับ</td><td>ภาษีที่หักและค่าปรับที่หักจากใบขอเบิก รวมเป็นรายงานรายเดือนต่อประเภทเงินได้และผู้ถูกหัก ใช้กระทบยอดกับ GFMIS และตอบผู้ขาย</td><td><span class="tag t-should">ควรมี</span></td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.5</span>เก็บรักษาเงิน (F6)</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ฟังก์ชัน</th><th>รายละเอียด</th><th>ความสำคัญ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-FN-31</td><td>กรรมการเก็บรักษาเงิน</td><td>คำสั่งแต่งตั้งอย่างน้อย 2 คน ตรวจตำแหน่งตามข้อ 86 ผู้ทำหน้าที่แทนแต่งตั้งเป็นการประจำได้ (ข้อ 88) ตรวจ SD-13</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-32</td><td>รายงานเงินคงเหลือประจำวัน</td><td>ระบบสร้างจากรายการรับจ่ายของวัน แยกเงินสด เช็ค และเอกสารแทนตัวเงิน ตามประเภทเงิน กรรมการแต่ละคนใส่ยอดที่นับได้และลงนามเอง ผลต่างบันทึกตามข้อ 95 และแจ้งหัวหน้าส่วนราชการ วันที่ไม่มีรับจ่ายไม่ต้องทำ แต่หมายเหตุในวันถัดไป (ข้อ 92)</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-33</td><td>บันทึกส่งมอบกุญแจ</td><td>การส่งมอบระหว่างกรรมการกับผู้ทำหน้าที่แทน ต้องตรวจนับและลงนามในรายงานเงินคงเหลือวันนั้น (ข้อ 89) เหตุกุญแจหายเป็นเหตุการณ์ที่รายงานหัวหน้า (ข้อ 90)</td><td><span class="tag t-could">อาจมี</span></td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.6</span>GFMIS และการกระทบยอด (F7)</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ฟังก์ชัน</th><th>รายละเอียด</th><th>ความสำคัญ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-FN-34</td><td>ผู้มีสิทธิใช้งาน GFMIS</td><td>ทะเบียนผู้ได้รับมอบหมายตามข้อ 10–12: ชื่อ หน้าที่ (บันทึก อนุมัติ นำส่ง) เลขที่คำสั่ง วันหมดอายุ ใช้ตรวจว่าผู้ดาวน์โหลดไฟล์ส่ง GFMIS มีสิทธิ</td><td><span class="tag t-should">ควรมี</span></td></tr>
+    <tr><td class="id">FR-FN-35</td><td>นำเข้าไฟล์ GFMIS</td><td>5 ชนิด: ผลการบันทึกขอเบิก ผลการจ่าย ใบสั่งซื้อ รายได้และนำส่ง งบทดลอง ตรวจรูปแบบ แถวซ้ำ และงวด ก่อนนำเข้า เก็บประวัติไฟล์ (ต่อยอดหน้ากระทบยอดเดิม)</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-36</td><td>จับคู่สามทาง</td><td>Fisko ↔ GFMIS ↔ รายการเดินบัญชีธนาคาร จับคู่ตามเลขอ้างอิง ยอด และวันที่ ส่วนที่ไม่ตรงเป็นรายการค้างให้ชี้แจง ผู้ชี้แจงต้องไม่ใช่ผู้อนุมัติหรือผู้บันทึก (SD-05, SD-15) AG-20 เสนอคู่ที่น่าจะใช่ แต่คนยืนยัน</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-37</td><td>งบพิสูจน์ยอดเงินฝากธนาคาร</td><td>รายเดือนต่อบัญชี (งบประมาณ นอกงบประมาณ): ยอดตามบัญชี ยอดตามธนาคาร รายการระหว่างทาง ผลต่างต้องเป็นศูนย์จึงปิดงวดได้</td><td><span class="tag t-should">ควรมี</span></td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.7</span>ปิดงวดและรายงาน (F8)</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ฟังก์ชัน</th><th>รายละเอียด</th><th>ความสำคัญ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-FN-38</td><td>ปิดวัน</td><td>รายการตรวจสิ้นวันตามข้อ 108: รับเงินบันทึกครบ ส่งมอบเงินแล้ว รายงานเงินคงเหลือลงนามครบ การจ่ายของวันตรวจแล้ว นาฬิกาที่ครบกำหนดวันนี้</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-39</td><td>ปิดเดือนและปิดปี</td><td>รายการตรวจปิดเดือน (บทที่ 7.6) หัวหน้าการเงินปิดและเปิดใหม่พร้อมเหตุผล (SD-16) ปิดปีเพิ่ม: กันเงิน เงินยืมคาบเกี่ยวปี รายงานใบเสร็จ งบทดลองสิ้นปีจาก GFMIS และชุดเอกสารประกอบรายงานการเงิน (ร่าง)</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+    <tr><td class="id">FR-FN-40</td><td>ข้อทักท้วงและเหตุการณ์</td><td>ทะเบียนข้อทักท้วงจาก สตง. พร้อมนาฬิกาตามข้อ 109 คำชี้แจง ผลวินิจฉัย และเหตุการณ์เงินขาดบัญชีหรือสูญหายที่ต้องรายงานโดยด่วน (ข้อ 111)</td><td><span class="tag t-should">ควรมี</span></td></tr>
+    <tr><td class="id">FR-FN-41</td><td>รายงานและส่งยอดให้ Budget</td><td>ยอดเบิกจ่ายจริงต่อบรรทัดส่งให้ M06 และ M07 ทันทีที่จ่าย (แทนยอดตั้งไว้) รายงานทะเบียนคุม (ผูกพัน เงินยืม ใบเสร็จ ภาษี) ส่งออกเป็น Excel และ PDF</td><td><span class="tag t-must">ต้องมี</span></td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 07 ============================== -->
+<section class="ch" id="s7">
+<h2><span class="num">07</span>กฎและตรรกะ</h2>
+<p class="lede">ทุกค่าตัวเลขในบทนี้เป็นค่าตั้งต้นใน M10 → “กฎการเงิน” ต่อปีงบประมาณ พร้อมเลขข้อและระดับความมั่นใจ (P-F03)</p>
+
+<h3><span class="num">7.1</span>R-FN-01 ตรวจวงเงินและวัตถุประสงค์</h3>
+<pre class="logic">ก่อนส่งใบขอเบิก v ไปขั้นอนุมัติ:
+  line = บรรทัดจัดสรรของ v
+  ถ้า v.fy ≠ ปีงบประมาณของค่าใช้จ่าย                     → หยุด "ค่าใช้จ่ายปีใดเบิกจากงบปีนั้น (ข้อ 23)"
+  ถ้า v.purpose ไม่อยู่ในรายการที่บรรทัดนั้นใช้ได้              → หยุด "ใช้เงินผิดวัตถุประสงค์ (ข้อ 17)"
+  ถ้า line.allotted = เท็จ                                  → หยุด "ยังไม่ได้รับเงินจัดสรร (มาตรา 40 พ.ร.บ.วิธีการงบประมาณ)"
+  ผูกพันของ v (ถ้ามี) หักออกจากยอดผูกพันก่อน แล้วจึงตรวจ
+  ถ้า v.gross > headroom(line) + ผูกพันของ v                → หยุด "เกินวงเงินคงเหลือ (ข้อ 18)"
+  ถ้า v.dueDate − วันนี้ > ค่าตั้ง "ขอเบิกล่วงหน้าได้ไม่เกิน" (ตั้งต้น 10 วัน) → เตือน "ขอเบิกก่อนถึงกำหนด (ข้อ 22)"</pre>
+
+<h3><span class="num">7.2</span>R-FN-02 เลือกทางจ่าย</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ประเภทใบขอเบิก</th><th>เงื่อนไข</th><th>ต้องมี PO ใน GFMIS</th><th>ทางจ่าย</th><th>ที่มา</th></tr></thead>
+  <tbody>
+    <tr><td>ซื้อ จ้าง เช่า</td><td>ใบสั่งซื้อ สัญญา หรือข้อตกลง ≥ 5,000 บาท</td><td class="c">ต้องมี</td><td>กรมบัญชีกลางจ่ายตรงเจ้าหนี้</td><td>ข้อ 28 (1) <span class="tag t-must">A</span></td></tr>
+    <tr><td>ซื้อ จ้าง เช่า</td><td>&lt; 5,000 บาท</td><td class="c">ไม่ต้อง</td><td>เข้าบัญชีหน่วยงานแล้วจ่ายต่อ (ค่าเริ่มต้น) หรือจ่ายตรงก็ได้</td><td>ข้อ 28 (2) <span class="tag t-must">A</span></td></tr>
+    <tr><td>สาธารณูปโภค</td><td>มีเงินสมทบจากข้าราชการหรือหน่วยงานอื่น</td><td class="c">ไม่ต้อง</td><td>เข้าบัญชีหน่วยงานแล้วจ่ายต่อ</td><td>ข้อ 29 (1) <span class="tag t-must">A</span></td></tr>
+    <tr><td>สาธารณูปโภค</td><td>ไม่มีเงินสมทบ</td><td class="c">ไม่ต้อง</td><td>กรมบัญชีกลางจ่ายตรงเจ้าหนี้</td><td>ข้อ 29 <span class="tag t-must">A</span></td></tr>
+    <tr><td>ค่าตอบแทนและสวัสดิการ</td><td>ทุกกรณี</td><td class="c">ไม่ต้อง</td><td>เข้าบัญชีหน่วยงาน จ่ายต่อผ่าน e-Payment</td><td>ข้อ 29 (2) <span class="tag t-must">A</span></td></tr>
+    <tr><td>ค่าเดินทางและส่งใช้เงินยืม</td><td>ไม่มีเงินยืม</td><td class="c">ไม่ต้อง</td><td>กรมบัญชีกลางจ่ายตรงผู้มีสิทธิ</td><td>ข้อ 29 <span class="tag t-should">B</span></td></tr>
+    <tr><td>ค่าเดินทางและส่งใช้เงินยืม</td><td>มีเงินยืม</td><td class="c">ไม่ต้อง</td><td>ไม่จ่ายเงินออก: ล้างลูกหนี้เงินยืม จ่ายเพิ่มหรือรับคืนส่วนต่าง</td><td>ข้อ 65–66 <span class="tag t-must">A</span></td></tr>
+    <tr><td>เงินเดือนและค่าจ้างประจำ</td><td>ไฟล์จากระบบบุคลากร</td><td class="c">ไม่ต้อง</td><td>ตามระบบจ่ายตรงเงินเดือน (นอกขอบเขต D-FN-03)</td><td><span class="tag t-could">C</span></td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">7.3</span>R-FN-03 ภาษีหัก ณ ที่จ่ายและยอดสุทธิ</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ผู้รับเงิน</th><th>ประเภทเงินได้</th><th>เกณฑ์</th><th class="n">อัตรา</th><th>ระดับ</th></tr></thead>
+  <tbody>
+    <tr><td>นิติบุคคลหรือบุคคลธรรมดา</td><td>ซื้อทรัพย์สิน จ้างทำของ (ใบสั่งซื้อหรือใบสั่งจ้าง)</td><td>ยอดทั้งใบ ≥ 10,000 บาท (บุคคลธรรมดานับรวมยอดต่อราย)</td><td class="n">1%</td><td><span class="tag t-should">B</span> S2, S3</td></tr>
+    <tr><td>นิติบุคคลหรือบุคคลธรรมดา</td><td>ซื้อทรัพย์สิน จ้างทำของ</td><td>ยอดทั้งใบ &lt; 10,000 บาท</td><td class="n">0%</td><td><span class="tag t-should">B</span> S2</td></tr>
+    <tr><td>บุคคลธรรมดา</td><td>ค่าตอบแทน ค่าวิทยากร (เงินได้ประเภทอื่น)</td><td>ตามตารางประเภทเงินได้</td><td class="n">ตั้งได้</td><td><span class="tag t-could">C</span></td></tr>
+    <tr><td>หน่วยงานของรัฐ</td><td>ทุกประเภท</td><td>—</td><td class="n">0%</td><td><span class="tag t-could">C</span></td></tr>
+  </tbody>
+</table></div>
+<pre class="logic">ยอดสุทธิที่จ่ายผู้ขาย = ยอดงวดรวม VAT − ค่าปรับ − ภาษีหัก ณ ที่จ่าย − รายการหักอื่น
+  ฐานภาษี  = ยอดงวดรวม VAT ÷ 1.07          (ถ้าผู้ขายจด VAT)
+  ภาษี      = ปัดสองตำแหน่ง(ฐานภาษี × อัตรา)   อัตราตัดสินจากยอดทั้งใบสั่งซื้อ ไม่ใช่ยอดงวด
+  ค่าปรับและภาษีบันทึกเป็นรายได้แผ่นดินที่ต้องกระทบยอด (ข้อ 19)
+
+ตัวอย่าง (สมมติ): งวด 1,250,000.00 บาทรวม VAT ค่าปรับส่งช้า 12,500.00 บาท
+  ฐานภาษี 1,168,224.30 · ภาษี 1% 11,682.24 · จ่ายผู้ขาย 1,225,817.76 บาท</pre>
+
+<h3><span class="num">7.4</span>R-FN-04 นาฬิกาตามระเบียบ</h3>
+<div class="tbl"><table>
+  <thead><tr><th>นาฬิกา</th><th>เริ่มนับ</th><th>ระยะ</th><th>เตือนและส่งต่อ</th><th>ที่มา</th></tr></thead>
+  <tbody>
+    <tr><td>ขอเบิกค่าซื้อ จ้าง เช่า</td><td>วันตรวจรับครบ หรือวันได้รับแจ้งจากหน่วยงานย่อย</td><td>5 วันทำการ</td><td>ผู้จัดทำ → หัวหน้าการเงินเมื่อเหลือ 1 วัน</td><td>ข้อ 28</td></tr>
+    <tr><td>ขอเบิกรายการประจำเดือน</td><td>วันที่ 1 ของเดือน</td><td>ภายในวันที่ 15</td><td>ผู้จัดทำ → หัวหน้าการเงินวันที่ 13</td><td>ข้อ 31</td></tr>
+    <tr><td>ส่งใช้เงินยืม</td><td>ตามประเภท (บทที่ 7.5)</td><td>15 หรือ 30 วัน</td><td>ผู้ยืม 7/3/1 วัน → หัวหน้าการเงินเมื่อเลย</td><td>ข้อ 65</td></tr>
+    <tr><td>แก้ข้อทักท้วงใบสำคัญ</td><td>วันที่ผู้ยืมได้รับคำทักท้วง</td><td>15 วัน</td><td>ผู้ยืม → หัวหน้าการเงิน</td><td>ข้อ 65</td></tr>
+    <tr><td>เรียกชดใช้เงินยืม</td><td>วันครบกำหนด</td><td>ไม่เกิน 30 วัน</td><td>หัวหน้าการเงิน → หัวหน้าส่วนราชการ</td><td>ข้อ 68</td></tr>
+    <tr><td>บันทึกการรับเงิน</td><td>วันที่รับ</td><td>ภายในวัน (เงินสดหลังปิดบัญชี: วันทำการถัดไป)</td><td>ผู้รับเงิน → การเงินสิ้นวัน</td><td>ข้อ 81</td></tr>
+    <tr><td>นำส่งเช็ค</td><td>วันที่รับ</td><td>วันเดียวกันหรือวันทำการถัดไป</td><td>การเงิน</td><td>ข้อ 101 (1)</td></tr>
+    <tr><td>นำส่งรายได้แผ่นดินเงินสด</td><td>วันที่ยอดในตู้เกิน 10,000 บาท / วันรับครั้งแรกของเดือน</td><td>3 วันทำการ / สิ้นเดือน</td><td>การเงิน → หัวหน้าการเงิน</td><td>ข้อ 101 (2)</td></tr>
+    <tr><td>ส่งคืนเงินเบิกเกินหรือเหลือจ่าย</td><td>วันรับเงินจากคลังหรือวันได้รับคืน</td><td>15 วันทำการ</td><td>การเงิน → หัวหน้าการเงิน</td><td>ข้อ 99, 101 (4)</td></tr>
+    <tr><td>ฝากเงินนอกงบประมาณ</td><td>วันรับครั้งแรกของเดือน / วันรับเงินจากคลังเพื่อรอจ่าย</td><td>สิ้นเดือน / 15 วันทำการ</td><td>การเงิน</td><td>ข้อ 101 (5)</td></tr>
+    <tr><td>ขอกันเงินเหลื่อมปี</td><td>1 กรกฎาคม</td><td>ถึงวันที่ตั้งใน M10 (ก่อนสิ้นปี)</td><td>การเงิน → กองแผน → ผู้บริหาร</td><td>ข้อ 106, S5</td></tr>
+    <tr><td>รายงานใบเสร็จประจำปี</td><td>1 ตุลาคม</td><td>ภายใน 31 ตุลาคม</td><td>หน่วยงานที่รับเล่ม → การเงิน</td><td>ข้อ 74</td></tr>
+    <tr><td>ชี้แจงข้อทักท้วง สตง.</td><td>วันที่ได้รับแจ้ง</td><td>15 วัน</td><td>หัวหน้าการเงิน → ผู้บริหาร</td><td>ข้อ 109</td></tr>
+  </tbody>
+</table></div>
+<p class="small">วันทำการไม่นับเสาร์ อาทิตย์ และวันหยุดในตาราง <code>S.holidays</code> ที่ใช้ร่วมกับ Procurement นาฬิกาที่ไม่ระบุ “วันทำการ” นับวันปฏิทินตามถ้อยคำในระเบียบ</p>
+
+<h3><span class="num">7.5</span>R-FN-05 เงินยืม</h3>
+<pre class="logic">อนุมัติคำขอยืม a ได้เมื่อ:
+  ไม่มีสัญญาของ a.borrower ที่สถานะ A3 หรือ A4                    (ข้อ 59 ห้ามข้ามกฎ)
+  a.items ทุกรายการอยู่ในงบที่ยืมได้ (ค่าจ้างชั่วคราว ค่าตอบแทน ใช้สอย วัสดุ งบกลางที่กำหนด)  (ข้อ 63)
+  a.type = เดินทาง → จำนวนวันเดินทาง ≤ 90                            (ข้อ 64)
+  a.source = นอกงบประมาณ → มีผู้อนุมัติระดับหัวหน้าส่วนราชการ          (ข้อ 60)
+  a.endDate ≥ 1 ต.ค. ปีถัดไป → วันที่ใช้ในปีใหม่ ≤ 90 (เดินทาง) หรือ 30 (อื่น)  (ข้อ 62)
+  a.borrower ไม่มีเงินที่หักได้ → มีหลักทรัพย์หรือผู้ค้ำประกัน              (ข้อ 58)
+  ผู้อนุมัติ ≠ a.borrower และไม่ใช่ผู้ที่ a.borrower มอบอำนาจให้          (SD-12)
+
+วันครบกำหนดส่งใช้:
+  ไปประจำต่างสำนักงาน ต่างประเทศ หรือกลับภูมิลำเนา → วันจ่าย + 30 วัน
+  เดินทางไปราชการอื่น                              → วันกลับ + 15 วัน   (วันกลับจริง ถ้าไม่มีใช้วันกลับตามแผน)
+  ปฏิบัติราชการอื่น                                → วันจ่าย + 30 วัน
+เลยกำหนด = วันนี้ > วันครบกำหนด และยอดค้าง > 0  (คำนวณทุกครั้ง ไม่เก็บ)</pre>
+
+<h3><span class="num">7.6</span>R-FN-06 นำส่งเงินและรายการตรวจปิดเดือน</h3>
+<pre class="logic">ประเภทเงินส่งคืน (ข้อ 100):
+  วันส่งคืน ≤ 30 ก.ย. ของปีที่เบิก หรือ ≤ วันสิ้นสุดเงินกันเหลื่อมปี → "เงินเบิกเกินส่งคืน" (คืนวงเงินให้บรรทัด)
+  มิฉะนั้น                                                       → "เงินเหลือจ่ายปีเก่าส่งคืน" (รายได้แผ่นดิน)
+
+กำหนดนำส่งของยอดคงเหลือแต่ละประเภท (ข้อ 101):
+  เช็ค                       → วันที่รับ หรือวันทำการถัดไป
+  รายได้แผ่นดินเงินสด         → ถ้ายอดคงเหลือวันใด > 10,000 บาท: 3 วันทำการ มิฉะนั้น: สิ้นเดือน
+  เงินเบิกเกิน / เหลือจ่ายปีเก่า → 15 วันทำการ
+  นอกงบประมาณเงินสด          → สิ้นเดือน (ที่เบิกมารอจ่าย: 15 วันทำการ)
+
+ปิดเดือนได้เมื่อทุกข้อผ่านหรือมีเหตุผลยกเว้นที่หัวหน้าการเงินยอมรับ:
+  1 ใบขอเบิกที่จ่ายแล้วในเดือนมีเลขที่ GFMIS ครบ          4 งบพิสูจน์ยอดเงินฝากทุกบัญชีผลต่าง = 0
+  2 รายงานเงินคงเหลือทุกวันลงนามครบ                     5 นำเข้างบทดลองของเดือนจาก GFMIS แล้ว
+  3 ไม่มีนาฬิกานำส่งที่เลยกำหนดโดยไม่มีเหตุผล            6 ทบทวนทะเบียนเงินยืมค้างและเลยกำหนดแล้ว</pre>
+
+<h3><span class="num">7.7</span>การแยกหน้าที่ (ต่อจาก SD-01 ถึง SD-10)</h3>
+<p class="small">ทุกกฎตรวจทั้งผู้ที่ลงชื่อเข้าใช้และผู้ที่มอบอำนาจให้ เหมือน SD-01 ถึง SD-10 การพยายามที่ถูกกันบันทึกใน M09 และแสดงใน M10 → การแยกหน้าที่</p>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>กฎ</th><th>เหตุผล</th><th>ระดับ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">SD-11</td><td>ผู้จัดทำหรือผู้ตรวจใบขอเบิก อนุมัติใบนั้นไม่ได้ (ขยาย SD-03 ให้ครอบคลุมทุกประเภท)</td><td>สองคนเสมอ (P-F05)</td><td><span class="tag t-could">C</span></td></tr>
+    <tr><td class="id">SD-12</td><td>ผู้ยืมอนุมัติเงินยืมของตนไม่ได้ และตรวจใบสำคัญส่งใช้ของตนไม่ได้</td><td>ผลประโยชน์ทับซ้อน</td><td><span class="tag t-could">C</span></td></tr>
+    <tr><td class="id">SD-13</td><td>ผู้รับเงินหรือผู้จ่ายเงินของวันนั้น เป็นกรรมการเก็บรักษาเงินที่ตรวจนับวันเดียวกันไม่ได้</td><td>ผู้ถือเงินไม่ตรวจนับตัวเอง</td><td><span class="tag t-could">C</span></td></tr>
+    <tr><td class="id">SD-14</td><td>ผู้ขอแก้บัญชีธนาคารของผู้ขาย ยืนยันการแก้นั้นไม่ได้ และอนุมัติจ่ายให้ผู้ขายรายนั้นภายใน 30 วันหลังแก้ไม่ได้</td><td>ป้องกันการเปลี่ยนบัญชีรับเงิน</td><td><span class="tag t-could">C</span></td></tr>
+    <tr><td class="id">SD-15</td><td>ผู้บันทึกรับหรือจ่ายเงิน จัดทำงบพิสูจน์ยอดเงินฝากของงวดนั้นไม่ได้</td><td>ผู้บันทึกไม่กระทบยอดตัวเอง (ต่อจาก SD-05)</td><td><span class="tag t-could">C</span></td></tr>
+    <tr><td class="id">SD-16</td><td>เปิดงวดที่ปิดแล้วต้องเป็นหัวหน้าการเงินคนละคนกับผู้ปิด หรือผู้บริหาร พร้อมเหตุผล</td><td>ไม่ให้แก้ย้อนหลังโดยคนเดียว</td><td><span class="tag t-could">C</span></td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 08 ============================== -->
+<section class="ch" id="s8">
+<h2><span class="num">08</span>ข้อมูล บทบาท และการเชื่อมต่อ</h2>
+<p class="lede">ข้อมูลการเงินต่อจากบรรทัดจัดสรรและสัญญาที่มีอยู่ ไม่สร้างสายใหม่คู่ขนาน</p>
+<h3><span class="num">8.1</span>ข้อมูลหลัก</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ข้อมูล</th><th>ฟิลด์สำคัญ</th><th>ต่อกับ</th></tr></thead>
+  <tbody>
+    <tr><td><code>commitments</code></td><td>แหล่ง (สัญญา ใบสั่งซื้อ รายปี คำสั่งเดินทาง) บรรทัด ยอด ยอดคืน สถานะ เลขที่ PO ใน GFMIS</td><td>M06 บรรทัดจัดสรร · Procurement สัญญา</td></tr>
+    <tr><td><code>vouchers</code></td><td>เลขที่ ประเภท ผู้รับเงิน บรรทัด ยอดก่อน VAT, VAT, ค่าปรับ, ภาษี, สุทธิ ทางจ่าย สถานะ V1–V7 วันครบกำหนด เลขที่ GFMIS ผลการจ่าย</td><td>commitments · งวดสัญญา · advances</td></tr>
+    <tr><td><code>evidence</code></td><td>ใบขอเบิก ชนิดหลักฐาน ไฟล์ ข้อมูลที่อ่านได้ ผลตรวจ ผู้ตรวจ</td><td>vouchers · การอ่านเอกสารจำลอง (Q4)</td></tr>
+    <tr><td><code>whtCerts</code></td><td>เลขที่ต่อปี ผู้ถูกหัก เลขประจำตัวผู้เสียภาษี ประเภทเงินได้ ฐาน ภาษี วันจ่าย วันส่ง</td><td>vouchers · ทะเบียนผู้ขาย</td></tr>
+    <tr><td><code>vendorChanges</code></td><td>ผู้ขาย ฟิลด์ที่แก้ ค่าเดิมและใหม่ (บัญชีปิดบางส่วน) หลักฐาน ผู้ขอ ผู้ยืนยัน วันที่ส่งกรมบัญชีกลาง</td><td>ทะเบียนผู้ขายของ Procurement</td></tr>
+    <tr><td><code>advances</code></td><td>เลขที่สัญญา ผู้ยืม ประเภท ช่วงวันที่ ยอดยืม แหล่งเงิน บรรทัด หลักประกัน วันจ่าย ยอดส่งใช้ เงินคืน ข้อทักท้วง หนังสือเรียกชดใช้</td><td>vouchers (ส่งใช้) · receipts (เงินคืน)</td></tr>
+    <tr><td><code>receipts</code> · <code>receiptBooks</code></td><td>เล่ม เลขที่ ผู้ชำระ ประเภทเงิน ยอด วิธีรับ ยกเลิกและเหตุผล · เล่มที่จ่าย ผู้รับเล่ม ช่วงเลขที่ใช้</td><td>remittances · dailyCash</td></tr>
+    <tr><td><code>remittances</code></td><td>ประเภทเงิน รายการรับที่รวม ยอด วันครบกำหนด วันนำส่ง เลขอ้างอิง ผู้นำส่ง</td><td>receipts · ไฟล์ GFMIS รายได้</td></tr>
+    <tr><td><code>cashCommittee</code> · <code>dailyCash</code></td><td>คำสั่ง กรรมการ ผู้แทน · วันที่ ยอดตามระบบแยกประเภท ยอดที่กรรมการแต่ละคนนับ ลายมือชื่อ ผลต่าง</td><td>receipts · remittances</td></tr>
+    <tr><td><code>bankStatements</code> · <code>bankRecs</code></td><td>บัญชี รายการเดินบัญชี · งวด ยอดตามบัญชีและธนาคาร รายการระหว่างทาง ผู้จัดทำ ผู้ตรวจ</td><td>vouchers · remittances</td></tr>
+    <tr><td><code>gfmisFiles</code> (มีแล้ว ขยาย)</td><td>ชนิดไฟล์ งวด แถว ผลจับคู่ ผู้นำเข้า</td><td>vouchers · commitments · remittances</td></tr>
+    <tr><td><code>periods</code> · <code>auditQueries</code></td><td>เดือน สถานะ P1–P4 ผลรายการตรวจ ผู้ปิด เหตุผลเปิดใหม่ · ข้อทักท้วง วันรับ คำชี้แจง กำหนดเวลา ผล</td><td>ทุกข้อมูลของงวด</td></tr>
+    <tr><td><code>fcfg</code> (กฎการเงินใน M10)</td><td>วงเงิน PO (5,000) เกณฑ์ภาษี (10,000) เกณฑ์กันเงิน (100,000) เกณฑ์นำส่ง (10,000) จำนวนวันทุกนาฬิกา ตารางภาษี ตารางผู้มีอำนาจ รายการที่ยืมได้ อัตราค่าเดินทาง</td><td>ทุกกฎ R-FN</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">8.2</span>บทบาท</h3>
+<div class="tbl"><table class="matrix">
+  <thead><tr><th>งาน</th><th class="c">การเงิน<br><code>fin</code></th><th class="c">หัวหน้าการเงิน<br><code>finhead</code> ใหม่</th><th class="c">ผู้บริหาร<br><code>exec</code></th><th class="c">กรรมการเก็บรักษาเงิน</th><th class="c">พนักงานทั่วไป (ผู้ยืม)</th><th class="c">พัสดุ<br><code>proc</code></th><th class="c">ผู้ตรวจสอบ<br><code>audit</code></th></tr></thead>
+  <tbody>
+    <tr><td>จัดทำและตรวจใบขอเบิก</td><td class="c mx-a">ทำ</td><td class="c mx-u">ตรวจ</td><td class="c mx-r">ดู</td><td class="c">—</td><td class="c">—</td><td class="c mx-r">ดูของตน</td><td class="c mx-r">ดู</td></tr>
+    <tr><td>อนุมัติจ่าย (ข้อ 36)</td><td class="c">—</td><td class="c mx-u">ถ้ารับมอบ</td><td class="c mx-a">อนุมัติ</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c mx-r">ดู</td></tr>
+    <tr><td>ส่งไฟล์และนำเข้าผล GFMIS</td><td class="c mx-a">ทำ</td><td class="c mx-u">ตรวจ</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c mx-r">ดู</td></tr>
+    <tr><td>ขอยืมและส่งใช้เงินยืม</td><td class="c mx-a">ตรวจ</td><td class="c mx-u">เรียกชดใช้</td><td class="c mx-a">อนุมัติ</td><td class="c">—</td><td class="c mx-a">ขอ ส่งใช้</td><td class="c">—</td><td class="c mx-r">ดู</td></tr>
+    <tr><td>รับเงินและออกใบเสร็จ</td><td class="c mx-a">ทำ</td><td class="c mx-u">ตรวจสิ้นวัน</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c mx-r">ดู</td></tr>
+    <tr><td>รายงานเงินคงเหลือประจำวัน</td><td class="c mx-a">จัดทำ</td><td class="c mx-r">ดู</td><td class="c mx-r">รับทราบ</td><td class="c mx-a">ตรวจนับ ลงนาม</td><td class="c">—</td><td class="c">—</td><td class="c mx-r">ดู</td></tr>
+    <tr><td>นำส่งเงิน</td><td class="c mx-a">จัดทำ</td><td class="c mx-a">ผู้นำส่ง (ข้อ 102)</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c mx-r">ดู</td></tr>
+    <tr><td>กระทบยอดและงบพิสูจน์ยอด</td><td class="c mx-a">ทำ</td><td class="c mx-u">ตรวจ</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c mx-r">ดู</td></tr>
+    <tr><td>ปิดงวด</td><td class="c mx-r">เตรียม</td><td class="c mx-a">ปิด เปิดใหม่</td><td class="c mx-u">เปิดใหม่</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c mx-r">ดู</td></tr>
+    <tr><td>ตั้งค่ากฎการเงินใน M10</td><td class="c mx-r">ดู</td><td class="c mx-r">ดู เสนอ</td><td class="c mx-r">ดู</td><td class="c">—</td><td class="c">—</td><td class="c">—</td><td class="c mx-r">ดู</td></tr>
+  </tbody>
+</table></div>
+<p class="small">ผู้ดูแลระบบ (<code>admin</code>) แก้กฎการเงินใน M10 กรรมการเก็บรักษาเงินไม่ใช่บทบาทของระบบ แต่เป็นรายชื่อตามคำสั่งแต่งตั้ง ผู้ใช้ที่อยู่ในรายชื่อเห็นงานตรวจนับใน My Workspace “พนักงานทั่วไป” คือทุกบทบาทที่ขอยืมเงินได้ (ประเด็น D-FN-02)</p>
+
+<h3><span class="num">8.3</span>การเชื่อมต่อ</h3>
+<div class="hub">
+  <div class="side">
+    <div class="ext"><b>Fisko Budget</b>บรรทัดจัดสรร สถานะเงินจัดสรร (M06) ← ยอดเบิกจ่ายจริง รายการกันเงิน (M06, M07)</div>
+    <div class="ext"><b>Fisko Procurement</b>งวดที่ตรวจรับและผ่านประตู R-11 ค่าปรับ ทะเบียนผู้ขาย ← สถานะการจ่าย (ขั้น 10–12)</div>
+    <div class="ext"><b>My Workspace</b>เงินยืมของฉัน งานตรวจนับของกรรมการ งานอนุมัติ</div>
+  </div>
+  <div class="core"><b>Fisko Finance</b><span>ผูกพัน · ใบขอเบิก · เงินยืม · รับเงินและนำส่ง · เงินคงเหลือ · กระทบยอด · ปิดงวด</span></div>
+  <div class="side">
+    <div class="ext"><b>GFMIS (New GFMIS Thai)</b>ไฟล์ส่ง: PO และขอเบิก · ไฟล์รับ: ผลบันทึก ผลจ่าย รายได้ งบทดลอง (D-F05)</div>
+    <div class="ext"><b>ธนาคาร</b>รายการเดินบัญชี (ไฟล์) · ไฟล์ e-Payment สำหรับจ่ายจากบัญชีหน่วยงาน</div>
+    <div class="ext"><b>ระบบบุคลากรและเงินเดือน</b>ไฟล์ยอดเงินเดือนเพื่อรับรู้ยอดใช้จ่าย (นอกขอบเขต D-FN-03)</div>
+  </div>
+</div>
+<div class="callout"><b>หลักการเชื่อมต่อ</b> ทุกช่องทางภายนอกเป็นไฟล์นำเข้าและส่งออกตามประเด็น D-F05 จนกว่าจะมีช่องทางทางการ รูปแบบไฟล์เป็นค่าตั้งได้ (ประเด็น D-FN-07) ต้นแบบใช้ไฟล์ตัวอย่างที่สร้างจากข้อมูลในระบบ บางแถวผิดโดยตั้งใจเพื่อแสดงการจับคู่ไม่ตรง</div>
+</section>
+
+<!-- ============================== 09 ============================== -->
+<section class="ch" id="s9">
+<h2><span class="num">09</span>ออกแบบหน้าจอและประสบการณ์ใช้งาน</h2>
+<p class="lede">เมนูของ Fisko Finance เปลี่ยนจาก 3 หน้า เป็น 8 หน้าตามกลุ่มงาน และเพิ่มหน้าบริการตนเองใน My Workspace</p>
+<h3><span class="num">9.1</span>แผนผังเมนู</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">หน้า</th><th>ชื่อ</th><th>ผู้ใช้หลัก</th><th>สิ่งที่เห็นเป็นอย่างแรก</th></tr></thead>
+  <tbody>
+    <tr><td class="id">F1</td><td>ภาพรวมการเงิน</td><td>การเงิน หัวหน้าการเงิน ผู้บริหาร</td><td>นาฬิกาที่ครบกำหนดวันนี้และพรุ่งนี้ คิวงานของฉัน เงินในตู้นิรภัยเทียบเกณฑ์ 10,000 บาท ร้อยละการเบิกจ่ายเทียบเป้า และสถานะปิดวัน</td></tr>
+    <tr><td class="id">F2</td><td>วงเงินผูกพันและใบสั่งซื้อ</td><td>การเงิน กองแผน</td><td>ตารางสายจากจัดสรรถึงจ่าย (ต่อจากหน้าเดิม) ใบสั่งซื้อที่ยังไม่มีเลขที่ PO และรายการเข้าเกณฑ์กันเงิน</td></tr>
+    <tr><td class="id">F3</td><td>ใบขอเบิก</td><td>การเงิน หัวหน้าการเงิน ผู้บริหาร</td><td>โต๊ะทำงานแบ่งตามสถานะ V1–V7 พร้อมตัวกรองประเภท ทางจ่าย และนาฬิกา (บทที่ 9.2)</td></tr>
+    <tr><td class="id">F4</td><td>เงินยืม</td><td>การเงิน หัวหน้าการเงิน</td><td>ทะเบียนคุมเงินยืมพร้อมอายุหนี้ ใบสำคัญที่รอตรวจ และรายการที่ต้องเรียกชดใช้</td></tr>
+    <tr><td class="id">F5</td><td>รับเงินและนำส่ง</td><td>การเงิน</td><td>ปุ่มออกใบเสร็จ รายการรับของวัน และนาฬิกานำส่งแยกประเภทเงิน</td></tr>
+    <tr><td class="id">F6</td><td>เงินคงเหลือประจำวัน</td><td>การเงิน กรรมการเก็บรักษาเงิน</td><td>รายงานของวันนี้ ยอดตามระบบ ช่องยอดที่นับได้ของกรรมการแต่ละคน และสถานะการลงนาม</td></tr>
+    <tr><td class="id">F7</td><td>GFMIS และกระทบยอด</td><td>การเงิน หัวหน้าการเงิน</td><td>ไฟล์ที่รอส่งและรอผล ผลจับคู่สามทาง รายการค้างที่ต้องชี้แจง และงบพิสูจน์ยอดเงินฝาก</td></tr>
+    <tr><td class="id">F8</td><td>ปิดงวดและรายงาน</td><td>หัวหน้าการเงิน ผู้ตรวจสอบ</td><td>รายการตรวจปิดวัน เดือน ปี ข้อทักท้วง และรายงานทะเบียนคุม</td></tr>
+    <tr><td class="id">F9</td><td>AI และ Analytics</td><td>ทุกบทบาทการเงิน ผู้บริหาร</td><td>Agent การเงิน พยากรณ์ What-if ตัวชี้วัด และสัญญาณเตือน (บทที่ 10–11)</td></tr>
+    <tr><td class="id">WS</td><td>My Workspace → เงินยืมของฉัน</td><td>พนักงานทุกคน</td><td>เงินยืมที่ค้าง วันครบกำหนด ปุ่มขอยืมใหม่ (ปิดไว้ถ้ามีรายการค้าง พร้อมบอกเหตุผล) และปุ่มส่งใช้</td></tr>
+  </tbody>
+</table></div>
+<h3><span class="num">9.2</span>โครงหน้าจอตัวอย่าง: ใบขอเบิก (F3)</h3>
+<div class="wf">
+  <div class="wf-top"><b>VC-2570-0142</b> · ซื้อ จ้าง เช่า · สัญญา CT-2570-002 งวด 2 · บริษัทตัวอย่าง จำกัด · นาฬิกาขอเบิก: เหลือ 2 วันทำการ</div>
+  <div class="wf-body">
+    <ol class="wf-steps">
+      <li class="ok">ร่าง (จาก Procurement)</li>
+      <li class="now">ตรวจหลักฐาน</li>
+      <li>รออนุมัติ</li>
+      <li>พร้อมส่ง GFMIS</li>
+      <li>บันทึกใน GFMIS แล้ว</li>
+      <li>จ่ายเงินแล้ว</li>
+      <li>กระทบยอดแล้ว</li>
+    </ol>
+    <div class="wf-main">
+      <b>ยอดและรายการหัก</b>
+      <span>ยอดงวดรวม VAT 1,250,000.00 · ค่าปรับ −12,500.00 · ภาษี 1% −11,682.24 · <b>จ่ายผู้ขาย 1,225,817.76 บาท</b></span>
+      <span>ทางจ่าย: กรมบัญชีกลางจ่ายตรงเจ้าหนี้ (ข้อ 28 (1)) · PO ใน GFMIS: 7000012345 ✓</span>
+      <b>หลักฐาน</b>
+      <span>● ใบแจ้งหนี้ (อ่านแล้ว ยอดตรง) · ● ใบตรวจรับงวด 2 (ลงนามครบ) · ○ ใบเสร็จรับเงิน (รอหลังจ่าย) · ● หนังสือค้ำประกันยังไม่หมดอายุ</span>
+      <b>กฎ</b>
+      <span>R-FN-01 ผ่าน · R-FN-02 ผ่าน · R-FN-03 ผ่าน · SD-11 ผู้อนุมัติต้องไม่ใช่ผู้จัดทำหรือผู้ตรวจ</span>
+    </div>
+    <div class="wf-side">
+      <b>ขั้นต่อไป</b>
+      <span>เจ้าหน้าที่การเงินคนที่สองตรวจหลักฐาน แล้วกด “ส่งอนุมัติ”</span>
+      <b>บรรทัดจัดสรร</b>
+      <span>จัดสรร 4.80 · ผูกพัน 3.75 · จ่ายแล้ว 1.25 ล้านบาท</span>
+      <b>AG-18 ตรวจแล้ว</b>
+      <span>ไม่พบใบแจ้งหนี้ซ้ำ ยอดตรงกับตรวจรับ</span>
+    </div>
+  </div>
+</div>
+<h3><span class="num">9.3</span>หลักการหน้าจอ</h3>
+<div class="cards">
+  <div class="card"><div class="k">UX-F01</div><b>นาฬิกาอยู่บนสุด</b><span>ทุกรายการแสดงวันที่เหลือ สีจุดบอกสถานะ (ปกติ ใกล้ เลย) ตามแนวทางหน้าตาเรียบของ Fisko ไม่ใช้แถบสีเต็มแถว</span></div>
+  <div class="card"><div class="k">UX-F02</div><b>ตัวเลขทุกตัวกดดูที่มาได้</b><span>ยอดสุทธิแตกเป็นรายการหัก ยอดคงเหลือแตกเป็นจัดสรร ผูกพัน และจ่าย แต่ละบรรทัดพาไปเอกสารต้นทาง</span></div>
+  <div class="card"><div class="k">UX-F03</div><b>บอกว่าทำไมทำไม่ได้</b><span>ปุ่มที่กดไม่ได้บอกกฎและเลขข้อระเบียบ เช่น “ยังมีเงินยืมค้าง 1 รายการ (ข้อ 59)”</span></div>
+  <div class="card"><div class="k">UX-F04</div><b>ทำเป็นชุด</b><span>ตรวจ อนุมัติ ส่งไฟล์ และนำส่ง ทำได้หลายรายการพร้อมกันเมื่อทุกรายการผ่านกฎ รายการที่ไม่ผ่านแยกออกพร้อมเหตุผล</span></div>
+  <div class="card"><div class="k">UX-F05</div><b>บริการตนเองสำหรับผู้ยืม</b><span>ผู้ยืมไม่ต้องเข้า Fisko Finance ทำทุกอย่างได้จาก My Workspace บนโทรศัพท์ รวมถึงถ่ายรูปใบเสร็จเพื่อส่งใช้</span></div>
+  <div class="card"><div class="k">UX-F06</div><b>เงินมีรูปแบบเดียว</b><span>หน้าทำงานแสดงเป็นบาทพร้อมสตางค์ หน้าภาพรวมแสดงเป็นล้านบาท ระบุหน่วยที่หัวตารางทุกครั้ง</span></div>
+</div>
+</section>
+
+<!-- ============================== 10 ============================== -->
+<section class="ch" id="s10">
+<h2><span class="num">10</span>AI, Agent, พยากรณ์ และ What-if</h2>
+<p class="lede">ใช้โครงเดียวกับ Agent ของ Procurement และ Budget: รับเป้าหมาย วางขั้นตอน เรียกเครื่องมือจากทะเบียน และหยุดให้คนกดทุกครั้งที่เขียนข้อมูล ทั้งหมดเป็นการจำลองตามประเด็น D-P09</p>
+<h3><span class="num">10.1</span>Agent ด้านการเงิน</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>Agent</th><th>ทำอะไร</th><th>หยุดให้คนทำ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">AG-18</td><td>ผู้ตรวจใบขอเบิก</td><td>อ่านหลักฐาน เทียบยอดกับใบขอเบิกและตรวจรับ ตรวจใบแจ้งหนี้ซ้ำ ตรวจภาษีและทางจ่าย สรุปสิ่งที่ขาด</td><td>ส่งต่อ ส่งกลับ และแก้ยอด</td></tr>
+    <tr><td class="id">AG-19</td><td>ผู้ติดตามเงินยืม</td><td>ส่งเตือนผู้ยืมตามนาฬิกา จัดลำดับรายการเลยกำหนด ร่างหนังสือเรียกชดใช้และรายงานหัวหน้าส่วนราชการ</td><td>ส่งหนังสือ (หัวหน้าการเงินกดส่ง)</td></tr>
+    <tr><td class="id">AG-20</td><td>ผู้กระทบยอด</td><td>จับคู่รายการ Fisko, GFMIS และธนาคาร เสนอคู่ที่น่าจะใช่พร้อมความมั่นใจ และร่างคำอธิบายรายการระหว่างทาง</td><td>ยืนยันคู่และคำชี้แจง</td></tr>
+    <tr><td class="id">AG-21</td><td>ผู้ช่วยปิดงวด</td><td>รันรายการตรวจปิดวันและปิดเดือน บอกข้อที่ไม่ผ่านและใครต้องทำ ร่างบันทึกปิดงวด</td><td>ปิดและเปิดงวด</td></tr>
+    <tr><td class="id">AG-22</td><td>ผู้พยากรณ์การเบิกจ่าย</td><td>พยากรณ์การเบิกจ่ายรายเดือนและเงินที่ต้องใช้ บอกบรรทัดที่เสี่ยงไม่ถึงเป้าหรือต้องกันเงิน</td><td>ไม่มีการเขียนข้อมูล</td></tr>
+  </tbody>
+</table></div>
+<p class="small">Agent ใหม่ลงทะเบียนใน M09 ใช้สวิตช์เปิดปิดและระดับอิสระ L0–L3 เดิม และเรียกใช้ได้จากแชต AI co-work ตามหน่วยงานของผู้ใช้ (รอบ 34)</p>
+<h3><span class="num">10.2</span>พยากรณ์</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>พยากรณ์</th><th>ข้อมูลที่ใช้</th><th>ผลที่แสดง</th></tr></thead>
+  <tbody>
+    <tr><td class="id">F-FN-01</td><td>การเบิกจ่ายรายเดือนถึงสิ้นปี</td><td>งวดสัญญาและวันส่งมอบ ผูกพันรายปี ประวัติการเบิกจ่ายปีก่อน</td><td>เส้น P10–P90 เทียบเป้าเบิกจ่ายรายไตรมาส (ค่าจาก M10 ของ Budget)</td></tr>
+    <tr><td class="id">F-FN-02</td><td>เงินยืมที่น่าจะเลยกำหนด</td><td>ประเภท ระยะเวลา ประวัติผู้ยืมและหน่วยงาน</td><td>รายการเรียงตามโอกาส ให้ AG-19 เตือนก่อน</td></tr>
+    <tr><td class="id">F-FN-03</td><td>เงินที่ต้องกันเหลื่อมปี</td><td>ผูกพันที่ยังไม่จ่าย งวดหลังกันยายน ความล่าช้าที่ Procurement พยากรณ์ (F-04)</td><td>ยอดและรายการคาดว่าต้องกัน ส่งให้ M06</td></tr>
+    <tr><td class="id">F-FN-04</td><td>ปริมาณงานของการเงิน</td><td>ใบขอเบิกที่จะเกิดจากงวดตรวจรับ ใบสำคัญที่จะส่ง และวันหยุด</td><td>จำนวนต่อสัปดาห์เทียบกำลังคน</td></tr>
+  </tbody>
+</table></div>
+<h3><span class="num">10.3</span>จำลองสถานการณ์ (What-if)</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>คันโยก</th><th>ผลที่ดู</th></tr></thead>
+  <tbody>
+    <tr><td class="id">W-FN-01</td><td>เวลาจากตรวจรับถึงขอเบิก (วันทำการ)</td><td>ร้อยละเบิกจ่ายสิ้นไตรมาสและสิ้นปี</td></tr>
+    <tr><td class="id">W-FN-02</td><td>งวดส่งมอบเลื่อน N วัน (เลือกสัญญาหรือหมวด)</td><td>เบิกจ่ายรายเดือน และยอดที่ต้องกันเงิน</td></tr>
+    <tr><td class="id">W-FN-03</td><td>เป้าหมายเบิกจ่ายของปี (ลงทุน ประจำ ภาพรวม)</td><td>ช่องว่างถึงเป้าต่อบรรทัด</td></tr>
+    <tr><td class="id">W-FN-04</td><td>สัดส่วนเงินยืมที่ส่งใช้ตรงเวลา</td><td>ยอดค้างและจำนวนหนังสือเรียกชดใช้</td></tr>
+  </tbody>
+</table></div>
+<p class="small">ผลจำลองบันทึกเป็นสถานการณ์และเทียบกันได้ ข้อมูลจริงไม่เปลี่ยน เหมือน What-if ของ Procurement (Q5)</p>
+<h3><span class="num">10.4</span>สิ่งที่ AI ไม่ทำ</h3>
+<div class="callout dark"><b>ขอบเขตที่ห้ามข้าม</b> ไม่อนุมัติจ่ายหรืออนุมัติเงินยืม · ไม่สั่งจ่ายเงินหรือสร้างไฟล์จ่ายเงินที่ส่งได้เอง · ไม่แก้ยอดเงิน ภาษี หรือค่าปรับ · ไม่แก้บัญชีธนาคารของผู้ขาย · ไม่ลงนามแทนกรรมการเก็บรักษาเงิน · ไม่ปิดหรือเปิดงวด · ไม่ส่งหนังสือหรืออีเมลออก · ทุกการใช้บันทึกใน M09 พร้อมข้อมูลที่ใช้และผลที่เสนอ</div>
+</section>
+
+<!-- ============================== 11 ============================== -->
+<section class="ch" id="s11">
+<h2><span class="num">11</span>Analytics และตัวชี้วัด</h2>
+<p class="lede">นิยามตัวชี้วัดครั้งเดียว ใช้ทั้งในหน้า F1 หน้า Analytics ของ F9 และคำตอบของแชต AI</p>
+<h3><span class="num">11.1</span>ตัวชี้วัด</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ตัวชี้วัด</th><th>นิยาม</th><th>เป้าตั้งต้น</th></tr></thead>
+  <tbody>
+    <tr><td class="id">KPI-F01</td><td>ขอเบิกทันเวลา</td><td>ร้อยละใบขอเบิกค่าซื้อจ้างที่ส่งภายใน 5 วันทำการหลังตรวจรับ</td><td>100% (ข้อ 28)</td></tr>
+    <tr><td class="id">KPI-F02</td><td>เวลาจากขอเบิกถึงจ่าย</td><td>มัธยฐานวันทำการจาก V2 ถึง V6</td><td>ตั้งได้</td></tr>
+    <tr><td class="id">KPI-F03</td><td>ใบขอเบิกที่ถูกส่งกลับ</td><td>ร้อยละที่ส่งกลับจากขั้นตรวจหรืออนุมัติ แยกตามเหตุ</td><td>&lt; 10%</td></tr>
+    <tr><td class="id">KPI-F04</td><td>เงินยืมเลยกำหนด</td><td>จำนวนและยอดค้างที่เลยกำหนด แยกตามอายุหนี้</td><td>0</td></tr>
+    <tr><td class="id">KPI-F05</td><td>นำส่งเงินทันเวลา</td><td>ร้อยละรายการนำส่งที่ทันนาฬิกา R-FN-06</td><td>100% (ข้อ 101)</td></tr>
+    <tr><td class="id">KPI-F06</td><td>จับคู่ GFMIS ได้</td><td>ร้อยละรายการที่จับคู่สามทางได้โดยไม่ต้องชี้แจง</td><td>&gt; 98%</td></tr>
+    <tr><td class="id">KPI-F07</td><td>วันปิดงวด</td><td>วันทำการหลังสิ้นเดือนที่ปิดงวดได้</td><td>≤ 5</td></tr>
+    <tr><td class="id">KPI-F08</td><td>จ่ายด้วย e-Payment</td><td>ร้อยละการจ่ายที่ไม่ใช่เช็คหรือเงินสด</td><td>100% (ข้อ 52)</td></tr>
+    <tr><td class="id">KPI-F09</td><td>หนังสือรับรองภาษีทันที</td><td>ร้อยละ 50 ทวิ ที่ออกภายในวันที่มีผลการจ่าย</td><td>100%</td></tr>
+    <tr><td class="id">KPI-F10</td><td>เบิกจ่ายเทียบเป้า</td><td>ร้อยละเบิกจ่ายสะสมเทียบเป้ารายไตรมาส (ลงทุน ประจำ ภาพรวม) ใช้นิยามเดียวกับ KPI-B ของ Budget</td><td>ค่าจาก M10</td></tr>
+  </tbody>
+</table></div>
+<h3><span class="num">11.2</span>สัญญาณเตือน</h3>
+<p class="small">สัญญาณเป็นสิ่งที่ควรตรวจ ไม่ใช่ข้อกล่าวหา ใช้ขั้นตอนคัดกรองเดียวกับ Red flag ของ Procurement (ถาม ชี้แจง ตัดสิน นับผลบวกลวง)</p>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>สัญญาณ</th><th>ตรรกะ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">SG-F01</td><td>ใบแจ้งหนี้ซ้ำ</td><td>ผู้ขาย เลขที่ใบแจ้งหนี้ หรือยอดและวันที่เดียวกันในใบขอเบิกมากกว่าหนึ่งใบ</td></tr>
+    <tr><td class="id">SG-F02</td><td>แบ่งจ่ายให้ต่ำกว่าเกณฑ์</td><td>ผู้ขายเดียวกัน หลายใบต่ำกว่า 5,000 หรือ 10,000 บาทในช่วงสั้น และรวมแล้วเกินเกณฑ์ (คล้าย R-02 ของ Procurement)</td></tr>
+    <tr><td class="id">SG-F03</td><td>จ่ายหลังเปลี่ยนบัญชี</td><td>มีการจ่ายให้ผู้ขายภายใน 30 วันหลังแก้บัญชีธนาคาร (คู่กับ SD-14)</td></tr>
+    <tr><td class="id">SG-F04</td><td>ผู้ยืมส่งช้าซ้ำ</td><td>ผู้ยืมหรือหน่วยงานที่เลยกำหนด 2 ครั้งขึ้นไปใน 12 เดือน</td></tr>
+    <tr><td class="id">SG-F05</td><td>เงินสดขาดหรือเกิน</td><td>รายงานเงินคงเหลือมีผลต่าง หรือยอดในตู้เกิน 10,000 บาทนานกว่า 3 วันทำการ</td></tr>
+    <tr><td class="id">SG-F06</td><td>จ่ายเช็คหรือเงินสดบ่อย</td><td>สัดส่วนที่ไม่ใช่ e-Payment ของผู้จัดทำหรือหน่วยงานสูงกว่าค่าเฉลี่ยมาก</td></tr>
+    <tr><td class="id">SG-F07</td><td>ยกเลิกใบเสร็จบ่อย</td><td>จำนวนใบเสร็จที่ยกเลิกต่อผู้รับเงินสูงผิดปกติ</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 12 ============================== -->
+<section class="ch" id="s12">
+<h2><span class="num">12</span>ลำดับการสร้างต้นแบบ</h2>
+<p class="lede">6 รอบ แต่ละรอบสาธิตได้ด้วยตัวเอง ข้อมูลเดิมของรอบ 11 ย้ายเข้าโครงใหม่ในรอบแรก</p>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รอบ</th><th>สร้าง</th><th>ข้อกำหนด</th><th>สาธิตได้</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FN1</td><td>พื้นฐาน: กฎการเงินใน M10 (ค่าตั้ง ตารางภาษี ตารางผู้มีอำนาจ นาฬิกา) บทบาท <code>finhead</code> ทะเบียนผูกพันและใบสั่งซื้อ รายการเข้าเกณฑ์กันเงิน หน้า F1 และ F2 ข้อมูลตัวอย่างและเพิ่ม <code>DATA_V</code></td><td>FR-FN-01 ถึง 06</td><td>สัญญาที่ยังไม่มีเลขที่ PO ขอเบิกไม่ได้ และรายการกันเงินไหลไป M06</td></tr>
+    <tr><td class="id">FN2</td><td>ใบขอเบิกและภาษี: 6 ประเภท หลักฐาน ทางจ่าย ภาษีและ 50 ทวิ นาฬิกา อนุมัติตามตำแหน่ง ส่งไฟล์และนำเข้าผล GFMIS ผลการจ่าย จ่ายจากบัญชีหน่วยงาน ตรวจการจ่ายประจำวัน ข้อมูลหลักผู้ขาย SD-11 และ SD-14 ย้าย <code>S.payreqs</code></td><td>FR-FN-07 ถึง 17</td><td>งวดตรวจรับกลายเป็นใบขอเบิก หักค่าปรับและภาษี อนุมัติ ส่ง GFMIS จ่าย และขั้น 11 ของแฟ้มจัดซื้อเปลี่ยนตาม</td></tr>
+    <tr><td class="id">FN3</td><td>เงินยืม: เงินยืมของฉันใน My Workspace สัญญา กฎข้อ 58–65 อนุมัติ จ่าย ส่งใช้ ทักท้วง เรียกชดใช้ ทะเบียนคุม SD-12</td><td>FR-FN-18 ถึง 24</td><td>ขอยืมใหม่ถูกกันเพราะมีรายการค้าง ส่งใช้ช้าแล้วหัวหน้าการเงินเรียกชดใช้</td></tr>
+    <tr><td class="id">FN4</td><td>รับเงิน เก็บรักษา และนำส่ง: ใบเสร็จ ทะเบียนคุม ประเภทเงินรับ นาฬิกานำส่ง กรรมการเก็บรักษาเงิน รายงานเงินคงเหลือประจำวัน SD-13</td><td>FR-FN-25 ถึง 33</td><td>รับเงินสดเกิน 10,000 บาท นาฬิกา 3 วันทำการเริ่ม กรรมการนับได้ไม่ตรงและรายงาน</td></tr>
+    <tr><td class="id">FN5</td><td>กระทบยอดและปิดงวด: ทะเบียนผู้มีสิทธิ GFMIS ไฟล์ 5 ชนิด จับคู่สามทาง งบพิสูจน์ยอดเงินฝาก ปิดวัน ปิดเดือน ปิดปี ข้อทักท้วง ส่งยอดเบิกจ่ายให้ M06 และ M07 SD-15 และ SD-16</td><td>FR-FN-34 ถึง 41</td><td>ปิดเดือนไม่ได้เพราะงบพิสูจน์ยอดมีผลต่าง ชี้แจงแล้วปิดได้ และ M07 แสดงยอดจาก Finance</td></tr>
+    <tr><td class="id">FN6</td><td>AI และ Analytics: AG-18 ถึง AG-22 พยากรณ์ F-FN-01 ถึง 04 What-if W-FN-01 ถึง 04 KPI-F01 ถึง 10 สัญญาณ SG-F01 ถึง 07 ขั้นสาธิตในคู่มือสาธิต และกรณีทดสอบใน <code>tests/sweep.js</code></td><td>บทที่ 10–11</td><td>Agent ปิดงวดบอกสิ่งที่ค้าง และพยากรณ์บอกบรรทัดที่ต้องกันเงิน</td></tr>
+  </tbody>
+</table></div>
+<div class="callout"><b>วิธีทำงานแต่ละรอบ</b> สร้าง ทดสอบด้วยชุดทดสอบเต็ม (ทุกหน้า ทุกบทบาท ทุกภาษา) ตรวจความกว้างโทรศัพท์และโหมดมืด ปรับ README และ HANDOFF เผยแพร่ต้นแบบที่ลิงก์เดิม แล้วจึงขออนุญาตบันทึกและส่งขึ้น repository เหมือนรอบ Budget และ Procurement</div>
+</section>
+
+<!-- ============================== 13 ============================== -->
+<section class="ch" id="s13">
+<h2><span class="num">13</span>ความเสี่ยงและประเด็นที่ต้องตัดสินใจ</h2>
+<h3><span class="num">13.1</span>ความเสี่ยง</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ความเสี่ยง</th><th>ผลกระทบ</th><th>วิธีลด</th></tr></thead>
+  <tbody>
+    <tr><td>ระเบียบมีฉบับแก้ไขหรือหนังสือเวียนที่ยังไม่ได้อ่าน</td><td>ค่าเริ่มต้นผิด ผู้ใช้เชื่อระบบเกินควร</td><td>ทุกค่าเป็นค่าตั้งได้ แสดงเลขข้อและระดับความมั่นใจ ตรวจกับฝ่ายกฎหมายของหน่วยงานก่อนใช้จริง (D-FN-09)</td></tr>
+    <tr><td>Fisko กลายเป็นระบบบัญชีซ้ำกับ GFMIS</td><td>บันทึกสองที่ ยอดไม่ตรง ภาระงานเพิ่ม</td><td>หลัก P-F01 ไม่ทำบัญชีแยกประเภท รับงบทดลองจาก GFMIS เพื่อตรวจเท่านั้น (D-FN-01)</td></tr>
+    <tr><td>ไม่รู้รูปแบบไฟล์ของ New GFMIS Thai และธนาคาร</td><td>ต้นแบบเชื่อมจริงไม่ได้</td><td>รูปแบบไฟล์เป็นค่าตั้งได้ ขอไฟล์ตัวอย่างจากหน่วยงาน (D-F05, D-FN-07)</td></tr>
+    <tr><td>ขอบเขตลามไปเงินเดือนและงานบุคคล</td><td>งานเพิ่มมาก ทับระบบจ่ายตรงเงินเดือน</td><td>รับไฟล์ยอดเท่านั้น (D-FN-03)</td></tr>
+    <tr><td>ข้อมูลบัญชีธนาคารและเลขประจำตัวผู้เสียภาษีเป็นข้อมูลอ่อนไหว</td><td>ความเสี่ยงด้านข้อมูลส่วนบุคคล</td><td>ปิดบังบางส่วนบนหน้าจอ สิทธิดูเต็มเฉพาะการเงิน บันทึกการเปิดดูใน M09</td></tr>
+    <tr><td>ผู้ใช้เข้าใจว่าต้นแบบจ่ายเงินจริง</td><td>ความสับสนในการสาธิต</td><td>ป้าย “จำลอง” ที่ไฟล์และผลการจ่ายทุกชิ้น ไม่มีช่องทางส่งออกไปภายนอกจริง</td></tr>
+  </tbody>
+</table></div>
+<h3><span class="num">13.2</span>ประเด็นที่ต้องตัดสินใจ</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ประเด็น</th><th>ทางเลือก (เสนอ)</th><th>ผู้ตัดสิน</th><th>สถานะ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">D-FN-01</td><td>บทบาทของ Fisko ต่อ GFMIS</td><td><b>โต๊ะทำงานและบัญชีย่อยหน้า GFMIS (เสนอ)</b> / ทำบัญชีแยกประเภทเต็ม</td><td>ผู้บริหาร ผู้อำนวยการกองคลัง</td><td><span class="tag t-warn">เปิด</span></td></tr>
+    <tr><td class="id">D-FN-02</td><td>บทบาทใหม่และผู้ยืม</td><td><b>เพิ่ม <code>finhead</code> และให้ทุกบทบาทขอยืมได้จาก My Workspace (เสนอ)</b> / ใช้ <code>fin</code> และ <code>exec</code> เดิม</td><td>Avalant หน่วยงาน</td><td><span class="tag t-warn">เปิด</span></td></tr>
+    <tr><td class="id">D-FN-03</td><td>เงินเดือนและค่าจ้างประจำ</td><td><b>นอกขอบเขต รับไฟล์ยอดเพื่อรับรู้การใช้จ่าย (เสนอ)</b> / ทำใบขอเบิกเงินเดือนใน Fisko</td><td>ผู้บริหาร</td><td><span class="tag t-warn">เปิด</span></td></tr>
+    <tr><td class="id">D-FN-04</td><td>ความลึกของเงินนอกงบประมาณ</td><td><b>รับ ฝากคลัง และจ่ายพื้นฐาน (เสนอ)</b> / ทั้งวงจรรวมแผนการใช้เงิน (เชื่อม FR-B-18 ของ Budget)</td><td>ผู้อำนวยการกองคลัง</td><td><span class="tag t-warn">เปิด</span></td></tr>
+    <tr><td class="id">D-FN-05</td><td>คำนวณค่าเดินทางในระบบ</td><td><b>ตัวช่วยจากตารางอัตราที่ตั้งได้ (เสนอ)</b> / ไม่คำนวณ ให้แนบเอกสารเท่านั้น</td><td>หน่วยงาน</td><td><span class="tag t-warn">เปิด</span></td></tr>
+    <tr><td class="id">D-FN-06</td><td>ภาษีหัก ณ ที่จ่าย</td><td><b>คำนวณและออก 50 ทวิ ใน Fisko นำส่งผ่านรายได้ในคำขอเบิก GFMIS (เสนอ)</b> / ใช้ผลจาก GFMIS อย่างเดียว</td><td>ผู้อำนวยการกองคลัง</td><td><span class="tag t-warn">เปิด</span></td></tr>
+    <tr><td class="id">D-FN-07</td><td>รูปแบบไฟล์ GFMIS และธนาคาร</td><td><b>รูปแบบตั้งได้ เริ่มจากไฟล์ตัวอย่างของหน่วยงาน (เสนอ)</b> / รอเอกสารทางการก่อนสร้าง</td><td>ฝ่าย IT หน่วยงาน</td><td><span class="tag t-warn">เปิด</span></td></tr>
+    <tr><td class="id">D-FN-08</td><td>การลงนามของกรรมการเก็บรักษาเงิน</td><td><b>ยืนยันในระบบรายคน และพิมพ์รายงานเก็บ (เสนอ)</b> / ลงนามบนกระดาษเท่านั้น</td><td>ผู้อำนวยการกองคลัง ผู้ตรวจสอบ</td><td><span class="tag t-warn">เปิด</span></td></tr>
+    <tr><td class="id">D-FN-09</td><td>การตรวจกฎก่อนใช้จริง</td><td><b>ฝ่ายกฎหมายและกองคลังตรวจตาราง R-FN และค่าตั้งก่อนเปิดใช้ (เสนอ)</b></td><td>หน่วยงาน</td><td><span class="tag t-warn">เปิด</span></td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 14 ============================== -->
+<section class="ch" id="s14">
+<h2><span class="num">14</span>ขอบเขตกับผลิตภัณฑ์อื่น</h2>
+<p class="lede">Finance รับต่อจาก Budget และ Procurement และส่งผลกลับไป ไม่ทำงานแทนกัน</p>
+<div class="tbl"><table>
+  <thead><tr><th>ผลิตภัณฑ์หรือส่วน</th><th>Finance รับ</th><th>Finance ส่งกลับ</th><th>ไม่ทำใน Finance</th></tr></thead>
+  <tbody>
+    <tr><td>Fisko Budget (M06, M07)</td><td>บรรทัดจัดสรร สถานะเงินจัดสรร เป้าหมายเบิกจ่าย</td><td>ยอดผูกพันและเบิกจ่ายจริง เงินเหลือจ่าย รายการเสนอกันเงิน</td><td>โอนเปลี่ยนแปลงงบประมาณ ปรับแผนการใช้จ่าย</td></tr>
+    <tr><td>Fisko Procurement</td><td>สัญญาและใบสั่งซื้อ งวดที่ตรวจรับและผ่านประตู R-11 ค่าปรับ ทะเบียนผู้ขาย</td><td>เลขที่ PO ใน GFMIS สถานะใบขอเบิกและการจ่าย (ขั้น 10–12 ของแฟ้ม) คำขอแก้บัญชีผู้ขาย</td><td>เลือกผู้ขาย ตรวจรับ คิดค่าปรับ</td></tr>
+    <tr><td>Fisko Assets (อนาคต D-P11)</td><td>—</td><td>ยอดจ่ายจริงของครุภัณฑ์เพื่อใช้เป็นราคาทุน</td><td>ทะเบียนครุภัณฑ์ ค่าเสื่อมราคา พัสดุคงคลัง</td></tr>
+    <tr><td>ระบบบุคลากรและเงินเดือน</td><td>ไฟล์ยอดเงินเดือนรายเดือน</td><td>—</td><td>คำนวณเงินเดือน ภาษีเงินเดือน (D-FN-03)</td></tr>
+    <tr><td>My Workspace</td><td>—</td><td>เงินยืมของฉัน งานตรวจนับ งานอนุมัติ การแจ้งเตือนนาฬิกา</td><td>—</td></tr>
+    <tr><td>M10 ผู้ดูแลระบบ</td><td>กฎการเงิน ตารางผู้มีอำนาจ คำสั่งกรรมการ วันหยุด การแยกหน้าที่</td><td>บันทึกการถูกกันตามกฎ SD</td><td>—</td></tr>
+    <tr><td>M09 และแชต AI co-work</td><td>สวิตช์และระดับอิสระของ Agent</td><td>บันทึกการใช้ AI คำตอบเรื่องการเงินจากชั้นตัวชี้วัด</td><td>—</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 15 ============================== -->
+<section class="ch" id="s15">
+<h2><span class="num">15</span>แหล่งอ้างอิง</h2>
+<div class="tbl"><table>
+  <thead><tr><th>รหัส</th><th>แหล่ง</th><th>ใช้สำหรับ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">S1</td><td><a href="https://www.satit.nu.ac.th/files/upload/1604653509.pdf">ระเบียบกระทรวงการคลังว่าด้วยการเบิกเงินจากคลัง การรับเงิน การจ่ายเงิน การเก็บรักษาเงิน และการนำเงินส่งคลัง พ.ศ. 2562 (ราชกิจจานุเบกษา เล่ม 136 ตอนพิเศษ 120 ง 13 พฤษภาคม 2562)</a> (สำเนาที่เผยแพร่โดยโรงเรียนสาธิต มหาวิทยาลัยนเรศวร อ่านทั้งฉบับ)</td><td>ข้อ 4–111 ทุกข้อระดับ A</td></tr>
+    <tr><td class="id">S2</td><td><a href="https://rd.go.th/65193.html">กรมสรรพากร: ข้อหารือการหักภาษี ณ ที่จ่ายร้อยละ 1 ของใบสั่งซื้อหรือใบสั่งจ้างของส่วนราชการตั้งแต่ 10,000 บาท</a></td><td>R-FN-03 (ระดับ B)</td></tr>
+    <tr><td class="id">S3</td><td><a href="https://rd.go.th/55004.html">กรมสรรพากร: ข้อหารือการนับยอดจ่ายให้บุคคลธรรมดาเพื่อหักภาษี ณ ที่จ่าย</a></td><td>R-FN-03 (ระดับ B)</td></tr>
+    <tr><td class="id">S4</td><td><a href="https://rd.go.th/46397.html">กรมสรรพากร: ข้อหารือการโอนเงินให้ผู้ขายผ่าน GFMIS และหนังสือรับรองการหักภาษี</a></td><td>FR-FN-10 (ระดับ B)</td></tr>
+    <tr><td class="id">S5</td><td><a href="https://www.bangkokbiznews.com/economics/1249041">กรุงเทพธุรกิจ (13 ตุลาคม 2569): หลักเกณฑ์กันเงินงบประมาณปี 2569 ผ่าน New GFMIS Thai</a> (อ้างจากผลค้นหา ยังไม่ได้เปิดอ่านทั้งข่าว)</td><td>กำหนดวันขอกันเงิน (ระดับ B)</td></tr>
+    <tr><td class="id">S6</td><td>Fisko Budget Detailed Design v0.2 และ Fisko Procurement Detailed Design v0.2 (Avalant)</td><td>BR-17, R-11, SD-01 ถึง SD-10, AG-01 ถึง AG-17, รูปแบบเอกสาร</td></tr>
+  </tbody>
+</table></div>
+<p class="small">แหล่งระดับ B และข้อที่ไม่มีรหัสแหล่ง ต้องตรวจกับตัวบทและหนังสือเวียนฉบับปัจจุบันก่อนใช้งานจริง</p>
+</section>
+
+<footer class="end">© 2026 Avalant. All rights reserved. · เอกสารฉบับร่างเพื่อการหารือ ไม่ใช่ความเห็นทางกฎหมาย · ตัวเลขในตัวอย่างเป็นข้อมูลสมมติ</footer>
+</div>
+</main>
+</div>
+
+<script>
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc ol a'));
+  var secs = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+  function onScroll() {
+    var y = window.scrollY + 120, cur = 0;
+    secs.forEach(function (s, i) { if (s && s.offsetTop <= y) cur = i; });
+    links.forEach(function (a, i) { a.classList.toggle('on', i === cur); });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+  var toc = document.getElementById('toc'), tg = document.getElementById('toc-toggle');
+  tg.addEventListener('click', function () { var o = toc.classList.toggle('open'); tg.setAttribute('aria-expanded', o); });
+  links.forEach(function (a) { a.addEventListener('click', function () { toc.classList.remove('open'); tg.setAttribute('aria-expanded', 'false'); }); });
+  document.getElementById('theme').addEventListener('click', function () {
+    var r = document.documentElement, cur = r.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    r.dataset.theme = cur === 'dark' ? 'light' : 'dark';
+  });
+})();
+</script>
+</body>
+</html>
