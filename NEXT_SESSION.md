@@ -114,3 +114,8 @@ Roles now: `div`, `divhead`, `plan`, `committee`, `exec`, `fin`, `audit`, `admin
 4. **Small polish:** BR-11 exception flags; splitting the request form's first steps; moving the forecast probabilities by unit or type history into data.
 
 Start the next session by reading this file, then `HANDOFF.md` sections 3, 4, 11 and 26 to 35, then run the quick sweep to confirm a clean start.
+
+## Round 44 (Procurement information architecture)
+
+Built on branch `procurement-ia` (worktree `..\Fisko-proc`). Procurement now has 13 pages in 5 groups declared in `src/js/74-proc-pages.js` (see `HANDOFF.md` section 44 and design chapter 19). Next for Procurement: the follow-ups listed at the end of section 44.
+

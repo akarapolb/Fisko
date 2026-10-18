@@ -174,7 +174,7 @@ CASE_BINDS.push((c, done) => {
   const base = ADMIN.procprof, bb = BIND_ADMIN.procprof;
   ADMIN.procprof = () => {
     const ad = isAdmin(), p = P2(), num = (k, lbl, hint) => `<div class="f" style="flex:0 1 200px"><label for="p2-${k}">${lbl}</label><input type="number" id="p2-${k}" min="0" step="any" value="${p[k]}" ${ad ? "" : "disabled"}><span class="sub">${hint}</span></div>`;
-    return base() + `<section class="panel"><header><h2>${L("ค่าตั้งรอบ T2", "Round T2 settings")}</h2></header><div class="body inline-form">
+    return base() + `<section class="panel"><header><h2>${L("หลักประกัน แต้มต่อ และอุทธรณ์", "Guarantees, price preference and appeals")}</h2></header><div class="body inline-form">
       ${num("bidSecReturnDays", L("คืนหลักประกันการเสนอราคาภายใน (วัน)", "Return bid security within (days)"), CONF_TAG("C"))}${num("bidSecWarnDays", L("เตือนก่อนหลักประกันหมดอายุ (วัน)", "Warn before expiry (days)"), CONF_TAG("C"))}
       ${num("smePct", L("แต้มต่อ SME (ร้อยละของราคา)", "SME preference (% of price)"), CONF_TAG("C"))}${num("mitPct", L("แต้มต่อ MiT (ร้อยละของราคา)", "MiT preference (% of price)"), CONF_TAG("C"))}${num("appealFwdDays", L("คาดว่าได้ผลอุทธรณ์ภายใน (วัน)", "Appeal result expected within (days)"), CONF_TAG("C"))}
       <div class="f" style="flex:0 1 240px"><label for="p2-central">${L("หน่วยงานกลางที่รับอุทธรณ์", "Central body for appeals")}</label><input type="text" id="p2-central" value="${esc(p.central)}" ${ad ? "" : "disabled"}></div></div>
@@ -187,7 +187,7 @@ CASE_BINDS.push((c, done) => {
     const sv = $("#p2-save"); if (sv) sv.onclick = () => { const v = {}; for (const k of ["bidSecReturnDays", "bidSecWarnDays", "smePct", "mitPct", "appealFwdDays"]) v[k] = Number($("#p2-" + k).value);
       const central = $("#p2-central").value.trim(); if (Object.values(v).some(x => !(x >= 0)) || v.smePct > 50 || v.mitPct > 50 || !central) { toast(L("ค่าไม่ถูกต้อง", "Check the values")); return; }
       Object.assign(S.prof.p2, v, { central }); S.prof.testCats = $$("[name=p2-cat]:checked").map(x => x.value);
-      audit(["แก้ค่าตั้งโปรไฟล์จัดซื้อ (รอบ T2)", "Changed profile settings (T2)"], Object.entries(v).map(([k, x]) => `${k}=${x}`).join(" ") + ` central=${central} testCats=${S.prof.testCats.join(",")}`); commit(); route(); toast(L("บันทึกแล้ว", "Saved")); };
+      audit(["แก้ค่าตั้งโปรไฟล์จัดซื้อ (หลักประกันและอุทธรณ์)", "Changed profile settings (guarantees and appeals)"], Object.entries(v).map(([k, x]) => `${k}=${x}`).join(" ") + ` central=${central} testCats=${S.prof.testCats.join(",")}`); commit(); route(); toast(L("บันทึกแล้ว", "Saved")); };
   };
 }
 
@@ -241,11 +241,10 @@ const vendorHome = () => { const v = vpMe(), R = v ? vpRfqs(v).filter(o => !o.x.
 
 // officers check the invoices suppliers send, on the contracts page
 {
-  const base = PROC.contracts;
-  PROC.contracts = () => {
-    const Q = (S.vinv || []).filter(x => x.status === "submitted"), html = base();
-    if (!vpOn() || !Q.length || !isProcRole()) return html;
-    return html + `<section class="panel"><header><h2>${L("ใบแจ้งหนี้ที่ผู้ขายส่งมาทางพอร์ทัล", "Invoices sent by suppliers in the portal")}</h2><span class="sp"></span><span class="mono sub">FR-PR-66</span></header><div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("ผู้ขาย", "Supplier")}</th><th>${L("สัญญา", "Contract")}</th><th class="n">${L("จำนวนเงิน", "Amount")}</th><th></th></tr></thead><tbody>${Q.map(x => { const k = S.contracts.find(y => y.id === x.contract), ph = k && k.phases.find(p => p.n === x.phase), match = ph && Math.abs(ph.amount - x.amount) <= S.pcfg.invoiceTol;
+  PROC.conInvoices = () => {
+    const Q = (S.vinv || []).filter(x => x.status === "submitted");
+    if (!vpOn() || !Q.length || !isProcRole()) return "";
+    return `<section class="panel"><header><h2>${L("ใบแจ้งหนี้ที่ผู้ขายส่งมาทางพอร์ทัล", "Invoices sent by suppliers in the portal")}</h2><span class="sp"></span><span class="mono sub">FR-PR-66</span></header><div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("ผู้ขาย", "Supplier")}</th><th>${L("สัญญา", "Contract")}</th><th class="n">${L("จำนวนเงิน", "Amount")}</th><th></th></tr></thead><tbody>${Q.map(x => { const k = S.contracts.find(y => y.id === x.contract), ph = k && k.phases.find(p => p.n === x.phase), match = ph && Math.abs(ph.amount - x.amount) <= S.pcfg.invoiceTol;
       return `<tr><td class="mono">${esc(x.no)}</td><td>${esc((S.vendors.find(v => v.id === x.vendor) || {}).name || "")}</td><td class="sub">${esc(x.contract)} · ${L("งวด", "phase")} ${x.phase}</td><td class="n">${fmt(x.amount)} ${match ? "" : tag(L("ไม่ตรงงวด", "Differs from the phase"), "p-warn")}</td>
         <td><button class="btn primary" type="button" data-vinvok="${x.id}">${L("ยืนยันเป็นใบแจ้งหนี้ของงวด", "Confirm as the phase invoice")}</button> <input type="text" id="vinv-n-${x.id}" placeholder="${L("เหตุผลที่ส่งคืน", "Reason")}" style="width:150px"> <button class="btn" type="button" data-vinvno="${x.id}">${L("ส่งคืน", "Return")}</button></td></tr>`; }).join("")}</tbody></table></div></section>`;
   };

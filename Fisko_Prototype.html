@@ -1437,7 +1437,7 @@ function resetDemo() { store.del(key()); S = SEEDS[ORG].seed(); save(); resetUi(
 function resetUi() {
   CUR_REQ = null; REQ_TAB = "main"; VER_A = VER_B = null; CMP_REQ = null; CHAIN_P = null; CMT_OPEN = null;
   DRILL_U = DRILL_P = null; PLAN_UNIT = ""; ALLOC_FY = 2570; WI.locks = null; STAGED = null;
-  OPEN_PROG.clear(); OPEN_UNIT.clear(); IDEA_OPEN = null; PASTE_ROWS = []; PLAN_REQ = null; PLAN_SPLIT = false; CT_FROM = null; PAY_FORM = null; CASE_OPEN = null; OCDS_JSON = ""; AI_CASE = null; AI_RES = {}; AI_TOR = ""; AI_Q = ""; TOR_OPEN = null; PACK_FOR = null; BL_ROWS = null; REP_MONTH = null; DOSSIER_FOR = null; DOC_OPEN = null; WIP = null; WI_LOCK.clear(); WI_NAME = ""; FC_CUT = null; RUN_OPEN = null; FN_PO = null; VC_OPEN = null; VC_NEW = false; GF_OUT = null; ADV_OPEN = null; RC_NEW = false; BK_MONTH = null; BK_ACCT = "budget"; PER_OPEN = null; FAI_TAB = "agents"; F_RUN_OPEN = null; FWI = null;
+  OPEN_PROG.clear(); OPEN_UNIT.clear(); IDEA_OPEN = null; PASTE_ROWS = []; PLAN_REQ = null; PLAN_SPLIT = false; CT_FROM = null; PAY_FORM = null; CASE_OPEN = null; CON_OPEN = null; AI_TOOL = "AI-01"; OCDS_JSON = ""; AI_CASE = null; AI_RES = {}; AI_TOR = ""; AI_Q = ""; TOR_OPEN = null; PACK_FOR = null; BL_ROWS = null; REP_MONTH = null; DOSSIER_FOR = null; DOC_OPEN = null; WIP = null; WI_LOCK.clear(); WI_NAME = ""; FC_CUT = null; RUN_OPEN = null; FN_PO = null; VC_OPEN = null; VC_NEW = false; GF_OUT = null; ADV_OPEN = null; RC_NEW = false; BK_MONTH = null; BK_ACCT = "budget"; PER_OPEN = null; FAI_TAB = "agents"; F_RUN_OPEN = null; FWI = null;
 }
 
 // ---------- roles ----------
@@ -7574,7 +7574,7 @@ const DEMO = [
     do: ["ที่ขั้น 43 ให้เจ้าหน้าที่พัสดุส่ง RFQ ถึงผู้ขายรายนี้ด้วย → ที่นี่กด “ส่งราคา” → แท็บใบแจ้งหนี้ ส่งใบแจ้งหนี้งวดที่ตรวจรับแล้ว → สลับเป็นเจ้าหน้าที่พัสดุ หน้าสัญญา ยืนยันใบแจ้งหนี้", "At step 43 have the procurement officer send an RFQ to this supplier too → here press Send price → on the Invoices tab send an invoice for an accepted phase → switch to the procurement officer and confirm it on the Contracts page"] },
   { t: "48:00", role: "proc", link: "prc-contracts", title: ["สัญญา: อนุมัติแบบ BOQ และหมายเลขเครื่อง", "Contract: drawing approval, BOQ and serial numbers"],
     say: ["สัญญาที่ต้องส่งแบบจะตรวจรับงวดแรกไม่ได้จนกว่าแบบจะอนุมัติ ระบบออกเลขหนังสือ MN และนับกำหนดตอบ BOQ ตรวจยอดกับวงเงินสัญญา หมายเลขเครื่องวางจาก Excel ได้ ซ้ำกับสัญญาใดก็บันทึกไม่ได้ และคาดวันที่ค่าปรับจะครบเพดาน", "A contract that needs drawings can't have its first phase accepted until one is approved. The system issues the MN letter number and counts the reply time. The BOQ is checked against the contract amount, serial numbers can be pasted from Excel and a number used on any contract is refused, and the date penalties will reach the cap is projected."],
-    do: ["ไปแผง “เพิ่มเติม (รอบ T3)” ของสัญญา CT-2570-001 → “BOQ และหมายเลขเครื่อง” วางหมายเลข SN-001 ถึง SN-003 แล้ววางซ้ำ SN-002 → เปิด “อนุมัติแบบ” ติ๊กสัญญานี้ต้องส่งแบบ บันทึกการรับแบบ แล้วส่งกลับแก้ (ต้องมีเหตุผล) และอนุมัติรอบสอง", "Open the More (round T3) panel of CT-2570-001 → BOQ and serial numbers: paste SN-001 to SN-003, then SN-002 again → open Drawing approval, tick the contract needs drawings, record receipt, send back (a reason is required) and approve the second round"] },
+    do: ["ไปแผง “แบบ BOQ และข้อมูลเพิ่มเติม” ของสัญญา CT-2570-001 → “BOQ และหมายเลขเครื่อง” วางหมายเลข SN-001 ถึง SN-003 แล้ววางซ้ำ SN-002 → เปิด “อนุมัติแบบ” ติ๊กสัญญานี้ต้องส่งแบบ บันทึกการรับแบบ แล้วส่งกลับแก้ (ต้องมีเหตุผล) และอนุมัติรอบสอง", "Open the More (round T3) panel of CT-2570-001 → BOQ and serial numbers: paste SN-001 to SN-003, then SN-002 again → open Drawing approval, tick the contract needs drawings, record receipt, send back (a reason is required) and approve the second round"] },
   { t: "49:00", role: "proc", link: "prc-fees", title: ["ค่าตอบแทนกรรมการ", "Committee fees"],
     say: ["เลือกแฟ้มและคณะกรรมการ ใส่วันประชุม ติ๊กการเข้าประชุม ระบบคำนวณตามอัตราตำแหน่ง ตัดวันหยุดและวันที่เบิกซ้ำ จำกัดเพดานรายเดือนและเพดานต่อแฟ้ม แล้วส่งหัวหน้าพัสดุหรือผู้บริหารตามวงเงิน ผู้เบิกอนุมัติเองไม่ได้ ระบบเตรียมรายการเท่านั้น ไม่จ่ายเงิน", "Pick a case and a committee, enter meeting dates and tick attendance. The system pays by position, drops days off and dates already claimed, applies the monthly and per-case caps and sends the claim to the head of procurement or the executive by amount. The person who raised it can't approve it. It only prepares the claim; it pays nothing."],
     do: ["ค่าตอบแทนกรรมการ → แฟ้ม PC-2570-001 คณะกรรมการ TOR วันที่ 2026-10-12, 2026-10-17, 2026-10-19 → สร้างตาราง → คำนวณ (วันเสาร์ถูกตัด) → ส่ง → สลับเป็นหัวหน้าพัสดุอนุมัติ → ลองเบิกวันที่ 2026-10-12 ซ้ำ", "Committee fees → case PC-2570-001, TOR committee, dates 2026-10-12, 2026-10-17 and 2026-10-19 → build the grid → calculate (the Saturday is dropped) → send → switch to the head of procurement and approve → try claiming 2026-10-12 again"] },
@@ -7971,7 +7971,7 @@ PROC.reqn = () => {
 function phaseSignText(c, ph) {
   return `${ph.signs.map(s => esc(userName(s.by))).join(", ") || "—"} <span class="sub">(${ph.signs.length}/${PHASE_SIGNS})</span>`;
 }
-PROC.contracts = () => {
+PROC.conCreate = () => {
   const isProc = isProcRole(), open = S.cases.filter(c => caseState(c) === 8), me_ = me().id, people = famPeople().filter(u => u.id !== me_);
   const sel = open.find(c => c.id === CT_FROM) || open[0], judges = sel ? caseJudges(sel) : [];
   const defs = [S.users.find(u => u.role === "plan" && u.primary), S.users.find(u => u.role === "div" && u.primary)].filter(Boolean).map(u => u.id).filter(id => !judges.includes(id));
@@ -7990,10 +7990,11 @@ PROC.contracts = () => {
       <fieldset style="border:1px solid var(--line);border-radius:8px;padding:8px 12px"><legend class="sub">${L("คณะกรรมการตรวจรับ", "Acceptance committee")}</legend>
         <div class="row">${people.map(u => `<label class="field-inline"><input type="checkbox" name="ct-insp" value="${u.id}" ${defs.includes(u.id) ? "checked" : ""}> ${esc(tx(u.name))} <span class="sub">· ${tx(ROLES[u.role])}</span></label>`).join("")}</div></fieldset>
       <div><button class="btn primary" type="submit">${L("สร้างสัญญา", "Create contract")}</button></div></form></div></section>`
-    : isProc ? `<div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("ยังไม่มีแฟ้มที่พร้อมทำสัญญา", "No case is ready for a contract")}</b><p>${L("แฟ้มที่ประกาศผู้ชนะและพ้นกำหนดอุทธรณ์แล้วจะปรากฏที่นี่", "Cases with a winner and a finished appeal period will appear here")}</p></div></div>` : ""}
-  ${S.contracts.slice().reverse().map(conPanel).join("")
-    || `<section class="panel"><div class="body sub">${L("ยังไม่มีสัญญา", "No contracts yet")}</div></section>`}`;
+    : isProc ? `<div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("ยังไม่มีแฟ้มที่พร้อมทำสัญญา", "No case is ready for a contract")}</b><p>${L("แฟ้มที่ประกาศผู้ชนะและพ้นกำหนดอุทธรณ์แล้วจะปรากฏที่นี่", "Cases with a winner and a finished appeal period will appear here")}</p></div></div>` : ""}`;
 };
+// Every contract in full (round 44 shows one at a time; see PROC.conList and PROC.conDetail in 74).
+PROC.conAll = () => S.contracts.slice().reverse().map(conPanel).join("") || `<section class="panel"><div class="body sub">${L("ยังไม่มีสัญญา", "No contracts yet")}</div></section>`;
+PROC.contracts = () => PROC.conCreate() + PROC.conAll();
 PROC.egp = () => {
   const log = S.egpImports || [];
   return `
@@ -8007,14 +8008,7 @@ PROC.egp = () => {
     <tbody>${log.map(g => `<tr><td class="mono">${g.id}</td><td class="sub">${fdate(g.t, true)}</td><td>${esc(userName(g.by))}</td><td class="n">${g.ok}</td><td class="n">${g.bad}</td></tr>`).join("")}</tbody></table></div></section>` : ""}`;
 };
 
-VIEWS.procurement = () => {
-  if (!PROC[PROC_TAB]) PROC_TAB = "cases";
-  const tabs = [["cases", L("แฟ้มจัดซื้อ", "Case files")], ["plan", L("แผนจัดซื้อ", "Procurement plan")], ["reqn", `${L("ใบขอซื้อขอจ้าง", "Requisitions")}${S.reqn.filter(r => r.status === "pending").length ? ` (${S.reqn.filter(r => r.status === "pending").length})` : ""}`], ["tor", L("คลัง TOR", "TOR library")], ["contracts", L("สัญญาและงวดงาน", "Contracts and phases")], ["docs", L("รับเอกสาร (OCR)", "Document intake (OCR)")], ["suppliers", L("ผู้ขาย", "Suppliers")], ["gantt", L("ไทม์ไลน์แฟ้ม", "Case timeline")], ["reports", L("รายงานประจำเดือน", "Monthly report")], ["egp", L("ไฟล์จาก e-GP", "e-GP file")], ["analytics", L("วิเคราะห์", "Analytics")], ["forecast", L("พยากรณ์", "Forecast")], ["whatif", L("จำลองสถานการณ์", "What-if")], ["flags", L("สัญญาณเตือน", "Red flags")], ["ocds", L("ส่งออก OCDS", "OCDS export")], ["ai", L("ผู้ช่วย AI", "AI assistant")], ["agents", L("Agent อัตโนมัติ", "Agents")]];
-  return `
-  ${PROC_TAB === "cases" && CASE_OPEN && caseOf(CASE_OPEN) ? "" : `<div class="head"><div><div class="eyebrow">Fisko Procurement · ${L("จัดซื้อจัดจ้าง", "Procurement")}</div><h1>${(tabs.find(t => t[0] === PROC_TAB) || tabs[0])[1]}</h1>
-    <p>${L("เตรียมและติดตามการจัดซื้อที่ผูกกับรายการจัดสรร ขั้นตอนทางการยังทำใน e-GP", "Prepare and track procurement tied to allocation lines. The official steps stay in e-GP.")} · ${fyLabel(FAM_FY)}</p></div></div>`}
-  ${PROC[PROC_TAB]()}`;
-};
+// The page itself (menu, tabs, sections) is built in 74-proc-pages.js (round 44).
 
 BIND.procurement = () => {
   $$("[data-prtab]").forEach(b => (b.onclick = () => { PROC_TAB = b.dataset.prtab; route(); }));
@@ -8934,7 +8928,9 @@ function demandPanel() {
 }
 {
   const base = PROC.plan;
-  PROC.plan = () => planPanel() + base() + demandPanel();
+  PROC.planMain = () => planPanel() + base();
+  PROC.demand = () => demandPanel();
+  PROC.plan = () => PROC.planMain() + PROC.demand();
 }
 function bindPlan2() {
   const done = m => { commit(); renderShell(); route(); if (m) toast(m); };
@@ -9565,7 +9561,7 @@ function vendorHist(name) {
   return { n: cons.length, value: sumv(cons.map(c => c.amount)), late: sumv(cons.flatMap(c => c.phases.map(phLate))), pen: sumv(cons.map(conPenalty)), dissent: cons.flatMap(c => c.phases.flatMap(ph => ph.dissent || [])).length,
     terminated: cons.filter(c => c.status === "terminated").length, score: scores.length ? avg(scores) : null, bids: S.cases.filter(x => (x.bids || []).some(b => normName(b.name) === normName(name))).length };
 }
-PROC.suppliers = () => {
+PROC.supKpis = () => {
   const V = S.vendors, B = S.blacklist, pr = isProcRole();
   return `
   <section class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
@@ -9573,7 +9569,11 @@ PROC.suppliers = () => {
     <div class="kpi"><span class="l">${L("SME", "SMEs")}</span><span class="v">${V.filter(v => v.sme).length}</span></div>
     <div class="kpi"><span class="l">${L("รายชื่อผู้ทิ้งงาน", "Abandoned-work list")}</span><span class="v">${B.rows.length}</span></div>
     <div class="kpi"><span class="l">${L("นำเข้ารายชื่อล่าสุด", "Last list import")}</span><span class="v" style="font-size:18px">${B.imports[0] ? fdate(B.imports[0].t) : "—"}</span></div>
-  </section>
+  </section>`;
+};
+PROC.supRegister = () => {
+  const V = S.vendors, B = S.blacklist, pr = isProcRole();
+  return `
   <section class="panel"><header><h2>${L("ทะเบียนผู้ขาย", "Supplier register")}</h2><span class="sp"></span><span class="sub">${L("ประวัติรวมจากทุกสัญญา ใช้ประกอบการจัดซื้อครั้งถัดไป (FR-PR-52) ไม่ใช่การจัดอันดับ", "History across all contracts, shown when buying next time (FR-PR-52). Not a ranking.")}</span></header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("ผู้ขาย", "Supplier")}</th><th>${L("เลขประจำตัวผู้เสียภาษี", "Tax ID")}</th><th>${L("ประเภท", "Type")}</th><th class="n">${L("สัญญา", "Contracts")}</th><th class="n">${L("มูลค่า (ลบ.)", "Value (M)")}</th><th class="n">${L("วันล่าช้า", "Late days")}</th><th class="n">${L("ค่าปรับ (บาท)", "Penalties (baht)")}</th><th class="n">${L("คะแนนเฉลี่ย", "Avg score")}</th><th>${L("สถานะ", "Status")}</th></tr></thead>
       <tbody>${V.map(v => { const h = vendorHist(v.name), bl = blHit(v.name);
@@ -9584,12 +9584,17 @@ PROC.suppliers = () => {
       <div class="f" style="flex:0 1 170px"><label for="vd-t">${L("เลขประจำตัวผู้เสียภาษี 13 หลัก", "13-digit tax ID")}</label><input type="text" id="vd-t" inputmode="numeric" maxlength="13" required></div>
       <div class="f" style="flex:0 1 150px"><label for="vd-ty">${L("ประเภท", "Type")}</label><select id="vd-ty">${Object.keys(VTYPE).map(k => `<option value="${k}">${tx(VTYPE[k])}</option>`).join("")}</select></div>
       <label class="field-inline"><input type="checkbox" id="vd-sme"> SME</label><label class="field-inline"><input type="checkbox" id="vd-loc"> ${L("ในพื้นที่", "Local")}</label>
-      <div class="f" style="flex:1 1 160px"><label for="vd-c">${L("ผู้ติดต่อ", "Contact")}</label><input type="text" id="vd-c"></div><button class="btn" type="submit">+ ${L("เพิ่ม", "Add")}</button></form></div>` : ""}</section>
+      <div class="f" style="flex:1 1 160px"><label for="vd-c">${L("ผู้ติดต่อ", "Contact")}</label><input type="text" id="vd-c"></div><button class="btn" type="submit">+ ${L("เพิ่ม", "Add")}</button></form></div>` : ""}</section>`;
+};
+PROC.supBlacklist = () => {
+  const V = S.vendors, B = S.blacklist, pr = isProcRole();
+  return `
   <section class="panel"><header><h2>${L("รายชื่อผู้ทิ้งงาน", "Abandoned-work list")}</h2><span class="sp"></span>${pr ? `<button class="btn" type="button" id="bl-sample">${L("สร้างไฟล์ตัวอย่าง", "Create a sample file")}</button>` : ""}</header>
     <div class="body sub">${L("นำเข้าจากไฟล์ที่หน่วยงานได้รับ ระบบตรวจชื่อและเลขประจำตัวผู้เสียภาษีก่อนบันทึกผู้ชนะและก่อนทำสัญญา (R-17) ปลดได้เฉพาะหัวหน้าพัสดุเมื่อยืนยันว่าเป็นคนละราย", "Imported from the file the agency receives. Names and tax IDs are checked before a winner is recorded and before a contract (R-17). Only the head of procurement can release a match, after confirming it's a different entity.")}</div>
     <div class="tbl-wrap"><table><thead><tr><th>${L("ชื่อ", "Name")}</th><th>${L("เลขประจำตัวผู้เสียภาษี", "Tax ID")}</th><th>${L("ตั้งแต่", "Since")}</th><th>${L("อ้างอิง", "Reference")}</th></tr></thead><tbody>${B.rows.map(r => `<tr><td>${esc(r.name)}</td><td class="mono">${esc(r.taxId)}</td><td class="sub">${fdate(r.since)}</td><td class="sub">${esc(r.ref)}</td></tr>`).join("") || `<tr><td colspan="4" class="sub">—</td></tr>`}</tbody></table></div>
     ${BL_ROWS ? `<div class="body"><b>${L("ตัวอย่างไฟล์ที่จะนำเข้า", "File to import")}</b> <span class="sub">${BL_ROWS.length} ${L("แถว แทนที่รายชื่อเดิมทั้งหมด", "rows; replaces the current list")}</span><div class="row" style="margin-top:6px"><button class="btn primary" type="button" id="bl-go">${L("นำเข้า", "Import")}</button><button class="btn ghost" type="button" id="bl-clear">${L("ล้าง", "Clear")}</button></div></div>` : ""}</section>`;
 };
+PROC.suppliers = () => PROC.supKpis() + PROC.supRegister() + PROC.supBlacklist();
 function bindSuppliers() {
   const done = m => { commit(); renderShell(); route(); if (m) toast(m); };
   const f = $("#vd-form"); if (f) f.onsubmit = e => { e.preventDefault(); const name = $("#vd-n").value.trim(), taxId = $("#vd-t").value.trim();
@@ -12968,9 +12973,12 @@ function aiDraft(c, type) {
 
 // ---------- views ----------
 const aiCases = () => S.cases.filter(c => !c.cancelled);
+// Round 44: one tool at a time, picked from a bar (AI_TOOL is the tool id prefix of the section title).
+let AI_TOOL = "AI-01";
+const AI_TOOLS = [["AI-01", ["รวมซื้อและแตกซื้อ", "Combine and split"]], ["AI-03", ["ราคากลาง", "Reference price"]], ["AI-04", ["ตรวจ TOR", "TOR check"]], ["AI-05", ["วิธีจัดซื้อ", "Method"]], ["AI-07", ["งานล่าช้า", "Late delivery"]], ["AI-02", ["ร่างเอกสาร", "Drafts"]], ["AI-09", ["ถามข้อมูล", "Ask"]], ["AI-10", ["ผลงานผู้ขาย", "Supplier record"]]];
 PROC.ai = () => {
   const cs = aiCases(), c = caseOf(AI_CASE) || cs[0], off = id => (agentOn(id) ? "" : tag(L("ปิดอยู่ใน M09", "Off in M09"), "p-bad")), pr = isProcRole() || ROLE === "audit";
-  const sec = (title, ag, sub, body) => `<section class="panel"><header><h2>${title}</h2><span class="sp"></span><span class="mono sub">${ag}</span> ${off(ag)}</header><div class="body" style="display:flex;flex-direction:column;gap:10px">${sub ? `<div class="sub">${sub}</div>` : ""}${body}</div></section>`;
+  const sec = (title, ag, sub, body) => !title.startsWith(AI_TOOL) ? "" : `<section class="panel"><header><h2>${title}</h2><span class="sp"></span><span class="mono sub">${ag}</span> ${off(ag)}</header><div class="body" style="display:flex;flex-direction:column;gap:10px">${sub ? `<div class="sub">${sub}</div>` : ""}${body}</div></section>`;
   const res = k => (AI_RES[k] ? `<div class="callout" style="margin:0">${AI_RES[k]}</div>` : "");
   const risk = S.contracts.flatMap(x => x.phases.filter(ph => !phaseAccepted(ph)).map(ph => ({ x, ph, r: aiDelay(x, ph) }))).sort((a, b) => b.r.s - a.r.s);
   const stat = S.aiDrafts.length ? `${S.aiDrafts.filter(d => d.edit < 0.3).length}/${S.aiDrafts.length}` : "—";
@@ -12979,6 +12987,7 @@ PROC.ai = () => {
   <div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">AI</div><div><b>${L("AI อ่านและร่าง คนตัดสิน", "AI reads and drafts; a person decides")}</b>
     <p>${L("ต้นแบบนี้ใช้กฎและสถิติ ไม่เรียกโมเดลภายนอก (รุ่น rules-1) ทุกการใช้บันทึกใน M09 และปิดเปิดแต่ละ Agent ได้ที่นั่น AI ไม่ให้คะแนนหรือจัดอันดับข้อเสนอ ไม่เลือกผู้ขาย ไม่ประกาศผู้ชนะ ไม่อนุมัติ ไม่เขียนสถานะ 6 ถึง 8 และไม่ส่งข้อมูลลับออกนอกหน่วยงาน", "This prototype uses rules and statistics and calls no outside model (version rules-1). Every use is logged in M09 and each agent can be switched there. AI never scores or ranks bids, selects a supplier, announces a winner, approves, writes in steps 6 to 8 or sends confidential data out.")}</p></div></div>
   <section class="panel"><header><h2>${L("เลือกแฟ้ม", "Choose a case")}</h2></header><div class="body row"><select id="ai-case" aria-label="${L("แฟ้ม", "Case")}">${cs.map(x => `<option value="${x.id}" ${c && x.id === c.id ? "selected" : ""}>${x.id} · ${esc(caseName(x))}</option>`).join("")}</select>${c ? caseStTag(c) : ""}</div></section>
+  <div style="margin:0 0 12px">${segBar(AI_TOOLS.map(([k, l]) => [k, `<span class="mono">${k}</span> ${tx(l)}`]), AI_TOOL, "aitool")}</div>
   ${sec(L("AI-01 เสนอรวมความต้องการและเตือนแตกซื้อ", "AI-01 Consolidation and split-purchase watch"), "AG-05", L("เทียบชื่อรายการและหน่วยงานในแผน เสนอรวมซื้อ ไม่ตัดสินว่าผิด", "Compares item names and units in the plan and suggests buying together. It does not judge anyone."), `<div><button class="btn" type="button" id="ai-01" ${pr ? "" : "disabled"}>${L("สแกนแผนจัดซื้อ", "Scan the plan")}</button></div>${res("a01")}`)}
   ${sec(L("AI-03 เสนอราคากลางพร้อมหลักฐาน", "AI-03 Reference price with evidence"), "AG-07", L("อ่านอย่างเดียว ใช้สัญญาเดิมชนิดเดียวกัน ผู้ใช้ต้องกดยืนยันก่อนบันทึกเป็นราคากลาง", "Read-only. Uses past contracts of the same kind. The user must confirm before it becomes the reference price."), `<div><button class="btn" type="button" id="ai-03" ${pr && c ? "" : "disabled"}>${L("เสนอราคากลาง", "Suggest a price")}</button></div>${res("a03")}`)}
   ${sec(L("AI-04 ตรวจความครบถ้วนและข้อความล็อกสเปก", "AI-04 Completeness and spec-lock check"), "AG-02", L("วางข้อความ TOR ระบบชี้ข้อความที่ระบุยี่ห้อหรือรุ่นเฉพาะ เป็นการแนะนำ ไม่ห้าม", "Paste TOR text. It points at wording that names a brand or model. Advice only; nothing is blocked."),
@@ -12999,6 +13008,7 @@ PROC.ai = () => {
 // ---------- actions ----------
 function bindAI() {
   const c = () => caseOf($("#ai-case").value) || aiCases()[0], show = (k, html) => { AI_RES[k] = html; route(); };
+  $$("[data-aitool]").forEach(b => (b.onclick = () => { AI_TOOL = b.dataset.aitool; route(); }));
   const sel = $("#ai-case"); if (sel) sel.onchange = () => { AI_CASE = sel.value; AI_RES = {}; route(); };
   const keep = () => { const t = $("#ai-tor"); if (t) AI_TOR = t.value; };
   const run = (id, name, fn) => { if (aiOff(id, name)) return; fn(); commit(); };
@@ -13013,7 +13023,7 @@ function bindAI() {
   const s04 = $("#ai-04s"); if (s04) s04.onclick = () => { AI_TOR = "ขอบเขตงาน: จัดหาเครื่องแม่ข่ายยี่ห้อ Dellon รุ่น PX-4420 เท่านั้น ติดตั้งภายใน 30 วัน"; route(); };
   const b05 = $("#ai-05"); if (b05) b05.onclick = () => run("AG-02", "Budget Validation Agent", () => { const k = c(), r = recommendMethod(k), docs = DOCS_BY_METHOD[r.method] || []; aiLog("AG-02", ["แนะนำวิธีจัดซื้อ", "Advised a procurement method"], k.id, 1);
     show("a05", r.method ? `<div>${L("วิธีที่แนะนำ", "Advised method")}: <b>${tx(PMETHOD[r.method])}</b> ${tag(`${L("กฎ", "Rule")} ${r.rule.id} · ${r.rule.conf}`, r.rule.conf === "A" ? "p-ok" : "p-info")}</div><div class="sub">${esc(tx(r.why))}</div><div class="sub">${L("เอกสารที่ต้องมี", "Documents needed")}: ${docs.map(d => tx(d)).join(" · ")}</div><div class="sub">${L("คำแนะนำเท่านั้น หัวหน้าพัสดุอนุมัติหากเลือกต่างออกไป", "Advice only; the head approves a different choice")}</div>` : `<span class="sub">${esc(tx(r.why))}</span>`); });
-  $$("[data-ailtr]").forEach(b => (b.onclick = () => run("AG-08", "Contract Monitoring Agent", () => { const con = famCon(b.dataset.ailtr), k = caseByPlan(con.plan); aiLog("AG-08", ["ร่างหนังสือเร่งรัดการส่งมอบ", "Drafted a delivery reminder"], con.id, 1); AI_DOCT = "letter"; AI_CASE = k.id; AI_RES = { draft: aiDraft(k, "letter") }; route(); })));
+  $$("[data-ailtr]").forEach(b => (b.onclick = () => run("AG-08", "Contract Monitoring Agent", () => { const con = famCon(b.dataset.ailtr), k = caseByPlan(con.plan); aiLog("AG-08", ["ร่างหนังสือเร่งรัดการส่งมอบ", "Drafted a delivery reminder"], con.id, 1); AI_DOCT = "letter"; AI_TOOL = "AI-02"; AI_CASE = k.id; AI_RES = { draft: aiDraft(k, "letter") }; route(); })));
   const dt = $("#ai-dt"); if (dt) dt.onchange = () => { AI_DOCT = dt.value; };
   const b02 = $("#ai-02"); if (b02) b02.onclick = () => { AI_DOCT = $("#ai-dt").value; run("AG-07", "Procurement Drafting Agent", () => { const k = c(); aiLog("AG-07", [`สร้าง${tx(DOC_T[AI_DOCT][0])}`, `Created a ${tx(DOC_T[AI_DOCT][0])}`], k.id, 1); AI_RES = { draft: aiDraft(k, AI_DOCT), orig: aiDraft(k, AI_DOCT) }; route(); }); };
   const use = $("#ai-use"); if (use) use.onclick = () => { const k = c(), fin = $("#ai-draft").value, orig = AI_RES.orig || aiDraft(k, AI_DOCT), ow = orig.split(/\s+/), fw = new Set(fin.split(/\s+/)), edit = ow.filter(w => !fw.has(w)).length / Math.max(1, ow.length);
@@ -14415,7 +14425,7 @@ CASE_BINDS.push((c, done) => {
   const base = ADMIN.procprof, bb = BIND_ADMIN.procprof;
   ADMIN.procprof = () => {
     const ad = isAdmin(), p = P2(), num = (k, lbl, hint) => `<div class="f" style="flex:0 1 200px"><label for="p2-${k}">${lbl}</label><input type="number" id="p2-${k}" min="0" step="any" value="${p[k]}" ${ad ? "" : "disabled"}><span class="sub">${hint}</span></div>`;
-    return base() + `<section class="panel"><header><h2>${L("ค่าตั้งรอบ T2", "Round T2 settings")}</h2></header><div class="body inline-form">
+    return base() + `<section class="panel"><header><h2>${L("หลักประกัน แต้มต่อ และอุทธรณ์", "Guarantees, price preference and appeals")}</h2></header><div class="body inline-form">
       ${num("bidSecReturnDays", L("คืนหลักประกันการเสนอราคาภายใน (วัน)", "Return bid security within (days)"), CONF_TAG("C"))}${num("bidSecWarnDays", L("เตือนก่อนหลักประกันหมดอายุ (วัน)", "Warn before expiry (days)"), CONF_TAG("C"))}
       ${num("smePct", L("แต้มต่อ SME (ร้อยละของราคา)", "SME preference (% of price)"), CONF_TAG("C"))}${num("mitPct", L("แต้มต่อ MiT (ร้อยละของราคา)", "MiT preference (% of price)"), CONF_TAG("C"))}${num("appealFwdDays", L("คาดว่าได้ผลอุทธรณ์ภายใน (วัน)", "Appeal result expected within (days)"), CONF_TAG("C"))}
       <div class="f" style="flex:0 1 240px"><label for="p2-central">${L("หน่วยงานกลางที่รับอุทธรณ์", "Central body for appeals")}</label><input type="text" id="p2-central" value="${esc(p.central)}" ${ad ? "" : "disabled"}></div></div>
@@ -14428,7 +14438,7 @@ CASE_BINDS.push((c, done) => {
     const sv = $("#p2-save"); if (sv) sv.onclick = () => { const v = {}; for (const k of ["bidSecReturnDays", "bidSecWarnDays", "smePct", "mitPct", "appealFwdDays"]) v[k] = Number($("#p2-" + k).value);
       const central = $("#p2-central").value.trim(); if (Object.values(v).some(x => !(x >= 0)) || v.smePct > 50 || v.mitPct > 50 || !central) { toast(L("ค่าไม่ถูกต้อง", "Check the values")); return; }
       Object.assign(S.prof.p2, v, { central }); S.prof.testCats = $$("[name=p2-cat]:checked").map(x => x.value);
-      audit(["แก้ค่าตั้งโปรไฟล์จัดซื้อ (รอบ T2)", "Changed profile settings (T2)"], Object.entries(v).map(([k, x]) => `${k}=${x}`).join(" ") + ` central=${central} testCats=${S.prof.testCats.join(",")}`); commit(); route(); toast(L("บันทึกแล้ว", "Saved")); };
+      audit(["แก้ค่าตั้งโปรไฟล์จัดซื้อ (หลักประกันและอุทธรณ์)", "Changed profile settings (guarantees and appeals)"], Object.entries(v).map(([k, x]) => `${k}=${x}`).join(" ") + ` central=${central} testCats=${S.prof.testCats.join(",")}`); commit(); route(); toast(L("บันทึกแล้ว", "Saved")); };
   };
 }
 
@@ -14482,11 +14492,10 @@ const vendorHome = () => { const v = vpMe(), R = v ? vpRfqs(v).filter(o => !o.x.
 
 // officers check the invoices suppliers send, on the contracts page
 {
-  const base = PROC.contracts;
-  PROC.contracts = () => {
-    const Q = (S.vinv || []).filter(x => x.status === "submitted"), html = base();
-    if (!vpOn() || !Q.length || !isProcRole()) return html;
-    return html + `<section class="panel"><header><h2>${L("ใบแจ้งหนี้ที่ผู้ขายส่งมาทางพอร์ทัล", "Invoices sent by suppliers in the portal")}</h2><span class="sp"></span><span class="mono sub">FR-PR-66</span></header><div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("ผู้ขาย", "Supplier")}</th><th>${L("สัญญา", "Contract")}</th><th class="n">${L("จำนวนเงิน", "Amount")}</th><th></th></tr></thead><tbody>${Q.map(x => { const k = S.contracts.find(y => y.id === x.contract), ph = k && k.phases.find(p => p.n === x.phase), match = ph && Math.abs(ph.amount - x.amount) <= S.pcfg.invoiceTol;
+  PROC.conInvoices = () => {
+    const Q = (S.vinv || []).filter(x => x.status === "submitted");
+    if (!vpOn() || !Q.length || !isProcRole()) return "";
+    return `<section class="panel"><header><h2>${L("ใบแจ้งหนี้ที่ผู้ขายส่งมาทางพอร์ทัล", "Invoices sent by suppliers in the portal")}</h2><span class="sp"></span><span class="mono sub">FR-PR-66</span></header><div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("ผู้ขาย", "Supplier")}</th><th>${L("สัญญา", "Contract")}</th><th class="n">${L("จำนวนเงิน", "Amount")}</th><th></th></tr></thead><tbody>${Q.map(x => { const k = S.contracts.find(y => y.id === x.contract), ph = k && k.phases.find(p => p.n === x.phase), match = ph && Math.abs(ph.amount - x.amount) <= S.pcfg.invoiceTol;
       return `<tr><td class="mono">${esc(x.no)}</td><td>${esc((S.vendors.find(v => v.id === x.vendor) || {}).name || "")}</td><td class="sub">${esc(x.contract)} · ${L("งวด", "phase")} ${x.phase}</td><td class="n">${fmt(x.amount)} ${match ? "" : tag(L("ไม่ตรงงวด", "Differs from the phase"), "p-warn")}</td>
         <td><button class="btn primary" type="button" data-vinvok="${x.id}">${L("ยืนยันเป็นใบแจ้งหนี้ของงวด", "Confirm as the phase invoice")}</button> <input type="text" id="vinv-n-${x.id}" placeholder="${L("เหตุผลที่ส่งคืน", "Reason")}" style="width:150px"> <button class="btn" type="button" data-vinvno="${x.id}">${L("ส่งคืน", "Return")}</button></td></tr>`; }).join("")}</tbody></table></div></section>`;
   };
@@ -14573,7 +14582,7 @@ function t3Panel(c) {
       <div class="row"><span>${L("ร้อยละผลงานสะสม", "Cumulative progress")}: ${lr ? `<b>${lr.actual != null ? lr.actual : "—"}%</b> ${L("(รายงานผู้ควบคุมงานล่าสุด)", "(latest supervisor report)")}` : `<span class="sub">${L("ยังไม่มีรายงาน", "no report yet")}</span>`}</span><span class="sub">·</span><span>${L("ตรวจรับแล้วตามวงเงิน", "Accepted by value")}: <b>${accPct(c)}%</b></span></div>
       <div class="sub" style="margin-top:4px">${cd ? (cd.passed ? tag(L("ค่าปรับสะสมถึงเพดานแล้ว", "Penalties have reached the cap"), "p-bad") : `${L("ที่อัตราค่าปรับปัจจุบัน ค่าปรับจะครบเพดาน", "At the current rate, penalties reach the cap on")} ${S.pcfg.penaltyCapPct}% ${L("ในวันที่", "on")} <b>${fdate(cd.date)}</b> (${fmt(Math.round(cd.daily))} ${L("บาทต่อวัน", "baht a day")})`) : L("ไม่มีงวดเลยกำหนด จึงยังไม่คาดวันครบเพดานค่าปรับ", "No overdue phase, so no cap date is projected")}</div>
       ${erp ? `<form class="inline-form" data-xref="${c.id}" style="margin-top:8px">${[["wbs", "WBS", "WBS"], ["po", "เลขที่ใบสั่งซื้อ (ERP)", "PO no. (ERP)"], ["fund", "ที่มาของเงิน", "Source of funds"], ["asset", "รหัสครุภัณฑ์", "Asset code"]].map(([k, th, en]) => `<div class="f" style="flex:1 1 160px"><label>${L(th, en)}</label><input type="text" name="${k}" value="${esc(x[k] || "")}" ${ed ? "" : "disabled"}></div>`).join("")}${ed ? `<button class="btn" type="submit">${L("บันทึก", "Save")}</button>` : ""}</form>` : ""}</div></details>`;
-  return `<section class="panel"><header><h2>${L("เพิ่มเติม (รอบ T3)", "More (round T3)")} · <span class="mono">${c.id}</span></h2></header><div class="body">${drwHtml}${bqHtml}${exHtml}</div></section>`;
+  return `<section class="panel"><header><h2>${L("แบบ BOQ และข้อมูลเพิ่มเติม", "Drawings, BOQ and more")} · <span class="mono">${c.id}</span></h2></header><div class="body">${drwHtml}${bqHtml}${exHtml}</div></section>`;
 }
 
 // ---------- tasks ----------
@@ -14618,13 +14627,7 @@ function t3Panel(c) {
   };
 }
 
-// ---------- committee fees ----------
-{
-  const nav = NAV.find(n => n.id === "procurement"), all = [...nav.tabs, ["fees", ["ค่าตอบแทนกรรมการ", "Committee fees"], "P18"]];
-  Object.defineProperty(nav, "tabs", { get: () => all.filter(t => t[0] !== "fees" || feat("commFee")), configurable: true });
-  const bv = VIEWS.procurement;
-  VIEWS.procurement = () => { const h = bv(); return PROC_TAB === "fees" ? h.replace(/<h1>[^<]*<\/h1>/, `<h1>${tx(["ค่าตอบแทนกรรมการ", "Committee fees"])}</h1>`) : h; };
-}
+// ---------- committee fees (the page is listed by 74-proc-pages.js while the switch is on) ----------
 const feeOn = () => feat("commFee");
 const isOff = d => { const g = new Date(d + "T00:00:00").getDay(); return g === 0 || g === 6 || (S.holidays || []).includes(d); };
 const feeCommittees = c => ({ tor: c.committees && c.committees.tor, eval: c.committees && c.committees.eval, buy: c.committees && c.committees.buy });
@@ -14718,7 +14721,7 @@ VP_TABS.push(["bank", ["บัญชีธนาคาร", "Bank account"], "V4
   const base = ADMIN.procprof, bb = BIND_ADMIN.procprof;
   ADMIN.procprof = () => {
     const ad = isAdmin(), p = P3(), num = (id, lbl, val, hint) => `<div class="f" style="flex:0 1 190px"><label for="${id}">${lbl}</label><input type="number" id="${id}" min="0" step="any" value="${val}" ${ad ? "" : "disabled"}><span class="sub">${hint}</span></div>`;
-    return base() + `<section class="panel"><header><h2>${L("ค่าตั้งรอบ T3", "Round T3 settings")}</h2></header><div class="body inline-form">
+    return base() + `<section class="panel"><header><h2>${L("ค่าตอบแทนกรรมการและการอนุมัติแบบ", "Committee fees and drawing approval")}</h2></header><div class="body inline-form">
       ${num("p3-drawingReplyDays", L("ตอบอนุมัติแบบภายใน (วัน)", "Reply on drawings within (days)"), p.drawingReplyDays, CONF_TAG("C"))}${num("p3-feeMonthCap", L("เพดานค่าตอบแทนต่อคนต่อเดือน (บาท)", "Fee cap per person a month (baht)"), p.feeMonthCap, CONF_TAG("C"))}${num("p3-feeLadder", L("ถึงวงเงินนี้ หัวหน้าพัสดุอนุมัติ (บาท)", "Up to this the head approves (baht)"), p.feeLadder, CONF_TAG("C"))}
       ${num("p3-feeCasePct", L("เพดานค่าตอบแทนต่อแฟ้ม (ร้อยละของวงเงิน)", "Fee cap per case (% of value)"), p.feeCasePct, CONF_TAG("C"))}${num("p3-feeMinAttendPct", L("เกณฑ์เข้าประชุมขั้นต่ำ (ร้อยละ)", "Minimum attendance (%)"), p.feeMinAttendPct, CONF_TAG("C"))}
       <div class="f" style="flex:1 1 100%"><label class="field-inline"><input type="checkbox" id="p3-feeHolidayOk" ${p.feeHolidayOk ? "checked" : ""} ${ad ? "" : "disabled"}> ${L("จ่ายค่าตอบแทนสำหรับวันหยุดได้", "Allow fees for meetings on days off")}</label></div></div>
@@ -14732,7 +14735,7 @@ VP_TABS.push(["bank", ["บัญชีธนาคาร", "Bank account"], "V4
       const fee = {}; for (const k of ["tor", "eval", "buy", "accept"]) fee[k] = [Number($(`#p3-fee-${k}-0`).value), Number($(`#p3-fee-${k}-1`).value)];
       if (Object.values(v).some(x => !(x >= 0)) || v.feeMinAttendPct > 100 || Object.values(fee).flat().some(x => !(x >= 0))) { toast(L("ค่าไม่ถูกต้อง", "Check the values")); return; }
       Object.assign(S.prof.p3, v, { fee, feeHolidayOk: $("#p3-feeHolidayOk").checked }); S.prof.drawCats = $$("[name=p3-cat]:checked").map(x => x.value);
-      audit(["แก้ค่าตั้งโปรไฟล์จัดซื้อ (รอบ T3)", "Changed profile settings (T3)"], Object.entries(v).map(([k, x]) => `${k}=${x}`).join(" ") + ` drawCats=${S.prof.drawCats.join(",")}`); commit(); route(); toast(L("บันทึกแล้ว", "Saved")); };
+      audit(["แก้ค่าตั้งโปรไฟล์จัดซื้อ (ค่าตอบแทนและแบบ)", "Changed profile settings (fees and drawings)"], Object.entries(v).map(([k, x]) => `${k}=${x}`).join(" ") + ` drawCats=${S.prof.drawCats.join(",")}`); commit(); route(); toast(L("บันทึกแล้ว", "Saved")); };
   };
 }
 
@@ -14842,11 +14845,10 @@ function entityLookup(v) {
 }
 const ENT_ST = { active: [["ดำเนินกิจการ", "Active"], "p-ok"], dissolved: [["เลิกกิจการ", "Dissolved"], "p-bad"], suspended: [["ระงับ", "Suspended"], "p-warn"], notfound: [["ไม่พบข้อมูล", "Not found"], "p-bad"] };
 {
-  const base = PROC.suppliers;
-  PROC.suppliers = () => {
-    const html = base(); if (!feat("entity")) return html;
+  PROC.supEntity = () => {
+    if (!feat("entity")) return "";
     const ed = isProcRole(), erp = feat("erpRef");
-    return html + `<section class="panel"><header><h2>${L("ตรวจข้อมูลนิติบุคคล (จำลอง)", "Legal-entity check (simulated)")}</h2><span class="sp"></span><span class="mono sub">FR-PR-86</span></header><div class="tbl-wrap"><table><thead><tr><th>${L("ผู้ขาย", "Supplier")}</th><th>${L("เลขประจำตัวผู้เสียภาษี", "Tax ID")}</th><th>${L("ผลตรวจ", "Result")}</th>${erp ? `<th>${L("รหัสผู้ขายใน ERP", "ERP vendor code")}</th>` : ""}<th></th></tr></thead><tbody>${S.vendors.map((v, i) => `<tr><td>${esc(v.name)}</td><td class="mono">${esc(v.taxId)}</td><td>${v.entity ? `${tag(tx(ENT_ST[v.entity.status][0]), ENT_ST[v.entity.status][1])} <span class="sub">${fdate(v.entity.t.slice(0, 10))}</span>` : `<span class="sub">${L("ยังไม่ตรวจ", "Not checked")}</span>`}</td>
+    return `<section class="panel"><header><h2>${L("ตรวจข้อมูลนิติบุคคล (จำลอง)", "Legal-entity check (simulated)")}</h2><span class="sp"></span><span class="mono sub">FR-PR-86</span></header><div class="tbl-wrap"><table><thead><tr><th>${L("ผู้ขาย", "Supplier")}</th><th>${L("เลขประจำตัวผู้เสียภาษี", "Tax ID")}</th><th>${L("ผลตรวจ", "Result")}</th>${erp ? `<th>${L("รหัสผู้ขายใน ERP", "ERP vendor code")}</th>` : ""}<th></th></tr></thead><tbody>${S.vendors.map((v, i) => `<tr><td>${esc(v.name)}</td><td class="mono">${esc(v.taxId)}</td><td>${v.entity ? `${tag(tx(ENT_ST[v.entity.status][0]), ENT_ST[v.entity.status][1])} <span class="sub">${fdate(v.entity.t.slice(0, 10))}</span>` : `<span class="sub">${L("ยังไม่ตรวจ", "Not checked")}</span>`}</td>
       ${erp ? `<td><input type="text" id="vx-${i}" value="${esc(v.erpCode || "")}" style="width:130px" ${ed ? "" : "disabled"}></td>` : ""}<td>${ed ? `<button class="btn" type="button" data-ent="${i}">${L("ตรวจ", "Check")}</button>${erp ? ` <button class="btn ghost" type="button" data-entx="${i}">${L("บันทึกรหัส", "Save code")}</button>` : ""}` : ""}</td></tr>`).join("")}</tbody></table></div>
       <div class="body sub">${L("ผลตรวจเป็นการจำลองจากเลขประจำตัวผู้เสียภาษี (เทียบ GDX และ Linkage Center ภายหลัง) ไม่เขียนกลับไปยังระบบใด", "The result is simulated from the tax ID (to be matched with GDX and the Linkage Center later). Nothing is written back to any system.")}</div></section>`;
   };
@@ -14898,19 +14900,237 @@ const ENT_ST = { active: [["ดำเนินกิจการ", "Active"], "p
   };
 }
 
-// ---------- tabs in the menu (listed only while the switch is on) ----------
-{
-  const nav = NAV.find(n => n.id === "procurement"), prev = Object.getOwnPropertyDescriptor(nav, "tabs").get, extra = [["forms", ["แบบฟอร์มและอีเมล", "Forms and e-mail"], "P19", "forms"], ["coi", ["ผลประโยชน์ทับซ้อน", "Conflicts of interest"], "P20", "coiRep"]];
-  Object.defineProperty(nav, "tabs", { get: () => [...prev(), ...extra.filter(t => feat(t[3])).map(t => t.slice(0, 3))], configurable: true });
-  const bv = VIEWS.procurement;
-  VIEWS.procurement = () => { const h = bv(), t = extra.find(x => x[0] === PROC_TAB); return t ? h.replace(/<h1>[^<]*<\/h1>/, `<h1>${tx(t[1])}</h1>`) : h; };
-}
-
-// ---------- M10: T4 settings ----------
+// ---------- M10: reminder e-mails ----------
 {
   const base = ADMIN.procprof, bb = BIND_ADMIN.procprof;
-  ADMIN.procprof = () => { const ad = isAdmin(); return base() + `<section class="panel"><header><h2>${L("ค่าตั้งรอบ T4", "Round T4 settings")}</h2></header><div class="body inline-form"><div class="f" style="flex:0 1 220px"><label for="p4-rep">${L("ไม่ส่งอีเมลเตือนซ้ำภายใน (วัน)", "Don't repeat a reminder within (days)")}</label><input type="number" id="p4-rep" min="0" step="1" value="${P4().mailRepeatDays}" ${ad ? "" : "disabled"}><span class="sub">${CONF_TAG("C")}</span></div>${ad ? `<button class="btn primary" type="button" id="p4-save">${L("บันทึก", "Save")}</button>` : ""}</div></section>`; };
+  ADMIN.procprof = () => { const ad = isAdmin(); return base() + `<section class="panel"><header><h2>${L("อีเมลเตือน", "Reminder e-mails")}</h2></header><div class="body inline-form"><div class="f" style="flex:0 1 220px"><label for="p4-rep">${L("ไม่ส่งอีเมลเตือนซ้ำภายใน (วัน)", "Don't repeat a reminder within (days)")}</label><input type="number" id="p4-rep" min="0" step="1" value="${P4().mailRepeatDays}" ${ad ? "" : "disabled"}><span class="sub">${CONF_TAG("C")}</span></div>${ad ? `<button class="btn primary" type="button" id="p4-save">${L("บันทึก", "Save")}</button>` : ""}</div></section>`; };
   BIND_ADMIN.procprof = () => { bb(); const sv = $("#p4-save"); if (sv) sv.onclick = () => { const v = Math.round(Number($("#p4-rep").value)); if (!(v >= 0 && v <= 60)) { toast(L("ค่าไม่ถูกต้อง", "Check the value")); return; } P4().mailRepeatDays = v; audit(["แก้ค่าตั้งโปรไฟล์จัดซื้อ (รอบ T4)", "Changed profile settings (T4)"], `mailRepeatDays=${v}`); commit(); route(); toast(L("บันทึกแล้ว", "Saved")); }; };
+}
+
+/* ---- 74-proc-pages.js ---- */
+// Fisko Procurement pages (round 44: information architecture), the same way 66h-fin-pages.js lays out Finance.
+// Every page, its menu group, who sees it, the feature switch it needs and its tabs are declared here. Each tab
+// lists its sections (PROC entries) top to bottom and a `key`: the page id the earlier rounds used. Opening a tab
+// sets PROC_TAB to that key, so the binders added by rounds 11 to T4 (guards such as PROC_TAB === "gantt"),
+// CASE_OPEN, jump("case:...") and old `prc-<key>` links keep working. A pair [a, b] puts two sections side by side.
+// Moving something to another page means editing this table.
+let PROC_PAGE = "today", CON_OPEN = null;
+PROC_TAB = "today";
+const PROC_ST = {};
+const PR_ALL = ["proc", "prochead", "div", "divhead", "plan", "exec", "fin", "finhead", "audit"];
+const PR_WORK = ["proc", "prochead", "div", "divhead", "plan", "exec", "audit"];
+const PR_OFF = ["proc", "prochead", "audit"];
+const PROC_GROUPS = { today: ["จัดซื้อจัดจ้าง", "Procurement"], plan: ["วางแผน", "Planning"], run: ["ดำเนินการจัดซื้อ", "Sourcing"], con: ["สัญญาและผู้ขาย", "Contracts and suppliers"], more: ["วิเคราะห์และรายงาน", "Insight and reports"] };
+const PROC_PAGES = [
+  { id: "today", code: "P1", group: "today", label: ["งานวันนี้", "Today"], roles: PR_ALL,
+    sub: ["งานของคุณ สิ่งที่รออนุมัติ และงวดงานกับหลักประกันที่ครบกำหนดใน 60 วัน · ขั้นตอนทางการยังทำใน e-GP", "Your work, what waits for approval, and phases and guarantees due in 60 days · the official steps stay in e-GP"],
+    tabs: [{ id: "main", key: "today", secs: ["todayKpis", "today", "todayDue"] }] },
+  { id: "plan", code: "P2", group: "plan", label: ["แผนจัดซื้อ", "Procurement plan"], roles: PR_WORK,
+    sub: ["แผนจัดซื้อจัดจ้างประจำปีที่ผูกกับรายการจัดสรร ฉบับที่ประกาศ และความต้องการที่ยังไม่อยู่ในแผน", "The yearly plan tied to allocation lines, its published versions, and needs not yet in the plan"],
+    tabs: [{ id: "plan", key: "plan", label: ["แผนและฉบับ", "Plan and versions"], secs: ["planMain"] },
+      { id: "demand", key: "plan", label: ["ความต้องการนอกแผน", "Needs not in the plan"], secs: ["demand"] }] },
+  { id: "reqn", code: "P3", group: "plan", label: ["ใบขอซื้อขอจ้าง", "Requisitions"], roles: PR_WORK,
+    sub: ["ขอซื้อขอจ้างตามแผน อนุมัติภายในวงเงินคงเหลือ และตรวจการแบ่งซื้อ", "Requisitions from the plan, approval within the room left, and the split-purchase check"],
+    tabs: [{ id: "main", key: "reqn", secs: ["reqn"] }] },
+  { id: "cases", code: "P4", group: "run", label: ["แฟ้มจัดซื้อ", "Case files"], roles: PR_WORK,
+    sub: ["แฟ้มจัดซื้อ 12 ขั้นตั้งแต่ขอซื้อถึงปิดงาน และไทม์ไลน์ของทุกแฟ้ม", "The 12-step case file from requisition to close, and a timeline of every case"],
+    tabs: [{ id: "cases", key: "cases", label: ["แฟ้ม", "Cases"], secs: ["cases"] },
+      { id: "gantt", key: "gantt", label: ["ไทม์ไลน์", "Timeline"], secs: ["gantt"] }] },
+  { id: "tor", code: "P5", group: "run", label: ["คลัง TOR", "TOR library"], roles: PR_OFF,
+    sub: ["ขอบเขตงานที่หัวหน้าพัสดุอนุมัติ ใช้ซ้ำได้พร้อมฉบับ", "Approved terms of reference to reuse, with versions"],
+    tabs: [{ id: "main", key: "tor", secs: ["tor"] }] },
+  { id: "docs", code: "P6", group: "run", label: ["เอกสาร", "Documents"], roles: PR_OFF,
+    sub: ["แบบฟอร์ม อีเมล และการอ่านเอกสารที่ได้รับ (จำลอง)", "Forms, e-mails and reading documents received (simulated)"],
+    tabs: [{ id: "forms", key: "forms", feat: "forms", label: ["แบบฟอร์มและอีเมล", "Forms and e-mail"], secs: ["forms"] },
+      { id: "ocr", key: "docs", label: ["รับเอกสาร (OCR)", "Document intake (OCR)"], secs: ["docs"] }] },
+  { id: "contracts", code: "P7", group: "con", label: ["สัญญาและงวดงาน", "Contracts and phases"], roles: ["proc", "prochead", "div", "divhead", "plan", "exec", "fin", "finhead", "audit"],
+    sub: ["สัญญา งวดส่งมอบ ตรวจรับ ค่าปรับ การแก้ไขสัญญา และหลักประกัน", "Contracts, deliveries, acceptance, penalties, changes and guarantees"],
+    tabs: [{ id: "main", key: "contracts", secs: () => (CON_OPEN && famCon(CON_OPEN) ? ["conDetail"] : ["conCreate", "conList", "conInvoices"]) }] },
+  { id: "fees", code: "P8", group: "con", label: ["ค่าตอบแทนกรรมการ", "Committee fees"], feat: "commFee", roles: ["proc", "prochead", "exec", "fin", "finhead", "audit"],
+    sub: ["ค่าตอบแทนคณะกรรมการตามอัตรา การอนุมัติตามวงเงิน และการส่งให้การเงิน", "Committee fees by rate, approval by amount, and passing them to Finance"],
+    tabs: [{ id: "main", key: "fees", secs: ["fees"] }] },
+  { id: "suppliers", code: "P9", group: "con", label: ["ผู้ขาย", "Suppliers"], roles: ["proc", "prochead", "fin", "finhead", "audit"],
+    sub: ["ทะเบียนผู้ขายและประวัติ รายชื่อผู้ทิ้งงาน และการตรวจนิติบุคคล", "Supplier register and history, the abandoned-work list, and the legal-entity check"],
+    top: ["supKpis"],
+    tabs: [{ id: "reg", key: "suppliers", label: ["ทะเบียน", "Register"], secs: ["supRegister"] },
+      { id: "bl", key: "suppliers", label: ["รายชื่อผู้ทิ้งงาน", "Abandoned-work list"], secs: ["supBlacklist"] },
+      { id: "entity", key: "suppliers", feat: "entity", label: ["ตรวจนิติบุคคล", "Legal-entity check"], secs: ["supEntity"] }] },
+  { id: "insight", code: "P10", group: "more", label: ["วิเคราะห์", "Analytics"], roles: ["proc", "prochead", "plan", "exec", "fin", "finhead", "audit"],
+    sub: ["ตัวชี้วัด สัญญาณเตือน พยากรณ์ และจำลองสถานการณ์", "KPIs, red flags, forecasts and what-ifs"],
+    tabs: [{ id: "kpi", key: "analytics", label: ["ตัวชี้วัด", "KPIs"], secs: ["analytics"] },
+      { id: "flags", key: "flags", label: ["สัญญาณเตือน", "Red flags"], secs: ["flags"] },
+      { id: "forecast", key: "forecast", label: ["พยากรณ์", "Forecast"], secs: ["forecast"] },
+      { id: "whatif", key: "whatif", label: ["จำลองสถานการณ์", "What-if"], secs: ["whatif"] }] },
+  { id: "reports", code: "P11", group: "more", label: ["รายงาน", "Reports"], roles: ["proc", "prochead", "exec", "audit"],
+    sub: ["รายงานสรุปผลการจัดซื้อประจำเดือน และรายงานผลประโยชน์ทับซ้อน", "The monthly procurement summary and the conflict-of-interest report"],
+    tabs: [{ id: "month", key: "reports", label: ["รายงานประจำเดือน", "Monthly report"], secs: ["reports"] },
+      { id: "coi", key: "coi", feat: "coiRep", label: ["ผลประโยชน์ทับซ้อน", "Conflicts of interest"], secs: ["coi"] }] },
+  { id: "egp", code: "P12", group: "more", label: ["e-GP และ OCDS", "e-GP and OCDS"], roles: PR_OFF,
+    sub: ["นำเข้าไฟล์สถานะจาก e-GP และส่งออกข้อมูลเปิดตามมาตรฐาน OCDS", "Import status files from e-GP and export open data in OCDS"],
+    tabs: [{ id: "egp", key: "egp", label: ["ไฟล์จาก e-GP", "e-GP file"], secs: ["egp"] },
+      { id: "ocds", key: "ocds", label: ["ส่งออก OCDS", "OCDS export"], secs: ["ocds"] }] },
+  { id: "ai", code: "P13", group: "more", label: ["AI และ Agent", "AI and agents"], roles: ["proc", "prochead", "exec", "audit"],
+    sub: ["ผู้ช่วย AI ทีละเครื่องมือ และ Agent ที่หยุดให้คนอนุมัติทุกขั้นที่เขียนข้อมูล (จำลอง)", "The AI assistant one tool at a time, and agents that stop for a person at every write (simulated)"],
+    tabs: [{ id: "assist", key: "ai", label: ["ผู้ช่วย AI", "AI assistant"], secs: ["ai"] },
+      { id: "agents", key: "agents", label: ["Agent อัตโนมัติ", "Agents"], secs: ["agents"] }] },
+];
+
+// ---------- helpers ----------
+const prPage = id => PROC_PAGES.find(p => p.id === id);
+const prOn = x => (!x.feat || feat(x.feat)) && (!x.roles || x.roles.includes(ROLE));
+const prTabs = p => p.tabs.filter(prOn);
+const prSees = p => prOn(p) && prTabs(p).length > 0;
+const prSecs = t => (typeof t.secs === "function" ? t.secs() : t.secs);
+// The first visible tab carrying an old page key.
+function prOwner(key) {
+  for (const p of PROC_PAGES) if (prSees(p)) { const t = prTabs(p).find(x => x.key === key); if (t) return { p, t }; }
+  return null;
+}
+// The page and tab on screen. Older code sets PROC_TAB directly (for example "contracts" or "cases"); follow it.
+function prCur() {
+  let p = prPage(PROC_PAGE);
+  if (!p || !prSees(p)) p = PROC_PAGES.find(prSees);
+  let T = prTabs(p), t = T.find(x => x.id === PROC_ST[p.id]) || T[0];
+  if (t.key !== PROC_TAB) {
+    const o = prOwner(PROC_TAB);
+    if (o && !(o.p.id === p.id && T.some(x => x.key === PROC_TAB))) { p = o.p; t = o.t; }
+    else if (o) t = T.find(x => x.key === PROC_TAB);
+  }
+  PROC_PAGE = p.id; PROC_ST[p.id] = t.id; PROC_TAB = t.key;
+  return { p, t };
+}
+// "contracts", "insight:flags" or an old key such as "gantt". A deep link names a key first (prc-docs is the OCR tab);
+// a menu click (keep) names a page and returns to the tab you were on.
+function procSet(v, keep) {
+  const [a, b] = String(v).split(":");
+  const page = prPage(a), own = !b && !(keep && page) ? prOwner(a) : null;
+  if (own) { PROC_PAGE = own.p.id; PROC_ST[own.p.id] = own.t.id; PROC_TAB = own.t.key; return PROC_TAB; }
+  if (page) {
+    PROC_PAGE = page.id;
+    const T = prTabs(page), t = T.find(x => x.id === b) || (keep ? T.find(x => x.id === PROC_ST[page.id]) : null) || T[0];
+    if (t) { PROC_ST[page.id] = t.id; PROC_TAB = t.key; }
+    return PROC_TAB;
+  }
+  PROC_PAGE = "today"; PROC_TAB = "today"; return PROC_TAB;
+}
+const prSec = id => { const f = PROC[id]; return f ? f() : ""; };
+function prBlock(x) {
+  if (!Array.isArray(x)) return prSec(x);
+  const [a, b] = x.map(prSec);
+  return a.trim() && b.trim() ? `<div class="grid2">${a}${b}</div>` : a + b;
+}
+// Badges: the work waiting for this role under the old keys, on the menu (summed per page) and on the tabs.
+const prKeyBadge = key => { const m = String(PROC_KEY_BADGE(key)).match(/>(\d+)</); return m ? Number(m[1]) : 0; };
+let PROC_KEY_BADGE = () => "";
+
+// ---------- P1 Today ----------
+// My work: the role's Procurement tasks, plus (for the officer and the head) the case files whose next step is theirs.
+function prMine() {
+  const t = myTasks().filter(x => x.cls !== "p-mute" && typeof x.link === "string" && (x.link.startsWith("prc-") || x.link.startsWith("case:")));
+  // The officer also follows cases in contract management (step 9) and cases waiting on a date (bids closing, appeal window).
+  const who = ROLE === "proc" ? ["proc", "con", "wait"] : ROLE === "prochead" ? ["head"] : [];
+  (S.cases || []).filter(c => !c.cancelled && who.includes(caseNext(c).who) && caseState(c) < 10 && !t.some(x => x.link === "case:" + c.id)).forEach(c => {
+    const n = caseNext(c), wait = n.who === "wait";
+    t.push({ title: `${c.id} ${caseName(c)}`, sub: `${L("ขั้น", "Step")} ${caseState(c)} · ${n.raw ? esc(n.th) : L(n.th, n.en)}`, due: wait && c.egp && c.egp.close > TODAY ? c.egp.close : wait && c.award && c.award.appealEnd ? c.award.appealEnd : TODAY, link: "case:" + c.id, cls: n.who === "proc" || n.who === "head" ? "p-warn" : "p-info" });
+  });
+  return t.sort((a, b) => (a.due < b.due ? -1 : 1));
+}
+function prDue(days) {
+  const lim = addDays(TODAY, days), out = [];
+  (S.contracts || []).filter(c => c.status !== "terminated").forEach(c => {
+    c.phases.filter(ph => !ph.cancelled && !phaseAccepted(ph) && ph.due <= lim).forEach(ph => out.push({ due: ph.due, kind: L("งวดส่งมอบ", "Phase due"), what: `${c.id} ${tx(ph.name)}`, sub: `${tx(c.vendor)} · ${mb(ph.amount)} ${L("ลบ.", "M")}`, link: "prc-contracts", con: c.id }));
+    const g = c.guarantee, gx = g && g.expires;
+    if (gx && gx <= lim && g.status !== "returned") out.push({ due: gx, kind: L("หลักประกันหมดอายุ", "Guarantee expires"), what: c.id, sub: tx(c.vendor), link: "prc-contracts", con: c.id });
+  });
+  return out.sort((a, b) => (a.due < b.due ? -1 : 1));
+}
+PROC.todayKpis = () => {
+  const mine = prMine(), live = (S.cases || []).filter(c => !c.cancelled && caseState(c) < 12), due = prDue(60), late = due.filter(d => d.due < TODAY);
+  return `<section class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+    <div class="kpi hl"><span class="l">${L("งานของฉัน", "My work")}</span><span class="v">${mine.length}</span><span class="d" style="color:var(--rail-ink)">${mine.filter(x => x.due <= TODAY).length} ${L("ถึงกำหนดหรือเลยแล้ว", "due or overdue")}</span></div>
+    <div class="kpi"><span class="l">${L("แฟ้มที่ดำเนินการอยู่", "Cases in progress")}</span><span class="v">${live.length}</span></div>
+    <div class="kpi"><span class="l">${L("สัญญาที่ใช้อยู่", "Active contracts")}</span><span class="v">${(S.contracts || []).filter(c => c.status !== "terminated" && c.status !== "closed").length}</span></div>
+    <div class="kpi"><span class="l">${L("ครบกำหนดใน 60 วัน", "Due in 60 days")}</span><span class="v">${due.length}</span><span class="d sub">${late.length} ${L("เลยกำหนด", "overdue")}</span></div>
+  </section>`;
+};
+PROC.today = () => {
+  const t = prMine();
+  return `<section class="panel"><header><h2>${ROLE === "prochead" || canSpend() ? L("รอคุณดำเนินการหรืออนุมัติ", "Waiting for you to act or approve") : L("งานของฉัน", "My work")}</h2><span class="sp"></span><span class="sub">${t.length} ${L("รายการ", "items")}</span></header>
+    ${t.length ? `<div class="tbl-wrap"><table><tbody>${t.slice(0, 12).map(x => `<tr><td>${dotI(x.cls === "p-bad" ? "bad" : x.cls === "p-warn" ? "warn" : "ok")}<b style="font-weight:600">${esc(x.title)}</b>${x.sub ? `<div class="sub">${x.sub}</div>` : ""}</td><td class="sub" style="white-space:nowrap">${clockTxt(x.due)}</td><td><button class="btn" type="button" data-jump="${x.link}">${L("เปิด", "Open")}</button></td></tr>`).join("")}</tbody></table></div>
+      ${t.length > 12 ? `<div class="body"><button class="btn ghost" type="button" data-jump="home">${L("ดูทั้งหมดในพื้นที่ทำงานของฉัน", "See all in My Workspace")} (${t.length})</button></div>` : ""}`
+      : `<div class="body sub">${dotI("ok")}${L("ไม่มีงานค้างในแอปจัดซื้อ", "Nothing waiting for you in Procurement")}</div>`}</section>`;
+};
+PROC.todayDue = () => {
+  const d = prDue(60);
+  return `<section class="panel"><header><h2>${L("งวดงานและหลักประกันที่ครบกำหนดใน 60 วัน", "Phases and guarantees due in 60 days")}</h2><span class="sp"></span><span class="sub">${L("เรียงตามวันครบกำหนด", "By due date")}</span></header>
+    ${d.length ? `<div class="tbl-wrap"><table><thead><tr><th>${L("รายการ", "Item")}</th><th>${L("ประเภท", "Kind")}</th><th>${L("ครบกำหนด", "Due")}</th><th></th></tr></thead><tbody>${d.map(x => `<tr><td><span class="mono">${esc(x.what)}</span><div class="sub">${esc(x.sub)}</div></td><td class="sub">${x.kind}</td><td style="white-space:nowrap">${dotI(clockDot(x.due))}${clockTxt(x.due)}</td><td><button class="btn ghost" type="button" data-conopen="${x.con}">${L("เปิด", "Open")}</button></td></tr>`).join("")}</tbody></table></div>`
+      : `<div class="body sub">${L("ไม่มีงวดหรือหลักประกันที่ครบกำหนด", "Nothing due")}</div>`}</section>`;
+};
+
+// ---------- P7 contracts: a list, and one contract at a time ----------
+PROC.conList = () => {
+  const C = (S.contracts || []).slice().reverse();
+  if (!C.length) return `<section class="panel"><div class="body sub">${L("ยังไม่มีสัญญา", "No contracts yet")}</div></section>`;
+  return `<section class="panel"><header><h2>${L("สัญญา", "Contracts")}</h2><span class="sp"></span><span class="sub">${C.length} ${L("สัญญา · กดเปิดเพื่อดูงวดงาน ตรวจรับ และการแก้ไข", "contracts · open one for phases, acceptance and changes")}</span></header>
+    <div class="tbl-wrap"><table><thead><tr><th style="min-width:220px">${L("สัญญา", "Contract")}</th><th class="n">${L("วงเงิน (ลบ.)", "Amount (M)")}</th><th style="width:140px">${L("ตรวจรับแล้ว", "Accepted")}</th><th>${L("งวดถัดไป", "Next phase")}</th><th>${L("ต้องดู", "Watch")}</th><th></th></tr></thead>
+      <tbody>${C.map(c => {
+        const live = c.phases.filter(ph => !ph.cancelled), acc = live.filter(phaseAccepted), accAmt = sumv(acc.map(ph => ph.amount)), nx = live.find(ph => !phaseAccepted(ph));
+        const gs = guarSt(c), pen = conPenalty(c), chg = (c.vars || []).filter(v => v.status === "pending").length;
+        const flags = [pen ? tag(`${L("ค่าปรับ", "Penalty")} ${fmt(pen)}`, "p-warn") : "", chg ? tag(`${chg} ${L("รออนุมัติแก้ไข", "change pending")}`, "p-info") : "", ["none", "expiring", "expired"].includes(gs) ? tag(tx(GUAR_TAG[gs][0]), GUAR_TAG[gs][1]) : "", c.status === "terminated" ? tag(L("บอกเลิกแล้ว", "Terminated"), "p-bad") : ""].filter(Boolean).join(" ");
+        return `<tr><td><span class="mono">${c.id}</span> <span class="sub">${esc(c.no)}</span><div style="font-weight:600">${esc(tx(famPlan(c.plan).name))}</div><div class="sub">${esc(tx(c.vendor))}</div></td><td class="n">${mb(c.amount)}</td>
+          <td><div class="bar"><i style="width:${c.amount ? Math.min(100, accAmt / c.amount * 100) : 0}%"></i></div><span class="sub">${acc.length}/${live.length} ${L("งวด", "phases")}</span></td>
+          <td>${nx ? `${tx(nx.name)} <div class="sub">${dueText(nx.due)}</div>` : `<span class="sub">${L("ครบทุกงวด", "All accepted")}</span>`}</td><td>${flags || `<span class="sub">—</span>`}</td>
+          <td><button class="btn" type="button" data-conopen="${c.id}">${L("เปิด", "Open")}</button></td></tr>`; }).join("")}</tbody></table></div></section>`;
+};
+PROC.conDetail = () => {
+  const c = famCon(CON_OPEN);
+  return `<div class="row" style="margin:0 0 10px"><button class="btn ghost" type="button" data-conback>← ${L("สัญญาทั้งหมด", "All contracts")}</button></div>${conPanel(c)}${prSec("conInvoices")}`;
+};
+
+// ---------- the page ----------
+VIEWS.procurement = () => {
+  const { p, t } = prCur(), T = prTabs(p);
+  // An open case file is a page of its own (it has its own heading and back link).
+  if (t.key === "cases" && CASE_OPEN && caseOf(CASE_OPEN)) return prSec("cases");
+  const body = prSecs(t).map(prBlock).join("");
+  const tb = x => { const first = T.find(y => y.key === x.key) === x, n = first ? prKeyBadge(x.key) : 0; return n ? ` <span class="badge">${n}</span>` : ""; };
+  return `
+  <div class="head"><div><div class="eyebrow">Fisko Procurement · ${p.code} · ${tx(PROC_GROUPS[p.group])}</div><h1>${tx(p.label)}</h1>
+    <p>${tx(p.sub)} · ${fyLabel(FAM_FY)}</p></div></div>
+  ${(p.top || []).map(prBlock).join("")}
+  ${T.length > 1 ? `<div class="tabs fn-tabs" role="tablist" aria-label="${esc(tx(p.label))}">${T.map(x => `<button class="tab ${x.id === t.id ? "on" : ""}" type="button" role="tab" aria-selected="${x.id === t.id}" data-psub="${x.id}">${tx(x.label)}${tb(x)}</button>`).join("")}</div>` : ""}
+  ${body.trim() ? body : `<section class="panel"><div class="body sub">${L("ไม่มีรายการสำหรับบทบาทนี้", "Nothing here for this role")}</div></section>`}`;
+};
+{
+  const bind = BIND.procurement;
+  BIND.procurement = () => {
+    bind();
+    $$("[data-psub]").forEach(b => (b.onclick = () => { procSet(`${PROC_PAGE}:${b.dataset.psub}`); route(); }));
+    $$("[data-conopen]").forEach(b => (b.onclick = () => { CON_OPEN = b.dataset.conopen; procSet("contracts:main"); route(); }));
+    $$("[data-conback]").forEach(b => (b.onclick = () => { CON_OPEN = null; route(); }));
+    $$("#view [data-jump]").forEach(b => { if (!b.onclick) b.onclick = () => jump(b.dataset.jump); });
+  };
+}
+
+// ---------- menu ----------
+Object.assign(NAV_ICON, { today: "home", insight: "chart", suppliers: "users", fees: "coins", reports: "cal", egp: "download", ai: "sparkle", docs: "scan", cases: "folder", contracts: "pen" });
+{
+  const n = NAV.find(x => x.id === "procurement");
+  // [id, label, code, group, roles]: the menu shows a heading per group and only the pages a role may see.
+  Object.defineProperty(n, "tabs", { get: () => PROC_PAGES.filter(p => (!p.feat || feat(p.feat)) && prTabs(p).length).map(p => [p.id, p.label, p.code, PROC_GROUPS[p.group], p.roles]), configurable: true });
+  n.tabGet = () => PROC_PAGE;
+  n.tabSet = v => procSet(v, true);
+  JUMP_TABS.prc = ["procurement", v => procSet(v)];
+  // Deep links (prc-flags) are routed by procSet; the old "case:" link still opens the case file.
+  const tb = tabBadge;
+  PROC_KEY_BADGE = key => tb("procurement", key);
+  tabBadge = function (nid, tab) {
+    if (nid !== "procurement") return tb(nid, tab);
+    const p = prPage(tab);
+    if (!p) return tb(nid, tab);
+    const k = p.id === "today" ? prMine().filter(x => x.due <= TODAY).length : sumv([...new Set(prTabs(p).map(x => x.key))].map(prKeyBadge));
+    return k ? `<span class="badge">${k}</span>` : "";
+  };
 }
 
 /* ---- 99-boot.js ---- */

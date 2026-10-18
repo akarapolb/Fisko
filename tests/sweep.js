@@ -54,6 +54,14 @@
         });
         await tick();
       } }
+      // Procurement pages that show one item at a time (round 44): every contract opened, every AI tool picked
+      if (o.suites.includes("render") && typeof PROC_PAGES !== "undefined") for (const lang of o.langs) { LANG = lang; for (const role of ["proc", "prochead", "div", "fin", "audit"].filter(r => o.roles.includes(r))) {
+        ROLE = role; safe("shell", renderShell);
+        for (const c of S.contracts || []) safe(`${org}/${lang}/${role}/contract ${c.id}`, () => { CON_OPEN = c.id; procSet("contracts:main"); go2("procurement"); chk(`${org}/${lang}/${role}/contract ${c.id}`); });
+        CON_OPEN = null;
+        if (prSees(prPage("ai"))) for (const [k] of AI_TOOLS) safe(`${org}/${lang}/${role}/ai ${k}`, () => { AI_TOOL = k; procSet("ai:assist"); go2("procurement"); chk(`${org}/${lang}/${role}/ai ${k}`); });
+        AI_TOOL = "AI-01"; await tick();
+      } }
       // Finance F9 sub-pages and every finance agent run
       if (o.suites.includes("agents") && typeof F_AG !== "undefined") {
         LANG = "en"; ROLE = "finhead"; renderShell();

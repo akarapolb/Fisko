@@ -103,11 +103,10 @@ function entityLookup(v) {
 }
 const ENT_ST = { active: [["ดำเนินกิจการ", "Active"], "p-ok"], dissolved: [["เลิกกิจการ", "Dissolved"], "p-bad"], suspended: [["ระงับ", "Suspended"], "p-warn"], notfound: [["ไม่พบข้อมูล", "Not found"], "p-bad"] };
 {
-  const base = PROC.suppliers;
-  PROC.suppliers = () => {
-    const html = base(); if (!feat("entity")) return html;
+  PROC.supEntity = () => {
+    if (!feat("entity")) return "";
     const ed = isProcRole(), erp = feat("erpRef");
-    return html + `<section class="panel"><header><h2>${L("ตรวจข้อมูลนิติบุคคล (จำลอง)", "Legal-entity check (simulated)")}</h2><span class="sp"></span><span class="mono sub">FR-PR-86</span></header><div class="tbl-wrap"><table><thead><tr><th>${L("ผู้ขาย", "Supplier")}</th><th>${L("เลขประจำตัวผู้เสียภาษี", "Tax ID")}</th><th>${L("ผลตรวจ", "Result")}</th>${erp ? `<th>${L("รหัสผู้ขายใน ERP", "ERP vendor code")}</th>` : ""}<th></th></tr></thead><tbody>${S.vendors.map((v, i) => `<tr><td>${esc(v.name)}</td><td class="mono">${esc(v.taxId)}</td><td>${v.entity ? `${tag(tx(ENT_ST[v.entity.status][0]), ENT_ST[v.entity.status][1])} <span class="sub">${fdate(v.entity.t.slice(0, 10))}</span>` : `<span class="sub">${L("ยังไม่ตรวจ", "Not checked")}</span>`}</td>
+    return `<section class="panel"><header><h2>${L("ตรวจข้อมูลนิติบุคคล (จำลอง)", "Legal-entity check (simulated)")}</h2><span class="sp"></span><span class="mono sub">FR-PR-86</span></header><div class="tbl-wrap"><table><thead><tr><th>${L("ผู้ขาย", "Supplier")}</th><th>${L("เลขประจำตัวผู้เสียภาษี", "Tax ID")}</th><th>${L("ผลตรวจ", "Result")}</th>${erp ? `<th>${L("รหัสผู้ขายใน ERP", "ERP vendor code")}</th>` : ""}<th></th></tr></thead><tbody>${S.vendors.map((v, i) => `<tr><td>${esc(v.name)}</td><td class="mono">${esc(v.taxId)}</td><td>${v.entity ? `${tag(tx(ENT_ST[v.entity.status][0]), ENT_ST[v.entity.status][1])} <span class="sub">${fdate(v.entity.t.slice(0, 10))}</span>` : `<span class="sub">${L("ยังไม่ตรวจ", "Not checked")}</span>`}</td>
       ${erp ? `<td><input type="text" id="vx-${i}" value="${esc(v.erpCode || "")}" style="width:130px" ${ed ? "" : "disabled"}></td>` : ""}<td>${ed ? `<button class="btn" type="button" data-ent="${i}">${L("ตรวจ", "Check")}</button>${erp ? ` <button class="btn ghost" type="button" data-entx="${i}">${L("บันทึกรหัส", "Save code")}</button>` : ""}` : ""}</td></tr>`).join("")}</tbody></table></div>
       <div class="body sub">${L("ผลตรวจเป็นการจำลองจากเลขประจำตัวผู้เสียภาษี (เทียบ GDX และ Linkage Center ภายหลัง) ไม่เขียนกลับไปยังระบบใด", "The result is simulated from the tax ID (to be matched with GDX and the Linkage Center later). Nothing is written back to any system.")}</div></section>`;
   };
@@ -159,17 +158,9 @@ const ENT_ST = { active: [["ดำเนินกิจการ", "Active"], "p
   };
 }
 
-// ---------- tabs in the menu (listed only while the switch is on) ----------
-{
-  const nav = NAV.find(n => n.id === "procurement"), prev = Object.getOwnPropertyDescriptor(nav, "tabs").get, extra = [["forms", ["แบบฟอร์มและอีเมล", "Forms and e-mail"], "P19", "forms"], ["coi", ["ผลประโยชน์ทับซ้อน", "Conflicts of interest"], "P20", "coiRep"]];
-  Object.defineProperty(nav, "tabs", { get: () => [...prev(), ...extra.filter(t => feat(t[3])).map(t => t.slice(0, 3))], configurable: true });
-  const bv = VIEWS.procurement;
-  VIEWS.procurement = () => { const h = bv(), t = extra.find(x => x[0] === PROC_TAB); return t ? h.replace(/<h1>[^<]*<\/h1>/, `<h1>${tx(t[1])}</h1>`) : h; };
-}
-
-// ---------- M10: T4 settings ----------
+// ---------- M10: reminder e-mails ----------
 {
   const base = ADMIN.procprof, bb = BIND_ADMIN.procprof;
-  ADMIN.procprof = () => { const ad = isAdmin(); return base() + `<section class="panel"><header><h2>${L("ค่าตั้งรอบ T4", "Round T4 settings")}</h2></header><div class="body inline-form"><div class="f" style="flex:0 1 220px"><label for="p4-rep">${L("ไม่ส่งอีเมลเตือนซ้ำภายใน (วัน)", "Don't repeat a reminder within (days)")}</label><input type="number" id="p4-rep" min="0" step="1" value="${P4().mailRepeatDays}" ${ad ? "" : "disabled"}><span class="sub">${CONF_TAG("C")}</span></div>${ad ? `<button class="btn primary" type="button" id="p4-save">${L("บันทึก", "Save")}</button>` : ""}</div></section>`; };
+  ADMIN.procprof = () => { const ad = isAdmin(); return base() + `<section class="panel"><header><h2>${L("อีเมลเตือน", "Reminder e-mails")}</h2></header><div class="body inline-form"><div class="f" style="flex:0 1 220px"><label for="p4-rep">${L("ไม่ส่งอีเมลเตือนซ้ำภายใน (วัน)", "Don't repeat a reminder within (days)")}</label><input type="number" id="p4-rep" min="0" step="1" value="${P4().mailRepeatDays}" ${ad ? "" : "disabled"}><span class="sub">${CONF_TAG("C")}</span></div>${ad ? `<button class="btn primary" type="button" id="p4-save">${L("บันทึก", "Save")}</button>` : ""}</div></section>`; };
   BIND_ADMIN.procprof = () => { bb(); const sv = $("#p4-save"); if (sv) sv.onclick = () => { const v = Math.round(Number($("#p4-rep").value)); if (!(v >= 0 && v <= 60)) { toast(L("ค่าไม่ถูกต้อง", "Check the value")); return; } P4().mailRepeatDays = v; audit(["แก้ค่าตั้งโปรไฟล์จัดซื้อ (รอบ T4)", "Changed profile settings (T4)"], `mailRepeatDays=${v}`); commit(); route(); toast(L("บันทึกแล้ว", "Saved")); }; };
 }

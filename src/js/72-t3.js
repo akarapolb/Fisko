@@ -70,7 +70,7 @@ function t3Panel(c) {
       <div class="row"><span>${L("ร้อยละผลงานสะสม", "Cumulative progress")}: ${lr ? `<b>${lr.actual != null ? lr.actual : "—"}%</b> ${L("(รายงานผู้ควบคุมงานล่าสุด)", "(latest supervisor report)")}` : `<span class="sub">${L("ยังไม่มีรายงาน", "no report yet")}</span>`}</span><span class="sub">·</span><span>${L("ตรวจรับแล้วตามวงเงิน", "Accepted by value")}: <b>${accPct(c)}%</b></span></div>
       <div class="sub" style="margin-top:4px">${cd ? (cd.passed ? tag(L("ค่าปรับสะสมถึงเพดานแล้ว", "Penalties have reached the cap"), "p-bad") : `${L("ที่อัตราค่าปรับปัจจุบัน ค่าปรับจะครบเพดาน", "At the current rate, penalties reach the cap on")} ${S.pcfg.penaltyCapPct}% ${L("ในวันที่", "on")} <b>${fdate(cd.date)}</b> (${fmt(Math.round(cd.daily))} ${L("บาทต่อวัน", "baht a day")})`) : L("ไม่มีงวดเลยกำหนด จึงยังไม่คาดวันครบเพดานค่าปรับ", "No overdue phase, so no cap date is projected")}</div>
       ${erp ? `<form class="inline-form" data-xref="${c.id}" style="margin-top:8px">${[["wbs", "WBS", "WBS"], ["po", "เลขที่ใบสั่งซื้อ (ERP)", "PO no. (ERP)"], ["fund", "ที่มาของเงิน", "Source of funds"], ["asset", "รหัสครุภัณฑ์", "Asset code"]].map(([k, th, en]) => `<div class="f" style="flex:1 1 160px"><label>${L(th, en)}</label><input type="text" name="${k}" value="${esc(x[k] || "")}" ${ed ? "" : "disabled"}></div>`).join("")}${ed ? `<button class="btn" type="submit">${L("บันทึก", "Save")}</button>` : ""}</form>` : ""}</div></details>`;
-  return `<section class="panel"><header><h2>${L("เพิ่มเติม (รอบ T3)", "More (round T3)")} · <span class="mono">${c.id}</span></h2></header><div class="body">${drwHtml}${bqHtml}${exHtml}</div></section>`;
+  return `<section class="panel"><header><h2>${L("แบบ BOQ และข้อมูลเพิ่มเติม", "Drawings, BOQ and more")} · <span class="mono">${c.id}</span></h2></header><div class="body">${drwHtml}${bqHtml}${exHtml}</div></section>`;
 }
 
 // ---------- tasks ----------
@@ -115,13 +115,7 @@ function t3Panel(c) {
   };
 }
 
-// ---------- committee fees ----------
-{
-  const nav = NAV.find(n => n.id === "procurement"), all = [...nav.tabs, ["fees", ["ค่าตอบแทนกรรมการ", "Committee fees"], "P18"]];
-  Object.defineProperty(nav, "tabs", { get: () => all.filter(t => t[0] !== "fees" || feat("commFee")), configurable: true });
-  const bv = VIEWS.procurement;
-  VIEWS.procurement = () => { const h = bv(); return PROC_TAB === "fees" ? h.replace(/<h1>[^<]*<\/h1>/, `<h1>${tx(["ค่าตอบแทนกรรมการ", "Committee fees"])}</h1>`) : h; };
-}
+// ---------- committee fees (the page is listed by 74-proc-pages.js while the switch is on) ----------
 const feeOn = () => feat("commFee");
 const isOff = d => { const g = new Date(d + "T00:00:00").getDay(); return g === 0 || g === 6 || (S.holidays || []).includes(d); };
 const feeCommittees = c => ({ tor: c.committees && c.committees.tor, eval: c.committees && c.committees.eval, buy: c.committees && c.committees.buy });
@@ -215,7 +209,7 @@ VP_TABS.push(["bank", ["บัญชีธนาคาร", "Bank account"], "V4
   const base = ADMIN.procprof, bb = BIND_ADMIN.procprof;
   ADMIN.procprof = () => {
     const ad = isAdmin(), p = P3(), num = (id, lbl, val, hint) => `<div class="f" style="flex:0 1 190px"><label for="${id}">${lbl}</label><input type="number" id="${id}" min="0" step="any" value="${val}" ${ad ? "" : "disabled"}><span class="sub">${hint}</span></div>`;
-    return base() + `<section class="panel"><header><h2>${L("ค่าตั้งรอบ T3", "Round T3 settings")}</h2></header><div class="body inline-form">
+    return base() + `<section class="panel"><header><h2>${L("ค่าตอบแทนกรรมการและการอนุมัติแบบ", "Committee fees and drawing approval")}</h2></header><div class="body inline-form">
       ${num("p3-drawingReplyDays", L("ตอบอนุมัติแบบภายใน (วัน)", "Reply on drawings within (days)"), p.drawingReplyDays, CONF_TAG("C"))}${num("p3-feeMonthCap", L("เพดานค่าตอบแทนต่อคนต่อเดือน (บาท)", "Fee cap per person a month (baht)"), p.feeMonthCap, CONF_TAG("C"))}${num("p3-feeLadder", L("ถึงวงเงินนี้ หัวหน้าพัสดุอนุมัติ (บาท)", "Up to this the head approves (baht)"), p.feeLadder, CONF_TAG("C"))}
       ${num("p3-feeCasePct", L("เพดานค่าตอบแทนต่อแฟ้ม (ร้อยละของวงเงิน)", "Fee cap per case (% of value)"), p.feeCasePct, CONF_TAG("C"))}${num("p3-feeMinAttendPct", L("เกณฑ์เข้าประชุมขั้นต่ำ (ร้อยละ)", "Minimum attendance (%)"), p.feeMinAttendPct, CONF_TAG("C"))}
       <div class="f" style="flex:1 1 100%"><label class="field-inline"><input type="checkbox" id="p3-feeHolidayOk" ${p.feeHolidayOk ? "checked" : ""} ${ad ? "" : "disabled"}> ${L("จ่ายค่าตอบแทนสำหรับวันหยุดได้", "Allow fees for meetings on days off")}</label></div></div>
@@ -229,6 +223,6 @@ VP_TABS.push(["bank", ["บัญชีธนาคาร", "Bank account"], "V4
       const fee = {}; for (const k of ["tor", "eval", "buy", "accept"]) fee[k] = [Number($(`#p3-fee-${k}-0`).value), Number($(`#p3-fee-${k}-1`).value)];
       if (Object.values(v).some(x => !(x >= 0)) || v.feeMinAttendPct > 100 || Object.values(fee).flat().some(x => !(x >= 0))) { toast(L("ค่าไม่ถูกต้อง", "Check the values")); return; }
       Object.assign(S.prof.p3, v, { fee, feeHolidayOk: $("#p3-feeHolidayOk").checked }); S.prof.drawCats = $$("[name=p3-cat]:checked").map(x => x.value);
-      audit(["แก้ค่าตั้งโปรไฟล์จัดซื้อ (รอบ T3)", "Changed profile settings (T3)"], Object.entries(v).map(([k, x]) => `${k}=${x}`).join(" ") + ` drawCats=${S.prof.drawCats.join(",")}`); commit(); route(); toast(L("บันทึกแล้ว", "Saved")); };
+      audit(["แก้ค่าตั้งโปรไฟล์จัดซื้อ (ค่าตอบแทนและแบบ)", "Changed profile settings (fees and drawings)"], Object.entries(v).map(([k, x]) => `${k}=${x}`).join(" ") + ` drawCats=${S.prof.drawCats.join(",")}`); commit(); route(); toast(L("บันทึกแล้ว", "Saved")); };
   };
 }

@@ -23,7 +23,7 @@ function vendorHist(name) {
   return { n: cons.length, value: sumv(cons.map(c => c.amount)), late: sumv(cons.flatMap(c => c.phases.map(phLate))), pen: sumv(cons.map(conPenalty)), dissent: cons.flatMap(c => c.phases.flatMap(ph => ph.dissent || [])).length,
     terminated: cons.filter(c => c.status === "terminated").length, score: scores.length ? avg(scores) : null, bids: S.cases.filter(x => (x.bids || []).some(b => normName(b.name) === normName(name))).length };
 }
-PROC.suppliers = () => {
+PROC.supKpis = () => {
   const V = S.vendors, B = S.blacklist, pr = isProcRole();
   return `
   <section class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
@@ -31,7 +31,11 @@ PROC.suppliers = () => {
     <div class="kpi"><span class="l">${L("SME", "SMEs")}</span><span class="v">${V.filter(v => v.sme).length}</span></div>
     <div class="kpi"><span class="l">${L("รายชื่อผู้ทิ้งงาน", "Abandoned-work list")}</span><span class="v">${B.rows.length}</span></div>
     <div class="kpi"><span class="l">${L("นำเข้ารายชื่อล่าสุด", "Last list import")}</span><span class="v" style="font-size:18px">${B.imports[0] ? fdate(B.imports[0].t) : "—"}</span></div>
-  </section>
+  </section>`;
+};
+PROC.supRegister = () => {
+  const V = S.vendors, B = S.blacklist, pr = isProcRole();
+  return `
   <section class="panel"><header><h2>${L("ทะเบียนผู้ขาย", "Supplier register")}</h2><span class="sp"></span><span class="sub">${L("ประวัติรวมจากทุกสัญญา ใช้ประกอบการจัดซื้อครั้งถัดไป (FR-PR-52) ไม่ใช่การจัดอันดับ", "History across all contracts, shown when buying next time (FR-PR-52). Not a ranking.")}</span></header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("ผู้ขาย", "Supplier")}</th><th>${L("เลขประจำตัวผู้เสียภาษี", "Tax ID")}</th><th>${L("ประเภท", "Type")}</th><th class="n">${L("สัญญา", "Contracts")}</th><th class="n">${L("มูลค่า (ลบ.)", "Value (M)")}</th><th class="n">${L("วันล่าช้า", "Late days")}</th><th class="n">${L("ค่าปรับ (บาท)", "Penalties (baht)")}</th><th class="n">${L("คะแนนเฉลี่ย", "Avg score")}</th><th>${L("สถานะ", "Status")}</th></tr></thead>
       <tbody>${V.map(v => { const h = vendorHist(v.name), bl = blHit(v.name);
@@ -42,12 +46,17 @@ PROC.suppliers = () => {
       <div class="f" style="flex:0 1 170px"><label for="vd-t">${L("เลขประจำตัวผู้เสียภาษี 13 หลัก", "13-digit tax ID")}</label><input type="text" id="vd-t" inputmode="numeric" maxlength="13" required></div>
       <div class="f" style="flex:0 1 150px"><label for="vd-ty">${L("ประเภท", "Type")}</label><select id="vd-ty">${Object.keys(VTYPE).map(k => `<option value="${k}">${tx(VTYPE[k])}</option>`).join("")}</select></div>
       <label class="field-inline"><input type="checkbox" id="vd-sme"> SME</label><label class="field-inline"><input type="checkbox" id="vd-loc"> ${L("ในพื้นที่", "Local")}</label>
-      <div class="f" style="flex:1 1 160px"><label for="vd-c">${L("ผู้ติดต่อ", "Contact")}</label><input type="text" id="vd-c"></div><button class="btn" type="submit">+ ${L("เพิ่ม", "Add")}</button></form></div>` : ""}</section>
+      <div class="f" style="flex:1 1 160px"><label for="vd-c">${L("ผู้ติดต่อ", "Contact")}</label><input type="text" id="vd-c"></div><button class="btn" type="submit">+ ${L("เพิ่ม", "Add")}</button></form></div>` : ""}</section>`;
+};
+PROC.supBlacklist = () => {
+  const V = S.vendors, B = S.blacklist, pr = isProcRole();
+  return `
   <section class="panel"><header><h2>${L("รายชื่อผู้ทิ้งงาน", "Abandoned-work list")}</h2><span class="sp"></span>${pr ? `<button class="btn" type="button" id="bl-sample">${L("สร้างไฟล์ตัวอย่าง", "Create a sample file")}</button>` : ""}</header>
     <div class="body sub">${L("นำเข้าจากไฟล์ที่หน่วยงานได้รับ ระบบตรวจชื่อและเลขประจำตัวผู้เสียภาษีก่อนบันทึกผู้ชนะและก่อนทำสัญญา (R-17) ปลดได้เฉพาะหัวหน้าพัสดุเมื่อยืนยันว่าเป็นคนละราย", "Imported from the file the agency receives. Names and tax IDs are checked before a winner is recorded and before a contract (R-17). Only the head of procurement can release a match, after confirming it's a different entity.")}</div>
     <div class="tbl-wrap"><table><thead><tr><th>${L("ชื่อ", "Name")}</th><th>${L("เลขประจำตัวผู้เสียภาษี", "Tax ID")}</th><th>${L("ตั้งแต่", "Since")}</th><th>${L("อ้างอิง", "Reference")}</th></tr></thead><tbody>${B.rows.map(r => `<tr><td>${esc(r.name)}</td><td class="mono">${esc(r.taxId)}</td><td class="sub">${fdate(r.since)}</td><td class="sub">${esc(r.ref)}</td></tr>`).join("") || `<tr><td colspan="4" class="sub">—</td></tr>`}</tbody></table></div>
     ${BL_ROWS ? `<div class="body"><b>${L("ตัวอย่างไฟล์ที่จะนำเข้า", "File to import")}</b> <span class="sub">${BL_ROWS.length} ${L("แถว แทนที่รายชื่อเดิมทั้งหมด", "rows; replaces the current list")}</span><div class="row" style="margin-top:6px"><button class="btn primary" type="button" id="bl-go">${L("นำเข้า", "Import")}</button><button class="btn ghost" type="button" id="bl-clear">${L("ล้าง", "Clear")}</button></div></div>` : ""}</section>`;
 };
+PROC.suppliers = () => PROC.supKpis() + PROC.supRegister() + PROC.supBlacklist();
 function bindSuppliers() {
   const done = m => { commit(); renderShell(); route(); if (m) toast(m); };
   const f = $("#vd-form"); if (f) f.onsubmit = e => { e.preventDefault(); const name = $("#vd-n").value.trim(), taxId = $("#vd-t").value.trim();

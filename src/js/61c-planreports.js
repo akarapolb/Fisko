@@ -52,7 +52,9 @@ function demandPanel() {
 }
 {
   const base = PROC.plan;
-  PROC.plan = () => planPanel() + base() + demandPanel();
+  PROC.planMain = () => planPanel() + base();
+  PROC.demand = () => demandPanel();
+  PROC.plan = () => PROC.planMain() + PROC.demand();
 }
 function bindPlan2() {
   const done = m => { commit(); renderShell(); route(); if (m) toast(m); };

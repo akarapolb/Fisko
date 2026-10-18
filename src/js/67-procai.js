@@ -72,9 +72,12 @@ function aiDraft(c, type) {
 
 // ---------- views ----------
 const aiCases = () => S.cases.filter(c => !c.cancelled);
+// Round 44: one tool at a time, picked from a bar (AI_TOOL is the tool id prefix of the section title).
+let AI_TOOL = "AI-01";
+const AI_TOOLS = [["AI-01", ["รวมซื้อและแตกซื้อ", "Combine and split"]], ["AI-03", ["ราคากลาง", "Reference price"]], ["AI-04", ["ตรวจ TOR", "TOR check"]], ["AI-05", ["วิธีจัดซื้อ", "Method"]], ["AI-07", ["งานล่าช้า", "Late delivery"]], ["AI-02", ["ร่างเอกสาร", "Drafts"]], ["AI-09", ["ถามข้อมูล", "Ask"]], ["AI-10", ["ผลงานผู้ขาย", "Supplier record"]]];
 PROC.ai = () => {
   const cs = aiCases(), c = caseOf(AI_CASE) || cs[0], off = id => (agentOn(id) ? "" : tag(L("ปิดอยู่ใน M09", "Off in M09"), "p-bad")), pr = isProcRole() || ROLE === "audit";
-  const sec = (title, ag, sub, body) => `<section class="panel"><header><h2>${title}</h2><span class="sp"></span><span class="mono sub">${ag}</span> ${off(ag)}</header><div class="body" style="display:flex;flex-direction:column;gap:10px">${sub ? `<div class="sub">${sub}</div>` : ""}${body}</div></section>`;
+  const sec = (title, ag, sub, body) => !title.startsWith(AI_TOOL) ? "" : `<section class="panel"><header><h2>${title}</h2><span class="sp"></span><span class="mono sub">${ag}</span> ${off(ag)}</header><div class="body" style="display:flex;flex-direction:column;gap:10px">${sub ? `<div class="sub">${sub}</div>` : ""}${body}</div></section>`;
   const res = k => (AI_RES[k] ? `<div class="callout" style="margin:0">${AI_RES[k]}</div>` : "");
   const risk = S.contracts.flatMap(x => x.phases.filter(ph => !phaseAccepted(ph)).map(ph => ({ x, ph, r: aiDelay(x, ph) }))).sort((a, b) => b.r.s - a.r.s);
   const stat = S.aiDrafts.length ? `${S.aiDrafts.filter(d => d.edit < 0.3).length}/${S.aiDrafts.length}` : "—";
@@ -83,6 +86,7 @@ PROC.ai = () => {
   <div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">AI</div><div><b>${L("AI อ่านและร่าง คนตัดสิน", "AI reads and drafts; a person decides")}</b>
     <p>${L("ต้นแบบนี้ใช้กฎและสถิติ ไม่เรียกโมเดลภายนอก (รุ่น rules-1) ทุกการใช้บันทึกใน M09 และปิดเปิดแต่ละ Agent ได้ที่นั่น AI ไม่ให้คะแนนหรือจัดอันดับข้อเสนอ ไม่เลือกผู้ขาย ไม่ประกาศผู้ชนะ ไม่อนุมัติ ไม่เขียนสถานะ 6 ถึง 8 และไม่ส่งข้อมูลลับออกนอกหน่วยงาน", "This prototype uses rules and statistics and calls no outside model (version rules-1). Every use is logged in M09 and each agent can be switched there. AI never scores or ranks bids, selects a supplier, announces a winner, approves, writes in steps 6 to 8 or sends confidential data out.")}</p></div></div>
   <section class="panel"><header><h2>${L("เลือกแฟ้ม", "Choose a case")}</h2></header><div class="body row"><select id="ai-case" aria-label="${L("แฟ้ม", "Case")}">${cs.map(x => `<option value="${x.id}" ${c && x.id === c.id ? "selected" : ""}>${x.id} · ${esc(caseName(x))}</option>`).join("")}</select>${c ? caseStTag(c) : ""}</div></section>
+  <div style="margin:0 0 12px">${segBar(AI_TOOLS.map(([k, l]) => [k, `<span class="mono">${k}</span> ${tx(l)}`]), AI_TOOL, "aitool")}</div>
   ${sec(L("AI-01 เสนอรวมความต้องการและเตือนแตกซื้อ", "AI-01 Consolidation and split-purchase watch"), "AG-05", L("เทียบชื่อรายการและหน่วยงานในแผน เสนอรวมซื้อ ไม่ตัดสินว่าผิด", "Compares item names and units in the plan and suggests buying together. It does not judge anyone."), `<div><button class="btn" type="button" id="ai-01" ${pr ? "" : "disabled"}>${L("สแกนแผนจัดซื้อ", "Scan the plan")}</button></div>${res("a01")}`)}
   ${sec(L("AI-03 เสนอราคากลางพร้อมหลักฐาน", "AI-03 Reference price with evidence"), "AG-07", L("อ่านอย่างเดียว ใช้สัญญาเดิมชนิดเดียวกัน ผู้ใช้ต้องกดยืนยันก่อนบันทึกเป็นราคากลาง", "Read-only. Uses past contracts of the same kind. The user must confirm before it becomes the reference price."), `<div><button class="btn" type="button" id="ai-03" ${pr && c ? "" : "disabled"}>${L("เสนอราคากลาง", "Suggest a price")}</button></div>${res("a03")}`)}
   ${sec(L("AI-04 ตรวจความครบถ้วนและข้อความล็อกสเปก", "AI-04 Completeness and spec-lock check"), "AG-02", L("วางข้อความ TOR ระบบชี้ข้อความที่ระบุยี่ห้อหรือรุ่นเฉพาะ เป็นการแนะนำ ไม่ห้าม", "Paste TOR text. It points at wording that names a brand or model. Advice only; nothing is blocked."),
@@ -103,6 +107,7 @@ PROC.ai = () => {
 // ---------- actions ----------
 function bindAI() {
   const c = () => caseOf($("#ai-case").value) || aiCases()[0], show = (k, html) => { AI_RES[k] = html; route(); };
+  $$("[data-aitool]").forEach(b => (b.onclick = () => { AI_TOOL = b.dataset.aitool; route(); }));
   const sel = $("#ai-case"); if (sel) sel.onchange = () => { AI_CASE = sel.value; AI_RES = {}; route(); };
   const keep = () => { const t = $("#ai-tor"); if (t) AI_TOR = t.value; };
   const run = (id, name, fn) => { if (aiOff(id, name)) return; fn(); commit(); };
@@ -117,7 +122,7 @@ function bindAI() {
   const s04 = $("#ai-04s"); if (s04) s04.onclick = () => { AI_TOR = "ขอบเขตงาน: จัดหาเครื่องแม่ข่ายยี่ห้อ Dellon รุ่น PX-4420 เท่านั้น ติดตั้งภายใน 30 วัน"; route(); };
   const b05 = $("#ai-05"); if (b05) b05.onclick = () => run("AG-02", "Budget Validation Agent", () => { const k = c(), r = recommendMethod(k), docs = DOCS_BY_METHOD[r.method] || []; aiLog("AG-02", ["แนะนำวิธีจัดซื้อ", "Advised a procurement method"], k.id, 1);
     show("a05", r.method ? `<div>${L("วิธีที่แนะนำ", "Advised method")}: <b>${tx(PMETHOD[r.method])}</b> ${tag(`${L("กฎ", "Rule")} ${r.rule.id} · ${r.rule.conf}`, r.rule.conf === "A" ? "p-ok" : "p-info")}</div><div class="sub">${esc(tx(r.why))}</div><div class="sub">${L("เอกสารที่ต้องมี", "Documents needed")}: ${docs.map(d => tx(d)).join(" · ")}</div><div class="sub">${L("คำแนะนำเท่านั้น หัวหน้าพัสดุอนุมัติหากเลือกต่างออกไป", "Advice only; the head approves a different choice")}</div>` : `<span class="sub">${esc(tx(r.why))}</span>`); });
-  $$("[data-ailtr]").forEach(b => (b.onclick = () => run("AG-08", "Contract Monitoring Agent", () => { const con = famCon(b.dataset.ailtr), k = caseByPlan(con.plan); aiLog("AG-08", ["ร่างหนังสือเร่งรัดการส่งมอบ", "Drafted a delivery reminder"], con.id, 1); AI_DOCT = "letter"; AI_CASE = k.id; AI_RES = { draft: aiDraft(k, "letter") }; route(); })));
+  $$("[data-ailtr]").forEach(b => (b.onclick = () => run("AG-08", "Contract Monitoring Agent", () => { const con = famCon(b.dataset.ailtr), k = caseByPlan(con.plan); aiLog("AG-08", ["ร่างหนังสือเร่งรัดการส่งมอบ", "Drafted a delivery reminder"], con.id, 1); AI_DOCT = "letter"; AI_TOOL = "AI-02"; AI_CASE = k.id; AI_RES = { draft: aiDraft(k, "letter") }; route(); })));
   const dt = $("#ai-dt"); if (dt) dt.onchange = () => { AI_DOCT = dt.value; };
   const b02 = $("#ai-02"); if (b02) b02.onclick = () => { AI_DOCT = $("#ai-dt").value; run("AG-07", "Procurement Drafting Agent", () => { const k = c(); aiLog("AG-07", [`สร้าง${tx(DOC_T[AI_DOCT][0])}`, `Created a ${tx(DOC_T[AI_DOCT][0])}`], k.id, 1); AI_RES = { draft: aiDraft(k, AI_DOCT), orig: aiDraft(k, AI_DOCT) }; route(); }); };
   const use = $("#ai-use"); if (use) use.onclick = () => { const k = c(), fin = $("#ai-draft").value, orig = AI_RES.orig || aiDraft(k, AI_DOCT), ow = orig.split(/\s+/), fw = new Set(fin.split(/\s+/)), edit = ow.filter(w => !fw.has(w)).length / Math.max(1, ow.length);

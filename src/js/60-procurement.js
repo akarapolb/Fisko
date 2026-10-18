@@ -101,7 +101,7 @@ PROC.reqn = () => {
 function phaseSignText(c, ph) {
   return `${ph.signs.map(s => esc(userName(s.by))).join(", ") || "—"} <span class="sub">(${ph.signs.length}/${PHASE_SIGNS})</span>`;
 }
-PROC.contracts = () => {
+PROC.conCreate = () => {
   const isProc = isProcRole(), open = S.cases.filter(c => caseState(c) === 8), me_ = me().id, people = famPeople().filter(u => u.id !== me_);
   const sel = open.find(c => c.id === CT_FROM) || open[0], judges = sel ? caseJudges(sel) : [];
   const defs = [S.users.find(u => u.role === "plan" && u.primary), S.users.find(u => u.role === "div" && u.primary)].filter(Boolean).map(u => u.id).filter(id => !judges.includes(id));
@@ -120,10 +120,11 @@ PROC.contracts = () => {
       <fieldset style="border:1px solid var(--line);border-radius:8px;padding:8px 12px"><legend class="sub">${L("คณะกรรมการตรวจรับ", "Acceptance committee")}</legend>
         <div class="row">${people.map(u => `<label class="field-inline"><input type="checkbox" name="ct-insp" value="${u.id}" ${defs.includes(u.id) ? "checked" : ""}> ${esc(tx(u.name))} <span class="sub">· ${tx(ROLES[u.role])}</span></label>`).join("")}</div></fieldset>
       <div><button class="btn primary" type="submit">${L("สร้างสัญญา", "Create contract")}</button></div></form></div></section>`
-    : isProc ? `<div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("ยังไม่มีแฟ้มที่พร้อมทำสัญญา", "No case is ready for a contract")}</b><p>${L("แฟ้มที่ประกาศผู้ชนะและพ้นกำหนดอุทธรณ์แล้วจะปรากฏที่นี่", "Cases with a winner and a finished appeal period will appear here")}</p></div></div>` : ""}
-  ${S.contracts.slice().reverse().map(conPanel).join("")
-    || `<section class="panel"><div class="body sub">${L("ยังไม่มีสัญญา", "No contracts yet")}</div></section>`}`;
+    : isProc ? `<div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("ยังไม่มีแฟ้มที่พร้อมทำสัญญา", "No case is ready for a contract")}</b><p>${L("แฟ้มที่ประกาศผู้ชนะและพ้นกำหนดอุทธรณ์แล้วจะปรากฏที่นี่", "Cases with a winner and a finished appeal period will appear here")}</p></div></div>` : ""}`;
 };
+// Every contract in full (round 44 shows one at a time; see PROC.conList and PROC.conDetail in 74).
+PROC.conAll = () => S.contracts.slice().reverse().map(conPanel).join("") || `<section class="panel"><div class="body sub">${L("ยังไม่มีสัญญา", "No contracts yet")}</div></section>`;
+PROC.contracts = () => PROC.conCreate() + PROC.conAll();
 PROC.egp = () => {
   const log = S.egpImports || [];
   return `
@@ -137,14 +138,7 @@ PROC.egp = () => {
     <tbody>${log.map(g => `<tr><td class="mono">${g.id}</td><td class="sub">${fdate(g.t, true)}</td><td>${esc(userName(g.by))}</td><td class="n">${g.ok}</td><td class="n">${g.bad}</td></tr>`).join("")}</tbody></table></div></section>` : ""}`;
 };
 
-VIEWS.procurement = () => {
-  if (!PROC[PROC_TAB]) PROC_TAB = "cases";
-  const tabs = [["cases", L("แฟ้มจัดซื้อ", "Case files")], ["plan", L("แผนจัดซื้อ", "Procurement plan")], ["reqn", `${L("ใบขอซื้อขอจ้าง", "Requisitions")}${S.reqn.filter(r => r.status === "pending").length ? ` (${S.reqn.filter(r => r.status === "pending").length})` : ""}`], ["tor", L("คลัง TOR", "TOR library")], ["contracts", L("สัญญาและงวดงาน", "Contracts and phases")], ["docs", L("รับเอกสาร (OCR)", "Document intake (OCR)")], ["suppliers", L("ผู้ขาย", "Suppliers")], ["gantt", L("ไทม์ไลน์แฟ้ม", "Case timeline")], ["reports", L("รายงานประจำเดือน", "Monthly report")], ["egp", L("ไฟล์จาก e-GP", "e-GP file")], ["analytics", L("วิเคราะห์", "Analytics")], ["forecast", L("พยากรณ์", "Forecast")], ["whatif", L("จำลองสถานการณ์", "What-if")], ["flags", L("สัญญาณเตือน", "Red flags")], ["ocds", L("ส่งออก OCDS", "OCDS export")], ["ai", L("ผู้ช่วย AI", "AI assistant")], ["agents", L("Agent อัตโนมัติ", "Agents")]];
-  return `
-  ${PROC_TAB === "cases" && CASE_OPEN && caseOf(CASE_OPEN) ? "" : `<div class="head"><div><div class="eyebrow">Fisko Procurement · ${L("จัดซื้อจัดจ้าง", "Procurement")}</div><h1>${(tabs.find(t => t[0] === PROC_TAB) || tabs[0])[1]}</h1>
-    <p>${L("เตรียมและติดตามการจัดซื้อที่ผูกกับรายการจัดสรร ขั้นตอนทางการยังทำใน e-GP", "Prepare and track procurement tied to allocation lines. The official steps stay in e-GP.")} · ${fyLabel(FAM_FY)}</p></div></div>`}
-  ${PROC[PROC_TAB]()}`;
-};
+// The page itself (menu, tabs, sections) is built in 74-proc-pages.js (round 44).
 
 BIND.procurement = () => {
   $$("[data-prtab]").forEach(b => (b.onclick = () => { PROC_TAB = b.dataset.prtab; route(); }));
