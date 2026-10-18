@@ -15,6 +15,7 @@ function seedT3(s) {
   s.prof.drawCats = []; s.fees = [];
   s.docno.fmt.mn = { pfx: "MN", pad: 3, unit: false }; s.docno.fmt.fee = { pfx: "คต", pad: 3, unit: false };
   const k = s.contracts[0]; if (k) k.boq = [{ item: ["หม้อแปลงไฟฟ้า 500 kVA", "Transformer 500 kVA"], unit: ["เครื่อง", "unit"], qty: 20, price: 1000000, serial: true, kind: "material" }, { item: ["ค่าติดตั้งและทดสอบ", "Installation and testing"], unit: ["งาน", "job"], qty: 1, price: 4000000, serial: false, kind: "labour" }];
+  seedT4(s);
 }
 const P3 = () => S.prof.p3;
 Object.assign(CASE_EV, {});

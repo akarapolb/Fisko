@@ -194,6 +194,7 @@ const bindRecv = () => {
     audit(["ยกเลิกใบเสร็จรับเงิน", "Cancelled a receipt"], `${rcNo(r)} · ${why}`); done(L("ยกเลิกแล้ว · ใบเดิมยังอยู่ในทะเบียน", "Cancelled · the original stays in the register"));
   }));
   $$("[data-rmk]").forEach(b => (b.onclick = () => {
+    if (typeof gfOk === "function" && !gfOk("remit")) return;
     const k = b.dataset.rmk, xs = rcOpen().filter(r => rcClass(r) === k), id = `RM-${FAM_FY}-${String((S.remits || []).length + 1).padStart(3, "0")}`, late = xs.filter(r => daysUntil(rcDue(r)) < 0).length;
     const m = { id, cls: k, rows: xs.map(r => r.id), amount: sumv(xs.map(r => r.amount)), t: nowIso(), by: me().id, ref: `KTB-${id.slice(-3)}${TODAY.replace(/-/g, "").slice(2)}`, late };
     xs.forEach(r => (r.remit = id)); (S.remits = S.remits || []).push(m);

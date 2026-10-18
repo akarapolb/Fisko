@@ -10,9 +10,13 @@
 //   FY2570 against quarterly targets that are settings (FR-B-31, BR-20, BR-21).
 const B4_FY = 2570;
 const lineStruct = l => { const lin = lineage(l.act); return { prog: (lin[0] || {}).id || "", out: (lin.find(n => n.lvl === "output") || {}).id || "" }; };
-const linePaid = id => sumv(S.payreqs.filter(p => p.status === "approved" && (S.contracts.find(c => c.id === p.contract) || {}).line === id).map(p => p.amount));
+// Actual spending of a line: approved contract payments, plus (Fisko Finance FN5) paid vouchers outside contracts
+// and budget advances (lent until cleared, then what was spent), so M06 and M07 show what Finance paid.
+const linePaid = id => sumv(S.payreqs.filter(p => p.status === "approved" && (S.contracts.find(c => c.id === p.contract) || {}).line === id).map(p => p.amount))
+  + sumv((S.vouchers || []).filter(v => v.line === id && !v.contract && v.state === "paid").map(v => v.gross - (v.penalty || 0)))
+  + sumv((S.advances || []).filter(a => a.line === id && a.source === "budget" && ["paid", "clearing", "objected", "cleared"].includes(a.state)).map(a => (a.state === "cleared" ? Math.min(a.clearing.spent, a.approvedAmt || a.amount) : a.approvedAmt || a.amount)));
 function bal(l) {
-  const res = typeof famReserved === "function" ? famReserved(l.id) : 0, com = typeof famCommitted === "function" ? famCommitted(l.id) : 0, paid = linePaid(l.id);
+  const res = typeof famReserved === "function" ? famReserved(l.id) : 0, com = (typeof famCommitted === "function" ? famCommitted(l.id) : 0) + (typeof famOther === "function" ? famOther(l.id) : 0), paid = linePaid(l.id);
   return { allot: l.amount, res, com, paid, avail: l.amount - res - com };
 }
 const TR_WHY = { fix: ["แก้ไขปัญหาการปฏิบัติงาน", "Fix an operational problem"], eff: ["เพิ่มประสิทธิภาพการให้บริการ", "Make services more efficient"], qual: ["เพิ่มคุณภาพการให้บริการ", "Improve service quality"], staff: ["พัฒนาบุคลากร", "Develop staff"], tech: ["พัฒนาเทคโนโลยี", "Develop technology"] };

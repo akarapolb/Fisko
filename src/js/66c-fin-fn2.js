@@ -310,6 +310,7 @@ function vPaid(v, ref) {
     }
     const gm = $("#gf-make");
     if (gm) gm.onclick = () => {
+      if (typeof gfOk === "function" && !gfOk("record")) return;
       const rows = (S.vouchers || []).filter(v => v.state === "ready" && !v.gfFile), f = { id: `GO-${FAM_FY}-${String((S.gfOut || []).length + 1).padStart(2, "0")}`, t: nowIso(), by: me().id, rows: rows.map(v => v.id), state: "sent" };
       rows.forEach(v => { v.gfFile = f.id; vLog(v, ["อยู่ในไฟล์ส่ง GFMIS", "Included in the GFMIS file"], f.id); });
       (S.gfOut = S.gfOut || []).push(f);

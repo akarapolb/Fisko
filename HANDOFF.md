@@ -1,6 +1,6 @@
 # Fisko: project handoff
 
-State as of 18 October 2026, branch `main`. Round 40 (Fisko Finance FN4) is the latest; see sections 36 to 40. This note is for whoever picks the work up next: what exists, how to run and change it, what was decided, and what is still open.
+State as of 18 October 2026, branch `main`. Round 41 (Fisko Finance FN5) is the latest; see sections 36 to 41. This note is for whoever picks the work up next: what exists, how to run and change it, what was decided, and what is still open.
 
 ## 1. What this is
 
@@ -494,7 +494,7 @@ The user found the interface unimpressive and chose a clean enterprise direction
 
 Builds round FN1 of `Fisko_Finance_Design.html`. The proposed answers to the open decisions are used as working defaults: Fisko stays a workbench in front of GFMIS (D-FN-01) and there is a new head of finance role (D-FN-02). New file `src/js/66b-fin-fn1.js` (loads after `66-apps.js`, so it can patch `NAV`, `APPS`, `payGate`, `tabBadge` and `myTasks`).
 
-- **Role `finhead`** (user `u21`, both organisations): added to every `NAV` entry that `fin` has (in a `renderShell` wrapper, like `divhead`); `MATRIX.finhead` copies `fin`. Gets clock follow-ups in My Workspace. Helper `isFinRole()`.
+- **Role `finhead`** (user `u31`, both organisations; it was `u21` until round 41, which clashed with a committee member): added to every `NAV` entry that `fin` has (in a `renderShell` wrapper, like `divhead`); `MATRIX.finhead` copies `fin`. Gets clock follow-ups in My Workspace. Helper `isFinRole()`.
 - **M10 → Finance rules** (`ADMIN.fcfg`, `S.fcfg`, defaults in `FCFG_DEFAULT`, read through `fcfg()`): PO threshold 5,000, withholding 10,000 and 1%, carry-over 100,000 and filing date, remittance 10,000, and the clocks (request 5 working days, monthly by day 15, advances 15/30 days, objection 15, demand 30, remit 3 working days, refund 15 working days), plus the clause-36 approval authority table. Each row shows its clause and level A/B/C. Admin edits; fin, finhead and audit read. Changes are audited; "Restore defaults" clears `S.fcfg`.
 - **F1 Finance overview** (`FIN.home`, now the default tab): regulation clocks (`finClocks()`: request within 5 working days of the last acceptance signature, missing POs, carry-over filing), waiting approvals and differences, commitments by kind.
 - **F2 Commitments and POs** (tab id stays `chain`, so old `fnc-chain` links work): PO list with "prepare PO data" and a 10-digit PO number (unique), the round-11 chain table, non-procurement commitments (`S.fcommit`, `CM-2570-nnn`: add, release with a reason) and carry-over candidates (signed by `FY_END`, at least 100,000 left, last payment after the year end) sent to `S.carry.reqs` with `src`, using the M06 `cfChecks`.
@@ -583,3 +583,35 @@ Builds FR-FN-25 to 32 (FR-FN-33, key handover, is not built). New file `src/js/6
 - **Seed** (`seedFinanceFN4`): committee = Planning user and division director (order 15/2569); books 1/2570, 7/2569 (returned), 8/2569 (held by a division, not returned); five October receipts (one remitted, a cheque refund one day overdue, two today not recorded); signed reports for 14 and 15 October. `DATA_V` is 32.
 - **Tested:** full sweep 6,547 checks passing; by hand: issue, record, remit (late item flagged), the 3-working-day rule when today's cash passes 10,000, the daily report with one member counting short (diff and report), acknowledgement; 375 px width for F5, F6 and the count page.
 
+## 41. Fisko Finance FN5: GFMIS, reconciliation and closing (round 41)
+
+Builds FR-FN-34 to 41. New file `src/js/66f-fin-fn5.js`; it wraps `FIN.recon` (F7) and adds F8 `close`.
+
+- **GFMIS users** (`S.gfUsers`: user, duties `record`/`approve`/`remit`, order, until): `gfOk(duty)` refuses and audits when the signed-in user has no live assignment. "Create the request file" (66c) checks `record`; remitting (66e) checks `remit`. `finhead` adds or revokes assignments.
+- **Bank accounts** (`S.bankAccts`: `budget` and `nonbudget`, opening balance for September): `bookLines()` builds the agency account movements from advances (funded in, paid out), agency-route vouchers (funded, paid) and book adjustments (`S.bookAdj`). Opening balances roll forward (`bkOpen`).
+- **Statements** (`S.bankStmts`): the sample import copies the month's book lines except the last one (in transit) and adds a 25-baht bank fee. `bkMatch()` matches on reference and amount and works out the adjusted bank and book balances; bank-only lines get "Record in the books". The reconciliation (`S.bankRecs`) can be signed only with no difference and no bank-only items left, and only by someone who did not record that month's money (`monthRecorders`, SD-15), so in the demo `finhead` signs and `fin` is refused.
+- **GFMIS files in:** the revenue report stamps each remittance with a GFMIS document (`r.gf`); the trial balance (`S.tbs`) is built from the Fisko book balances and line spending, so it agrees (`ok`).
+- **Daily close** (`S.dayCloses`): four checks (receipts recorded, daily cash report signed, payments checked, nothing due; the last is a warning only); failing checks need a reason.
+- **Month close** (`S.periods`): the six R-FN-06 checks (`monthChecks`); check 6 is a "Reviewed" tick by `finhead`. Closing with failures needs a reason of 10+ characters, recorded as exceptions. Reopening needs a reason and is refused for the person who closed it (SD-16); the executive may reopen.
+- **Year-end list:** carry-over candidates proposed, advances running into the new year, receipt books, year-end trial balance (status only).
+- **Audit queries** (`S.auditQs`, `AQ-2570-nn`, due 15 days after receipt): `finhead` records and answers; daily-cash differences are listed as incidents.
+- **Budget feed:** `linePaid` (47d) now also counts paid vouchers outside contracts and budget advances; `bal()` counts `famOther` in "committed". F8 shows spending per line.
+- **SD-15 and SD-16** are pushed into `SOD_RULES`.
+- **User change kept in this round:** "My advances" is now a Finance menu item for every role (`66d`, `appOfLink` in `66-apps.js`).
+- **Bug fixed:** the `finhead` demo user had id `u21`, which the budget committee seed (42d) also uses; it is now `u31`. Saved demo data reseeds (`DATA_V` 34).
+- **Seed** (`seedFinanceFN5`): GFMIS assignments for `fin`, `finhead` and `exec` (order 3/2569); September statements and signed reconciliations, no September trial balance yet, both periods open, yesterday's day closed, one State Audit Office query due 23 October, remittances already in a GFMIS report.
+- **Tested:** full sweep 6,547 checks passing; by hand: October statement import, recording the fee, SD-15 refusing `fin`, `finhead` signing, the September trial balance, closing September, SD-16 refusing the closer and the executive reopening, the daily close needing a reason, answering the query, `gfOk` refusing an unassigned user; 375 px width for F7 and F8.
+- **Not done:** export of registers to Excel or PDF (artifact pages can't download files without the downloads capability).
+
+
+## 40P. Procurement T4 from the MEA TOR (round 40, Procurement)
+
+- **Built, all in `src/js/73-t4.js`** (design chapter 18: FR-PR-81 to 84 and 86). Three new profile switches, `forms`, `coiRep` and `entity` (all on for both kinds), and `S.prof.p4 = {mailRepeatDays}` (set under M10 → Procurement profile). `seedT4(s)` is called from `seedT3` and adds document types `memo`, `ltr`, `ann`, `S.pdocs`, `S.outbox`, `S.coiRep` and an e-mail address, ERP code and entity-check slot on every vendor.
+  - **Forms:** `FORM_T` has 17 starter forms in three groups (memos, letters, announcements); each is a function from a case, contract and supplier to Thai text. New tab `forms` (P19). `S.pdocs[] = {id, tpl, g, case, ven, no, text, sign: {req: {role}, signed: {by, t, cert}}, pub[], mail[]}`. The number comes from `docNo(group, unit)`. The text is editable until signed; the drafter can't sign; letters can be e-mailed and announcements published (channel and time recorded) only once signed. Forms that need an award or a contract refuse to be made without one.
+  - **E-mail:** `S.outbox[]` entries are simulated. "Reminders due" lists unanswered RFQ rows past their date and overdue deliveries; a reminder to the same item isn't repeated within `mailRepeatDays`. A signature request notifies the signer's role and creates a task.
+  - **Conflict-of-interest report:** tab `coi` (P20). `coiRows()` walks every case at step 4 or later with a TOR, evaluation or selective committee and counts declarations, missing declarations and declared conflicts per person. A report is a snapshot: draft, sent to the head, approved by someone other than the preparer, then exported as CSV (a data link; status "exported"). The real channel to the agency's system is still D-P18.
+  - **Entity check and ERP code:** a panel added under the supplier register. The lookup is simulated from the tax ID (invalid number: not found; last digit 7: dissolved; 3: suspended; otherwise active). ERP vendor code is editable when the `erpRef` switch is on.
+  - The tabs are listed only while their switch is on (the NAV item's `tabs` getter from `72-t3.js` is wrapped), and `VIEWS.procurement` is wrapped again to give them their own headings.
+- **Data version** `DATA_V` is 33. **Demo guide** steps 48 and 49.
+- **Tested:** full sweep 6,547 checks passed. By hand: a memo got `บก-05/001/2570`; a winner letter refused with no winner; the invitation letter couldn't be e-mailed before it was signed, the head signed it, then it went to the supplier's address; an announcement was signed by the executive and recorded as published on e-GP; an overdue RFQ produced a reminder and a second one was blocked; the COI page listed three members, a report was prepared, sent, approved by the head (the officer had no approve button) and could then be exported; the entity check set a status. Not checked: phone width, dark mode, the CSV file opening in Excel, English wording beyond the sweep, and the wording of each template against MEA's real forms.
+- **Not done:** not committed or published. FR-PR-85 remains deferred. Procurement chapter 18 is otherwise built. Next in the larger TOR picture are the designs that don't exist yet: AP and payment on the MEA side, ECM, the workflow and form designer, and the SAP integration.

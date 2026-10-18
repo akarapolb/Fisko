@@ -19,7 +19,7 @@ All three share My Workspace, M10 System Administration, the AI co-work chat (ro
 | Published prototype | https://claude.ai/artifact/5pZpV5JDgdLNBdnwHtYFuy (private, from round 37). The old link https://claude.ai/artifact/K8TJFETX7GMftoZYb9zFZR (version 43) belongs to another organisation's account and can't be updated from this one. |
 | Published Budget design | https://claude.ai/artifact/EFs3q62eP5tVTZWMSFQkX9 (version 2, private) |
 | Published Finance design | https://claude.ai/artifact/G4Sx84KthvJWcLJMAWPKD1 (version 1, private; `Fisko_Finance_Design.html` v0.1, round 36) |
-| Data version | `DATA_V = 32` in `src/js/00-core.js` (bump it whenever the seed shape changes) |
+| Data version | `DATA_V = 34` in `src/js/00-core.js` (bump it whenever the seed shape changes) |
 
 ## 2. How the user likes to work
 
@@ -89,7 +89,7 @@ Roles now: `div`, `divhead`, `plan`, `committee`, `exec`, `fin`, `audit`, `admin
 
 ## 6. Open items
 
-- **Procurement T1 to T3 are built (T1 and T2 committed; T3, round 39, is not committed or published).** See `HANDOFF.md` sections 37, 38 and 39. T2 to T4 follow design chapter 18. A parallel Finance FN1 build shares the working tree.
+- **Procurement T1 to T4 are built (T4, round 40, is not committed or published).** See `HANDOFF.md` sections 37, 38, 39 and 40P. Only FR-PR-85 is left in design chapter 18. T2 to T4 follow design chapter 18. A parallel Finance FN1 build shares the working tree.
 
 **From the Budget design** (chapter 13.4 of v0.2):
 
@@ -107,7 +107,7 @@ Roles now: `div`, `divhead`, `plan`, `committee`, `exec`, `fin`, `audit`, `admin
 
 ## 7. Suggested next steps
 
-1. **Fisko Finance (recommended next).** Design v0.1 is done (round 36); FN1 to FN4 are built (rounds 37 to 40: `66b` to `66e-fin-*.js`, `DATA_V = 32`). Next: FN5, GFMIS files, bank reconciliation and period close (FR-FN-34 to 41). Decisions D-FN-01 to 09 run on the proposed defaults until the user answers.
+1. **Fisko Finance (recommended next).** Design v0.1 is done (round 36); FN1 to FN5 are built (rounds 37 to 41: `66b` to `66f-fin-*.js`, `DATA_V = 34`). Next: FN6, finance agents AG-18 to 22, forecast, what-if, KPI-F and signals SG-F, demo steps and test cases. Decisions D-FN-01 to 09 run on the proposed defaults until the user answers.
 2. **Fisko Assets design (D-P11):** stock and assets, fed by Procurement acceptances.
 3. **From simulated to real AI:** a plan to swap the planner and answer writer for a real model, keeping the same tools, approvals and audit log.
 4. **Small polish:** BR-11 exception flags; splitting the request form's first steps; moving the forecast probabilities by unit or type history into data.

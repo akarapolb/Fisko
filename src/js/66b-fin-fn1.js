@@ -296,7 +296,7 @@ VIEWS.finance = () => {
 // ---------- seed (called from the shared seed builder) ----------
 function seedFinanceFN1(s) {
   const sample = (s.org[1] || "").startsWith("Sample"), fin = s.users.find(u => u.role === "fin");
-  if (!s.users.some(u => u.role === "finhead")) s.users.push({ id: "u21", role: "finhead", unit: fin ? fin.unit : s.units[1].id, primary: true, mfa: true, active: true,
+  if (!s.users.some(u => u.role === "finhead")) s.users.push({ id: "u31", role: "finhead", unit: fin ? fin.unit : s.units[1].id, primary: true, mfa: true, active: true,
     name: sample ? ["ศิริพร คลังดี", "Siriporn Khlangdee"] : ["สมพร การคลัง", "Somporn Kankhlang"] });
   s.fcfg = {};
   // The two running contracts already have their POs; contracts created in the demo start without one.
