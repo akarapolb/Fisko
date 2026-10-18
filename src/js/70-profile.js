@@ -15,7 +15,7 @@ const PROF_FEATS = [
   { k: "sampleTest", round: "T2", gov: false, soe: true, th: "ตัวอย่างและทดสอบ (Type Test)", en: "Samples and type tests", tor: "ผนวก 12 s.4.5–4.7" },
   { k: "drawing", round: "T3", gov: false, soe: true, th: "อนุมัติแบบ", en: "Drawing approval", tor: "ผนวก 12 s.4.2" },
   { k: "commFee", round: "T3", gov: true, soe: true, th: "ค่าตอบแทนกรรมการ", en: "Committee fees", tor: "5.1.6" },
-  { k: "smallBudget", round: "เลื่อน", gov: false, soe: true, th: "วิธีวงเงินเล็กน้อยตามระเบียบ (MR-06)", en: "Small-budget method (MR-06)", tor: "ผนวก 12 s.2" },
+  { k: "smallBudget", round: "deferred", gov: false, soe: true, th: "วิธีวงเงินเล็กน้อยตามระเบียบ (MR-06)", en: "Small-budget method (MR-06)", tor: "ผนวก 12 s.2" },
 ];
 const PROF_DEFAULT_P = { hearingMin: 5000000, hearingDays: 7, rfqMin: 3, rfqDays: 3, vatPct: 7 };
 const DOC_TYPES = { rfq: ["ใบสอบถามราคา / หนังสือเชิญ", "RFQ / invitation letter"], hear: ["ประกาศรับฟังความคิดเห็น TOR", "Hearing notice"] };
@@ -202,7 +202,7 @@ ADMIN.procprof = () => {
     <div class="body row">${Object.keys(PROF_TYPES).map(k => `<button class="btn ${pf.type === k ? "primary" : ""}" type="button" data-ptype="${k}" ${ad ? "" : "disabled"}>${tx(PROF_TYPES[k])}</button>`).join("")}<span class="sub">${L("เลือกแล้วระบบตั้งสวิตช์เป็นค่าตั้งต้นของชนิดนั้น แก้ทีละข้อได้ภายหลัง", "Choosing a kind sets the switches to its starting values; you can then change each one")}</span></div></section>
   <section class="panel"><header><h2>${L("สวิตช์ฟังก์ชัน", "Feature switches")}</h2><span class="sp"></span>${tag(ad ? L("แก้ไขได้", "Editable") : L("ดูอย่างเดียว", "View only"), ad ? "p-ok" : "p-mute")}</header>
     <div class="tbl-wrap"><table><thead><tr><th class="c" style="width:70px">${L("เปิด", "On")}</th><th>${L("ฟังก์ชัน", "Feature")}</th><th>${L("ราชการ", "Gov")}</th><th>${L("รัฐวิสาหกิจ", "SOE")}</th><th>${L("อ้างอิง TOR", "TOR ref")}</th><th>${L("รอบ", "Round")}</th></tr></thead>
-      <tbody>${PROF_FEATS.map(f => `<tr><td class="c">${sw("pf-sw-" + f.k, pf.sw[f.k], !ad)}</td><td>${tx([f.th, f.en])}</td><td class="c">${f.gov ? "✓" : "—"}</td><td class="c">${f.soe ? "✓" : "—"}</td><td class="sub">${f.tor}</td><td>${f.built ? tag(L("สร้างแล้ว", "Built") + " " + f.round, "p-ok") : tag(L("ยังไม่สร้าง", "Not built") + " · " + f.round, "p-mute")}</td></tr>`).join("")}</tbody></table></div>
+      <tbody>${PROF_FEATS.map(f => `<tr><td class="c">${sw("pf-sw-" + f.k, pf.sw[f.k], !ad)}</td><td>${tx([f.th, f.en])}</td><td class="c">${f.gov ? "✓" : "—"}</td><td class="c">${f.soe ? "✓" : "—"}</td><td class="sub">${f.tor}</td><td>${f.built ? tag(L("สร้างแล้ว", "Built") + " " + f.round, "p-ok") : tag(L("ยังไม่สร้าง", "Not built") + " · " + (f.round === "deferred" ? L("เลื่อน", "deferred") : f.round), "p-mute")}</td></tr>`).join("")}</tbody></table></div>
     <div class="body sub">${L("สวิตช์ของฟังก์ชันที่ยังไม่สร้างบันทึกไว้ก่อน ยังไม่มีผลต่อหน้าจอ ปิดสวิตช์แล้วต้นแบบทำงานเหมือนฉบับ 0.2", "Switches for features not built yet are stored but do nothing. With a switch off, the prototype behaves as in v0.2.")}</div></section>
   <section class="panel"><header><h2>${L("ค่าตั้งของฟังก์ชัน", "Feature settings")}</h2></header>
     <div class="body inline-form">

@@ -16,10 +16,10 @@ All three share My Workspace, M10 System Administration, the AI co-work chat (ro
 |---|---|
 | Repository | `D:\Claude\Fisko`, branch `main`, remote `https://github.com/akarapolb/Fisko.git` |
 | Last commit | `e969601` Round 35: demo guide, Budget design v0.2, test runner (working tree clean) |
-| Published prototype | https://claude.ai/artifact/K8TJFETX7GMftoZYb9zFZR (version 43, built from `fisko-prototype.html`) |
+| Published prototype | https://claude.ai/artifact/5pZpV5JDgdLNBdnwHtYFuy (private, from round 37). The old link https://claude.ai/artifact/K8TJFETX7GMftoZYb9zFZR (version 43) belongs to another organisation's account and can't be updated from this one. |
 | Published Budget design | https://claude.ai/artifact/EFs3q62eP5tVTZWMSFQkX9 (version 2, private) |
 | Published Finance design | https://claude.ai/artifact/G4Sx84KthvJWcLJMAWPKD1 (version 1, private; `Fisko_Finance_Design.html` v0.1, round 36) |
-| Data version | `DATA_V = 28` in `src/js/00-core.js` (bump it whenever the seed shape changes) |
+| Data version | `DATA_V = 29` in `src/js/00-core.js` (bump it whenever the seed shape changes) |
 
 ## 2. How the user likes to work
 
@@ -107,7 +107,7 @@ Roles now: `div`, `divhead`, `plan`, `committee`, `exec`, `fin`, `audit`, `admin
 
 ## 7. Suggested next steps
 
-1. **Fisko Finance (recommended next).** Design v0.1 is done (round 36). Get approval and answers to D-FN-01 to 09, then build FN1 to FN6.
+1. **Fisko Finance (recommended next).** Design v0.1 is done (round 36) and FN1 is built (round 37, `66b-fin-fn1.js`, `DATA_V = 29`). Next: FN2, payment requests and withholding tax (FR-FN-07 to 17). Decisions D-FN-01 to 09 run on the proposed defaults until the user answers.
 2. **Fisko Assets design (D-P11):** stock and assets, fed by Procurement acceptances.
 3. **From simulated to real AI:** a plan to swap the planner and answer writer for a real model, keeping the same tools, approvals and audit log.
 4. **Small polish:** BR-11 exception flags; splitting the request form's first steps; moving the forecast probabilities by unit or type history into data.

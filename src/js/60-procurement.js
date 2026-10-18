@@ -10,7 +10,9 @@ const famReq = id => S.reqn.find(r => r.id === id);
 const famCon = id => S.contracts.find(c => c.id === id);
 const famCommitted = lineId => sumv(S.contracts.filter(c => c.line === lineId).map(c => c.amount));
 const famReserved = lineId => sumv(S.reqn.filter(r => r.status === "approved" && famPlan(r.plan).line === lineId).map(r => r.amount));
-const famHeadroom = lineId => famLine(lineId).amount - famCommitted(lineId) - famReserved(lineId);
+// Non-procurement commitments kept by Fisko Finance (round FN1): utilities, rent, service agreements, travel orders.
+const famOther = lineId => sumv((S.fcommit || []).filter(c => c.line === lineId).map(c => c.amount - (c.released || 0)));
+const famHeadroom = lineId => famLine(lineId).amount - famCommitted(lineId) - famReserved(lineId) - famOther(lineId);
 const phaseAccepted = ph => ph.signs.length >= PHASE_SIGNS;
 const phaseSigners = c => c.phases.flatMap(ph => ph.signs.map(s => s.by));
 const famPeople = () => S.users.filter(u => u.active && u.role !== "admin" && u.role !== "proc" && u.role !== "prochead");

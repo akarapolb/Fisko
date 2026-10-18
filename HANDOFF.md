@@ -1,6 +1,6 @@
 # Fisko: project handoff
 
-State as of 18 October 2026, branch `main`. Round 36 (Fisko Finance design) is the latest; see section 36. This note is for whoever picks the work up next: what exists, how to run and change it, what was decided, and what is still open.
+State as of 18 October 2026, branch `main`. Round 37 (Fisko Finance FN1) is the latest; see sections 36 and 37. This note is for whoever picks the work up next: what exists, how to run and change it, what was decided, and what is still open.
 
 ## 1. What this is
 
@@ -489,3 +489,18 @@ The user found the interface unimpressive and chose a clean enterprise direction
 - **Tested:** full sweep 6,490 checks, all passed (33 s). By hand in the app: opened a hearing, commented, blocked an early close, closed early with a reason and a TOR change, head approved, reopened as round 2; sent an RFQ to three suppliers and recorded a reply; saved item details with VAT in; imported price indices; checked that switching `rfq` or `hearing` off hides or releases the check. Not checked: looks at phone width and in dark mode (the browser pane was hidden), and the English text of the new screens beyond the sweep.
 - **Not done:** not published to the artifact and not committed. Another session was building Fisko Finance FN1 (`66b-fin-fn1.js`, edits to `60-procurement.js`, `62-finance.js`, `00-core.js`, `06-seedhelp.js`) in the same working tree at the same time, so the built HTML files contain that unfinished work. Commit only after sorting out whose changes go together.
 - **Next:** T2 (vendor portal, SME and MiT preference, bid security, samples and type tests, appeal forwarding to the central body), then T3 and T4 as in design chapter 18.
+
+## 37. Fisko Finance FN1: foundations (round 37)
+
+Builds round FN1 of `Fisko_Finance_Design.html`. The proposed answers to the open decisions are used as working defaults: Fisko stays a workbench in front of GFMIS (D-FN-01) and there is a new head of finance role (D-FN-02). New file `src/js/66b-fin-fn1.js` (loads after `66-apps.js`, so it can patch `NAV`, `APPS`, `payGate`, `tabBadge` and `myTasks`).
+
+- **Role `finhead`** (user `u21`, both organisations): added to every `NAV` entry that `fin` has (in a `renderShell` wrapper, like `divhead`); `MATRIX.finhead` copies `fin`. Gets clock follow-ups in My Workspace. Helper `isFinRole()`.
+- **M10 → Finance rules** (`ADMIN.fcfg`, `S.fcfg`, defaults in `FCFG_DEFAULT`, read through `fcfg()`): PO threshold 5,000, withholding 10,000 and 1%, carry-over 100,000 and filing date, remittance 10,000, and the clocks (request 5 working days, monthly by day 15, advances 15/30 days, objection 15, demand 30, remit 3 working days, refund 15 working days), plus the clause-36 approval authority table. Each row shows its clause and level A/B/C. Admin edits; fin, finhead and audit read. Changes are audited; "Restore defaults" clears `S.fcfg`.
+- **F1 Finance overview** (`FIN.home`, now the default tab): regulation clocks (`finClocks()`: request within 5 working days of the last acceptance signature, missing POs, carry-over filing), waiting approvals and differences, commitments by kind.
+- **F2 Commitments and POs** (tab id stays `chain`, so old `fnc-chain` links work): PO list with "prepare PO data" and a 10-digit PO number (unique), the round-11 chain table, non-procurement commitments (`S.fcommit`, `CM-2570-nnn`: add, release with a reason) and carry-over candidates (signed by `FY_END`, at least 100,000 left, last payment after the year end) sent to `S.carry.reqs` with `src`, using the M06 `cfChecks`.
+- **Money logic:** `famHeadroom` (60) now also subtracts `famOther` (non-procurement commitments less releases). `payGate` gains a PO check for contracts from the PO threshold; a missing PO sets `g.noPo`, which can't be released as an exception (`62-finance.js` stops the request with a message; `63-contracts.js` `gateBox` explains it). PO rules apply to contracts, rent and service agreements only (clause 28), not utilities or travel orders.
+- **Menu:** Finance tabs are F1 overview, F2 commitments, F3 payment requests (round-11 page), F7 GFMIS and reconciliation (round-11 page). Codes follow the design; F4 to F6 and F8 to F9 come in later rounds.
+- **Seed** (`seedFinanceFN1`, called last in `06-seedhelp.js`): the two contracts get PO numbers (so demo step 22 still passes the gate), four commitments (electricity 1.8 M, rent 0.96 M without a PO, IT maintenance 1.2 M running past the year end so it is a carry-over candidate, a 4,800-baht travel order). `DATA_V` is 29.
+- **Tested:** full sweep 6,490 checks passing (it now covers `finhead`); by hand: PO entry and validation, release, new commitment over the headroom, carry-over to M06, the gate blocking a contract without a PO, M10 edit, reset and read-only views; 375 px width with no overflow; dark mode.
+- **Not done:** demo guide steps for Finance (planned for FN6); the Finance design document is not yet tagged with build status.
+- **Published:** the old prototype link (K8TJFETX7GMftoZYb9zFZR) belongs to another organisation's account, so this round was published as a new private artifact: https://claude.ai/artifact/5pZpV5JDgdLNBdnwHtYFuy (version 1).

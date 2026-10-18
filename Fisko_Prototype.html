@@ -1408,7 +1408,7 @@ const fyLabel = fy => L(`ปีงบประมาณ พ.ศ. ${fy}`, `FY${fy
 
 // ---------- organizations and state ----------
 const SEEDS = {}; // id -> { name: [th, en], seed: () => state }, registered by data files
-const DATA_V = 28; // bump when the seed shape changes so saved demo state is reseeded
+const DATA_V = 29; // bump when the seed shape changes so saved demo state is reseeded
 let ORG = "sample";
 let S = null;
 const key = () => "fisko-v1-" + ORG;
@@ -1424,7 +1424,7 @@ function resetDemo() { store.del(key()); S = SEEDS[ORG].seed(); save(); resetUi(
 function resetUi() {
   CUR_REQ = null; REQ_TAB = "main"; VER_A = VER_B = null; CMP_REQ = null; CHAIN_P = null; CMT_OPEN = null;
   DRILL_U = DRILL_P = null; PLAN_UNIT = ""; ALLOC_FY = 2570; WI.locks = null; STAGED = null;
-  OPEN_PROG.clear(); OPEN_UNIT.clear(); IDEA_OPEN = null; PASTE_ROWS = []; PLAN_REQ = null; PLAN_SPLIT = false; CT_FROM = null; PAY_FORM = null; CASE_OPEN = null; OCDS_JSON = ""; AI_CASE = null; AI_RES = {}; AI_TOR = ""; AI_Q = ""; TOR_OPEN = null; PACK_FOR = null; BL_ROWS = null; REP_MONTH = null; DOSSIER_FOR = null; DOC_OPEN = null; WIP = null; WI_LOCK.clear(); WI_NAME = ""; FC_CUT = null; RUN_OPEN = null;
+  OPEN_PROG.clear(); OPEN_UNIT.clear(); IDEA_OPEN = null; PASTE_ROWS = []; PLAN_REQ = null; PLAN_SPLIT = false; CT_FROM = null; PAY_FORM = null; CASE_OPEN = null; OCDS_JSON = ""; AI_CASE = null; AI_RES = {}; AI_TOR = ""; AI_Q = ""; TOR_OPEN = null; PACK_FOR = null; BL_ROWS = null; REP_MONTH = null; DOSSIER_FOR = null; DOC_OPEN = null; WIP = null; WI_LOCK.clear(); WI_NAME = ""; FC_CUT = null; RUN_OPEN = null; FN_PO = null;
 }
 
 // ---------- roles ----------
@@ -1975,6 +1975,7 @@ function buildOrg(cfg) {
   seedDocs(s);
   seedForecast(s);
   seedAgents(s);
+  seedProfile(s);
   seedBudgetB1(s);
   seedBudgetB2(s);
   seedBudgetB3(s);
@@ -1982,6 +1983,7 @@ function buildOrg(cfg) {
   seedBudgetB4(s);
   seedBudgetB5(s);
   seedBudgetB6(s);
+  seedFinanceFN1(s);
   s.audit.unshift(
     { t: "2026-10-15T10:00", user: EX, role: "exec", action: ["อนุมัติเบิกจ่าย", "Approved a payment"], target: "PY-2570-001 CT-2570-001" },
     { t: "2026-10-14T15:00", user: FN, role: "fin", action: ["ขออนุมัติเบิกจ่าย", "Requested a payment approval"], target: "PY-2570-001 CT-2570-001" },
@@ -7530,7 +7532,15 @@ const DEMO = [
   { t: "41:00", role: "admin", link: "admin-bcfg", title: ["M10 ตั้งค่า AI และสัญญาณ แล้วปิด", "M10 AI and signal settings, and close"],
     say: ["เป้าหมายการเบิกจ่ายตามมติ ครม. สมมติฐานพยากรณ์ เกณฑ์สัญญาณ และเกณฑ์ 3R ปรับได้ทุกปีโดยผู้ดูแลระบบ ทุกค่าบอกระดับความมั่นใจ และทุกการปรับอยู่ในบันทึกการใช้งาน", "Spending targets from the Cabinet resolution, forecast assumptions, signal thresholds and the 3R rules are set each year by the administrator. Each value shows its confidence level, and every change is in the audit log."],
     do: ["ลดเกณฑ์ BF-01 เป็น 10% → กลับไปแท็บสัญญาณดูจำนวนที่เปลี่ยน → “คืนค่าตั้งต้น”", "Lower BF-01 to 10% → go back to the signals tab and see the count change → Restore defaults"] },
-
+  { t: "42:00", role: "admin", link: "admin-procprof", title: ["M10 โปรไฟล์จัดซื้อ: ส่วนราชการหรือรัฐวิสาหกิจ", "M10 Procurement profile: government or state enterprise"],
+    say: ["Fisko ตัวเดียวใช้ได้ทั้งส่วนราชการและรัฐวิสาหกิจ ต่างกันที่โปรไฟล์ เลือกชนิดหน่วยงานแล้วสวิตช์ฟังก์ชันเปลี่ยนเป็นค่าตั้งต้น แก้ทีละข้อได้ ปิดสวิตช์แล้วต้นแบบกลับไปทำงานแบบเดิม เลขที่เอกสารออกอัตโนมัติและตั้งรูปแบบได้ที่นี่", "One Fisko serves government agencies and state enterprises; the profile is what differs. Choosing a kind resets the switches to its starting values, each can be changed, and with a switch off the prototype works as before. Document numbers are issued automatically and formatted here."],
+    do: ["กด “รัฐวิสาหกิจ” → ดูสวิตช์ที่เปิดเพิ่ม (รับฟังความคิดเห็น รหัส ERP) → ปรับ “รับฟังเมื่อวงเงินตั้งแต่” → ดูรูปแบบเลขที่เอกสาร", "Press State enterprise → see the extra switches that turn on (hearing, ERP codes) → change the hearing threshold → look at the document number formats"] },
+  { t: "43:00", role: "proc", link: "case:PC-2570-003", title: ["แฟ้มจัดซื้อ: ข้อมูลเพิ่มเติม หนังสือเชิญ และดัชนีราคา", "Case file: item details, invitations and price indices"],
+    say: ["รายการมีช่องข้อมูลเพิ่ม เช่น มาตรฐานคุณภาพ วันส่งมอบ ภาษีมูลค่าเพิ่ม และรหัส ERP ใบสอบถามราคาออกเลขที่อัตโนมัติ ผู้ทิ้งงานเลือกเชิญไม่ได้ ผู้ขายตอบแล้วบันทึกราคา ราคากลางเทียบกับการซื้อครั้งก่อนและดัชนีราคา การส่งเป็นการจำลอง", "Items carry extra fields such as quality standard, delivery date, VAT and ERP codes. An RFQ gets an automatic number, anyone on the abandoned-work list cannot be invited, and replies are recorded with a price. The reference price is shown against the last purchase and price indices. Sending is simulated."],
+    do: ["เลื่อนลงที่แผง “ข้อมูลเพิ่มเติมของรายการ” กรอกแล้วบันทึก → “ใบสอบถามราคาและหนังสือเชิญ” เลือก 3 ราย ส่ง แล้วบันทึกคำตอบ 1 ราย → ที่แผงดัชนีราคา กด “ใส่ข้อมูลตัวอย่าง” แล้วนำเข้า", "Scroll to Item details, fill and save → in RFQ and invitation letters pick 3 suppliers, send, and record one reply → in the price panel press Fill a sample and import"] },
+  { t: "44:00", role: "proc", link: "case:PC-2570-004", title: ["รับฟังความคิดเห็น TOR ก่อนประกาศเชิญชวน", "Public hearing of the TOR before the announcement"],
+    say: ["เมื่อโปรไฟล์กำหนดให้รับฟัง และวงเงินถึงเกณฑ์ (หรือรายการติดธง) แฟ้มจะประกาศเชิญชวนไม่ได้จนกว่าจะสรุปผลรับฟัง ถ้าต้องแก้ TOR หัวหน้าพัสดุต้องอนุมัติเวอร์ชันใหม่ แล้วเปิดรับฟังซ้ำได้ (R-25)", "When the profile requires it and the value reaches the threshold (or the item is flagged), the case cannot be announced until the hearing is concluded. A TOR change needs the head's approval of a new version, and the hearing can be reopened (R-25)."],
+    do: ["ให้ผู้บริหารอนุมัติใบขอซื้อ PC-2570-004 แล้วเลือกวิธี e-bidding → เปิดรับฟัง บันทึกความเห็น → สรุปผลโดยติ๊ก “ต้องแก้ TOR” (ต้องแนบ TOR ก่อน) → สลับเป็นหัวหน้าพัสดุอนุมัติ → เปิดรับฟังซ้ำ", "Have the executive approve requisition PC-2570-004 and choose e-bidding → open the hearing, add a comment → conclude with The TOR must change ticked (attach a TOR first) → switch to the head of procurement to approve → reopen the hearing"] },
 ];
 VIEWS.demo = () => `
   <div class="head"><div><div class="eyebrow">${L("คู่มือการสาธิต", "Demo guide")}</div><h1>${L("สาธิต Fisko 15 นาที + ส่วนเสริมจัดซื้อและการเงิน + วงจรงบประมาณเชิงลึก", "Fisko in 15 minutes + the Procurement and Finance extension + the Budget cycle in depth")}</h1>
@@ -7827,7 +7837,9 @@ const famReq = id => S.reqn.find(r => r.id === id);
 const famCon = id => S.contracts.find(c => c.id === id);
 const famCommitted = lineId => sumv(S.contracts.filter(c => c.line === lineId).map(c => c.amount));
 const famReserved = lineId => sumv(S.reqn.filter(r => r.status === "approved" && famPlan(r.plan).line === lineId).map(r => r.amount));
-const famHeadroom = lineId => famLine(lineId).amount - famCommitted(lineId) - famReserved(lineId);
+// Non-procurement commitments kept by Fisko Finance (round FN1): utilities, rent, service agreements, travel orders.
+const famOther = lineId => sumv((S.fcommit || []).filter(c => c.line === lineId).map(c => c.amount - (c.released || 0)));
+const famHeadroom = lineId => famLine(lineId).amount - famCommitted(lineId) - famReserved(lineId) - famOther(lineId);
 const phaseAccepted = ph => ph.signs.length >= PHASE_SIGNS;
 const phaseSigners = c => c.phases.flatMap(ph => ph.signs.map(s => s.by));
 const famPeople = () => S.users.filter(u => u.active && u.role !== "admin" && u.role !== "proc" && u.role !== "prochead");
@@ -9183,6 +9195,7 @@ BIND.finance = () => {
     pf.onsubmit = e => {
       e.preventDefault();
       const [cid, n] = $("#py-ph").value.split("|"), c = famCon(cid), ph = c.phases.find(x => x.n === Number(n)), amount = Math.round(Number($("#py-amt").value)), g = payGate(c, ph);
+      if (g.noPo) { toast(L("สัญญานี้ยังไม่มีเลขที่ใบสั่งซื้อ (PO) ใน GFMIS · บันทึกที่หน้า วงเงินผูกพันและใบสั่งซื้อ ก่อน (ข้อ 28)", "This contract has no GFMIS purchase order yet · record it on Commitments and POs first (clause 28)")); return; }
       if (!g.ok) {
         if (!ph.hold) { ph.hold = { by: me().id, t: nowIso(), fails: g.checks.filter(x => !x.ok).map(x => x.label).join("; ") }; audit(["ประตูเบิกจ่ายพักรายการ", "The payment gate held a request"], `${c.id} ${tx(ph.name)}`); notify(["prochead", "exec"], [`${c.id} ${ph.name[0]} ไม่ผ่านประตูเบิกจ่าย รอปลดข้อยกเว้น`, `${c.id} ${ph.name[1]} did not pass the payment gate and waits for a release`], "prc-contracts"); commit(); }
         toast(L("ไม่ผ่านประตูเบิกจ่าย (R-11): พักเป็นข้อยกเว้นให้หัวหน้าพัสดุปลด", "Payment gate not passed (R-11): held as an exception for release")); return;
@@ -9291,7 +9304,7 @@ const gateBox = (c, ph) => {
   return `<div class="callout" style="margin:0"><b>${L("ประตูเบิกจ่าย (R-11)", "Payment gate (R-11)")}</b>
     <ul class="check" style="margin-top:6px">${g.checks.map(x => `<li><span class="m ${x.ok ? "ok" : "no"}">${x.ok ? "✓" : "×"}</span><div>${esc(x.label)}</div></li>`).join("")}</ul>
     <div class="sub" style="margin-top:6px">${L("ยอดที่ขอได้", "Payable")} = ${fmt(ph.result === "partial" ? ph.okAmount : ph.amount)} − ${L("ค่าปรับ", "penalty")} ${fmt(g.penalty)} = <b>${fmt(g.net)}</b> ${L("บาท", "baht")}${g.rejected ? ` · ${L("ส่วนที่ไม่ผ่านตรวจรับ", "not accepted")} ${fmt(g.rejected)}` : ""}</div>
-    ${g.released ? `<div class="sub">${L("ปลดข้อยกเว้นโดย", "Exception released by")} ${esc(userName(ph.release.by))}: ${esc(ph.release.reason)}</div>` : !g.pass ? `<div class="sub">${L("ไม่ผ่านประตู: การเงินส่งคำขอไม่ได้ ระบบจะพักเป็นข้อยกเว้นให้หัวหน้าพัสดุหรือผู้บริหารปลด", "The gate is not passed: Finance can't send the request. It is held as an exception for the head of procurement or the executive to release.")}</div>` : ""}</div>`;
+    ${g.noPo ? `<div class="sub">${L("ยังไม่มีเลขที่ใบสั่งซื้อ (PO) ใน GFMIS: บันทึกที่ Fisko Finance → วงเงินผูกพันและใบสั่งซื้อ ข้อนี้ปลดเป็นข้อยกเว้นไม่ได้", "No GFMIS purchase order yet: record it in Fisko Finance → Commitments and POs. This check can't be released as an exception.")}</div>` : g.released ? `<div class="sub">${L("ปลดข้อยกเว้นโดย", "Exception released by")} ${esc(userName(ph.release.by))}: ${esc(ph.release.reason)}</div>` : !g.pass ? `<div class="sub">${L("ไม่ผ่านประตู: การเงินส่งคำขอไม่ได้ ระบบจะพักเป็นข้อยกเว้นให้หัวหน้าพัสดุหรือผู้บริหารปลด", "The gate is not passed: Finance can't send the request. It is held as an exception for the head of procurement or the executive to release.")}</div>` : ""}</div>`;
 };
 
 // ---------- the contract panel ----------
@@ -10630,6 +10643,309 @@ STYPE.app = ["แอป", "App"];
   };
 }
 
+/* ---- 66b-fin-fn1.js ---- */
+// Fisko Finance round FN1 (Finance design v0.1, chapter 12): foundations.
+// - Finance rules in M10 (P-F03): thresholds, regulation clocks and the payment-approval authority table (clause 36).
+//   The administrator edits; finance, the head of finance and the auditor read. Every value carries its clause and level.
+// - Head of finance role (finhead, D-FN-02): checks, escalations and later the period close.
+// - Commitments register (FR-FN-01, 03, 04, 05): contracts from Procurement plus non-procurement commitments.
+// - GFMIS purchase orders (FR-FN-02): contracts and agreements from 5,000 baht need a PO number before a payment request.
+// - Carry-over candidates (FR-FN-06) sent to the M06 carry-over page.
+// - F1 Finance overview with the regulation clocks.
+ROLES.finhead = ["หัวหน้าการเงิน (ผู้อำนวยการกองคลัง)", "Head of finance"];
+const isFinRole = () => ROLE === "fin" || ROLE === "finhead";
+let FN_PO = null;
+
+// ---------- finance rules (M10) ----------
+const FCFG_DEFAULT = () => ({
+  poMin: 5000, whtMin: 10000, whtPct: 1, carryMin: 100000, carryBy: "2027-09-30", aheadDays: 10,
+  reqDays: 5, monthlyDay: 15, advTravel: 15, advOther: 30, advFix: 15, demandDays: 30, remitCash: 10000, remitDays: 3, refundDays: 15,
+  auth: [
+    { id: "A1", pos: ["หัวหน้าส่วนราชการระดับกรม", "Head of the department"], role: "exec", max: 0 },
+    { id: "A2", pos: ["รองหัวหน้าส่วนราชการ (ได้รับมอบหมาย)", "Deputy head (by assignment)"], role: "exec", max: 10000000 },
+    { id: "A3", pos: ["ผู้อำนวยการกองคลัง (ได้รับมอบหมาย ระดับชำนาญการขึ้นไป)", "Director of finance (by assignment, professional level or higher)"], role: "finhead", max: 1000000 },
+  ],
+});
+function fcfg() {
+  const d = FCFG_DEFAULT(), c = (S && S.fcfg) || {};
+  return Object.assign(d, c, { auth: d.auth.map(a => Object.assign({}, a, ((c.auth || []).find(x => x.id === a.id) || {}))) });
+}
+// key: [label, unit, level, source]
+const FCFG_ROWS = {
+  limits: [
+    ["poMin", ["ต้องลงใบสั่งซื้อ (PO) ใน GFMIS เมื่อวงเงินตั้งแต่", "A GFMIS purchase order is needed from"], ["บาท", "baht"], "A", "ข้อ 28 (1)"],
+    ["whtMin", ["หักภาษี ณ ที่จ่าย เมื่อใบสั่งซื้อหรือสั่งจ้างตั้งแต่", "Withhold tax when the order is at least"], ["บาท", "baht"], "B", "S2"],
+    ["whtPct", ["อัตราภาษีหัก ณ ที่จ่าย ซื้อและจ้างทำของ", "Withholding rate, goods and works"], ["%", "%"], "B", "S2"],
+    ["carryMin", ["กันเงินเหลื่อมปีได้เมื่อวงเงินผูกพันตั้งแต่", "Carry-over allowed from a commitment of"], ["บาท", "baht"], "A", "ข้อ 105"],
+    ["remitCash", ["นำส่งเร็วเมื่อรายได้แผ่นดินเงินสดในวันใดเกิน", "Remit early when cash revenue held in a day exceeds"], ["บาท", "baht"], "A", "ข้อ 101 (2)"],
+  ],
+  clocks: [
+    ["reqDays", ["ขอเบิกค่าซื้อ จ้าง เช่า หลังตรวจรับ ภายใน", "Request payment after acceptance within"], ["วันทำการ", "working days"], "A", "ข้อ 28"],
+    ["monthlyDay", ["ขอเบิกรายการประจำเดือน ภายในวันที่", "Monthly items requested by day"], ["ของเดือน", "of the month"], "A", "ข้อ 31"],
+    ["aheadDays", ["เตือนเมื่อขอเบิกก่อนถึงกำหนดจ่ายเกิน", "Warn when requesting earlier than due by"], ["วัน", "days"], "C", "ข้อ 22"],
+    ["advTravel", ["ส่งใช้เงินยืมเดินทางไปราชการ นับจากวันกลับ", "Clear a travel advance, from the return date"], ["วัน", "days"], "A", "ข้อ 65 (2)"],
+    ["advOther", ["ส่งใช้เงินยืมอื่นและไปประจำต่างสำนักงาน นับจากวันรับเงิน", "Clear other advances, from the payment date"], ["วัน", "days"], "A", "ข้อ 65 (1), (3)"],
+    ["advFix", ["ผู้ยืมแก้ข้อทักท้วงภายใน", "Borrower fixes an objection within"], ["วัน", "days"], "A", "ข้อ 65"],
+    ["demandDays", ["เรียกชดใช้เงินยืมภายใน นับจากวันครบกำหนด", "Demand repayment within, from the due date"], ["วัน", "days"], "A", "ข้อ 68"],
+    ["remitDays", ["นำส่งรายได้เงินสดที่เกินเกณฑ์ภายใน", "Remit cash revenue above the limit within"], ["วันทำการ", "working days"], "A", "ข้อ 101 (2)"],
+    ["refundDays", ["ส่งคืนเงินที่เบิกมาแต่ไม่ได้จ่ายภายใน", "Return money drawn but not paid within"], ["วันทำการ", "working days"], "A", "ข้อ 99, 101 (4)"],
+  ],
+};
+ADMIN_TABS.push({ id: "fcfg", label: ["กฎการเงิน", "Finance rules"], roles: ["admin", "fin", "finhead", "audit"] });
+ADMIN.fcfg = () => {
+  const c = fcfg(), ed = ROLE === "admin", ds = ed ? "" : "disabled";
+  const lvl = v => tag(v, v === "A" ? "p-ok" : v === "B" ? "p-info" : "p-mute");
+  const rows = list => list.map(([k, label, unit, lv, src]) => `<tr><td>${tx(label)}</td><td class="n"><input type="number" data-fc="${k}" value="${c[k]}" min="0" step="1" ${ds} style="width:100px" aria-label="${esc(tx(label))}"> ${tx(unit)}</td><td>${lvl(lv)}</td><td class="sub">${src}</td></tr>`).join("");
+  const sec = (title, sub, body) => `<section class="panel"><header><h2>${title}</h2><span class="sp"></span><span class="sub">${sub}</span></header><div class="tbl-wrap"><table><thead><tr><th>${L("ค่า", "Setting")}</th><th class="n">${L("ตั้งไว้", "Value")}</th><th>${L("ระดับ", "Level")}</th><th>${L("ที่มา", "Source")}</th></tr></thead><tbody>${body}</tbody></table></div></section>`;
+  return `${ed ? "" : `<div class="alert"><div class="ic">i</div><div><b>${L("ดูอย่างเดียว", "View only")}</b><p>${L("ผู้ดูแลระบบเป็นผู้แก้ไข การเงินและผู้ตรวจสอบเห็นค่าที่ระบบใช้", "The administrator edits these; finance and audit see the values the system uses")}</p></div></div>`}
+    ${sec(L("วงเงินและเกณฑ์", "Amounts and thresholds"), L("ระเบียบกระทรวงการคลังว่าด้วยการเบิกเงินจากคลังฯ พ.ศ. 2562", "Finance Ministry regulation on treasury withdrawals, 2562"), rows(FCFG_ROWS.limits) +
+      `<tr><td>${L("วันสุดท้ายที่ขอกันเงินไว้เบิกเหลื่อมปีใน GFMIS", "Last day to file carry-over in GFMIS")}</td><td class="n"><input type="date" data-fcd="carryBy" value="${c.carryBy}" ${ds} aria-label="${L("วันสุดท้ายที่ขอกันเงิน", "Carry-over filing date")}"></td><td>${lvl("B")}</td><td class="sub">ข้อ 106 · S5</td></tr>`)}
+    ${sec(L("นาฬิกาตามระเบียบ", "Regulation clocks"), L("วันทำการไม่นับเสาร์ อาทิตย์ และวันหยุดใน กฎจัดซื้อจัดจ้าง", "Working days skip weekends and the holidays in Procurement rules"), rows(FCFG_ROWS.clocks))}
+    <section class="panel"><header><h2>${L("ผู้มีอำนาจอนุมัติจ่าย (ข้อ 36)", "Payment approval authority (clause 36)")}</h2><span class="sp"></span><span class="sub">${L("ใช้ตรวจผู้อนุมัติใบขอเบิกและเงินยืม", "Used to check who approves vouchers and advances")}</span></header>
+      <div class="tbl-wrap"><table><thead><tr><th>${L("ตำแหน่ง", "Position")}</th><th>${L("บทบาทในระบบ", "Role in Fisko")}</th><th class="n">${L("อนุมัติได้ไม่เกิน (บาท · 0 = ไม่จำกัด)", "Up to (baht · 0 = no limit)")}</th><th>${L("ระดับ", "Level")}</th></tr></thead>
+        <tbody>${c.auth.map(a => `<tr><td>${tx(a.pos)}</td><td class="sub">${tx(ROLES[a.role])}</td><td class="n"><input type="number" data-fca="${a.id}" value="${a.max}" min="0" step="1000" ${ds} style="width:130px" aria-label="${esc(tx(a.pos))}"></td><td>${lvl(a.id === "A1" ? "A" : "C")}</td></tr>`).join("")}</tbody></table></div>
+      <div class="body sub">${L("หัวหน้าส่วนราชการระดับกรมเป็นผู้มีอำนาจตามข้อ 36 (1) ผู้ได้รับมอบหมายต้องดำรงตำแหน่งตามที่ข้อ 36 กำหนด วงเงินของผู้ได้รับมอบหมายเป็นตัวอย่าง ตั้งตามคำสั่งมอบหมายของหน่วยงาน", "The head of the department holds the authority under clause 36 (1). Assignees must hold the positions the clause sets. Assignee limits are examples; set them from the agency's assignment order.")}</div></section>
+    ${ed ? `<div class="row"><button class="btn ghost" type="button" id="fc-reset">${L("คืนค่าตั้งต้น", "Restore defaults")}</button><span class="sub">${L("ระดับ A อ่านจากตัวบทระเบียบ · ระดับ B มาจากข้อหารือหรือข่าว ต้องยืนยัน · ระดับ C เป็นข้อเสนอการออกแบบ", "Level A is read from the regulation · level B comes from rulings or news and needs confirming · level C is a design proposal")}</span></div>` : ""}`;
+};
+BIND_ADMIN.fcfg = () => {
+  const save_ = (key, old, v) => { audit(["ปรับกฎการเงิน", "Changed a finance rule"], `${key}: ${old} → ${v}`); commit(); route(); };
+  $$("[data-fc]").forEach(inp => (inp.onchange = () => { const k = inp.dataset.fc, v = Number(inp.value), old = fcfg()[k]; S.fcfg = Object.assign({}, S.fcfg, { [k]: v }); save_(k, old, v); }));
+  $$("[data-fcd]").forEach(inp => (inp.onchange = () => { const k = inp.dataset.fcd, old = fcfg()[k]; if (!inp.value) return; S.fcfg = Object.assign({}, S.fcfg, { [k]: inp.value }); save_(k, old, inp.value); }));
+  $$("[data-fca]").forEach(inp => (inp.onchange = () => {
+    const id = inp.dataset.fca, v = Number(inp.value), cur = Object.assign({}, S.fcfg), auth = (cur.auth || []).filter(a => a.id !== id);
+    const old = fcfg().auth.find(a => a.id === id).max; auth.push({ id, max: v }); cur.auth = auth; S.fcfg = cur; save_(id, old, v);
+  }));
+  const r = $("#fc-reset"); if (r) r.onclick = () => { S.fcfg = {}; audit(["คืนค่าตั้งต้นกฎการเงิน", "Restored finance rule defaults"], ""); commit(); route(); };
+};
+
+// ---------- commitments register ----------
+const FC_KIND = { contract: ["สัญญาจัดซื้อจัดจ้าง", "Procurement contract"], utility: ["ค่าสาธารณูปโภค", "Utilities"], rent: ["ค่าเช่า", "Rent"], service: ["สัญญาบริการ", "Service agreement"], travel: ["คำสั่งเดินทางไปราชการ", "Travel order"] };
+const conPaid = c => sumv(S.payreqs.filter(p => p.contract === c.id && p.status === "approved").map(p => p.amount));
+// One list for every commitment: contracts come live from Procurement, the others are kept by Finance.
+function finCommits() {
+  const fromCon = (S.contracts || []).map(c => ({ src: "contract", kind: "contract", id: c.id, name: famPlan(c.plan).name, line: c.line, vendor: c.vendor, amount: c.amount, released: 0,
+    paid: conPaid(c), signed: c.signed, due: c.phases.map(ph => ph.due).sort().pop() || c.signed, gfPo: c.gfPo || null, ref: c }));
+  const other = (S.fcommit || []).map(c => Object.assign({ src: "other", ref: c }, c, { paid: c.paid || 0, released: c.released || 0 }));
+  return [...fromCon, ...other];
+}
+const fcLeft = x => Math.max(0, x.amount - x.released - x.paid);
+// Clause 28 covers buying, hiring and renting under the procurement law; utilities and travel orders need no PO.
+const poKind = x => ["contract", "rent", "service"].includes(x.kind);
+const needsPo = x => poKind(x) && x.amount >= fcfg().poMin && !x.gfPo;
+const fcRef = id => (S.contracts || []).find(c => c.id === id) || (S.fcommit || []).find(c => c.id === id);
+// Carry-over candidates (FR-FN-06): signed by the year end, at least the carry-over amount still unpaid, last payment due after the year end.
+const carryCands = () => finCommits().filter(x => x.signed <= FY_END && fcLeft(x) >= fcfg().carryMin && x.due > FY_END);
+const carrySent = id => (S.carry && S.carry.reqs || []).some(r => r.src === id);
+// The acceptance date of a phase is the last committee signature; the request clock (clause 28) starts from it.
+const accDate = ph => ph.signs.map(s => s.t).sort().pop().slice(0, 10);
+const reqDue = ph => addWorkdays(accDate(ph), fcfg().reqDays);
+
+// ---------- regulation clocks ----------
+function finClocks() {
+  const out = [], add = (due, title, sub, link, src, who) => out.push({ due, title, sub, link, src, who });
+  famAcceptedUnpaid().forEach(({ c, ph }) => add(reqDue(ph), `${L("ขอเบิก", "Request payment for")} ${c.id} ${tx(ph.name)}`, `${tx(c.vendor)} · ${fmt(ph.amount)} ${L("บาท", "baht")} · ${L("ตรวจรับ", "accepted")} ${fdate(accDate(ph))}`, "fnc-pay", L("ข้อ 28", "cl. 28"), "fin"));
+  finCommits().filter(needsPo).forEach(x => add(x.signed, `${L("บันทึกเลขที่ PO ใน GFMIS", "Record the GFMIS PO for")} ${x.id}`, `${tx(x.vendor)} · ${fmt(x.amount)} ${L("บาท", "baht")}`, "fnc-chain", L("ข้อ 28 (1)", "cl. 28 (1)"), "fin"));
+  const cc = carryCands().filter(x => !carrySent(x.id));
+  if (cc.length) add(fcfg().carryBy, L(`เสนอกันเงินเหลื่อมปี ${cc.length} รายการ`, `Propose ${cc.length} commitments for carry-over`), `${mb(sumv(cc.map(fcLeft)))} ${L("ลบ.", "M")}`, "fnc-chain", L("ข้อ 105–106", "cl. 105–106"), "fin");
+  return out.sort((a, b) => (a.due < b.due ? -1 : 1));
+}
+const clockDot = due => { const d = daysUntil(due); return d < 0 ? "bad" : d <= 2 ? "warn" : "ok"; };
+const clockTxt = due => { const d = daysUntil(due); return d < 0 ? `<span style="color:var(--bad)">${L("เลยกำหนด", "Overdue")} ${-d} ${L("วัน", "d")}</span>` : d === 0 ? `<span style="color:var(--warn)">${L("วันนี้", "Today")}</span>` : `${fdate(due)} · ${L("อีก", "in")} ${d} ${L("วัน", "d")}`; };
+const dotI = k => `<i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--${k === "ok" ? "accent" : k});margin-right:6px;vertical-align:middle"></i>`;
+
+// ---------- F1 overview ----------
+FIN.home = () => {
+  const K = finClocks(), soon = K.filter(k => daysUntil(k.due) <= 2), all = finCommits();
+  const left = sumv(all.map(fcLeft)), com = sumv(all.map(x => x.amount - x.released)), paid = sumv(all.map(x => x.paid));
+  const pend = S.payreqs.filter(p => p.status === "pending"), diff = S.payreqs.filter(p => p.recon && p.recon.state === "diff");
+  return `
+  <section class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+    <div class="kpi hl"><span class="l">${L("ครบกำหนดภายใน 2 วัน", "Due within 2 days")}</span><span class="v">${soon.length}</span><span class="d" style="color:var(--rail-ink)">${K.filter(k => daysUntil(k.due) < 0).length} ${L("เลยกำหนด", "overdue")}</span></div>
+    <div class="kpi"><span class="l">${L("รอเลขที่ PO ใน GFMIS", "Waiting for a GFMIS PO")}</span><span class="v">${all.filter(needsPo).length}</span></div>
+    <div class="kpi"><span class="l">${L("ผูกพันที่ยังไม่จ่าย", "Committed, not paid")}</span><span class="v">${mb(left)}<small>${L("ลบ.", "M")}</small></span></div>
+    <div class="kpi"><span class="l">${L("จ่ายแล้วต่อวงเงินผูกพัน", "Paid of committed")}</span><span class="v">${fmt(com ? paid / com * 100 : 0, 1)}<small>%</small></span></div>
+  </section>
+  <section class="panel"><header><h2>${L("นาฬิกาตามระเบียบ", "Regulation clocks")}</h2><span class="sp"></span><span class="sub">${L("เรียงตามวันครบกำหนด · จำนวนวันตั้งใน M10 → กฎการเงิน", "By due date · day counts are set in M10 → Finance rules")}</span></header>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("งาน", "Work")}</th><th>${L("ครบกำหนด", "Due")}</th><th>${L("ที่มา", "Source")}</th><th></th></tr></thead>
+      <tbody>${K.map(k => `<tr><td>${dotI(clockDot(k.due))}<b style="font-weight:600">${esc(k.title)}</b><div class="sub">${esc(k.sub)}</div></td><td style="white-space:nowrap">${clockTxt(k.due)}</td><td class="sub">${k.src}</td><td><button class="btn" type="button" data-jump="${k.link}">${L("เปิด", "Open")}</button></td></tr>`).join("")
+        || `<tr><td colspan="4" class="sub">${L("ไม่มีงานที่มีกำหนดเวลา", "Nothing on the clock")}</td></tr>`}</tbody></table></div></section>
+  <div class="grid2">
+    <section class="panel"><header><h2>${L("รออนุมัติและรอกระทบยอด", "Waiting for approval or matching")}</h2></header>
+      <div class="body">
+        <p>${dotI(pend.length ? "warn" : "ok")}${pend.length} ${L("คำขอเบิกจ่ายรออนุมัติ", "payment requests waiting for approval")} ${pend.length ? `<button class="btn ghost" type="button" data-jump="fnc-pay">${L("ดู", "View")}</button>` : ""}</p>
+        <p>${dotI(diff.length ? "bad" : "ok")}${diff.length} ${L("รายการมีผลต่างกับ GFMIS", "payments differ from GFMIS")} ${diff.length ? `<button class="btn ghost" type="button" data-jump="fnc-recon">${L("ดู", "View")}</button>` : ""}</p>
+      </div></section>
+    <section class="panel"><header><h2>${L("วงเงินผูกพันตามประเภท", "Commitments by kind")}</h2><span class="sp"></span><span class="sub">${L("ล้านบาท", "M baht")}</span></header>
+      <div class="tbl-wrap"><table><thead><tr><th>${L("ประเภท", "Kind")}</th><th class="n">${L("ผูกพัน", "Committed")}</th><th class="n">${L("จ่ายแล้ว", "Paid")}</th><th class="n">${L("คงค้าง", "Left")}</th></tr></thead>
+        <tbody>${Object.keys(FC_KIND).map(k => { const xs = all.filter(x => x.kind === k); return xs.length ? `<tr><td>${tx(FC_KIND[k])} <span class="sub">(${xs.length})</span></td><td class="n">${mb(sumv(xs.map(x => x.amount - x.released)))}</td><td class="n">${mb(sumv(xs.map(x => x.paid)))}</td><td class="n">${mb(sumv(xs.map(fcLeft)))}</td></tr>` : ""; }).join("")}</tbody></table></div></section>
+  </div>`;
+};
+
+// ---------- F2 commitments and POs (wraps the round-11 chain table) ----------
+{
+  const chain = FIN.chain;
+  FIN.chain = () => {
+    const all = finCommits(), fin = isFinRole(), maker = ROLE === "fin", c = fcfg(), noPo = all.filter(needsPo);
+    const cc = carryCands(), lines = famLines().filter(l => l.type === "ope" || l.type === "inv");
+    const poRow = x => {
+      const open = FN_PO === x.id, l = famLine(x.line);
+      return `<tr><td class="mono">${x.id}</td><td>${esc(tx(x.name))}<div class="sub">${tx(FC_KIND[x.kind])} · ${esc(tx(x.vendor))}</div></td><td class="n">${fmt(x.amount)}</td><td>${x.gfPo ? `<span class="mono">${esc(x.gfPo.no)}</span><div class="sub">${fdate(x.gfPo.t)}</div>` : poKind(x) && x.amount >= c.poMin ? tag(L("ยังไม่มี PO", "No PO yet"), "p-warn") : `<span class="sub">${L("ไม่ต้องมี", "Not needed")}</span>`}</td>
+        <td>${maker && needsPo(x) ? `<button class="btn" type="button" data-fnpo="${x.id}">${open ? L("ปิด", "Close") : L("เตรียมข้อมูล PO", "Prepare PO data")}</button>` : ""}</td></tr>
+        ${open ? `<tr><td colspan="5"><div class="callout" style="margin:0"><b>${L("ข้อมูลสำหรับลงใบสั่งซื้อใน GFMIS", "Data for the GFMIS purchase order")}</b>
+          <div class="sub">${L("ผู้ขาย", "Supplier")}: ${esc(tx(x.vendor))} · ${L("รหัสงบประมาณ", "Budget code")}: <span class="mono">${x.line}</span> ${esc(lineLabel(l))} · ${L("วงเงิน", "Amount")}: ${fmt(x.amount)} ${L("บาท", "baht")} · ${L("ลงนาม", "Signed")} ${fdate(x.signed)}${x.ref.phases ? ` · ${x.ref.phases.length} ${L("งวด", "phases")}: ${x.ref.phases.map(ph => `${fdate(ph.due)} ${fmt(ph.amount)}`).join(" / ")}` : ""}</div>
+          <form class="inline-form" data-poform="${x.id}" style="margin-top:8px"><div class="f" style="flex:0 1 220px"><label for="po-${x.id}">${L("เลขที่ PO จาก GFMIS (10 หลัก)", "GFMIS PO number (10 digits)")}</label><input type="text" id="po-${x.id}" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" required placeholder="7000000000"></div><button class="btn primary" type="submit">${L("บันทึกเลขที่ PO", "Save PO number")}</button></form></div></td></tr>` : ""}`;
+    };
+    return `
+    <section class="panel"><header><h2>${L("ใบสั่งซื้อใน GFMIS", "Purchase orders in GFMIS")}</h2><span class="sp"></span><span class="sub">${L("ตั้งแต่", "From")} ${fmt(c.poMin)} ${L("บาท ต้องลง PO เพื่อจองงบประมาณก่อนขอเบิก (ข้อ 28 (1))", "baht a PO must reserve the budget before a payment request (clause 28 (1))")}</span></header>
+      ${noPo.length ? `<div class="body" style="padding-bottom:0"><div class="alert" style="margin:0"><div class="ic" style="background:var(--warn-soft);color:var(--warn)">!</div><div><b>${noPo.length} ${L("รายการยังไม่มีเลขที่ PO", "commitments have no PO number yet")}</b><p>${L("ขอเบิกเงินของรายการเหล่านี้ไม่ได้จนกว่าจะบันทึกเลขที่ PO", "Payments for these can't be requested until the PO number is recorded")}</p></div></div></div>` : ""}
+      <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("รายการ", "Item")}</th><th class="n">${L("วงเงิน (บาท)", "Amount (baht)")}</th><th>${L("PO ใน GFMIS", "GFMIS PO")}</th><th></th></tr></thead>
+        <tbody>${all.slice().sort((a, b) => (needsPo(b) - needsPo(a))).map(poRow).join("")}</tbody></table></div></section>
+    ${chain()}
+    <section class="panel"><header><h2>${L("ผูกพันที่ไม่ใช่การจัดซื้อ", "Commitments outside procurement")}</h2><span class="sp"></span><span class="sub">${L("กันวงเงินจากรายการจัดสรร คืนวงเงินได้พร้อมเหตุผล (FR-FN-03, 04)", "Reserve the allocation line; release with a reason (FR-FN-03, 04)")}</span></header>
+      <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("รายการ", "Item")}</th><th class="n">${L("ผูกพัน (บาท)", "Committed (baht)")}</th><th class="n">${L("จ่ายแล้ว", "Paid")}</th><th class="n">${L("คืนแล้ว", "Released")}</th><th class="n">${L("คงค้าง", "Left")}</th><th></th></tr></thead>
+        <tbody>${all.filter(x => x.src === "other").map(x => `<tr><td class="mono">${x.id}</td><td>${esc(tx(x.name))}<div class="sub">${tx(FC_KIND[x.kind])} · ${esc(tx(x.vendor))} · <span class="mono">${x.line}</span> · ${L("ถึง", "to")} ${fdate(x.due)}</div></td><td class="n">${fmt(x.amount)}</td><td class="n">${fmt(x.paid)}</td><td class="n">${fmt(x.released)}</td><td class="n">${fmt(fcLeft(x))}</td>
+          <td>${maker && fcLeft(x) > 0 ? `<div class="row" style="flex-wrap:nowrap"><input type="number" id="rl-${x.id}" min="1" max="${fcLeft(x)}" step="1" style="width:110px" placeholder="${L("บาท", "baht")}" aria-label="${L("คืนวงเงิน (บาท)", "Release (baht)")}"><input type="text" id="rw-${x.id}" placeholder="${L("เหตุผล", "Reason")}" style="min-width:140px" aria-label="${L("เหตุผล", "Reason")}"><button class="btn" type="button" data-fnrel="${x.id}">${L("คืนวงเงิน", "Release")}</button></div>` : ""}${historyBtn(x.id, x.id)}</td></tr>`).join("")
+          || `<tr><td colspan="7" class="sub">${L("ยังไม่มี", "None yet")}</td></tr>`}</tbody></table></div>
+      ${maker ? `<div class="body"><form class="inline-form" id="fc-form">
+        <div class="f" style="flex:0 1 170px"><label for="fc-kind">${L("ประเภท", "Kind")}</label><select id="fc-kind">${["utility", "rent", "service", "travel"].map(k => `<option value="${k}">${tx(FC_KIND[k])}</option>`).join("")}</select></div>
+        <div class="f" style="flex:2 1 220px"><label for="fc-name">${L("รายการ", "Item")}</label><input type="text" id="fc-name" required></div>
+        <div class="f" style="flex:1 1 160px"><label for="fc-vendor">${L("เจ้าหนี้", "Payee")}</label><input type="text" id="fc-vendor" required></div>
+        <div class="f" style="flex:2 1 240px"><label for="fc-line">${L("รายการจัดสรร", "Allocation line")}</label><select id="fc-line">${lines.map(l => `<option value="${l.id}">${esc(lineLabel(l))} · ${L("คงเหลือ", "free")} ${mb(famHeadroom(l.id))}</option>`).join("")}</select></div>
+        <div class="f" style="flex:0 1 140px"><label for="fc-amt">${L("วงเงิน (บาท)", "Amount (baht)")}</label><input type="number" id="fc-amt" min="1" step="1" required></div>
+        <div class="f" style="flex:0 1 160px"><label for="fc-due">${L("จ่ายงวดสุดท้าย", "Last payment")}</label><input type="date" id="fc-due" value="${FY_END}" required></div>
+        <button class="btn primary" type="submit">${L("บันทึกผูกพัน", "Add commitment")}</button></form></div>` : ""}</section>
+    <section class="panel"><header><h2>${L("รายการเข้าเกณฑ์กันเงินเหลื่อมปี", "Carry-over candidates")}</h2><span class="sp"></span><span class="sub">${L("ผูกพันก่อนสิ้นปี คงค้างตั้งแต่", "Committed before the year end, at least")} ${fmt(c.carryMin)} ${L("บาท และจ่ายงวดสุดท้ายหลัง", "baht left, last payment after")} ${fdate(FY_END)} · ${L("ยื่นใน GFMIS ภายใน", "file in GFMIS by")} ${fdate(c.carryBy)} (${L("ข้อ 105–106", "clauses 105–106")})</span></header>
+      <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("รายการ", "Item")}</th><th>${L("ลงนาม", "Signed")}</th><th>${L("งวดสุดท้าย", "Last payment")}</th><th class="n">${L("คงค้าง (บาท)", "Left (baht)")}</th><th></th></tr></thead>
+        <tbody>${cc.map(x => `<tr><td class="mono">${x.id}</td><td>${esc(tx(x.name))}<div class="sub">${esc(tx(x.vendor))}</div></td><td class="sub">${fdate(x.signed)}</td><td class="sub">${fdate(x.due)}</td><td class="n">${fmt(fcLeft(x))}</td>
+          <td>${carrySent(x.id) ? tag(L("ส่งให้ M06 แล้ว", "Sent to M06"), "p-ok") : maker ? `<button class="btn" type="button" data-fncf="${x.id}">${L("เสนอกันเงิน (M06)", "Propose carry-over (M06)")}</button>` : ""}</td></tr>`).join("")
+          || `<tr><td colspan="6" class="sub">${L("ไม่มีรายการเข้าเกณฑ์", "No commitment meets the rule")}</td></tr>`}</tbody></table></div></section>`;
+  };
+}
+
+// ---------- page and bindings ----------
+VIEWS.finance = () => {
+  const n = NAV.find(x => x.id === "finance");
+  if (!FIN[FIN_TAB] || !n.tabs.some(t => t[0] === FIN_TAB)) FIN_TAB = "home";
+  const t = n.tabs.find(x => x[0] === FIN_TAB);
+  const sub = { home: L("งานที่มีกำหนดเวลาตามระเบียบ สิ่งที่รออนุมัติ และวงเงินผูกพัน", "Work on a regulation clock, what is waiting, and commitments"),
+    chain: L("วงเงินผูกพันทุกแหล่ง ใบสั่งซื้อใน GFMIS และรายการกันเงินเหลื่อมปี", "Every commitment, GFMIS purchase orders and carry-over candidates"),
+    pay: L("ขอเบิกงวดที่ตรวจรับแล้ว และอนุมัติเบิกจ่าย", "Request accepted phases and approve payments"),
+    recon: L("กระทบยอดการจ่ายกับไฟล์รายงานจาก GFMIS", "Match payments with GFMIS report files") }[FIN_TAB];
+  return `
+  <div class="head"><div><div class="eyebrow">Fisko Finance · ${t[2]}</div><h1>${tx(t[1])}</h1>
+    <p>${sub} · ${L("GFMIS เป็นระบบบันทึกบัญชีและจ่ายเงินทางการ", "GFMIS stays the official books and payment channel")} · ${fyLabel(FAM_FY)}</p></div></div>
+  ${FIN[FIN_TAB]()}`;
+};
+{
+  const bind = BIND.finance;
+  BIND.finance = () => {
+    bind();
+    $$("[data-jump]").forEach(b => (b.onclick = () => jump(b.dataset.jump)));
+    $$("[data-fnpo]").forEach(b => (b.onclick = () => { FN_PO = FN_PO === b.dataset.fnpo ? null : b.dataset.fnpo; route(); }));
+    $$("[data-poform]").forEach(f => (f.onsubmit = e => {
+      e.preventDefault();
+      const id = f.dataset.poform, no = $("#po-" + id).value.trim(), r = fcRef(id);
+      if (!/^\d{10}$/.test(no)) { toast(L("เลขที่ PO ต้องเป็นตัวเลข 10 หลัก", "The PO number must be 10 digits")); return; }
+      if (finCommits().some(x => x.gfPo && x.gfPo.no === no)) { toast(L("เลขที่ PO นี้ใช้กับรายการอื่นแล้ว", "This PO number is already used")); return; }
+      r.gfPo = { no, t: nowIso(), by: me().id }; FN_PO = null;
+      audit(["บันทึกเลขที่ใบสั่งซื้อจาก GFMIS", "Recorded a GFMIS purchase order"], `${id} · PO ${no}`);
+      commit(); renderShell(); route(); toast(L("บันทึกเลขที่ PO แล้ว · ขอเบิกได้เมื่อตรวจรับ", "PO saved · payments can be requested after acceptance"));
+    }));
+    $$("[data-fnrel]").forEach(b => (b.onclick = () => {
+      const id = b.dataset.fnrel, r = fcRef(id), x = finCommits().find(y => y.id === id), amt = Math.round(Number($("#rl-" + id).value)), why = $("#rw-" + id).value.trim();
+      if (!(amt > 0) || amt > fcLeft(x)) { toast(L("ยอดคืนต้องมากกว่าศูนย์และไม่เกินยอดคงค้าง", "The release must be above zero and within what is left")); return; }
+      if (why.length < 5) { toast(L("ระบุเหตุผลอย่างน้อย 5 ตัวอักษร", "Give a reason of at least 5 characters")); return; }
+      r.released = (r.released || 0) + amt; (r.log = r.log || []).push({ t: nowIso(), by: me().id, amt, why });
+      audit(["คืนวงเงินผูกพัน", "Released a commitment"], `${id} · ${fmt(amt)} · ${why}`);
+      notify(["plan"], [`การเงินคืนวงเงินผูกพัน ${id} ${fmt(amt)} บาท ไปที่รายการ ${r.line}`, `Finance released ${fmt(amt)} baht of ${id} back to line ${r.line}`], "alloc-lines");
+      commit(); route(); toast(L("คืนวงเงินแล้ว", "Released"));
+    }));
+    const ff = $("#fc-form");
+    if (ff) ff.onsubmit = e => {
+      e.preventDefault();
+      const line = $("#fc-line").value, amount = Math.round(Number($("#fc-amt").value));
+      if (amount > famHeadroom(line)) { toast(L("เกินวงเงินคงเหลือของรายการจัดสรร (ข้อ 18)", "More than the line has left (clause 18)")); return; }
+      const id = `CM-${FAM_FY}-${String((S.fcommit || []).length + 1).padStart(3, "0")}`, nm = $("#fc-name").value.trim(), vd = $("#fc-vendor").value.trim();
+      (S.fcommit = S.fcommit || []).push({ id, kind: $("#fc-kind").value, name: [nm, nm], vendor: [vd, vd], line, amount, released: 0, paid: 0, signed: TODAY, due: $("#fc-due").value, gfPo: null, by: me().id, t: nowIso() });
+      audit(["บันทึกวงเงินผูกพัน", "Added a commitment"], `${id} · ${fmt(amount)}`);
+      commit(); renderShell(); route(); toast(amount >= fcfg().poMin ? L("บันทึกแล้ว · ต้องบันทึกเลขที่ PO ใน GFMIS ก่อนขอเบิก", "Saved · record the GFMIS PO before any payment") : L("บันทึกแล้ว", "Saved"));
+    };
+    $$("[data-fncf]").forEach(b => (b.onclick = () => {
+      const x = finCommits().find(y => y.id === b.dataset.fncf), C = S.carry;
+      const c = { id: `CF-2570-${String(C.reqs.length + 1).padStart(2, "0")}`, line: x.line, amount: fcLeft(x), po: x.gfPo ? x.gfPo.no : x.id, poDate: x.signed, vendor: tx(x.vendor), status: "pending", t: nowIso(), by: me().id, src: x.id };
+      const bad = cfChecks(c).filter(k => !k[0]);
+      if (bad.length) { toast(`${L("ยังเสนอไม่ได้", "Can't propose yet")}: ${bad.map(k => k[1]).join(", ")}`); return; }
+      C.reqs.push(c);
+      audit(["เสนอกันเงินไว้เบิกเหลื่อมปีจากทะเบียนผูกพัน", "Proposed a carry-over from the commitments register"], `${c.id} · ${x.id} · ${fmt(c.amount)}`);
+      notify(["exec", "plan"], [`การเงินเสนอกันเงินเหลื่อมปี ${c.id} (${x.id}) รออนุมัติ`, `Finance proposed carry-over ${c.id} (${x.id}) for approval`], "alloc-carry");
+      commit(); renderShell(); route(); toast(L("ส่งให้ M06 กันเงินเหลื่อมปีแล้ว · รอผู้บริหารอนุมัติ", "Sent to M06 carry-over · waiting for executive approval"));
+    }));
+  };
+}
+
+// ---------- the PO check joins the payment gate (R-11) ----------
+{
+  const gate = payGate;
+  payGate = function (c, ph) {
+    const g = gate(c, ph);
+    if (c.amount >= fcfg().poMin) {
+      const ok = !!c.gfPo;
+      g.checks.push({ ok, label: L("มีใบสั่งซื้อ (PO) ใน GFMIS แล้ว (ข้อ 28)", "A GFMIS purchase order is recorded (clause 28)") });
+      if (!ok) { g.noPo = true; g.pass = false; g.ok = false; }
+    }
+    return g;
+  };
+}
+
+// ---------- menu, role, tasks ----------
+{
+  const n = NAV.find(x => x.id === "finance");
+  n.tabs = [["home", ["ภาพรวมการเงิน", "Finance overview"], "F1"], ["chain", ["วงเงินผูกพันและใบสั่งซื้อ", "Commitments and POs"], "F2"], ["pay", ["ใบขอเบิกและอนุมัติจ่าย", "Payment requests"], "F3"], ["recon", ["GFMIS และกระทบยอด", "GFMIS and reconciliation"], "F7"]];
+  n.label = ["Fisko Finance · การเงิน", "Fisko Finance"];
+  FIN_TAB = "home";
+  APPS.finance.desc = ["ผูกพัน เบิกจ่าย และการเงินหน่วยงาน", "Commitments, payments and agency finance"];
+  const rs = renderShell;
+  renderShell = function () {
+    NAV.forEach(x => { if (x.roles.includes("fin") && !x.roles.includes("finhead")) x.roles.push("finhead"); });
+    if (typeof MATRIX !== "undefined" && !MATRIX.finhead) MATRIX.finhead = MATRIX.fin.slice();
+    return rs.apply(this, arguments);
+  };
+  const tb = tabBadge;
+  tabBadge = function (nid, tab) {
+    if (nid === "finance" && tab === "home" && isFinRole()) { const k = finClocks().filter(x => daysUntil(x.due) <= 2).length; return k ? `<span class="badge">${k}</span>` : ""; }
+    if (nid === "finance" && tab === "chain" && ROLE === "fin") { const k = finCommits().filter(needsPo).length; return k ? `<span class="badge">${k}</span>` : ""; }
+    return tb(nid, tab);
+  };
+  const mt = myTasks;
+  myTasks = function () {
+    const t = mt.apply(this, arguments);
+    if (ROLE === "fin") finCommits().filter(needsPo).forEach(x => t.push({ title: `${L("บันทึกเลขที่ PO ใน GFMIS", "Record the GFMIS PO for")} ${x.id}`, sub: `${tx(x.vendor)} · ${fmt(x.amount)} ${L("บาท", "baht")}`, due: TODAY, link: "fnc-chain", cls: "p-warn" }));
+    if (ROLE === "finhead") {
+      finClocks().filter(k => daysUntil(k.due) <= 1).forEach(k => t.push({ title: `${L("ติดตาม", "Follow up")}: ${k.title}`, sub: `${k.sub} · ${k.src}`, due: k.due, link: k.link, cls: daysUntil(k.due) < 0 ? "p-bad" : "p-warn" }));
+      if (!t.length) t.push({ title: L("ไม่มีงานค้าง", "Nothing waiting for you"), sub: "", due: TODAY, link: "fnc-home", cls: "p-mute" });
+    }
+    return t;
+  };
+}
+
+// ---------- seed (called from the shared seed builder) ----------
+function seedFinanceFN1(s) {
+  const sample = (s.org[1] || "").startsWith("Sample"), fin = s.users.find(u => u.role === "fin");
+  if (!s.users.some(u => u.role === "finhead")) s.users.push({ id: "u21", role: "finhead", unit: fin ? fin.unit : s.units[1].id, primary: true, mfa: true, active: true,
+    name: sample ? ["ศิริพร คลังดี", "Siriporn Khlangdee"] : ["สมพร การคลัง", "Somporn Kankhlang"] });
+  s.fcfg = {};
+  // The two running contracts already have their POs; contracts created in the demo start without one.
+  (s.contracts || []).forEach((c, i) => (c.gfPo = { no: String(7000012345 + i * 111), t: c.signed + "T15:00", by: fin ? fin.id : "" }));
+  const ope = s.allocs[2570].lines.filter(l => l.type === "ope").sort((a, b) => b.amount - a.amount), L0 = ope[0], L1 = ope[1] || ope[0], L2 = ope[2] || ope[0];
+  const by = fin ? fin.id : "";
+  s.fcommit = [
+    { id: "CM-2570-001", kind: "utility", name: ["ค่าไฟฟ้า ปีงบประมาณ 2570 (ประมาณการ)", "Electricity, FY2570 (estimate)"], vendor: ["การไฟฟ้านครหลวง", "Metropolitan Electricity Authority"], line: L0.id, amount: 1800000, released: 0, paid: 150000, signed: "2026-10-01", due: "2027-09-30", gfPo: null, by, t: "2026-10-01T09:00" },
+    { id: "CM-2570-002", kind: "rent", name: ["ค่าเช่าอาคารสำนักงานสาขา 12 เดือน", "Branch office rent, 12 months"], vendor: ["บริษัท ตัวอย่างพร็อพเพอร์ตี้ จำกัด", "Sample Property Co., Ltd."], line: L1.id, amount: 960000, released: 0, paid: 0, signed: "2026-10-05", due: "2027-09-30", gfPo: null, by, t: "2026-10-05T10:00" },
+    { id: "CM-2570-003", kind: "service", name: ["บำรุงรักษาระบบสารสนเทศ (สัญญาต่อเนื่อง)", "IT system maintenance (continuing agreement)"], vendor: ["บริษัท ตัวอย่างระบบ จำกัด", "Sample Systems Co., Ltd."], line: L2.id, amount: 1200000, released: 0, paid: 300000, signed: "2026-10-01", due: "2027-11-30", gfPo: { no: "7000012001", t: "2026-10-02T11:00", by }, by, t: "2026-10-01T09:30" },
+    { id: "CM-2570-004", kind: "travel", name: ["คำสั่งเดินทางไปราชการ ตรวจติดตามโครงการภาคเหนือ", "Travel order: northern project monitoring"], vendor: ["ผู้เดินทางตามคำสั่ง", "Travellers on the order"], line: L0.id, amount: 4800, released: 0, paid: 0, signed: "2026-10-12", due: "2026-11-20", gfPo: null, by, t: "2026-10-12T14:00" },
+  ];
+}
+
 /* ---- 67-procai.js ---- */
 // Fisko Procurement round 16 (P4 of the detailed design): AI use cases for procurement. The prototype uses
 // rules and statistics only, with no model call (version "rules-1"). Every use is logged in the M09 AI log,
@@ -11738,6 +12054,240 @@ BIND_ADMIN.bcfg = () => {
     audit(["ปรับค่าตั้งงบประมาณ (AI และสัญญาณ)", "Changed a budget AI and signals setting"], `${inp.dataset.bc}: ${old} → ${v}`); commit(); route();
   }));
   const r = $("#bc-reset"); if (r) r.onclick = () => { S.bcfg = {}; delete S.spendTargets; audit(["คืนค่าตั้งต้นงบประมาณ (AI และสัญญาณ)", "Restored budget AI and signals defaults"], ""); commit(); route(); };
+};
+
+/* ---- 70-profile.js ---- */
+// Fisko Procurement round 36 (T1 of design v0.3, chapter 18): the agency profile and feature switches (FR-PR-63),
+// automatic document numbers (FR-PR-80), public hearing of the TOR (FR-PR-64, R-25), RFQ and invitation letters
+// (FR-PR-65), extra item fields with VAT and ERP references (FR-PR-67) and price extras (FR-PR-68).
+// Government and state-enterprise agencies use the same product; what differs is a profile in M10.
+// E-mail, vendor replies and price index files are simulated (D-P17). The small-budget method (FR-PR-85) is deferred.
+
+const PROF_TYPES = { gov: ["ส่วนราชการ", "Government agency"], soe: ["รัฐวิสาหกิจ", "State enterprise"] };
+const PROF_FEATS = [
+  { k: "hearing", round: "T1", gov: false, soe: true, th: "รับฟังความคิดเห็น TOR", en: "Public hearing of the TOR", tor: "ผนวก 12 s.2", built: true },
+  { k: "rfq", round: "T1", gov: true, soe: true, th: "ใบสอบถามราคาและหนังสือเชิญ", en: "RFQ and invitation letters", tor: "ผนวก 12 s.1", built: true },
+  { k: "erpRef", round: "T1", gov: false, soe: true, th: "รหัสอ้างอิง ERP (WBS ใบขอซื้อ ใบสั่งซื้อ)", en: "ERP reference codes (WBS, PR, PO)", tor: "5.2", built: true },
+  { k: "vendorPortal", round: "T2", gov: false, soe: true, th: "ผู้ขายเข้าระบบ (Vendor portal)", en: "Vendor portal", tor: "5.1.7" },
+  { k: "smeMit", round: "T2", gov: true, soe: true, th: "สิทธิพิเศษ SME และสินค้า MiT", en: "SME and MiT preference", tor: "ผนวก 12 s.3.1.1.1.4–6" },
+  { k: "bidSec", round: "T2", gov: true, soe: true, th: "หลักประกันการเสนอราคา", en: "Bid security", tor: "5.1.16" },
+  { k: "sampleTest", round: "T2", gov: false, soe: true, th: "ตัวอย่างและทดสอบ (Type Test)", en: "Samples and type tests", tor: "ผนวก 12 s.4.5–4.7" },
+  { k: "drawing", round: "T3", gov: false, soe: true, th: "อนุมัติแบบ", en: "Drawing approval", tor: "ผนวก 12 s.4.2" },
+  { k: "commFee", round: "T3", gov: true, soe: true, th: "ค่าตอบแทนกรรมการ", en: "Committee fees", tor: "5.1.6" },
+  { k: "smallBudget", round: "deferred", gov: false, soe: true, th: "วิธีวงเงินเล็กน้อยตามระเบียบ (MR-06)", en: "Small-budget method (MR-06)", tor: "ผนวก 12 s.2" },
+];
+const PROF_DEFAULT_P = { hearingMin: 5000000, hearingDays: 7, rfqMin: 3, rfqDays: 3, vatPct: 7 };
+const DOC_TYPES = { rfq: ["ใบสอบถามราคา / หนังสือเชิญ", "RFQ / invitation letter"], hear: ["ประกาศรับฟังความคิดเห็น TOR", "Hearing notice"] };
+const feat = k => !!(S.prof && S.prof.sw && S.prof.sw[k]);
+const profType = () => (S.prof ? S.prof.type : "gov");
+
+function profDefaults(type) { const sw = {}; PROF_FEATS.forEach(f => (sw[f.k] = !!f[type])); return sw; }
+
+// ---------- document numbers (FR-PR-80) ----------
+function docNoFmt(type, n, unitId) {
+  const f = S.docno.fmt[type], u = f.unit && unitId ? (unitOf(unitId).code || "") : "";
+  return `${f.pfx}${u ? "-" + u : ""}/${String(n).padStart(f.pad, "0")}/${FAM_FY}`;
+}
+function docNo(type, unitId, ref) {
+  const f = S.docno.fmt[type], key = `${type}|${FAM_FY}|${f.unit && unitId ? unitId : ""}`;
+  const n = (S.docno.ctr[key] || 0) + 1; S.docno.ctr[key] = n;
+  const no = docNoFmt(type, n, unitId);
+  S.docno.log.unshift({ no, type, t: nowIso(), by: me().id, ref: ref || "" }); if (S.docno.log.length > 300) S.docno.log.length = 300;
+  return no;
+}
+
+// ---------- seed ----------
+function seedProfile(s) {
+  s.prof = { type: "gov", sw: profDefaults("gov"), p: { ...PROF_DEFAULT_P } };
+  s.docno = { fmt: { rfq: { pfx: "พด", pad: 3, unit: true }, hear: { pfx: "รพ", pad: 3, unit: false } }, ctr: {}, log: [] };
+  s.priceIdx = [
+    { k: "oil", name: ["ราคาน้ำมันดีเซล (บาท/ลิตร)", "Diesel price (baht/litre)"], date: "2026-09-30", value: 31.2 }, { k: "oil", name: ["ราคาน้ำมันดีเซล (บาท/ลิตร)", "Diesel price (baht/litre)"], date: "2026-10-15", value: 32.1 },
+    { k: "cu", name: ["ทองแดง LME (ดอลลาร์/ตัน)", "LME copper (USD/tonne)"], date: "2026-09-30", value: 9480 }, { k: "cu", name: ["ทองแดง LME (ดอลลาร์/ตัน)", "LME copper (USD/tonne)"], date: "2026-10-15", value: 9710 },
+    { k: "fx", name: ["อัตราแลกเปลี่ยน USD/THB", "USD/THB"], date: "2026-09-30", value: 34.9 }, { k: "fx", name: ["อัตราแลกเปลี่ยน USD/THB", "USD/THB"], date: "2026-10-15", value: 35.2 },
+  ];
+}
+
+// ---------- case helpers ----------
+const canProf = c => isProcRole() && !c.cancelled;
+const planEst = c => (c.ref ? c.ref.amount : famPlan(c.plan).est);
+const hearingReq = c => feat("hearing") && needsCompetition(c) && !!c.method && !!((c.extra && c.extra.hearing) || planEst(c) >= S.prof.p.hearingMin);
+const hearingDone = c => !!(c.hearing && c.hearing.closedAt && !(c.hearing.rev && c.hearing.rev.status === "pending"));
+const rfqInvited = c => new Set((c.rfq || []).flatMap(r => r.rows.map(x => x.v))).size;
+Object.assign(CASE_EV, {
+  hearing_open: ["เปิดรับฟังความคิดเห็น TOR", "TOR hearing opened"], hearing_comment: ["บันทึกความคิดเห็น", "Hearing comment recorded"], hearing_done: ["สรุปผลรับฟังความคิดเห็น", "Hearing concluded"],
+  hearing_rev: ["เสนอแก้ TOR หลังรับฟัง", "TOR revision proposed after the hearing"], hearing_rev_ok: ["อนุมัติ TOR ฉบับแก้", "Revised TOR approved"], hearing_again: ["เปิดรับฟังซ้ำ", "Hearing reopened"],
+  rfq_sent: ["ส่งใบสอบถามราคา / หนังสือเชิญ", "RFQ or invitation sent"], rfq_reply: ["ผู้ขายตอบกลับ", "Supplier replied"], extra: ["แก้ข้อมูลเพิ่มเติมของรายการ", "Item details edited"],
+});
+
+// extra checks (R-25 and the invitation minimum)
+{
+  const base = caseChecks;
+  caseChecks = c => {
+    const out = base(c), n = caseState(c), ok = (v, th, en) => ({ ok: !!v, label: L(th, en) });
+    if (c.cancelled) return out;
+    if (n === 4 && hearingReq(c)) out.push(ok(hearingDone(c), "สรุปผลรับฟังความคิดเห็น TOR ก่อนประกาศเชิญชวน (R-25)", "Conclude the TOR hearing before the announcement (R-25)"));
+    if (n === 4 && feat("rfq") && c.method === "selective") out.push(ok(rfqInvited(c) >= S.prof.p.rfqMin, `ส่งหนังสือเชิญผู้ขายอย่างน้อย ${S.prof.p.rfqMin} ราย`, `Invite at least ${S.prof.p.rfqMin} suppliers`));
+    return out;
+  };
+}
+// tasks: RFQ replies that are due
+{
+  const base = famTasks;
+  famTasks = R => {
+    base(R);
+    if (!S.cases || !feat("rfq") || !isProcRole()) return;
+    S.cases.filter(c => !c.cancelled).forEach(c => (c.rfq || []).forEach(r => { const open = r.rows.filter(x => !x.reply).length; if (open && r.due <= addDays(TODAY, 1)) R(`${L("ติดตามคำตอบ RFQ", "Chase RFQ replies")} ${r.no}`, `${c.id} · ${open} ${L("ราย", "suppliers")}`, r.due, "case:" + c.id, r.due < TODAY ? "p-bad" : "p-warn"); }));
+  };
+}
+
+// ---------- case panels ----------
+CASE_PANELS.push(c => {
+  const n = caseState(c); if (!hearingReq(c) && !c.hearing) return ""; if (n < 3) return "";
+  const h = c.hearing, ed = canProf(c) && n <= 4, head = ROLE === "prochead", need = hearingReq(c), P = S.prof.p;
+  const st = !h ? tag(L("ยังไม่เปิดรับฟัง", "Not opened"), need ? "p-warn" : "p-mute") : hearingDone(c) ? tag(L("สรุปผลแล้ว", "Concluded"), "p-ok") : h.rev && h.rev.status === "pending" ? tag(L("รออนุมัติ TOR ฉบับแก้", "Revised TOR awaiting approval"), "p-warn") : h.closedAt ? tag(L("สรุปผลแล้ว", "Concluded"), "p-ok") : tag(L("เปิดรับฟังอยู่", "Open"), "p-info");
+  const form = !h ? (ed ? `<form class="inline-form" id="hr-open"><div class="f" style="flex:0 1 160px"><label for="hr-s">${L("เริ่มรับฟัง", "From")}</label><input type="date" id="hr-s" value="${TODAY}" required></div>
+      <div class="f" style="flex:0 1 160px"><label for="hr-e">${L("ถึง", "To")}</label><input type="date" id="hr-e" value="${addDays(TODAY, P.hearingDays)}" required></div><button class="btn" type="submit">${L("เปิดรับฟังความคิดเห็น", "Open the hearing")}</button></form>` : `<span class="sub">${L("ยังไม่ได้เปิดรับฟัง", "Not opened yet")}</span>`)
+    : `<div class="row"><span class="mono sub">${esc(h.docNo)}</span><span class="sub">${fdate(h.start)} – ${fdate(h.end)}</span>${h.round > 1 ? tag(`${L("ครั้งที่", "Round")} ${h.round}`, "p-mute") : ""}</div>
+      ${h.comments.length ? `<div class="tbl-wrap"><table><thead><tr><th>${L("ผู้ให้ความเห็น", "From")}</th><th>${L("ความเห็น", "Comment")}</th><th>${L("การตอบ", "Response")}</th><th>${L("วันที่", "Date")}</th></tr></thead><tbody>${h.comments.map(k => `<tr><td>${esc(k.who)}</td><td>${esc(k.text)}</td><td class="sub">${esc(k.resp || "—")}</td><td class="sub">${fdate(k.t)}</td></tr>`).join("")}</tbody></table></div>` : `<div class="sub">${L("ยังไม่มีความเห็น", "No comments yet")}</div>`}
+      ${h.summary ? `<div class="callout" style="margin:8px 0 0"><b>${L("สรุปผล", "Conclusion")}</b>${esc(h.summary)}${h.revised ? `<div class="sub">${L("มีการแก้ TOR", "The TOR was changed")}${h.rev ? ` · ${h.rev.status === "pending" ? L("รอหัวหน้าพัสดุอนุมัติ", "waiting for the head of procurement") : L("อนุมัติแล้ว", "approved")}` : ""}</div>` : ""}</div>` : ""}
+      ${ed && !h.closedAt ? `<form class="inline-form" id="hr-cm" style="margin-top:8px"><div class="f" style="flex:0 1 180px"><label for="hr-w">${L("ผู้ให้ความเห็น", "From")}</label><input type="text" id="hr-w" required></div><div class="f" style="flex:2 1 220px"><label for="hr-t">${L("ความเห็น", "Comment")}</label><input type="text" id="hr-t" required></div><div class="f" style="flex:1 1 200px"><label for="hr-r">${L("การตอบ", "Response")}</label><input type="text" id="hr-r"></div><button class="btn" type="submit">+ ${L("เพิ่ม", "Add")}</button></form>
+        <form class="inline-form" id="hr-close" style="margin-top:8px"><div class="f" style="flex:2 1 280px"><label for="hr-sum">${L("สรุปผลการรับฟัง", "Conclusion")}</label><input type="text" id="hr-sum" required></div>
+          <div class="f" style="flex:0 1 200px"><label class="field-inline"><input type="checkbox" id="hr-rev"> ${L("ต้องแก้ TOR", "The TOR must change")}</label></div>
+          ${h.end > TODAY ? `<div class="f" style="flex:1 1 220px"><label for="hr-early">${L("เหตุผลปิดก่อนครบกำหนด", "Reason for closing early")}</label><input type="text" id="hr-early" placeholder="${L("ยังไม่ถึง", "Ends")} ${fdate(h.end)}"></div>` : ""}<button class="btn primary" type="submit">${L("สรุปผล", "Conclude")}</button></form>` : ""}
+      ${h.rev && h.rev.status === "pending" ? (head ? `<div class="body"><button class="btn primary" type="button" id="hr-revok">${L("อนุมัติ TOR ฉบับแก้ (สร้างเวอร์ชันใหม่)", "Approve the revised TOR (new version)")}</button></div>` : `<div class="sub">${L("รอหัวหน้าพัสดุอนุมัติ", "Waiting for the head of procurement")}</div>`) : ""}
+      ${ed && h.closedAt && h.revised && h.rev && h.rev.status === "approved" ? `<div class="body"><button class="btn" type="button" id="hr-again">${L("เปิดรับฟังซ้ำ", "Reopen the hearing")}</button></div>` : ""}`;
+  return `<section class="panel"><header><h2>${L("รับฟังความคิดเห็น TOR", "Public hearing of the TOR")}</h2><span class="sp"></span>${st}<span class="mono sub">FR-PR-64 · R-25</span></header>
+    <div class="body">${need ? `<div class="sub">${L("โปรไฟล์กำหนดให้รับฟัง: วงเงินตั้งแต่", "Required by the profile: value from")} ${fmt(P.hearingMin)} ${L("บาท หรือรายการที่ติดธงรับฟัง", "baht, or an item flagged for hearing")}</div>` : `<div class="sub">${L("ไม่บังคับสำหรับแฟ้มนี้ แต่ทำได้", "Not required for this case, but allowed")}</div>`}${form}</div></section>`;
+});
+
+CASE_PANELS.push(c => {
+  const n = caseState(c); if (!feat("rfq") || n < 3 || !c.method) return "";
+  const R = c.rfq || [], ed = canProf(c) && n >= 3 && n <= 6, P = S.prof.p, V = S.vendors || [];
+  return `<section class="panel"><header><h2>${L("ใบสอบถามราคาและหนังสือเชิญ", "RFQ and invitation letters")}</h2><span class="sp"></span><span class="sub">${L("ผู้ได้รับเชิญแล้ว", "Invited")} ${rfqInvited(c)}${c.method === "selective" ? ` / ${P.rfqMin} ${L("ขั้นต่ำ", "minimum")}` : ""}</span><span class="mono sub">FR-PR-65 · ${L("จำลองการส่ง", "send is simulated")}</span></header>
+    ${R.length ? R.map((r, ri) => `<div class="body"><div class="row"><b class="mono">${esc(r.no)}</b><span class="sub">${L("ส่งเมื่อ", "Sent")} ${fdate(r.sent)} · ${L("ตอบภายใน", "reply by")} ${fdate(r.due)}</span>${r.rows.some(x => !x.reply) && r.due < TODAY ? tag(L("เลยกำหนด", "Overdue"), "p-bad") : ""}</div>
+      <div class="tbl-wrap"><table><thead><tr><th>${L("ผู้ขาย", "Supplier")}</th><th>${L("สถานะ", "Status")}</th><th class="n">${L("ราคา (บาท)", "Price (baht)")}</th><th></th></tr></thead><tbody>${r.rows.map((x, xi) => `<tr><td>${esc(x.v)}</td><td>${x.reply ? tag(`${L("ตอบแล้ว", "Replied")} ${fdate(x.reply.d)}`, "p-ok") : tag(L("รอคำตอบ", "Waiting"), "p-warn")}</td>
+        <td class="n">${x.reply ? (x.reply.price ? fmt(x.reply.price) : L("ไม่เสนอ", "declined")) : ed ? `<input type="number" min="0" step="1" id="rq-p-${ri}-${xi}" style="width:130px" aria-label="${L("ราคา", "Price")}">` : "—"}</td>
+        <td>${!x.reply && ed ? `<button class="btn" type="button" data-rqrep="${ri}|${xi}">${L("บันทึกคำตอบ", "Record reply")}</button>` : ""}</td></tr>`).join("")}</tbody></table></div></div>`).join("") : `<div class="body sub">${L("ยังไม่ได้ส่ง", "None sent yet")}</div>`}
+    ${ed ? `<div class="body"><form id="rq-form"><div class="sub" style="margin-bottom:6px">${L("เลือกผู้ขาย (ผู้ทิ้งงานเลือกไม่ได้)", "Pick suppliers (anyone on the abandoned-work list is blocked)")}</div>
+      <div class="row" style="flex-wrap:wrap">${V.map((v, i) => { const bl = blHit(v.name); return `<label class="field-inline" style="min-width:230px"><input type="checkbox" name="rq-v" value="${i}" ${bl ? "disabled" : ""}> ${esc(v.name)}${bl ? ` ${tag(L("ผู้ทิ้งงาน", "Blocked"), "p-bad")}` : ""}</label>`; }).join("")}</div>
+      <div class="inline-form" style="margin-top:8px"><div class="f" style="flex:0 1 170px"><label for="rq-d">${L("ตอบภายใน", "Reply by")}</label><input type="date" id="rq-d" value="${addDays(TODAY, P.rfqDays)}" required></div><button class="btn primary" type="submit">${L("ออกเลขที่และส่งหนังสือ", "Issue a number and send")}</button></div></form></div>` : ""}</section>`;
+});
+
+const VAT_CALC = (est, mode) => { const r = S.prof.p.vatPct / 100; return mode === "in" ? { inc: est, ex: Math.round(est / (1 + r)), vat: est - Math.round(est / (1 + r)) } : { ex: est, vat: Math.round(est * r), inc: est + Math.round(est * r) }; };
+CASE_PANELS.push(c => {
+  const n = caseState(c); if (n < 1) return "";
+  const x = c.extra || {}, ed = canProf(c) && n <= 8, est = planEst(c), v = VAT_CALC(est, x.vatMode || "ex"), erp = feat("erpRef");
+  const inp = (id, lbl, val, type, w) => `<div class="f" style="flex:${w || "1 1 180px"}"><label for="${id}">${lbl}</label><input type="${type || "text"}" id="${id}" value="${esc(val || "")}" ${ed ? "" : "disabled"}></div>`;
+  return `<section class="panel"><header><h2>${L("ข้อมูลเพิ่มเติมของรายการ", "Item details")}</h2><span class="sp"></span><span class="mono sub">FR-PR-67</span></header>
+    <div class="body"><form class="inline-form" id="ex-form">
+      <div class="f" style="flex:1 1 100%"><label class="field-inline"><input type="checkbox" id="ex-hear" ${x.hearing ? "checked" : ""} ${ed ? "" : "disabled"}> ${L("ติดธงรับฟังความคิดเห็น", "Flag for public hearing")}</label>
+        <label class="field-inline"><input type="checkbox" id="ex-sme" ${x.sme ? "checked" : ""} ${ed ? "" : "disabled"}> ${L("เน้นผู้ประกอบการ SME", "Favour SMEs")}</label><label class="field-inline"><input type="checkbox" id="ex-mit" ${x.mit ? "checked" : ""} ${ed ? "" : "disabled"}> ${L("สินค้าผลิตในประเทศ (MiT)", "Made in Thailand (MiT)")}</label></div>
+      ${inp("ex-std", L("มาตรฐานคุณภาพ (มอก. ISO)", "Quality standard"), x.std)}${inp("ex-spec", L("เลขอ้างอิง Spec / Drawing", "Spec or drawing no."), x.spec)}
+      ${inp("ex-short", L("ผู้ขายที่ควรสอบถาม (Short list)", "Short list of suppliers"), x.short, "text", "2 1 260px")}
+      ${inp("ex-deliv", L("กำหนดส่งมอบ", "Delivery date"), x.deliv, "date", "0 1 170px")}${inp("ex-place", L("สถานที่ส่งมอบ", "Delivery place"), x.place)}
+      <div class="f" style="flex:0 1 200px"><label for="ex-vat">${L("วงเงินที่บันทึกเป็น", "Amount is")}</label><select id="ex-vat" ${ed ? "" : "disabled"}><option value="ex" ${x.vatMode !== "in" ? "selected" : ""}>${L("ไม่รวมภาษีมูลค่าเพิ่ม", "Excluding VAT")}</option><option value="in" ${x.vatMode === "in" ? "selected" : ""}>${L("รวมภาษีมูลค่าเพิ่ม", "Including VAT")}</option></select></div>
+      ${erp ? `${inp("ex-wbs", L("WBS", "WBS"), x.wbs, "text", "0 1 150px")}${inp("ex-pr", L("เลขที่ใบขอซื้อ (ERP)", "PR no. (ERP)"), x.pr, "text", "0 1 170px")}${inp("ex-po", L("เลขที่ใบสั่งซื้อ (ERP)", "PO no. (ERP)"), x.po, "text", "0 1 170px")}` : ""}
+      ${ed ? `<button class="btn" type="submit">${L("บันทึก", "Save")}</button>` : ""}</form>
+      <div class="sub" style="margin-top:8px">${L("วงเงิน", "Amount")}: ${L("ไม่รวมภาษี", "ex VAT")} <b>${fmt(v.ex)}</b> · ${L("ภาษี", "VAT")} ${S.prof.p.vatPct}% <b>${fmt(v.vat)}</b> · ${L("รวมภาษี", "inc VAT")} <b>${fmt(v.inc)}</b> ${L("บาท", "baht")}${erp ? ` · ${tag(L("รหัส ERP เป็นช่องอ้างอิง ยังไม่แลกเปลี่ยนข้อมูล", "ERP codes are references only; nothing is exchanged"), "p-mute")}` : ""}</div></div></section>`;
+});
+
+// price extras: against the last purchase in the same category, and the imported index values (FR-PR-68)
+function lastPurchase(c) {
+  const cat = famPlan(c.plan).cat; if (!cat) return null;
+  const prev = S.contracts.filter(k => k.plan !== c.plan && famPlan(k.plan).cat === cat).sort((a, b) => (b.signed || b.start || "").localeCompare(a.signed || a.start || ""))[0];
+  return prev ? { id: prev.id, amount: prev.amount } : null;
+}
+CASE_PANELS.push(c => {
+  const n = caseState(c); if (n < 3 || n > 8) return "";
+  const lp = lastPurchase(c), ref = c.ref && c.ref.amount, I = S.priceIdx || [], ed = isProcRole();
+  const keys = [...new Set(I.map(i => i.k))], latest = k => I.filter(i => i.k === k).sort((a, b) => b.date.localeCompare(a.date)), pct = (a, b) => (b ? ((a - b) / b) * 100 : 0);
+  return `<section class="panel"><header><h2>${L("ราคากลาง: เทียบและดัชนีราคา", "Reference price: comparison and indices")}</h2><span class="sp"></span><span class="mono sub">FR-PR-68</span></header>
+    <div class="body"><div class="sub">${L("เทียบกับการซื้อครั้งล่าสุดในหมวดเดียวกัน", "Against the last purchase in the same category")}: ${lp && ref ? `<b>${lp.id}</b> ${fmt(lp.amount)} ${L("บาท", "baht")} → ${L("ราคากลางนี้", "this reference price")} ${fmt(ref)} <b>${pct(ref, lp.amount) >= 0 ? "+" : ""}${pct(ref, lp.amount).toFixed(1)}%</b>` : L("ยังไม่มีข้อมูลเทียบ (ต้องมีราคากลางและสัญญาก่อนหน้าในหมวดเดียวกัน)", "No comparison yet (needs a reference price and an earlier contract in the same category)")}</div>
+      ${keys.length ? `<div class="tbl-wrap" style="margin-top:8px"><table><thead><tr><th>${L("ดัชนี", "Index")}</th><th class="n">${L("ล่าสุด", "Latest")}</th><th>${L("วันที่", "Date")}</th><th class="n">${L("เปลี่ยน", "Change")}</th></tr></thead><tbody>${keys.map(k => { const L2 = latest(k); return `<tr><td>${tx(L2[0].name)}</td><td class="n">${fmt(L2[0].value, 2)}</td><td class="sub">${fdate(L2[0].date)}</td><td class="n">${L2[1] ? `${pct(L2[0].value, L2[1].value) >= 0 ? "+" : ""}${pct(L2[0].value, L2[1].value).toFixed(1)}%` : "—"}</td></tr>`; }).join("")}</tbody></table></div>` : ""}
+      ${ed ? `<div class="body" style="padding-left:0"><div class="sub">${L("นำเข้าดัชนีราคาเป็นข้อความ (ชื่อดัชนี, วันที่ YYYY-MM-DD, ค่า) บรรทัดละรายการ", "Import index values as text (name, date YYYY-MM-DD, value), one per line")}</div><textarea id="ix-t" rows="3" style="width:100%" placeholder="ทองแดง LME, 2026-10-16, 9740"></textarea>
+        <div class="row" style="margin-top:6px"><button class="btn" type="button" id="ix-add">${L("นำเข้า", "Import")}</button><button class="btn ghost" type="button" id="ix-smp">${L("ใส่ข้อมูลตัวอย่าง", "Fill a sample")}</button></div></div>` : ""}</div></section>`;
+});
+
+// ---------- binders ----------
+CASE_BINDS.push((c, done) => {
+  const P = S.prof.p, uid = famLine(c.line).unit;
+  const ho = $("#hr-open"); if (ho) ho.onsubmit = e => { e.preventDefault(); const s = $("#hr-s").value, en = $("#hr-e").value;
+    if (en < s) { toast(L("วันสิ้นสุดต้องไม่ก่อนวันเริ่ม", "The end date can't be before the start")); return; }
+    c.hearing = { docNo: docNo("hear", uid, c.id), start: s, end: en, comments: [], summary: "", revised: false, rev: null, closedAt: null, round: 1, by: me().id };
+    caseLog(c, "hearing_open", `${c.hearing.docNo} · ${s} – ${en}`); audit(["เปิดรับฟังความคิดเห็น TOR", "Opened a TOR hearing"], `${c.id} ${c.hearing.docNo}`); done(L("เปิดรับฟังแล้ว", "Hearing opened")); };
+  const hc = $("#hr-cm"); if (hc) hc.onsubmit = e => { e.preventDefault(); c.hearing.comments.push({ who: $("#hr-w").value.trim(), text: $("#hr-t").value.trim(), resp: $("#hr-r").value.trim(), t: TODAY });
+    caseLog(c, "hearing_comment", c.hearing.comments[c.hearing.comments.length - 1].who); done(); };
+  const hx = $("#hr-close"); if (hx) hx.onsubmit = e => { e.preventDefault(); const sum = $("#hr-sum").value.trim(), early = $("#hr-early") ? $("#hr-early").value.trim() : "";
+    if (sum.length < 5) { toast(L("สรุปผลอย่างน้อย 5 ตัวอักษร", "Write a conclusion of at least 5 characters")); return; }
+    if (c.hearing.end > TODAY && early.length < 5) { toast(L("ยังไม่ถึงวันสิ้นสุด ต้องระบุเหตุผลปิดก่อนกำหนด", "The hearing has not ended; give a reason for closing early")); return; }
+    const rev = $("#hr-rev").checked; if (rev && !c.tor) { toast(L("ยังไม่ได้แนบ TOR ที่จะแก้", "There is no attached TOR to change")); return; }
+    Object.assign(c.hearing, { summary: sum + (early ? ` (ปิดก่อนกำหนด: ${early})` : ""), revised: rev, rev: rev ? { status: "pending", by: me().id, t: nowIso() } : null, closedAt: nowIso() });
+    caseLog(c, "hearing_done", sum); if (rev) { caseLog(c, "hearing_rev", c.hearing.docNo); notify(["prochead"], [`แฟ้ม ${c.id} เสนอแก้ TOR หลังรับฟังความคิดเห็น รออนุมัติ`, `Case ${c.id}: a TOR change after the hearing is waiting for approval`], "case:" + c.id); }
+    audit(["สรุปผลรับฟังความคิดเห็น TOR", "Concluded a TOR hearing"], c.id); done(rev ? L("สรุปแล้ว รอหัวหน้าพัสดุอนุมัติ TOR ฉบับแก้", "Concluded; waiting for the head to approve the revised TOR") : L("สรุปผลแล้ว", "Concluded")); };
+  const rk = $("#hr-revok"); if (rk) rk.onclick = () => { if (c.hearing.rev.by === me().id) { toast(L("ผู้เสนอแก้ TOR กับผู้อนุมัติต้องเป็นคนละคน", "The person who proposed the change cannot approve it")); return; }
+    c.hearing.rev = { ...c.hearing.rev, status: "approved", approvedBy: me().id, t: nowIso() }; c.tor = { ...c.tor, rev: (c.tor.rev || 1) + 1, doc: c.tor.doc.replace(/(?:([-_])v\d+)?\.pdf$/, (m, sep) => `${sep || "_"}v${(c.tor.rev || 1) + 1}.pdf`), t: nowIso(), by: me().id };
+    caseLog(c, "hearing_rev_ok", c.tor.doc); audit(["อนุมัติ TOR ฉบับแก้หลังรับฟัง", "Approved a revised TOR after the hearing"], `${c.id} ${c.tor.doc}`); done(L("อนุมัติแล้ว สร้างเวอร์ชันใหม่ของ TOR", "Approved; a new TOR version was created")); };
+  const ha = $("#hr-again"); if (ha) ha.onclick = () => { Object.assign(c.hearing, { round: c.hearing.round + 1, closedAt: null, summary: "", revised: false, rev: null, start: TODAY, end: addDays(TODAY, P.hearingDays) });
+    caseLog(c, "hearing_again", `รอบ ${c.hearing.round}`); done(L("เปิดรับฟังซ้ำแล้ว", "Hearing reopened")); };
+
+  const rf = $("#rq-form"); if (rf) rf.onsubmit = e => { e.preventDefault(); const V = S.vendors, picks = $$("[name=rq-v]:checked").map(i => V[Number(i.value)].name), due = $("#rq-d").value;
+    if (!picks.length) { toast(L("เลือกผู้ขายอย่างน้อย 1 ราย", "Pick at least one supplier")); return; } if (due < TODAY) { toast(L("วันตอบกลับต้องไม่ก่อนวันนี้", "The reply date can't be in the past")); return; }
+    const r = { no: docNo("rfq", uid, c.id), sent: TODAY, due, by: me().id, rows: picks.map(v => ({ v, reply: null })) }; (c.rfq = c.rfq || []).push(r);
+    caseLog(c, "rfq_sent", `${r.no} · ${picks.length}`); audit(["ส่งใบสอบถามราคา / หนังสือเชิญ (จำลอง)", "Sent an RFQ or invitation (simulated)"], `${c.id} ${r.no}`); done(`${L("ออกเลขที่", "Issued")} ${r.no}`); };
+  $$("[data-rqrep]").forEach(b => (b.onclick = () => { const [ri, xi] = b.dataset.rqrep.split("|").map(Number), row = c.rfq[ri].rows[xi], pr = Math.round(Number($(`#rq-p-${ri}-${xi}`).value) || 0);
+    row.reply = { d: TODAY, price: pr, by: me().id }; caseLog(c, "rfq_reply", `${row.v} · ${pr ? fmt(pr) : "ไม่เสนอ"}`);
+    if (pr && !needsCompetition(c) && !c.quotes.some(q => tx(q.vendor) === row.v)) c.quotes.push({ vendor: [row.v, row.v], price: pr, win: false });
+    done(pr && !needsCompetition(c) ? L("บันทึกแล้ว และเพิ่มเป็นใบเสนอราคา", "Recorded and added as a quotation") : L("บันทึกแล้ว", "Recorded")); }));
+
+  const ef = $("#ex-form"); if (ef) ef.onsubmit = e => { e.preventDefault(); const g = id => ($("#" + id) ? $("#" + id).value.trim() : "");
+    c.extra = { hearing: $("#ex-hear").checked, sme: $("#ex-sme").checked, mit: $("#ex-mit").checked, std: g("ex-std"), spec: g("ex-spec"), short: g("ex-short"), deliv: g("ex-deliv"), place: g("ex-place"), vatMode: $("#ex-vat").value, wbs: g("ex-wbs"), pr: g("ex-pr"), po: g("ex-po") };
+    caseLog(c, "extra", ""); audit(["แก้ข้อมูลเพิ่มเติมของรายการจัดซื้อ", "Edited item details"], c.id); done(L("บันทึกแล้ว", "Saved")); };
+
+  const sm = $("#ix-smp"); if (sm) sm.onclick = () => { $("#ix-t").value = "ราคาน้ำมันดีเซล (บาท/ลิตร), 2026-10-16, 32.4\nทองแดง LME (ดอลลาร์/ตัน), 2026-10-16, 9740\nอัตราแลกเปลี่ยน USD/THB, 2026-10-16, 35.1"; };
+  const ia = $("#ix-add"); if (ia) ia.onclick = () => { const rows = $("#ix-t").value.split("\n").map(l => l.split(",").map(x => x.trim())).filter(r => r.length === 3 && r[0]); let n = 0, bad = 0;
+    rows.forEach(([name, d, v]) => { const val = Number(v); if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || !(val > 0)) { bad++; return; } const ex = S.priceIdx.find(i => tx(i.name) === name || i.name.includes(name)); S.priceIdx.push({ k: ex ? ex.k : "x-" + normName(name).slice(0, 8), name: ex ? ex.name : [name, name], date: d, value: val }); n++; });
+    if (!n) { toast(L("ไม่มีบรรทัดที่ใช้ได้ (รูปแบบ: ชื่อ, วันที่, ค่า)", "No usable lines (format: name, date, value)")); return; }
+    audit(["นำเข้าดัชนีราคา", "Imported price indices"], `${n}${bad ? ` (ข้าม ${bad})` : ""}`); done(`${L("นำเข้า", "Imported")} ${n}${bad ? ` · ${L("ข้าม", "skipped")} ${bad}` : ""}`); };
+});
+
+// ---------- M10: procurement profile ----------
+ADMIN_TABS.push({ id: "procprof", roles: ["admin", "audit", "proc", "prochead"], label: ["โปรไฟล์จัดซื้อ", "Procurement profile"] });
+ADMIN.procprof = () => {
+  const ad = isAdmin(), pf = S.prof, F = S.docno.fmt, num = (k, lbl, hint) => `<div class="f" style="flex:0 1 200px"><label for="pf-${k}">${lbl}</label><input type="number" id="pf-${k}" min="0" step="any" value="${pf.p[k]}" ${ad ? "" : "disabled"}><span class="sub">${hint}</span></div>`;
+  return `
+  <div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("โปรไฟล์หน่วยงาน: ผลิตภัณฑ์เดียว ตั้งค่าได้ตามชนิดหน่วยงาน", "Agency profile: one product, configured for the kind of agency")}</b>
+    <p>${L("ส่วนราชการและรัฐวิสาหกิจใช้ Fisko ตัวเดียวกัน ต่างกันที่สวิตช์ด้านล่าง ค่าตั้งต้นเป็นข้อเสนอจากการเทียบ TOR ต้องยืนยันกับฝ่ายกฎหมายและเจ้าหน้าที่พัสดุ", "Government agencies and state enterprises use the same Fisko; the switches below differ. The starting values come from the TOR comparison and must be confirmed with legal and procurement staff.")}</p></div></div>
+  <section class="panel"><header><h2>${L("ชนิดหน่วยงาน", "Kind of agency")}</h2><span class="sp"></span>${tag(tx(PROF_TYPES[pf.type]), "p-info")}</header>
+    <div class="body row">${Object.keys(PROF_TYPES).map(k => `<button class="btn ${pf.type === k ? "primary" : ""}" type="button" data-ptype="${k}" ${ad ? "" : "disabled"}>${tx(PROF_TYPES[k])}</button>`).join("")}<span class="sub">${L("เลือกแล้วระบบตั้งสวิตช์เป็นค่าตั้งต้นของชนิดนั้น แก้ทีละข้อได้ภายหลัง", "Choosing a kind sets the switches to its starting values; you can then change each one")}</span></div></section>
+  <section class="panel"><header><h2>${L("สวิตช์ฟังก์ชัน", "Feature switches")}</h2><span class="sp"></span>${tag(ad ? L("แก้ไขได้", "Editable") : L("ดูอย่างเดียว", "View only"), ad ? "p-ok" : "p-mute")}</header>
+    <div class="tbl-wrap"><table><thead><tr><th class="c" style="width:70px">${L("เปิด", "On")}</th><th>${L("ฟังก์ชัน", "Feature")}</th><th>${L("ราชการ", "Gov")}</th><th>${L("รัฐวิสาหกิจ", "SOE")}</th><th>${L("อ้างอิง TOR", "TOR ref")}</th><th>${L("รอบ", "Round")}</th></tr></thead>
+      <tbody>${PROF_FEATS.map(f => `<tr><td class="c">${sw("pf-sw-" + f.k, pf.sw[f.k], !ad)}</td><td>${tx([f.th, f.en])}</td><td class="c">${f.gov ? "✓" : "—"}</td><td class="c">${f.soe ? "✓" : "—"}</td><td class="sub">${f.tor}</td><td>${f.built ? tag(L("สร้างแล้ว", "Built") + " " + f.round, "p-ok") : tag(L("ยังไม่สร้าง", "Not built") + " · " + (f.round === "deferred" ? L("เลื่อน", "deferred") : f.round), "p-mute")}</td></tr>`).join("")}</tbody></table></div>
+    <div class="body sub">${L("สวิตช์ของฟังก์ชันที่ยังไม่สร้างบันทึกไว้ก่อน ยังไม่มีผลต่อหน้าจอ ปิดสวิตช์แล้วต้นแบบทำงานเหมือนฉบับ 0.2", "Switches for features not built yet are stored but do nothing. With a switch off, the prototype behaves as in v0.2.")}</div></section>
+  <section class="panel"><header><h2>${L("ค่าตั้งของฟังก์ชัน", "Feature settings")}</h2></header>
+    <div class="body inline-form">
+      ${num("hearingMin", L("รับฟังความคิดเห็นเมื่อวงเงินตั้งแต่ (บาท)", "Hearing from value (baht)"), CONF_TAG("C"))}${num("hearingDays", L("ระยะรับฟัง (วัน)", "Hearing period (days)"), CONF_TAG("C"))}
+      ${num("rfqMin", L("เชิญผู้ขายอย่างน้อย (วิธีคัดเลือก)", "Invite at least (selective)"), CONF_TAG("B"))}${num("rfqDays", L("ตอบ RFQ ภายใน (วัน)", "RFQ reply within (days)"), CONF_TAG("C"))}${num("vatPct", L("ภาษีมูลค่าเพิ่ม (ร้อยละ)", "VAT (%)"), CONF_TAG("A"))}
+      ${ad ? `<button class="btn primary" type="button" id="pf-save">${L("บันทึก", "Save")}</button>` : ""}</div></section>
+  <section class="panel"><header><h2>${L("เลขที่เอกสารอัตโนมัติ", "Automatic document numbers")}</h2><span class="sp"></span><span class="mono sub">FR-PR-80</span></header>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("ชนิดเอกสาร", "Document")}</th><th>${L("คำนำหน้า", "Prefix")}</th><th class="n">${L("จำนวนหลัก", "Digits")}</th><th class="c">${L("รหัสหน่วย", "Unit code")}</th><th>${L("ตัวอย่าง", "Example")}</th><th class="n">${L("ออกแล้วปีนี้", "Issued this year")}</th></tr></thead>
+      <tbody>${Object.keys(DOC_TYPES).map(k => `<tr><td>${tx(DOC_TYPES[k])}</td><td><input type="text" id="dn-p-${k}" value="${esc(F[k].pfx)}" maxlength="8" style="width:90px" ${ad ? "" : "disabled"}></td><td class="n"><input type="number" id="dn-d-${k}" min="1" max="6" value="${F[k].pad}" style="width:70px" ${ad ? "" : "disabled"}></td><td class="c">${sw("dn-u-" + k, F[k].unit, !ad)}</td>
+        <td class="mono">${docNoFmt(k, 1, "U02")}</td><td class="n">${sumv(Object.keys(S.docno.ctr).filter(x => x.startsWith(k + "|")).map(x => S.docno.ctr[x]))}</td></tr>`).join("")}</tbody></table></div>
+    ${ad ? `<div class="body"><button class="btn" type="button" id="dn-save">${L("บันทึกรูปแบบ", "Save formats")}</button></div>` : ""}
+    <div class="body sub">${L("เลขวิ่งต่อเนื่องแยกตามชนิด ปีงบประมาณ และหน่วย (ถ้าเปิดรหัสหน่วย) ไม่ซ้ำและไม่ข้ามเลข เปลี่ยนคำนำหน้าแล้วเลขที่ออกไปแล้วไม่เปลี่ยน", "Numbers run by type, fiscal year and unit (if unit code is on): no duplicates, no gaps. Changing a prefix does not change numbers already issued.")}</div>
+    ${S.docno.log.length ? `<div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("ชนิด", "Type")}</th><th>${L("แฟ้ม", "Case")}</th><th>${L("ออกโดย", "By")}</th><th>${L("เวลา", "Time")}</th></tr></thead><tbody>${S.docno.log.slice(0, 8).map(x => `<tr><td class="mono">${esc(x.no)}</td><td class="sub">${tx(DOC_TYPES[x.type])}</td><td class="mono sub">${esc(x.ref)}</td><td class="sub">${esc(userName(x.by))}</td><td class="sub">${fdate(x.t, true)}</td></tr>`).join("")}</tbody></table></div>` : ""}</section>`;
+};
+BIND_ADMIN.procprof = () => {
+  $$("[data-ptype]").forEach(b => (b.onclick = () => { const k = b.dataset.ptype; if (S.prof.type === k) return; S.prof.type = k; S.prof.sw = profDefaults(k);
+    audit(["เปลี่ยนชนิดหน่วยงานในโปรไฟล์จัดซื้อ", "Changed the agency kind in the procurement profile"], k); commit(); renderShell(); route(); toast(L("ตั้งสวิตช์เป็นค่าตั้งต้นแล้ว", "Switches set to the starting values")); }));
+  PROF_FEATS.forEach(f => { const el = $("#pf-sw-" + f.k); if (el && !el.disabled) el.onchange = () => { S.prof.sw[f.k] = el.checked;
+    audit([el.checked ? "เปิดฟังก์ชันจัดซื้อตามโปรไฟล์" : "ปิดฟังก์ชันจัดซื้อตามโปรไฟล์", el.checked ? "Switched a procurement feature on" : "Switched a procurement feature off"], f.k);
+    if (!el.checked) notify(["audit", "prochead"], [`ผู้ดูแลระบบปิดฟังก์ชัน ${f.th}`, `An administrator switched off: ${f.en}`], "admin-procprof"); commit(); renderShell(); route(); toast(L("บันทึกแล้ว", "Saved")); }; });
+  const sv = $("#pf-save"); if (sv) sv.onclick = () => { const v = {}; for (const k of Object.keys(PROF_DEFAULT_P)) v[k] = Number($("#pf-" + k).value);
+    if (Object.values(v).some(x => !(x >= 0)) || v.rfqMin < 1 || v.vatPct > 30) { toast(L("ค่าไม่ถูกต้อง", "Check the values")); return; }
+    Object.assign(S.prof.p, v); audit(["แก้ค่าตั้งโปรไฟล์จัดซื้อ", "Changed profile settings"], Object.entries(v).map(([k, x]) => `${k}=${x}`).join(" ")); commit(); route(); toast(L("บันทึกแล้ว", "Saved")); };
+  const ds = $("#dn-save"); if (ds) ds.onclick = () => { const nf = {};
+    for (const k of Object.keys(DOC_TYPES)) { const pfx = $("#dn-p-" + k).value.trim(), pad = Math.round(Number($("#dn-d-" + k).value)); if (!pfx || !(pad >= 1 && pad <= 6)) { toast(L("ตรวจคำนำหน้าและจำนวนหลัก", "Check the prefix and digits")); return; } nf[k] = { pfx, pad, unit: $("#dn-u-" + k).checked }; }
+    Object.assign(S.docno.fmt, nf); audit(["แก้รูปแบบเลขที่เอกสาร", "Changed document number formats"], Object.entries(nf).map(([k, x]) => `${k}:${x.pfx}/${x.pad}${x.unit ? "/unit" : ""}`).join(" ")); commit(); route(); toast(L("บันทึกแล้ว", "Saved")); };
 };
 
 /* ---- 99-boot.js ---- */
