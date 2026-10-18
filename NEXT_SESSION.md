@@ -130,3 +130,7 @@ The Finance decisions D-FN-01 to D-FN-09 are answered (design v0.4, 13.2) and no
 ## Round 47 (Budget information architecture)
 
 Fisko Budget now has 11 pages B1 to B11 in four groups, declared in `src/js/75-budget-pages.js` (see `HANDOFF.md` section 47 and Budget design chapter 15). All three apps now share one page-table pattern (`66h-fin-pages.js`, `74-proc-pages.js`, `75-budget-pages.js`). Still open: FR-FN-33 and exports, a demo step for F11, a full demo rehearsal, then Fisko Assets or the real-AI plan.
+
+## Round 48 (Budget CRUD round C1)
+
+The Budget CRUD design (`Fisko_Budget_CRUD_Design.html` v0.1) is approved; round C1 built the shared list + drawer (`76-crud.js`) and moved B7 Allocation onto it (`77-alloc-crud.js`, `HANDOFF.md` section 48). Next: round C2 (formulation FY2571), then C3 (submission and parliament with Simulate), C4 (B8 and B9 on FY2570), C5 (strategy and master data), C6 (B10/B11, the end-to-end demo script and sweep).

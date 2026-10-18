@@ -62,6 +62,18 @@
         if (prSees(prPage("ai"))) for (const [k] of AI_TOOLS) safe(`${org}/${lang}/${role}/ai ${k}`, () => { AI_TOOL = k; procSet("ai:assist"); go2("procurement"); chk(`${org}/${lang}/${role}/ai ${k}`); });
         AI_TOOL = "AI-01"; await tick();
       } }
+      // Shared list + drawer (round C1): every record of every B7 list opened, each drawer tab, the edit form and the new form
+      if (o.suites.includes("render") && typeof CRUD !== "undefined") for (const role of ["fin", "exec", "plan", "audit"].filter(r => o.roles.includes(r))) {
+        ROLE = role; LANG = o.langs[0]; safe("shell", renderShell);
+        const where = { alLine: "allocate", alTr: "transfers", alRel: "releases", alCf: "carry", alAp: "appropriation" };
+        for (const fy of Object.keys(S.allocs).map(Number)) for (const [k, tab] of Object.entries(where)) {
+          ALLOC_FY = fy; ALLOC_TAB = tab; const sp = CRUD.defs[k];
+          const open = (id, mode, t) => safe(`${org}/${role}/${fy}/${k}/${id || "new"}/${mode}${t ? "/" + t : ""}`, () => { crOpen(k, id, mode); if (t) CR_OPEN.tab = t; go2("allocation"); chk(`${org}/${role}/${fy}/${k}/${id || "new"}/${mode}${t || ""}`); if (!document.querySelector(".cr-drawer")) errs.push(`${org}/${role}/${fy}/${k}/${id}: no drawer`); });
+          for (const r of (sp.list() || [])) { const id = sp.id(r); open(id, "view"); for (const [t] of (sp.tabs ? sp.tabs(r) : [])) open(id, "view", t); open(id, "view", "hist"); if (sp.edit && sp.edit.can(r)) open(id, "edit"); }
+          if (sp.create && sp.create.can()) open("", "edit");
+        }
+        crClose(); ALLOC_FY = 2570; await tick();
+      }
       // Budget pages (round 47): every old tab key on the page that holds it, and the old deep links
       if (o.suites.includes("render") && typeof BUD_PAGES !== "undefined") for (const lang of o.langs) { LANG = lang; for (const role of o.roles) {
         ROLE = role; safe("shell", renderShell);
