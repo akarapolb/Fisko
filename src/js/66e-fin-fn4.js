@@ -73,6 +73,7 @@ FS.receipts = () => {
     ${maker && unrec.length ? `<button class="btn" type="button" id="rc-rec">${L("บันทึกรับเงินในระบบ (GFMIS)", "Record in the system (GFMIS)")} (${unrec.length})</button>` : ""}</header>
     ${maker && advBack.length ? `<div class="body" style="padding-bottom:0"><div class="alert" style="margin:0"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("เงินยืมเหลือคืนที่ยังไม่ออกใบเสร็จ", "Advance cash returned without a receipt")}</b><p>${advBack.map(a => `<span class="mono">${a.id}</span> ${esc(userName(a.borrower))} ${fmt(a.cashBack.amount)} ${L("บาท", "baht")} <button class="btn ghost" type="button" data-rcadv="${a.id}">${L("ออกใบเสร็จ", "Issue receipt")}</button>`).join(" · ")}</p></div></div></div>` : ""}
     ${maker && RC_NEW ? `<div class="body"><form class="inline-form" id="rc-form">
+      ${typeof nbFunds === "function" && nbFunds().length ? `<div class="f" style="flex:1 1 220px"><label for="rf-fund">${L("กองทุน (ถ้าเป็นเงินนอกงบประมาณ)", "Fund (for non-budget money)")}</label><select id="rf-fund"><option value="">—</option>${nbFunds().map(f => `<option value="${f.id}">${f.id} · ${esc(tx(f.name))}</option>`).join("")}</select></div>` : ""}
       <div class="f" style="flex:1 1 220px"><label for="rf-kind">${L("ประเภทเงิน", "Type of money")}</label><select id="rf-kind">${Object.keys(RC_KIND).filter(k => k !== "advback").map(k => `<option value="${k}">${tx(RC_KIND[k])}</option>`).join("")}</select></div>
       <div class="f" style="flex:2 1 220px"><label for="rf-payer">${L("ชื่อผู้ชำระเงิน", "Payer")}</label><input type="text" id="rf-payer" required></div>
       <div class="f" style="flex:2 1 240px"><label for="rf-desc">${L("รายการ (รับเงินค่าอะไร)", "What the money is for")}</label><input type="text" id="rf-desc" required></div>
@@ -183,7 +184,9 @@ const bindRecv = () => {
   if (f) f.onsubmit = e => {
     e.preventDefault();
     const p = $("#rf-payer").value.trim(), d = $("#rf-desc").value.trim();
-    const r = rcIssue({ kind: $("#rf-kind").value, payer: [p, p], desc: [d, d], amount: Math.round(Number($("#rf-amt").value) * 100) / 100, method: $("#rf-m").value });
+    const fund = $("#rf-fund") ? $("#rf-fund").value : "";
+    if ($("#rf-kind").value === "nonbudget" && $("#rf-fund") && !fund) { toast(L("เลือกกองทุนของเงินนอกงบประมาณ", "Pick the fund for non-budget money")); return; }
+    const r = rcIssue({ fund: $("#rf-kind").value === "nonbudget" ? fund || null : null, kind: $("#rf-kind").value, payer: [p, p], desc: [d, d], amount: Math.round(Number($("#rf-amt").value) * 100) / 100, method: $("#rf-m").value });
     if (!r) return; RC_NEW = false;
     done(L(`ออกใบเสร็จ ${rcNo(r)} แล้ว · ${tx(REV_T[rcClass(r)])} · นำส่งภายใน ${fdate(rcDue(r))}`, `Receipt ${rcNo(r)} issued · ${tx(REV_T[rcClass(r)])} · remit by ${fdate(rcDue(r))}`));
   };

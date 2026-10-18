@@ -123,3 +123,7 @@ Built on branch `procurement-ia` (worktree `..\Fisko-proc`). Procurement now has
 
 `main` now carries rounds 43 to 45. The round-44 follow-ups are done (`HANDOFF.md` section 45). Still open: the Finance decisions D-FN-01 to D-FN-09, FR-FN-33 and exports, a full end-to-end rehearsal of the demo, then Fisko Assets or the real-AI plan.
 
+## Round 46 (Finance decisions and non-budget money)
+
+The Finance decisions D-FN-01 to D-FN-09 are answered (design v0.4, 13.2) and non-budget money is a full cycle on F11 (`66i-fin-nb.js`, `DATA_V = 36`). Still open: FR-FN-33 and exports, a demo step for F11, a full demo rehearsal, then Fisko Assets or the real-AI plan.
+

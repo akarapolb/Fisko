@@ -127,6 +127,7 @@ VIEWS.advances = () => {
       <div class="f" style="flex:0 1 160px"><label for="af-start">${L("ตั้งแต่", "From")}</label><input type="date" id="af-start" value="${addDays(TODAY, 7)}" required></div>
       <div class="f" style="flex:0 1 160px"><label for="af-end">${L("ถึง", "To")}</label><input type="date" id="af-end" value="${addDays(TODAY, 9)}" required></div>
       <div class="f" style="flex:0 1 170px"><label for="af-src">${L("แหล่งเงิน", "Source")}</label><select id="af-src"><option value="budget">${L("เงินงบประมาณ", "Budget")}</option><option value="nonbudget">${L("เงินนอกงบประมาณ", "Non-budget")}</option></select></div>
+      ${typeof nbLineOptions === "function" && nbLineOptions() ? `<div class="f" style="flex:2 1 260px"><label for="af-nb">${L("รายการในแผนเงินนอกงบประมาณ (ถ้าใช้)", "Non-budget plan line (if used)")}</label><select id="af-nb"><option value="">—</option>${nbLineOptions()}</select></div>` : ""}
       <div class="f" style="flex:2 1 240px"><label for="af-line">${L("รายการจัดสรร", "Allocation line")}</label><select id="af-line">${lines.map(l => `<option value="${l.id}">${esc(lineLabel(l))}</option>`).join("")}</select></div>
       ${itemRow(0, "perdiem")}${itemRow(1, "hotel")}${itemRow(2, "transport")}
       <div class="f" style="flex:1 1 100%"><button class="btn ghost" type="button" id="af-calc">${L("คำนวณเบี้ยเลี้ยงและที่พักจากจำนวนวัน", "Work out per diem and accommodation from the dates")}</button> <span class="sub">${L("อัตรา", "Rates")}: ${fmt(c.perDiem)} ${L("บาท/วัน", "baht/day")} · ${fmt(c.hotel)} ${L("บาท/คืน", "baht/night")} (M10)</span></div>
@@ -248,9 +249,10 @@ BIND.advances = () => {
     const items = [0, 1, 2].map(n => ({ k: $("#ai-k" + n).value, amt: Math.round(Number($("#ai-a" + n).value)) })).filter(i => i.k && i.amt > 0);
     if (!items.length) { toast(L("ใส่อย่างน้อยหนึ่งรายการ", "Add at least one item")); return; }
     const start = $("#af-start").value, end = $("#af-end").value; if (end < start) { toast(L("วันสิ้นสุดต้องไม่ก่อนวันเริ่ม", "The end can't be before the start")); return; }
-    const p = $("#af-purpose").value.trim(), src = $("#af-src").value;
+    const p = $("#af-purpose").value.trim(), src = $("#af-src").value, nbv = $("#af-nb") ? $("#af-nb").value : "";
+    if (src === "nonbudget" && !nbv) { toast(L("เลือกรายการในแผนเงินนอกงบประมาณ", "Pick the non-budget plan line")); return; }
     const a = { id: nextAdv(), borrower: me().id, unit: me().unit, type: $("#af-type").value, purpose: [p, p], start, end, returned: null, items, amount: sumv(items.map(i => i.amt)), approvedAmt: null,
-      source: src, line: $("#af-line").value, temp: $("#af-temp").checked, collateral: $("#af-coll").value.trim(), state: "request", t: nowIso(), log: [] };
+      source: src, line: $("#af-line").value, fund: src === "nonbudget" ? nbv.split("|")[0] : null, nbLine: src === "nonbudget" ? nbv.split("|")[1] : null, temp: $("#af-temp").checked, collateral: $("#af-coll").value.trim(), state: "request", t: nowIso(), log: [] };
     S.advSeqC = (S.advSeqC || 0) + 1; a.contract = { no: `สย.${String(S.advSeqC).padStart(3, "0")}/2570`, t: nowIso() };
     advLog(a, ["ขอยืมเงิน", "Requested"], fmt(a.amount)); (S.advances = S.advances || []).push(a); ADV_OPEN = a.id;
     const bad = advChecks(a).filter(k => !k.ok);
