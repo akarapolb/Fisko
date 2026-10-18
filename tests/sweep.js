@@ -1,0 +1,75 @@
+// Fisko prototype test sweep. Runs inside the prototype page (it needs the app's globals: ROLE, LANG, ORG, S,
+// route, NAV ...), so tests/run.html injects it into an iframe that loads Fisko_Prototype.html. It can also be
+// pasted into the browser console on the prototype page and started with FISKO_TEST.run().
+//
+// Suites
+//   render  every page, every tab clicked, for every role × language × organisation, plus request steps,
+//           allocation tabs for each fiscal year and quarterly-report rounds for each unit
+//   chat    the AI co-work answer engine for every agent against sample questions
+//   agents  every budget agent started and its run shown
+//   demo    every step of the in-app demo guide
+// A check fails when the page text contains undefined, NaN, [object, Infinity or Invalid, or when code throws.
+// The sweep reseeds data in memory; at the end it clears the saved demo state so the next load starts fresh.
+(function () {
+  const BAD = /undefined|NaN|\[object|Infinity|Invalid/;
+  const tick = () => new Promise(r => setTimeout(r, 0));
+  const QS = ["Check this request", "Draft the justification", "What if the ceiling drops 10%", "Which units are behind plan", "Any spending anomalies", "Summarise requests by status", "Which contracts are late", "Which cases are stuck", "What is the share of competitive cases", "What should I do first today", "Summarise payments", "hello"];
+  async function run(opts = {}) {
+    const o = Object.assign({ suites: ["render", "chat", "agents", "demo"], orgs: Object.keys(SEEDS), langs: ["th", "en"], roles: Object.keys(ROLES), onProgress: () => {} }, opts);
+    const t0 = performance.now(), errs = [];
+    let n = 0, done = 0;
+    const total = o.suites.length * o.orgs.length * o.langs.length * o.roles.length;
+    const chk = label => { n++; const v = document.getElementById("view"), s = v ? v.innerText : "", m = s.match(BAD); if (m) errs.push(`${label}: …${s.slice(Math.max(0, m.index - 40), m.index + 20).replace(/\s+/g, " ")}…`); };
+    const safe = (label, fn) => { try { fn(); } catch (e) { errs.push(`${label} THROW ${e && e.message}`); } };
+    // route by the test hook, not history (browsers ignore replaceState after a few hundred calls in 10 s)
+    const go2 = id => { window.FISKO_ROUTE = "#" + id; route(); const want = id.startsWith("admin-") ? "admin" : id; if (CUR !== want) errs.push(`asked for ${id}, got ${CUR}`); };
+    const report = what => o.onProgress({ what, n, errors: errs.length, done: ++done, total });
+    const oldErr = window.onerror; window.onerror = (msg, src, line) => { errs.push(`window.onerror ${msg} @${line}`); };
+    for (const org of o.orgs) {
+      ORG = org; S = SEEDS[org].seed();
+      if (o.suites.includes("render")) for (const lang of o.langs) { LANG = lang; for (const role of o.roles) {
+        ROLE = role; safe("shell", renderShell);
+        for (const nv of NAV.filter(x => x.roles.includes(role))) {
+          safe(`${org}/${lang}/${role}/${nv.id}`, () => {
+            go2(nv.id); chk(`${org}/${lang}/${role}/${nv.id}`);
+            const k = document.querySelectorAll("#view [role=tab]").length;
+            for (let i = 0; i < k; i++) { const b = document.querySelectorAll("#view [role=tab]")[i]; if (!b) break; b.click(); chk(`${org}/${lang}/${role}/${nv.id}/tab${i}`); }
+            if (nv.id === "allocation" && typeof ALLOC_TABS !== "undefined") { for (const fy of Object.keys(S.allocs)) { ALLOC_FY = Number(fy); for (const t of ALLOC_TABS.map(x => x.id)) { ALLOC_TAB = t; route(); chk(`alloc ${fy}/${t}`); } } ALLOC_FY = 2570; }
+            if (nv.id === "performance" && typeof QR_ROUNDS === "function") { PERF_TAB = "quarter"; for (const rd of QR_ROUNDS()) { QR_ROUND = rd.id; for (const u of [null, ...qrUnits()]) { QR_UNIT = u; route(); chk(`perf ${rd.id}/${u}`); } } QR_ROUND = "Q4"; QR_UNIT = null; }
+          });
+          await tick();
+        }
+        if (NAV.find(x => x.id === "requests").roles.includes(role)) for (const r of S.requests) for (const tb of ["main", "plan", "ready", "docs", "years", "equip", "payroll", "versions"]) safe(`req ${r.id}/${tb}`, () => { CUR_REQ = r.id; REQ_TAB = tb; go2("request"); chk(`${org}/${lang}/${role}/req ${r.id}/${tb}`); });
+        report(`render ${org}/${lang}/${role}`); await tick();
+      } }
+      if (o.suites.includes("chat") && typeof cwAnswer === "function") for (const role of ["plan", "proc", "fin", "exec"].filter(r => o.roles.includes(r))) {
+        ROLE = role;
+        for (const a of cwAgents()) for (const q of QS) safe(`chat ${org}/${role}/${a.id}/${q}`, () => { const r = cwAnswer(a.id, q, [], []), d = document.createElement("div"); d.innerHTML = r.html; n++; const m = d.innerText.match(BAD); if (m) errs.push(`chat ${org}/${role}/${a.id}/${q}: ${d.innerText.slice(Math.max(0, m.index - 40), m.index + 20)}`); });
+        report(`chat ${org}/${role}`); await tick();
+      }
+      if (o.suites.includes("agents") && typeof B_AG !== "undefined") {
+        LANG = "en"; ROLE = "plan"; renderShell();
+        for (const id of Object.keys(B_AG)) safe(`agent ${org}/${id}`, () => { const r = bStart(id, id === "AG-15" ? { to: (S.allocs[2570] && S.allocs[2570].lines.slice(-1)[0] || {}).id, need: 1e6 } : {}); INTEL_TAB = "bagents"; B_RUN_OPEN = r.id; go2("assistant"); chk(`agent ${org}/${id}`); });
+        S.bRuns = []; report(`agents ${org}`); await tick();
+      }
+    }
+    if (o.suites.includes("demo") && typeof DEMO !== "undefined") {
+      ORG = "sample"; S = SEEDS.sample.seed(); LANG = "en";
+      ROLE = "plan"; renderShell(); await new Promise(r => setTimeout(r, 60));
+      const openGuide = () => { window.FISKO_ROUTE = "#demo"; route(); window.FISKO_ROUTE = null; };
+      for (let i = 0; i < DEMO.length; i++) {
+        // a step's click changes the hash; let the change fire, then open the guide again
+        await new Promise(r => setTimeout(r, 20)); openGuide();
+        safe(`demo ${i + 1}`, () => { const b = document.querySelector(`#view [data-step="${i}"]`); if (!b) throw new Error(`no step button (page: ${CUR})`); b.click(); });
+        await new Promise(r => setTimeout(r, 30));
+        const v = document.getElementById("view").innerText; n++; if (!v.trim()) errs.push(`demo ${i + 1}: empty page`); else { const m = v.match(BAD); if (m) errs.push(`demo ${i + 1}: ${v.slice(Math.max(0, m.index - 40), m.index + 20)}`); }
+      }
+      report("demo");
+    }
+    window.onerror = oldErr; window.FISKO_ROUTE = null;
+    Object.keys(SEEDS).forEach(org => { ORG = org; store.del(key()); });
+    ORG = "sample"; S = SEEDS.sample.seed(); LANG = "th"; ROLE = "plan"; renderShell(); history.replaceState(null, "", "#home"); route();
+    return { ok: errs.length === 0, checks: n, errors: errs, seconds: Math.round((performance.now() - t0) / 100) / 10 };
+  }
+  window.FISKO_TEST = { run, version: 1 };
+})();

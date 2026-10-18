@@ -1481,7 +1481,8 @@ let APP = APP_IDS.includes(store.get("fisko-app")) ? store.get("fisko-app") : "b
 function allowed(id) { const n = NAV.find(x => x.id === id); return !n || n.roles.includes(ROLE); }
 function go(v) { if (location.hash === "#" + v) route(); else location.hash = v; }
 function route() {
-  let v = (location.hash || "#home").slice(1);
+  // window.FISKO_ROUTE lets tests/sweep.js route without touching browser history, which browsers throttle
+  let v = (window.FISKO_ROUTE || location.hash || "#home").slice(1);
   if (v.startsWith("admin-")) { ADMIN_TAB = v.slice(6); v = "admin"; }
   if (!VIEWS[v] && !NAV.find(n => n.id === v)) v = "home";
   CUR = v;
@@ -7159,7 +7160,7 @@ const DEMO = [
     do: ["“ให้คะแนน” แนวคิดที่รอกลั่นกรอง → “รับเข้าแผน” แนวคิดที่ให้คะแนนแล้ว → ชี้บทเรียนจาก M08 ด้านล่าง", "Score the idea awaiting screening → Accept a scored idea → point at the M08 lessons below"] },
   { t: "1:45", role: "div", link: "req:STORY", title: ["M02 จัดทำคำขอพร้อมผู้ช่วย AI", "M02 Preparing a request with AI"],
     say: ["ผู้จัดทำวางรายการจาก Excel ได้ทันที ระบบเทียบราคามาตรฐานและตรวจตามกฎ AI ช่วยร่างเหตุผลความจำเป็น แต่ผู้จัดทำเป็นคนตรวจและส่ง", "The requester pastes lines from Excel; the system checks them against standard prices and the rules. AI drafts the justification, but the requester reviews and sends."],
-    do: ["“วางจาก Excel” → “ใส่ข้อมูลตัวอย่าง” → “เพิ่ม” → “ร่างเหตุผลความจำเป็น” → “แนบคุณลักษณะเฉพาะ” → “ส่งให้กองแผนงาน”", "Paste from Excel → Use sample rows → Add → Draft justification → Attach specification → Send to Planning"] },
+    do: ["“วางจาก Excel” → “ใส่ข้อมูลตัวอย่าง” → “เพิ่ม” → “ร่างเหตุผลความจำเป็น” → ทำตามแถบ “ขั้นต่อไป”: แผนรายไตรมาส “เติมตามรูปแบบ” · ความพร้อม เลือกระดับ · เอกสารแนบ “ใช้ไฟล์ตัวอย่าง” · ครุภัณฑ์ ใส่สถานที่ → “ส่งให้ ผอ.กองเห็นชอบ” → เปลี่ยนบทบาทเป็น ผอ.กอง → “เห็นชอบและส่งกองแผนงาน”", "Paste from Excel → Use sample rows → Add → Draft justification → follow the Next hint: Quarterly plan, Fill from the pattern · Readiness, pick the levels · Documents, Use a sample · Equipment, add the location → Send to the division director → switch the role to Division director → Approve and send to Planning"] },
   { t: "3:30", role: "plan", link: "rev-queue", title: ["M04 กลั่นกรองรายบรรทัด", "M04 Line-by-line review"],
     say: ["กองแผนงานเห็นคิวพร้อมกำหนดเวลาตาม SLA ใส่ความเห็นรายบรรทัด ส่งกลับหรือเสนอต่อได้ ทุกอย่างถูกบันทึก", "Planning sees the queue with SLA due dates, comments on single lines, and returns or sends on. Everything is recorded."],
     do: ["กด “พิจารณา” ที่โครงการตัวอย่าง → ปุ่ม ✎ ใส่ความเห็น → “ผ่านการกลั่นกรอง · เสนอต่อ”", "Click Review on the storyline project → ✎ to comment → Pass review · send on"] },
@@ -7170,8 +7171,8 @@ const DEMO = [
     say: ["ก่อนคณะกรรมการตัดสิน ระบบชี้ว่าการปรับลดแต่ละโครงการทำให้ตัวชี้วัดใดเสี่ยงไม่บรรลุเป้า", "Before the committee decides, the system shows which KPI targets each cut puts at risk."],
     do: ["สลับ “รอบ 2 กองแผน” กับ “รอบ 3 ผู้บริหาร” ชี้ตัวชี้วัดที่เสี่ยงสูง", "Switch between Round 2 and Round 3; point at the high-risk KPIs"] },
   { t: "6:15", role: "exec", link: "rev-meetings", title: ["M04 มติคณะกรรมการ", "M04 Committee resolutions"],
-    say: ["บันทึกมติรายวาระ ระบบปรับสถานะคำขอตามมติอัตโนมัติ และเก็บวงเงินที่มีมติไว้ใช้ส่งสำนักงบประมาณ", "Record a resolution per item; request statuses follow automatically and the resolved amount flows to submission."],
-    do: ["เลือก “เห็นชอบโดยปรับลดวงเงิน” ใส่วงเงิน → “บันทึกมติและปิดการประชุม”", "Choose Approved, amount reduced, enter an amount → Record resolutions"] },
+    say: ["กรรมการลงความเห็นก่อนประชุม ผู้มีส่วนได้เสียงดออกเสียง ระบบตรวจองค์ประชุม แสดงผลกระทบของการปรับลดต่อตัวชี้วัด และร่างรายงานการประชุมจากมติ", "Members vote before the meeting, anyone with an interest abstains, the quorum is checked, a cut shows its effect on KPIs, and the minutes are drafted from the record."],
+    do: ["ลง “ความเห็นของฉัน” → เลือก “เห็นชอบโดยปรับลดวงเงิน” ใส่วงเงิน ดูผลกระทบที่เปลี่ยนตาม → “บันทึกมติและปิดการประชุม” → ชี้รายงานการประชุมที่ร่างให้", "Cast My vote → choose Approved, amount reduced, enter an amount and watch the impact change → Record resolutions → point at the drafted minutes"] },
   { t: "7:00", role: "plan", link: "sub-checks", title: ["M05 ส่งสำนักงบประมาณ", "M05 Submitting to the Budget Bureau"],
     say: ["ก่อนส่ง ระบบตรวจรหัส โครงสร้าง เอกสาร และสร้างแบบฟอร์มให้อัตโนมัติ จากนั้นติดตามสถานะจนได้ผลพิจารณา", "Before sending, codes, structure and documents are checked and the form is generated, then status is tracked to the result."],
     do: ["ดูแท็บตัวอย่างแบบฟอร์ม → แท็บสถานะ: ส่ง → จำลองผล 2 ขั้น", "Open Form preview → Status: send → run the two demo steps"] },
@@ -7227,9 +7228,53 @@ const DEMO = [
   { t: "26:30", role: "proc", link: "prc-agents", title: ["Agent เตรียมแฟ้ม: วางแผน เรียกเครื่องมือ รอคนอนุมัติ", "Case Copilot: plans, calls tools, waits for a person"],
     say: ["Agent รับเป้าหมาย “เตรียมแฟ้มให้พร้อมประกาศ” แตกเป็นขั้น เรียกเครื่องมือจากทะเบียน และหยุดให้คนอนุมัติทุกขั้นที่เขียนข้อมูล ไม่มีปุ่มอนุมัติทั้งหมด งานที่เป็นของคน เช่น การแจ้งผลประโยชน์ทับซ้อน Agent ทำแทนไม่ได้", "The agent takes the goal “get the case ready for the notice”, breaks it into steps, calls tools from the register and stops for a person at every step that writes data. There is no approve-all, and human duties such as conflict declarations stay with people."],
     do: ["เลือก PC-2570-006 → “เริ่ม” → อ่านแต่ละขั้น กด “อนุมัติขั้นนี้” ทีละขั้น ใส่เลขที่คำสั่งเมื่อถึงขั้นคณะกรรมการ → ชี้ทะเบียนเครื่องมือและสิ่งที่ไม่มีในทะเบียนด้านล่าง", "Choose PC-2570-006 → Start → read each step and approve it one at a time, typing the order number at the committee step → point at the tool register and what is not in it"] },
+  // Extension 2 (round 35): the Budget cycle in depth (rounds 26 to 34), about 14 minutes, same sample organisation.
+  { t: "28:00", role: "div", link: "home", title: ["ผู้ช่วย AI ทำงานร่วมในทุกหน้า", "AI co-work on every page"],
+    say: ["กดปุ่ม AI ที่แถบบนได้ทุกหน้า ผู้ช่วยรู้ว่าเราอยู่หน้าไหน คุยกับผู้ช่วยทั่วไปหรือผู้ช่วยเฉพาะทาง แนบไฟล์หรือพูดได้ และทุกอย่างที่เขียนข้อมูลเป็นปุ่มที่คนกดเอง", "The AI button works on every page and knows where you are. Talk to the general assistant or a specialist, attach a file or speak, and anything that writes data is a button a person presses."],
+    do: ["กด “ผู้ช่วย AI” (Ctrl+J) → ถาม “วันนี้ฉันควรทำอะไรก่อน” → พิมพ์ @AG-05 แล้วถาม “หน่วยงานไหนเบิกจ่ายช้ากว่าแผน” → ปุ่มขยายเต็มจอ ชี้รายชื่อผู้ช่วย", "Click AI (Ctrl+J) → ask “What should I do first today?” → type @AG-05 and ask “Which units are behind their spending plan?” → expand to full screen and point at the agent directory"] },
+  { t: "29:00", role: "plan", link: "strat-link", title: ["M01 เชื่อมโยงถึงแผนระดับชาติ", "M01 Link to national plans"],
+    say: ["ทุกคำขอเชื่อมยุทธศาสตร์ชาติ แผนแม่บท ยุทธศาสตร์หน่วยงาน และตัวชี้วัดตามคู่มือสำนักงบประมาณ เห็นว่าตัวชี้วัดใดยังไม่มีคำขอ และสัดส่วนวงเงินเทียบขั้นต่ำที่ผู้บริหารกำหนด", "Every request links to the national strategy, a master plan, the agency strategy and a KPI, as in the Budget Bureau manual. You see which KPIs have no request, and each strategy's share against the executive's minimum."],
+    do: ["เปิดต้นไม้จากยุทธศาสตร์ชาติถึงคำขอ → ชี้ “ตัวชี้วัดที่ยังไม่มีคำขอ” → ชี้ตารางสัดส่วนวงเงินตามยุทธศาสตร์", "Open the tree from national strategy to requests → point at KPIs with no request → point at the budget share table"] },
+  { t: "30:00", role: "plan", link: "cons-r3", title: ["M03 วิเคราะห์ 3R และงบฐานศูนย์", "M03 3R analysis and zero-based view"],
+    say: ["Review ผลเบิกจ่ายปีก่อน Redeploy จากคำขอคะแนนต่ำหรือกองที่ใช้จ่ายช้า Replace ไปยังงานจำเป็นที่อยู่ใต้เส้นกรอบ ตามคู่มือปี 2570 แล้วใช้เป็นข้อเสนอรอบ 2 ได้ทันที", "Review last year's spending, Redeploy from low-score or slow-spending requests, Replace into priority work below the line, per the FY2570 manual, then use it as Planning's round-2 proposal."],
+    do: ["ชี้การ์ด Review Redeploy Replace → “ใช้เป็นข้อเสนอรอบ 2 ของกองแผน” → แท็บมุมมองฐานศูนย์ “ขอให้อธิบายใหม่” หนึ่งคำขอ", "Point at the Review, Redeploy and Replace cards → Use as Planning's round-2 proposal → Zero-based view tab, Ask to explain one request"] },
+  { t: "31:00", role: "plan", link: "rev-rounds", title: ["M04 จากวงเงินที่ขอถึงที่เห็นชอบ", "M04 From requested to decided"],
+    say: ["รอบวงเงินมาจากคำขอจริง ไม่ใช่ตัวอย่างแยก กราฟน้ำตกบอกว่าลดที่ไหน เท่าไร และทุกการปรับมีเหตุผลในบันทึก", "Round amounts come from the real requests. The waterfall shows where and how much was cut, and every change has a reason in the log."],
+    do: ["ชี้กราฟน้ำตก → ชี้คำขอที่ถูกปรับลดมากที่สุด → ชี้บันทึกการปรับวงเงินที่มาจาก 3R", "Point at the waterfall → the largest cuts → the change log entries that came from 3R"] },
+  { t: "32:00", role: "plan", link: "sub-status", title: ["M05 รัฐมนตรีเห็นชอบ และชุดยื่นตามแบบสำนักงบประมาณ", "M05 Minister's approval and the Budget Bureau pack"],
+    say: ["ส่งได้เมื่อรัฐมนตรีเจ้าสังกัดเห็นชอบตามมาตรา 25 ชุดยื่นจัดตามแบบรายงานในคู่มือสำนักงบประมาณ พร้อมไฟล์ CSV สำหรับ e-Budgeting", "Sending needs the minister's approval (section 25). The pack follows the Budget Bureau's report layout, with a CSV for e-Budgeting."],
+    do: ["ชี้ปุ่มส่งที่ยังกดไม่ได้ → ใส่เลขที่หนังสือ “บันทึกความเห็นชอบ” → แท็บชุดยื่นตามแบบสำนักงบประมาณ เลื่อนดู 5 ส่วน → “คัดลอก CSV”", "Point at the disabled send button → enter a letter number, Record the approval → Budget Bureau pack tab, scroll the five parts → Copy CSV"] },
+  { t: "33:00", role: "plan", link: "sub-brief", title: ["M05 ชุดชี้แจง", "M05 Briefing pack"],
+    say: ["ก่อนชี้แจงสำนักงบประมาณ ครม. หรือกรรมาธิการ ระบบสรุปหนึ่งหน้าต่อคำขอ คาดคำถาม และให้ AI ร่างคำตอบจากข้อมูลคำขอ พร้อมข้อสังเกตของกรรมาธิการปีก่อน", "Before a hearing, one page per request, the likely questions and AI-drafted answers from the request data, plus last year's committee observations."],
+    do: ["ชี้ข้อสังเกตปีก่อน → “ให้ AI ร่างคำตอบ (AG-16)” → อ่านคำตอบหนึ่งข้อ", "Point at last year's observations → Have AI draft the answers (AG-16) → read one answer"] },
+  { t: "34:00", role: "fin", link: "alloc-balance", title: ["M06 ยอดคงเหลือ 4 ระดับ", "M06 Four-level balances"],
+    say: ["ทุกบรรทัดเห็นจัดสรร จอง ผูกพัน และเบิกจ่าย จาก Fisko Procurement และ Fisko Finance ยอดใช้ได้จริงคือจัดสรรลบจองและผูกพัน และระบบจัดซื้อไม่ให้ใช้เกินยอดนี้", "Each line shows allotted, reserved, committed and paid, from Fisko Procurement and Finance. Available = allotted − reserved − committed, and procurement can't go beyond it."],
+    do: ["ชี้แถบสี่ชั้น → คลิกบรรทัดที่มีสัญญาเพื่อดูใบขอซื้อ สัญญา และการเบิกจ่าย → ชี้บรรทัดที่ต้องส่งต่อส่วนภูมิภาคภายใน 15 วัน", "Point at the four-part bars → click a line with a contract to see its requisitions, contracts and payments → point at the line due to the region within 15 days"] },
+  { t: "35:00", role: "fin", link: "alloc-savings", title: ["M06 เงินเหลือจ่ายและการโอนตามระเบียบ", "M06 Savings and transfers by the regulation"],
+    say: ["เงินเหลือจ่ายจากสัญญาโอนได้ ระบบจัดประเภทการโอนจากโครงสร้างงบประมาณ: ภายในผลผลิตอนุมัติได้เองแล้วรายงานภายใน 15 วัน ข้ามแผนงานต้องตกลงสำนักงบประมาณ โครงการใหม่ต้องเสนอ ครม.", "A contract saving can be moved. The system classifies the transfer from the budget structure: within an output it is approved here and reported within 15 days, across programmes it needs the Budget Bureau, a new project needs the Cabinet."],
+    do: ["“โอนตามระเบียบ” ที่เงินเหลือจ่าย → เลือกปลายทาง ดูประเภท T ที่เปลี่ยนตาม → เลือกเหตุผลตามข้อ 25 → “ขอโอนเปลี่ยนแปลง”", "Transfer it, on a saving → pick a destination and watch the T type change → pick a clause-25 reason → Request transfer"] },
+  { t: "36:00", role: "exec", link: "mon-live", title: ["M07 ติดตามปีนี้แบบสด", "M07 This year, live"],
+    say: ["ผู้บริหารเห็นการเบิกจ่ายปีนี้จากข้อมูลจริงของการจัดสรร จัดซื้อ และการเงิน เทียบเป้าหมายรายไตรมาสของปี และงบลงทุนที่ยังไม่ก่อหนี้ก่อนพ้นไตรมาส 2", "The executive sees this year's spending from live allocation, procurement and finance data, against the year's quarterly targets, and investment not yet committed before Q2 ends."],
+    do: ["ชี้การ์ดเทียบเป้า → ตารางรายหน่วยงาน → รายการงบลงทุนที่ยังไม่ขยับ", "Point at the target cards → the unit table → the investment not moving"] },
+  { t: "37:00", role: "div", link: "perf-quarter", title: ["M08 รายงานรายไตรมาส", "M08 Quarterly reports"],
+    say: ["รายงานผลภายใน 15 วันหลังสิ้นไตรมาส และรายงานประจำปีภายใน 45 วัน พร้อมปัญหา แนวทางแก้ และหลักฐานที่ผู้ตรวจรับรอง ระบบบอกใครยังไม่ส่ง", "Results are due 15 days after each quarter and the annual report 45 days after the year, with problems, fixes and evidence the auditor certifies. The system shows who hasn't reported."],
+    do: ["กรอกผลทุกรายการ → “ใช้รูปตัวอย่าง” → “ส่งรายงาน” → เปลี่ยนเป็นกองแผน “รับรายงาน” → ชี้แท็บต้นทุนต่อผลผลิต และเผยแพร่", "Enter every result → Use a sample photo → Send report → switch to Planning, Accept → point at the Cost per output and Public page tabs"] },
+  { t: "38:00", role: "plan", link: "intel-bagents", title: ["M09 Agent งบประมาณ", "M09 Budget agents"],
+    say: ["Agent วางแผนเป็นขั้น อ่านข้อมูลจริง และหยุดให้คนอนุมัติทุกขั้นที่เปลี่ยนข้อมูลหรือแจ้งผู้อื่น เช่น เขียนวงเงินรอบ 2 หรือยื่นคำขอโอน ไม่มีการอนุมัติคำขอหรือการโอนแทนคน", "Agents plan steps, read real data and stop for a person at every step that changes data or notifies people, such as writing round-2 amounts or filing a transfer. They never approve requests or transfers."],
+    do: ["“เริ่มงาน” ที่ AG-03 → อ่านแต่ละขั้น → “อนุมัติขั้นนี้” ที่ขั้นบันทึกวงเงินรอบ 2 → ลอง AG-17 เตือนกองที่ยังไม่ส่งรายงาน", "Start AG-03 → read each step → Approve this step at the round-2 write → try AG-17 to remind units that haven't reported"] },
+  { t: "39:00", role: "exec", link: "intel-bwhatif", title: ["M09 พยากรณ์และจำลอง 4 สถานการณ์", "M09 Forecast and four what-ifs"],
+    say: ["พยากรณ์เบิกจ่ายสิ้นปีเป็นช่วง เงินที่จะต้องกันเหลื่อมปี และภาระปีหน้า จำลองการลดกรอบ การเลื่อนงบลงทุน การโอนเงินเหลือจ่าย และการตัดของกรรมาธิการ โดยไม่แก้ข้อมูลจริง", "Year-end spending as a range, likely carry-over and next year's load; what-ifs for a ceiling cut, an investment slip, moving savings and a committee cut, without changing real data."],
+    do: ["ปรับ % ลดกรอบ และเปลี่ยนวิธีตัด ดูคำขอและตัวชี้วัดที่กระทบ → เลือกคำขอใน WI-B4 อ่านร่างคำขอแปรญัตติคืน → แท็บพยากรณ์ปีนี้", "Change the cut % and the method, watch the requests and KPIs affected → pick a request in WI-B4 and read the drafted appeal → This year's forecast tab"] },
+  { t: "40:00", role: "plan", link: "intel-bkpi", title: ["M09 ตัวชี้วัดและสัญญาณเตือน", "M09 KPIs and warning signals"],
+    say: ["ตัวชี้วัดงบประมาณ 10 ตัวนิยามไว้ที่เดียว ใช้ร่วมกับแดชบอร์ดและผู้ช่วย AI สัญญาณเตือน เช่น เร่งใช้ปลายปี ลงทุนไม่ขยับ หรือตัดเท่ากันทุกคำขอ ชี้ไปที่หลักฐาน", "Ten budget KPIs are defined once and shared by dashboards and the AI assistant. Signals such as a year-end rush, investment not moving or equal cuts link to the evidence."],
+    do: ["ชี้ KPI-B01 ถึง B10 → คลิกสัญญาณหนึ่งรายการเพื่อไปที่หลักฐาน", "Point at KPI-B01 to B10 → click a signal to open its evidence"] },
+  { t: "41:00", role: "admin", link: "admin-bcfg", title: ["M10 ตั้งค่า AI และสัญญาณ แล้วปิด", "M10 AI and signal settings, and close"],
+    say: ["เป้าหมายการเบิกจ่ายตามมติ ครม. สมมติฐานพยากรณ์ เกณฑ์สัญญาณ และเกณฑ์ 3R ปรับได้ทุกปีโดยผู้ดูแลระบบ ทุกค่าบอกระดับความมั่นใจ และทุกการปรับอยู่ในบันทึกการใช้งาน", "Spending targets from the Cabinet resolution, forecast assumptions, signal thresholds and the 3R rules are set each year by the administrator. Each value shows its confidence level, and every change is in the audit log."],
+    do: ["ลดเกณฑ์ BF-01 เป็น 10% → กลับไปแท็บสัญญาณดูจำนวนที่เปลี่ยน → “คืนค่าตั้งต้น”", "Lower BF-01 to 10% → go back to the signals tab and see the count change → Restore defaults"] },
+
 ];
 VIEWS.demo = () => `
-  <div class="head"><div><div class="eyebrow">${L("คู่มือการสาธิต", "Demo guide")}</div><h1>${L("สาธิต Fisko 15 นาที + ส่วนเสริมจัดซื้อและการเงิน", "Fisko in 15 minutes + the Procurement and Finance extension")}</h1>
+  <div class="head"><div><div class="eyebrow">${L("คู่มือการสาธิต", "Demo guide")}</div><h1>${L("สาธิต Fisko 15 นาที + ส่วนเสริมจัดซื้อและการเงิน + วงจรงบประมาณเชิงลึก", "Fisko in 15 minutes + the Procurement and Finance extension + the Budget cycle in depth")}</h1>
     <p>${L("ทุกขั้นตอนเดินตามโครงการตัวอย่างเดียวกัน กด “ไปที่ขั้นนี้” เพื่อสลับบทบาทและเปิดหน้าที่ถูกต้อง", "Every step follows the same storyline project. Go to step switches the role and opens the right screen.")}</p></div>
     <div class="sp"></div><button class="btn" type="button" id="demo-reset">${L("เริ่มใหม่ด้วยข้อมูลตั้งต้น", "Start over with fresh data")}</button></div>
   <ol class="demo">${DEMO.map((s, i) => `<li class="panel"><div class="demo-t">${s.t}</div>

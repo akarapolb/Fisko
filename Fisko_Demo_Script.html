@@ -52,7 +52,7 @@ td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: to
 <div class="wrap">
   <div class="eyebrow">Fisko · Demo script</div>
   <h1>สคริปต์สาธิต Fisko 15 นาที</h1>
-  <p class="sub">มีส่วนเสริมสำหรับ Fisko Procurement และ Fisko Finance อีกราว 12 นาที (ขั้น 16 ถึง 25) อยู่ท้ายสคริปต์รายขั้น</p>
+  <p class="sub">มีส่วนเสริมสำหรับ Fisko Procurement และ Fisko Finance อีกราว 12 นาที (ขั้น 16 ถึง 25) และส่วนเสริม 2 วงจรงบประมาณเชิงลึกอีกราว 14 นาที (ขั้น 26 ถึง 39) อยู่ท้ายสคริปต์รายขั้น · ปรับปรุงรอบ 35 (ตุลาคม 2569)</p>
   <p class="sub">ใช้คู่กับต้นแบบ Fisko_Prototype.html หรือลิงก์ที่เผยแพร่ · ทุกขั้นเดินตามโครงการตัวอย่างเดียวกันตั้งแต่แผนถึงผลสัมฤทธิ์ · ในต้นแบบมีหน้า “คู่มือการสาธิต” ที่มีปุ่มพาไปแต่ละขั้น</p>
 
   <h2>ก่อนเริ่ม (2 นาที ก่อนลูกค้าเข้าห้อง)</h2>
@@ -106,8 +106,9 @@ td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: to
   <div class="step"><div class="time">1:45<small>1.75 นาที</small></div><div>
     <h3>3. M02 จัดทำคำขอพร้อมผู้ช่วย AI</h3><span class="role">สำนัก / กอง</span><span class="sub">เปิดคำขอโครงการตัวอย่าง</span>
     <div class="say">“ผู้จัดทำคัดลอกรายการจาก Excel มาวางได้เลย ระบบตรวจตัวเลขและเทียบราคามาตรฐานให้ทันที รายการที่ผิดจะไม่ถูกเพิ่ม AI ช่วยร่างเหตุผลความจำเป็นจากข้อมูลจริง แต่ผู้จัดทำเป็นคนตรวจและกดส่งเสมอ”<span class="en">The requester pastes lines straight from Excel; numbers and standard prices are checked at once and bad rows are left out. AI drafts the justification from real data, but the requester always reviews and sends.</span></div>
-    <div class="click"><b>คลิก:</b> “วางจาก Excel” → “ใส่ข้อมูลตัวอย่าง” (ชี้แถวที่ผิด) → “เพิ่ม 2 รายการ” → “ร่างเหตุผลความจำเป็น” → “แนบคุณลักษณะเฉพาะ” → “ส่งให้กองแผนงาน”</div>
-    <div class="backup">ถ้าส่งไม่ได้: ดูรายการที่มีเครื่องหมาย × ในกล่องตรวจความครบถ้วน แล้วแก้ตามนั้น (มักเป็นเอกสารแนบ)</div>
+    <div class="click"><b>คลิก:</b> “วางจาก Excel” → “ใส่ข้อมูลตัวอย่าง” (ชี้แถวที่ผิด) → “เพิ่ม 2 รายการ” → “ร่างเหตุผลความจำเป็น” → ทำตามแถบ “ขั้นต่อไป”: แผนรายไตรมาส “เติมตามรูปแบบ” · ความพร้อม เลือกระดับ · เอกสารแนบ “ใช้ไฟล์ตัวอย่าง” · ครุภัณฑ์ ใส่สถานที่ → “ส่งให้ ผอ.กองเห็นชอบ” → เปลี่ยนบทบาทเป็น ผอ.กอง (ผู้อำนวยการกอง) → “เห็นชอบและส่งกองแผนงาน”</div>
+    <div class="backup">ถ้าส่งไม่ได้: จุดแดงบนแถบขั้นตอนบอกว่าขั้นไหนยังขาด กดปุ่ม “ไปที่ขั้นนี้” ในแถบ “ขั้นต่อไป” แล้วแก้ตามนั้น</div>
+    <div class="msg"><b>ข้อความหลัก:</b> คำขอครบตามคู่มือสำนักงบประมาณตั้งแต่ต้นทาง (แผนรายไตรมาส ความพร้อม เอกสารตามเงื่อนไข) และผ่าน ผอ.กอง ก่อนถึงกองแผน</div>
   </div></div>
 
   <div class="step"><div class="time">3:30<small>1 นาที</small></div><div>
@@ -131,8 +132,8 @@ td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: to
 
   <div class="step"><div class="time">6:15<small>0.75 นาที</small></div><div>
     <h3>7. M04 มติคณะกรรมการ</h3><span class="role">ผู้บริหาร</span><span class="sub">แท็บการประชุมคณะกรรมการ</span>
-    <div class="say">“บันทึกมติรายวาระได้ในที่ประชุม ระบบปรับสถานะคำขอตามมติทันที และใช้วงเงินตามมติต่อในการส่งสำนักงบประมาณ ไม่ต้องพิมพ์ซ้ำ”<span class="en">Resolutions are recorded item by item in the meeting; request statuses update immediately and the resolved amount flows into submission.</span></div>
-    <div class="click"><b>คลิก:</b> เลือก “เห็นชอบโดยปรับลดวงเงิน” ใส่วงเงินประมาณ 90% → “บันทึกมติและปิดการประชุม”</div>
+    <div class="say">“กรรมการลงความเห็นได้ก่อนประชุม ผู้ที่มาจากกองเจ้าของคำขอต้องงดออกเสียง ระบบตรวจองค์ประชุม แสดงผลกระทบของการปรับลดต่อตัวชี้วัดก่อนลงมติ แล้วร่างรายงานการประชุมให้จากมติ”<span class="en">Members vote before the meeting, members from the requesting unit abstain, the quorum is checked, a cut shows its effect on KPIs before the vote, and the minutes are drafted from the resolutions.</span></div>
+    <div class="click"><b>คลิก:</b> ลง “ความเห็นของฉัน” → เลือก “เห็นชอบโดยปรับลดวงเงิน” ใส่วงเงินประมาณ 90% ชี้ผลกระทบที่เปลี่ยนตาม → “บันทึกมติและปิดการประชุม” → ชี้รายงานการประชุมที่ร่างให้</div>
   </div></div>
 
   <div class="step"><div class="time">7:00<small>1 นาที</small></div><div>
@@ -270,6 +271,127 @@ td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: to
     </tbody>
   </table></div>
 
+  <h2>ส่วนเสริม 2: วงจรงบประมาณเชิงลึก (ราว 14 นาที)</h2>
+  <div class="box"><p>ใช้ต่อจากขั้น 25 หรือแยกเป็นการสาธิตของตัวเองกับลูกค้าที่ดูแลงานงบประมาณ ทุกขั้นใช้ข้อมูลตัวอย่างชุดเดิมและปุ่ม “ไปที่ขั้นนี้” ในหน้าคู่มือการสาธิตเพื่อเปลี่ยนบทบาทและเปิดหน้าที่ถูกต้อง ครอบคลุมสิ่งที่สร้างในรอบ 26 ถึง 34 ตามเอกสารออกแบบ Fisko Budget</p></div>
+  <div class="tbl"><table>
+    <thead><tr><th>เวลา</th><th>ช่วง</th><th>บทบาท</th><th>ข้อความหลัก</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">28:00</td><td>ผู้ช่วย AI ทำงานร่วม</td><td>สำนัก / กอง</td><td>คุยกับผู้ช่วยได้ทุกหน้า คนกดปุ่มเอง</td></tr>
+      <tr><td class="mono">29:00</td><td>M01 แผนระดับชาติ</td><td>กองแผนงาน</td><td>ทุกบาทเชื่อมถึงยุทธศาสตร์ชาติ</td></tr>
+      <tr><td class="mono">30:00</td><td>M03 3R และฐานศูนย์</td><td>กองแผนงาน</td><td>ลด ย้าย แทนที่ ตามคู่มือปี 2570</td></tr>
+      <tr><td class="mono">31:00</td><td>M04 กราฟน้ำตก</td><td>กองแผนงาน</td><td>เห็นว่าตัดที่ไหน เท่าไร เพราะอะไร</td></tr>
+      <tr><td class="mono">32:00</td><td>M05 รัฐมนตรีและชุดยื่น</td><td>กองแผนงาน</td><td>ส่งตามมาตรา 25 ในแบบของสำนักงบประมาณ</td></tr>
+      <tr><td class="mono">33:00</td><td>M05 ชุดชี้แจง</td><td>กองแผนงาน</td><td>เตรียมคำตอบก่อนถูกถาม</td></tr>
+      <tr><td class="mono">34:00</td><td>M06 ยอด 4 ระดับ</td><td>การเงิน</td><td>ตัวเลขเดียว มาจากจัดซื้อและการเงินจริง</td></tr>
+      <tr><td class="mono">35:00</td><td>M06 โอนตามระเบียบ</td><td>การเงิน</td><td>ระบบรู้ว่าใครต้องอนุมัติการโอนแบบไหน</td></tr>
+      <tr><td class="mono">36:00</td><td>M07 ปีนี้แบบสด</td><td>ผู้บริหาร</td><td>เห็นก่อนไตรมาส 2 ว่าใครจะไม่ถึงเป้า</td></tr>
+      <tr><td class="mono">37:00</td><td>M08 รายงานรายไตรมาส</td><td>สำนัก / กอง → กองแผนงาน</td><td>รายงานตรงเวลา มีหลักฐาน มีต้นทุนต่อหน่วย</td></tr>
+      <tr><td class="mono">38:00</td><td>M09 Agent งบประมาณ</td><td>กองแผนงาน</td><td>AI ทำงานหลายขั้น คนอนุมัติทุกขั้นที่เขียนข้อมูล</td></tr>
+      <tr><td class="mono">39:00</td><td>M09 พยากรณ์และจำลอง</td><td>ผู้บริหาร</td><td>ลองก่อนตัดสินใจ โดยไม่แก้ข้อมูลจริง</td></tr>
+      <tr><td class="mono">40:00</td><td>M09 ตัวชี้วัดและสัญญาณ</td><td>กองแผนงาน</td><td>นิยามเดียว ใช้ทั้งองค์กร</td></tr>
+      <tr><td class="mono">41:00</td><td>M10 ตั้งค่า และปิด</td><td>ผู้ดูแลระบบ</td><td>ปรับเกณฑ์ทุกปีโดยไม่แก้โค้ด</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="step"><div class="time">28:00<small>1 นาที</small></div><div>
+    <h3>26. ผู้ช่วย AI ทำงานร่วมในทุกหน้า</h3><span class="role">สำนัก / กอง</span><span class="sub">พื้นที่ทำงานของฉัน → ปุ่ม “ผู้ช่วย AI” ที่แถบบน (Ctrl+J)</span>
+    <div class="say">“ผู้ช่วยรู้ว่าเราอยู่หน้าไหน คุยกับผู้ช่วยทั่วไปที่ส่งต่อให้ผู้เชี่ยวชาญ หรือเรียกผู้ช่วยเฉพาะทางด้วย @ แนบไฟล์หรือพูดได้ ทุกอย่างที่เขียนข้อมูลเป็นปุ่มที่คนกดเอง”<span class="en">The assistant knows the page you are on. Talk to the general assistant, which hands off to a specialist, or call one with @. Attach a file or speak; anything that writes data is a button a person presses.</span></div>
+    <div class="click"><b>คลิก:</b> “ผู้ช่วย AI” → ถาม “วันนี้ฉันควรทำอะไรก่อน” → พิมพ์ “@AG-05 หน่วยงานไหนเบิกจ่ายช้ากว่าแผน” → ชี้ขั้นตอนที่ AI ทำ → ปุ่มขยายเต็มจอ ชี้รายชื่อผู้ช่วย</div>
+    <div class="backup">ไมโครโฟนในหน้าที่เผยแพร่ถูกปิด ระบบจะใส่ข้อความตัวอย่างแทน ใช้ไฟล์ Fisko_Prototype.html ในเครื่องถ้าต้องการพูดจริง</div>
+  </div></div>
+
+  <div class="step"><div class="time">29:00<small>1 นาที</small></div><div>
+    <h3>27. M01 เชื่อมโยงถึงแผนระดับชาติ</h3><span class="role">กองแผนงาน</span><span class="sub">แผนยุทธศาสตร์ → แท็บความเชื่อมโยงถึงแผนชาติ</span>
+    <div class="say">“ตามแผนภาพในคู่มือสำนักงบประมาณ ทุกคำขอเชื่อมยุทธศาสตร์ชาติ แผนแม่บท ยุทธศาสตร์หน่วยงาน และตัวชี้วัด เห็นทันทีว่าตัวชี้วัดใดยังไม่มีคำขอ และสัดส่วนวงเงินของแต่ละยุทธศาสตร์เทียบขั้นต่ำที่ผู้บริหารกำหนด”<span class="en">As in the Budget Bureau's linkage map, every request links to the national strategy, a master plan, the agency strategy and a KPI; you see unfunded KPIs and each strategy's share against the minimum.</span></div>
+    <div class="click"><b>คลิก:</b> เปิดต้นไม้ → ชี้การ์ด “ตัวชี้วัดที่ยังไม่มีคำขอ” → เลื่อนลงชี้ตารางสัดส่วนวงเงินตามยุทธศาสตร์</div>
+  </div></div>
+
+  <div class="step"><div class="time">30:00<small>1 นาที</small></div><div>
+    <h3>28. M03 วิเคราะห์ 3R และงบฐานศูนย์</h3><span class="role">กองแผนงาน</span><span class="sub">รวบรวมคำขอ → แท็บวิเคราะห์ 3R</span>
+    <div class="say">“Review ผลเบิกจ่ายปีก่อน Redeploy จากคำขอที่คะแนนต่ำหรือกองที่ใช้จ่ายช้า Replace ไปยังงานจำเป็นที่อยู่ใต้เส้นกรอบ ตามคู่มือปี 2570 แล้วใช้ผลเป็นข้อเสนอรอบ 2 ได้ทันที”<span class="en">Review last year's spending, Redeploy from low-score or slow-spending requests, Replace into priority work below the line, per the FY2570 manual, and use it as the round-2 proposal.</span></div>
+    <div class="click"><b>คลิก:</b> ชี้การ์ด Review Redeploy Replace → “ใช้เป็นข้อเสนอรอบ 2 ของกองแผน” → แท็บมุมมองฐานศูนย์ → “ขอให้อธิบายใหม่” ที่คำขอยกยอด</div>
+    <div class="msg"><b>ข้อความหลัก:</b> หลักเกณฑ์ 3R ปรับได้ที่ M10 ทุกปี</div>
+  </div></div>
+
+  <div class="step"><div class="time">31:00<small>1 นาที</small></div><div>
+    <h3>29. M04 จากวงเงินที่ขอถึงที่เห็นชอบ</h3><span class="role">กองแผนงาน</span><span class="sub">กลั่นกรองและอนุมัติ → แท็บวงเงินแต่ละรอบ</span>
+    <div class="say">“รอบวงเงินคำนวณจากคำขอจริง กราฟน้ำตกบอกว่าลดที่ขั้นไหน เท่าไร และกดดูได้ว่าคำขอใดถูกลดมากที่สุด ทุกการปรับมีเหตุผลในบันทึก รวมถึงที่มาจาก 3R”<span class="en">Rounds come from the real requests; the waterfall shows where and how much was cut, which requests were cut most, and every change has a reason, including those from 3R.</span></div>
+    <div class="click"><b>คลิก:</b> ชี้กราฟน้ำตก → ชี้รายการ “คำขอที่ถูกปรับลดมากที่สุด” → ชี้บันทึกการปรับวงเงินด้านล่าง</div>
+  </div></div>
+
+  <div class="step"><div class="time">32:00<small>1 นาที</small></div><div>
+    <h3>30. M05 รัฐมนตรีเห็นชอบ และชุดยื่นตามแบบสำนักงบประมาณ</h3><span class="role">กองแผนงาน</span><span class="sub">ส่งสำนักงบประมาณ → แท็บสถานะ</span>
+    <div class="say">“ส่งได้เมื่อรัฐมนตรีเจ้าสังกัดเห็นชอบตามมาตรา 25 ชุดยื่นจัดตามแบบรายงานในคู่มือ สรุปตามแผนงาน กิจกรรมตามลำดับความสำคัญ งบรายจ่าย ผูกพันข้ามปี และแผนรายไตรมาส พร้อมไฟล์สำหรับ e-Budgeting”<span class="en">Sending needs the minister's approval (section 25). The pack follows the manual's reports, with a file for e-Budgeting.</span></div>
+    <div class="click"><b>คลิก:</b> ชี้ปุ่มส่งที่ยังกดไม่ได้ → ใส่เลขที่หนังสือ → “บันทึกความเห็นชอบ” → แท็บชุดยื่นตามแบบสำนักงบประมาณ → “คัดลอก CSV”</div>
+  </div></div>
+
+  <div class="step"><div class="time">33:00<small>1 นาที</small></div><div>
+    <h3>31. M05 ชุดชี้แจง</h3><span class="role">กองแผนงาน</span><span class="sub">ส่งสำนักงบประมาณ → แท็บชุดชี้แจง</span>
+    <div class="say">“ก่อนชี้แจง ระบบรวบรวมข้อสังเกตของกรรมาธิการปีก่อน สรุปหนึ่งหน้าต่อคำขอ และคาดคำถาม เช่น ทำไมเพิ่มเกินร้อยละ 20 หรือพร้อมดำเนินการหรือไม่ แล้วให้ AI ร่างคำตอบจากข้อมูลคำขอ”<span class="en">Before a hearing: last year's observations, one page per request, likely questions, and AI-drafted answers from the request data.</span></div>
+    <div class="click"><b>คลิก:</b> ชี้ตารางข้อสังเกต → “ให้ AI ร่างคำตอบ (AG-16)” → อ่านคำตอบหนึ่งข้อ</div>
+  </div></div>
+
+  <div class="step"><div class="time">34:00<small>1 นาที</small></div><div>
+    <h3>32. M06 ยอดคงเหลือ 4 ระดับ</h3><span class="role">การเงินและบัญชี</span><span class="sub">จัดสรรงบประมาณ → แท็บยอดคงเหลือ 4 ระดับ</span>
+    <div class="say">“ทุกบรรทัดเห็นจัดสรร จอง ผูกพัน และเบิกจ่าย ซึ่งมาจาก Fisko Procurement และ Fisko Finance โดยตรง ยอดที่ใช้ได้จริงคือจัดสรรลบจองและผูกพัน และระบบจัดซื้อไม่ยอมให้ใช้เกินยอดนี้ตามมาตรา 40”<span class="en">Each line shows allotted, reserved, committed and paid, straight from procurement and finance; procurement can't go beyond what is available (section 40).</span></div>
+    <div class="click"><b>คลิก:</b> ชี้แถบสี่ชั้น → คลิกบรรทัดที่มีสัญญาเพื่อดูใบขอซื้อ สัญญา และการเบิกจ่าย → ชี้บรรทัดที่ต้องส่งต่อส่วนภูมิภาคภายใน 15 วัน</div>
+  </div></div>
+
+  <div class="step"><div class="time">35:00<small>1 นาที</small></div><div>
+    <h3>33. M06 เงินเหลือจ่ายและการโอนตามระเบียบ</h3><span class="role">การเงินและบัญชี</span><span class="sub">จัดสรรงบประมาณ → แท็บเงินเหลือจ่าย</span>
+    <div class="say">“เงินเหลือจ่ายจากสัญญาโอนได้ ระบบจัดประเภทการโอนจากโครงสร้างงบประมาณตามระเบียบปี 2562: ภายในผลผลิตอนุมัติได้เองแล้วรายงานภายใน 15 วัน ข้ามแผนงานต้องตกลงสำนักงบประมาณ ตั้งโครงการใหม่ต้องเสนอ ครม. และโอนข้ามหน่วยรับงบประมาณไม่ได้”<span class="en">A saving can be moved; the system classifies the transfer from the budget structure under the 2019 regulation and routes it to the right approver.</span></div>
+    <div class="click"><b>คลิก:</b> “โอนตามระเบียบ” ที่เงินเหลือจ่าย → เลือกปลายทางสองแบบให้เห็นประเภท T เปลี่ยน → เลือกเหตุผลตามข้อ 25 → “ขอโอนเปลี่ยนแปลง”</div>
+  </div></div>
+
+  <div class="step"><div class="time">36:00<small>1 นาที</small></div><div>
+    <h3>34. M07 ติดตามปีนี้แบบสด</h3><span class="role">ผู้บริหาร</span><span class="sub">ติดตามการใช้จ่าย → แท็บปีปัจจุบัน (สด)</span>
+    <div class="say">“ตัวเลขปีนี้มาจากการจัดสรร จัดซื้อ และการเงินจริง เทียบเป้าหมายรายไตรมาสตามมติ ครม. ของปี และชี้งบลงทุนที่ยังไม่ก่อหนี้ ซึ่งต้องทำให้ทันไตรมาส 2”<span class="en">This year's figures come from live data, against the year's quarterly targets, with investment not yet committed before Q2 ends.</span></div>
+    <div class="click"><b>คลิก:</b> ชี้การ์ดเทียบเป้า → ตารางรายหน่วยงาน → รายการงบลงทุนที่ยังไม่ขยับ</div>
+  </div></div>
+
+  <div class="step"><div class="time">37:00<small>1 นาที</small></div><div>
+    <h3>35. M08 รายงานรายไตรมาส</h3><span class="role">สำนัก / กอง → กองแผนงาน</span><span class="sub">ผลสัมฤทธิ์ → แท็บรายงานรายไตรมาส</span>
+    <div class="say">“รายงานผลภายใน 15 วันหลังสิ้นไตรมาส รายงานประจำปีภายใน 45 วัน พร้อมปัญหา แนวทางแก้ และหลักฐานที่ผู้ตรวจรับรอง ระบบบอกว่าใครยังไม่ส่ง และคำนวณต้นทุนต่อหน่วยผลผลิตให้”<span class="en">Results are due 15 days after each quarter, with problems, fixes and certified evidence; the system shows who is late and works out the cost per output.</span></div>
+    <div class="click"><b>คลิก:</b> กรอกผลทุกรายการ → “ใช้รูปตัวอย่าง” → “ส่งรายงาน” → เปลี่ยนเป็นกองแผน “รับรายงาน” → ชี้แท็บต้นทุนต่อผลผลิต และเผยแพร่</div>
+  </div></div>
+
+  <div class="step"><div class="time">38:00<small>1 นาที</small></div><div>
+    <h3>36. M09 Agent งบประมาณ</h3><span class="role">กองแผนงาน</span><span class="sub">ผู้ช่วย AI งบประมาณ → แท็บ Agent งบประมาณ</span>
+    <div class="say">“Agent วางแผนเป็นขั้น อ่านข้อมูลจริง และหยุดให้คนอนุมัติทุกขั้นที่เปลี่ยนข้อมูลหรือแจ้งผู้อื่น ไม่อนุมัติคำขอ ไม่ลงมติ และไม่อนุมัติการโอนแทนคน”<span class="en">Agents plan steps, read real data and stop for a person at every step that changes data or notifies people; they never approve requests, vote or approve transfers.</span></div>
+    <div class="click"><b>คลิก:</b> “เริ่มงาน” ที่ AG-03 → อ่านแต่ละขั้น → “อนุมัติขั้นนี้” ที่ขั้นบันทึกวงเงินรอบ 2 → ลอง AG-17 เตือนกองที่ยังไม่ส่งรายงาน</div>
+    <div class="msg"><b>ย้ำ:</b> ต้นแบบจำลอง Agent ด้วยกฎ ไม่เรียกโมเดลภาษา (D-P09)</div>
+  </div></div>
+
+  <div class="step"><div class="time">39:00<small>1 นาที</small></div><div>
+    <h3>37. M09 พยากรณ์และจำลอง 4 สถานการณ์</h3><span class="role">ผู้บริหาร</span><span class="sub">ผู้ช่วย AI งบประมาณ → แท็บจำลอง 4 สถานการณ์</span>
+    <div class="say">“ลองก่อนตัดสินใจ ลดกรอบด้วยวิธีต่างกัน เลื่อนงบลงทุน โอนเงินเหลือจ่าย หรือถ้ากรรมาธิการตัด ระบบบอกผลต่อคำขอ ตัวชี้วัด เป้าเบิกจ่าย และร่างคำขอแปรญัตติคืนให้ โดยไม่แก้ข้อมูลจริง”<span class="en">Try before deciding: a ceiling cut, an investment slip, moving savings, or a committee cut, with the effect on requests, KPIs and spending, and a drafted appeal, without changing real data.</span></div>
+    <div class="click"><b>คลิก:</b> ปรับ % ลดกรอบ เปลี่ยนวิธีตัด → เลือกคำขอใน WI-B4 อ่านร่างคำขอแปรญัตติคืน → แท็บพยากรณ์ปีนี้ ชี้ช่วงพยากรณ์เทียบเป้า</div>
+  </div></div>
+
+  <div class="step"><div class="time">40:00<small>1 นาที</small></div><div>
+    <h3>38. M09 ตัวชี้วัดและสัญญาณเตือน</h3><span class="role">กองแผนงาน</span><span class="sub">ผู้ช่วย AI งบประมาณ → แท็บตัวชี้วัดและสัญญาณ</span>
+    <div class="say">“ตัวชี้วัดงบประมาณ 10 ตัวนิยามไว้ที่เดียว ใช้ร่วมกันทั้งแดชบอร์ดและผู้ช่วย AI สัญญาณ เช่น เร่งใช้ปลายปี ลงทุนไม่ขยับ หรือตัดเท่ากันทุกคำขอ กดแล้วไปที่หลักฐานได้ทันที”<span class="en">Ten budget KPIs defined once and shared; signals such as a year-end rush or equal cuts open their evidence in one click.</span></div>
+    <div class="click"><b>คลิก:</b> ชี้ KPI-B01 ถึง B10 → คลิกสัญญาณหนึ่งรายการ</div>
+  </div></div>
+
+  <div class="step"><div class="time">41:00<small>1 นาที</small></div><div>
+    <h3>39. M10 ตั้งค่า AI และสัญญาณ แล้วปิด</h3><span class="role">ผู้ดูแลระบบ</span><span class="sub">ผู้ดูแลระบบ → แท็บตั้งค่างบประมาณ (AI และสัญญาณ)</span>
+    <div class="say">“เป้าหมายการเบิกจ่ายตามมติ ครม. สมมติฐานพยากรณ์ เกณฑ์สัญญาณ และเกณฑ์ 3R ปรับได้ทุกปีโดยไม่แก้โค้ด ทุกค่าบอกระดับความมั่นใจว่ามาจากแหล่งใด และทุกการปรับอยู่ในบันทึกการใช้งาน”<span class="en">Spending targets, forecast assumptions, signal thresholds and the 3R rules are set each year without code; each shows its confidence level and every change is audited.</span></div>
+    <div class="click"><b>คลิก:</b> ลดเกณฑ์ BF-01 เป็น 10% → กลับไปแท็บสัญญาณดูจำนวนที่เปลี่ยน → “คืนค่าตั้งต้น”</div>
+    <div class="msg"><b>ปิด:</b> ทั้งวงจรงบประมาณ ตั้งแต่ยุทธศาสตร์ถึงผลสัมฤทธิ์ อยู่บนข้อมูลชุดเดียว ตามแนวปฏิบัติของสำนักงบประมาณ และ AI ช่วยทุกขั้นโดยคนเป็นผู้ตัดสิน</div>
+  </div></div>
+
+  <h3>คำถามเพิ่มเติมที่น่าจะพบในส่วนงบประมาณเชิงลึก</h3>
+  <div class="tbl"><table>
+    <thead><tr><th>คำถาม</th><th>คำตอบสั้น</th></tr></thead>
+    <tbody>
+      <tr><td>หลักเกณฑ์ตรงกับระเบียบปัจจุบันหรือไม่</td><td>อ้างคู่มือสำนักงบประมาณปี 2570 พ.ร.บ.วิธีการงบประมาณ 2561 และระเบียบการบริหารงบประมาณ 2562 ทุกค่ามีระดับความมั่นใจ และระเบียบฉบับที่ 2 พ.ศ. 2567 ต้องตรวจถ้อยคำก่อนใช้งานจริง</td></tr>
+      <tr><td>ส่งข้อมูลเข้า e-Budgeting และ BB EvMIS ได้จริงไหม</td><td>ต้นแบบส่งออกเป็นไฟล์ CSV ตามแบบรายงาน รูปแบบไฟล์จริงต้องได้ข้อกำหนดจากสำนักงบประมาณ</td></tr>
+      <tr><td>Agent ตัดงบหรืออนุมัติแทนคนได้ไหม</td><td>ไม่ได้ ทุกขั้นที่เปลี่ยนข้อมูลรอคนที่มีอำนาจอนุมัติ และไม่มีเครื่องมืออนุมัติคำขอ ลงมติ หรืออนุมัติการโอน</td></tr>
+      <tr><td>ข้อมูลในแต่ละหน้าตรงกันไหม</td><td>ตรงกัน ยอดรวมคำขอ รอบวงเงิน บรรทัดจัดสรร และยอดคงเหลือคำนวณจากรายการเดียวกัน ไม่มียอดตั้งไว้แยก</td></tr>
+    </tbody>
+  </table></div>
+
   <h2>คำถามที่น่าจะพบ</h2>
   <div class="tbl"><table>
     <thead><tr><th>คำถาม</th><th>คำตอบสั้น</th></tr></thead>
@@ -288,6 +410,7 @@ td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: to
   <div class="box"><ul>
     <li><b>8 นาที:</b> ขั้น 1, 2, 3, 4, 7, 11, 13 แล้วปิดด้วยข้อความ M10</li>
     <li><b>5 นาที:</b> ขั้น 1, 3, 11, 13 แล้วปิดด้วยข้อความ M10</li>
+    <li><b>วงจรงบประมาณเชิงลึกสั้น 6 นาที:</b> ขั้น 26, 28, 33, 34, 37 แล้วปิดด้วยขั้น 39</li>
     <li><b>ส่วนเสริมจัดซื้อสั้น 5 นาที:</b> ขั้น 16, 20, 22, 23 (ขอซื้อ แฟ้มจัดซื้อ ประตูเบิกจ่าย สัญญาณเตือน)</li>
   </ul></div>
   <p class="sub" style="margin-top:40px">© 2026 Avalant · เอกสารภายในสำหรับผู้นำเสนอ · ข้อมูลในต้นแบบเป็นข้อมูลสมมติทั้งหมด</p>

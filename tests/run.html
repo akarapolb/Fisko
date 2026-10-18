@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fisko Test Sweep</title>
+<style>
+:root { --bg: #F7F8FA; --surface: #FFFFFF; --line: #E5E7EB; --ink: #111827; --muted: #6B7280; --ok: #15803D; --bad: #B91C1C; --accent: #34498C; }
+@media (prefers-color-scheme: dark) { :root { --bg: #0E1015; --surface: #15181F; --line: #262B36; --ink: #E8EAEE; --muted: #8F96A3; --ok: #4ADE80; --bad: #F08A8A; --accent: #9DB0E3; color-scheme: dark; } }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 system-ui, "Segoe UI", Tahoma, sans-serif; }
+main { max-width: 980px; margin: 0 auto; padding: 24px max(16px, env(safe-area-inset-left, 0px)) 40px; display: flex; flex-direction: column; gap: 16px; }
+h1 { font-size: 22px; font-weight: 600; margin: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+button { font: inherit; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 7px 14px; cursor: pointer; }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button:disabled { opacity: .5; cursor: default; }
+label { display: inline-flex; gap: 6px; align-items: center; }
+.bar { height: 8px; background: var(--line); border-radius: 99px; overflow: hidden; } .bar i { display: block; height: 100%; width: 0; background: var(--accent); }
+.sub { color: var(--muted); font-size: 13px; }
+.ok { color: var(--ok); font-weight: 600; } .bad { color: var(--bad); font-weight: 600; }
+pre { white-space: pre-wrap; font: 12.5px/1.5 ui-monospace, Consolas, monospace; margin: 0; max-height: 360px; overflow: auto; }
+iframe { width: 100%; height: 420px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Fisko test sweep</h1>
+  <p class="sub">Serve the project folder (for example <code>python -m http.server 8787 --bind 127.0.0.1</code> from the repository root) and open <code>http://127.0.0.1:8787/tests/run.html</code>. Rebuild first with <code>bash src/build.sh</code>. The sweep runs inside the prototype below and resets its saved demo data when it finishes.</p>
+  <div class="card">
+    <div class="row">
+      <button class="primary" type="button" id="full">Full sweep</button>
+      <button type="button" id="quick">Quick (sample organisation, 5 roles)</button>
+      <button type="button" id="demo">Demo walk only</button>
+    </div>
+    <div class="row sub">
+      <label><input type="checkbox" data-s="render" checked> render</label>
+      <label><input type="checkbox" data-s="chat" checked> chat</label>
+      <label><input type="checkbox" data-s="agents" checked> agents</label>
+      <label><input type="checkbox" data-s="demo" checked> demo</label>
+    </div>
+    <div class="bar"><i id="bar"></i></div>
+    <div id="status" class="sub">Loading the prototype…</div>
+  </div>
+  <div class="card"><b>Result</b><pre id="out">–</pre></div>
+  <iframe id="app" src="../Fisko_Prototype.html" title="Fisko prototype under test"></iframe>
+</main>
+<script>
+(function () {
+  const app = document.getElementById("app"), st = document.getElementById("status"), out = document.getElementById("out"), bar = document.getElementById("bar"), btns = ["full", "quick", "demo"].map(id => document.getElementById(id));
+  let ready = false;
+  app.addEventListener("load", () => {
+    const d = app.contentDocument, s = d.createElement("script");
+    s.src = new URL("sweep.js", location.href).href + "?v=" + Date.now();
+    s.onload = () => { ready = true; st.textContent = "Ready."; btns.forEach(b => (b.disabled = false)); };
+    s.onerror = () => { st.textContent = "Couldn't load tests/sweep.js. Open this page through a local web server, not as a file."; };
+    d.body.appendChild(s);
+  });
+  btns.forEach(b => (b.disabled = true));
+  const suites = () => [...document.querySelectorAll("[data-s]")].filter(c => c.checked).map(c => c.dataset.s);
+  async function go(opts) {
+    if (!ready) return;
+    btns.forEach(b => (b.disabled = true)); out.textContent = "Running…"; bar.style.width = "0";
+    const w = app.contentWindow;
+    try {
+      const r = await w.FISKO_TEST.run(Object.assign({ onProgress: p => { st.textContent = `${p.what} · ${p.n} checks · ${p.errors} errors`; bar.style.width = Math.min(100, p.done / Math.max(1, p.total) * 100) + "%"; } }, opts));
+      bar.style.width = "100%";
+      st.innerHTML = r.ok ? `<span class="ok">Passed</span> · ${r.checks} checks in ${r.seconds} s` : `<span class="bad">${r.errors.length} errors</span> · ${r.checks} checks in ${r.seconds} s`;
+      out.textContent = r.ok ? "All checks passed." : r.errors.join("\n");
+    } catch (e) { st.innerHTML = `<span class="bad">The sweep stopped</span>`; out.textContent = String(e && e.stack || e); }
+    btns.forEach(b => (b.disabled = false));
+  }
+  document.getElementById("full").onclick = () => go({ suites: suites() });
+  document.getElementById("quick").onclick = () => go({ suites: suites(), orgs: ["sample"], roles: ["div", "divhead", "plan", "exec", "fin"] });
+  document.getElementById("demo").onclick = () => go({ suites: ["demo"] });
+})();
+</script>
+</body>
+</html>

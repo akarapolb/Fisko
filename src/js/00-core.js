@@ -107,7 +107,8 @@ let APP = APP_IDS.includes(store.get("fisko-app")) ? store.get("fisko-app") : "b
 function allowed(id) { const n = NAV.find(x => x.id === id); return !n || n.roles.includes(ROLE); }
 function go(v) { if (location.hash === "#" + v) route(); else location.hash = v; }
 function route() {
-  let v = (location.hash || "#home").slice(1);
+  // window.FISKO_ROUTE lets tests/sweep.js route without touching browser history, which browsers throttle
+  let v = (window.FISKO_ROUTE || location.hash || "#home").slice(1);
   if (v.startsWith("admin-")) { ADMIN_TAB = v.slice(6); v = "admin"; }
   if (!VIEWS[v] && !NAV.find(n => n.id === v)) v = "home";
   CUR = v;
