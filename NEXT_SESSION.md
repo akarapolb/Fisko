@@ -89,7 +89,7 @@ Roles now: `div`, `divhead`, `plan`, `committee`, `exec`, `fin`, `audit`, `admin
 
 ## 6. Open items
 
-- **Procurement T1 (round 37, committed) and T2 (round 38, not committed or published) are built.** See `HANDOFF.md` sections 37 and 38. T2 to T4 follow design chapter 18. A parallel Finance FN1 build shares the working tree.
+- **Procurement T1 to T3 are built (T1 and T2 committed; T3, round 39, is not committed or published).** See `HANDOFF.md` sections 37, 38 and 39. T2 to T4 follow design chapter 18. A parallel Finance FN1 build shares the working tree.
 
 **From the Budget design** (chapter 13.4 of v0.2):
 

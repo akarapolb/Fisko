@@ -116,8 +116,10 @@ function t3Panel(c) {
 
 // ---------- committee fees ----------
 {
-  const nav = NAV.find(n => n.id === "procurement");
-  nav.tabs.push(["fees", ["ค่าตอบแทนกรรมการ", "Committee fees"], "P18"]);
+  const nav = NAV.find(n => n.id === "procurement"), all = [...nav.tabs, ["fees", ["ค่าตอบแทนกรรมการ", "Committee fees"], "P18"]];
+  Object.defineProperty(nav, "tabs", { get: () => all.filter(t => t[0] !== "fees" || feat("commFee")), configurable: true });
+  const bv = VIEWS.procurement;
+  VIEWS.procurement = () => { const h = bv(); return PROC_TAB === "fees" ? h.replace(/<h1>[^<]*<\/h1>/, `<h1>${tx(["ค่าตอบแทนกรรมการ", "Committee fees"])}</h1>`) : h; };
 }
 const feeOn = () => feat("commFee");
 const isOff = d => { const g = new Date(d + "T00:00:00").getDay(); return g === 0 || g === 6 || (S.holidays || []).includes(d); };
