@@ -18,8 +18,8 @@ function ensureApp() {
 function appOfLink(l) {
   if (!l) return "budget";
   if (l.startsWith("prc-") || l.startsWith("case:") || l === "procurement") return "procurement";
-  if (l.startsWith("fnc-") || l === "finance") return "finance";
-  if (l.startsWith("admin") || l === "home" || l === "delegation" || l === "advances" || l === "cashcount") return "all";
+  if (l.startsWith("fnc-") || l === "finance" || l === "advances") return "finance";
+  if (l.startsWith("admin") || l === "home" || l === "delegation" || l === "cashcount") return "all";
   return "budget";
 }
 const appChip = l => { const a = appOfLink(l); return a === "budget" || a === "all" ? "" : `<span class="appchip" style="--c:${APPS[a].color}">${esc(tx(APPS[a].name))}</span> `; };

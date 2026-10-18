@@ -267,7 +267,7 @@ BIND.advances = () => {
 
 // ---------- menu, clocks, badges, tasks ----------
 // Everyone borrows, so My advances sits in My Workspace, not in the finance officer's menu.
-NAV.push({ id: "advances", code: "", group: "overview", app: "all", roles: Object.keys(ROLES), label: ["เงินยืมของฉัน", "My advances"] });
+NAV.push({ id: "advances", code: "", group: "overview", app: "finance", roles: Object.keys(ROLES), label: ["เงินยืมของฉัน", "My advances"] });
 NAV_ICON.advances = "wallet"; NAV_ICON.adv = "wallet";
 {
   const n = NAV.find(x => x.id === "finance");
