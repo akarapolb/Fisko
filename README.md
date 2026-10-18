@@ -18,6 +18,7 @@ This repository holds the conceptual design material and a clickable prototype p
 | `Fisko_Budget_Design.html` | Fisko Budget detailed design v0.2 (Thai; every requirement marked built, partly built or not built, with build status, decision outcomes and open items): research on the Budget Procedures Act 2561, the Budget Administration Regulation 2562 and the Budget Bureau FY2570 request manual; design principles; budget cycle and states; gaps; functions FR-B-01 to 40; rules BR-07 to 21 and the transfer authority table R-B-01; data, roles and file-based links; eight redesigned screens; budget agents, forecast and what-if; KPIs and warning signals; build rounds B1 to B6; decisions D-B01 to 08. Draft. |
 | `tests/run.html`, `tests/sweep.js` | Test sweep: every page and tab for every role, language and organisation, the AI chat, the budget agents and the demo walk. Serve the folder and open `tests/run.html`. |
 | `HANDOFF.md` | Where things stand, how to run and change the prototype, decisions, limits and next steps. |
+| `NEXT_SESSION.md` | Short start-here note for the next working session: state, workflow, commands, gotchas and what to do next. |
 | `ROADMAP.md` | The deeper feature planned for each module (all built). |
 | `src/` | Prototype source. |
 
