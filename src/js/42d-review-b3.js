@@ -24,7 +24,7 @@ const impactText = (r, amt) => {
   const base = REV_PANELS.meetings;
   REV_PANELS.meetings = () => {
     let html = base();
-    const m = S.meetings.find(x => x.status !== "held"), C = cmte(), agenda = S.requests.filter(r => r.status === "committee");
+    const m = S.meetings.find(x => (x.status || "scheduled") === "scheduled"), C = cmte(), agenda = S.requests.filter(r => r.status === "committee");
     if (m && html.includes('<div class="body inline-form">')) {
       m.present = m.present || C.members.slice(); m.votes = m.votes || {};
       const can = ROLE === "plan" || acting("exec", "committee"), qn = quorumN(), ok = m.present.length >= qn, mine = me().id, member = C.members.includes(mine) && m.present.includes(mine);
@@ -48,7 +48,7 @@ const impactText = (r, amt) => {
   const bb = REV_BIND.meetings;
   REV_BIND.meetings = () => {
     bb();
-    const m = S.meetings.find(x => x.status !== "held");
+    const m = S.meetings.find(x => (x.status || "scheduled") === "scheduled");
     $$("[data-mpres]").forEach(c => (c.onchange = () => { const p = m.present; const i = p.indexOf(c.dataset.mpres); if (c.checked && i < 0) p.push(c.dataset.mpres); if (!c.checked && i >= 0) p.splice(i, 1); save(); route(); }));
     $$("[data-vote]").forEach(s => (s.onchange = () => { (m.votes[s.dataset.vote] = m.votes[s.dataset.vote] || {})[me().id] = s.value || undefined; audit(["ลงความเห็นในวาระ", "Voted on an agenda item"], `${s.dataset.vote}: ${s.value || "-"}`); commit(); route(); }));
     $$("[data-ramt]").forEach(inp => inp.addEventListener("input", () => { const r = S.requests.find(x => x.id === inp.dataset.ramt), c = $(`[data-imp="${r.id}"]`); if (c) c.innerHTML = impactText(r, Number(inp.value) * 1e6); }));
@@ -104,7 +104,7 @@ const impactText = (r, amt) => {
   };
   const bt = myTasks;
   myTasks = function () {
-    const t = bt.apply(this, arguments), m = (S.meetings || []).find(x => x.status !== "held");
+    const t = bt.apply(this, arguments), m = (S.meetings || []).find(x => (x.status || "scheduled") === "scheduled");
     if (m && cmte().members.includes(me().id)) {
       const open = S.requests.filter(r => r.status === "committee" && !conflicted(me().id, r) && !((m.votes || {})[r.id] || {})[me().id]);
       if (open.length) t.unshift({ title: `${L("ลงความเห็นวาระประชุม", "Vote on the agenda for")} ${tx(m.no)} (${open.length})`, sub: L("ก่อนการประชุม", "Before the meeting"), link: "rev-meetings", due: m.date, cls: "p-warn" });
@@ -120,6 +120,6 @@ function seedBudgetB3(s) {
   });
   const ex = s.users.find(u => u.role === "exec"), fi = s.users.find(u => u.role === "fin"), pl = s.users.find(u => u.role === "plan");
   s.committee = { members: [ex && ex.id, fi && fi.id, "u21", "u22", "u23"].filter(Boolean), chair: ex ? ex.id : "u21", secretary: pl ? pl.id : "", quorum: 50 };
-  const m = (s.meetings || []).find(x => x.status !== "held");
+  const m = (s.meetings || []).find(x => (x.status || "scheduled") === "scheduled");
   if (m) { m.present = s.committee.members.slice(); m.votes = {}; const it = s.requests.find(r => r.status === "committee"); if (it) m.votes[it.id] = { u22: "approve", [ex ? ex.id : "u21"]: "reduce" }; }
 }

@@ -35,6 +35,7 @@ const agendaName = id => { const x = S.review.find(v => v.id === id) || S.reques
 REV_PANELS.meetings = () => {
   const canRec = ROLE === "plan" || acting("exec", "committee");
   return S.meetings.slice().reverse().map(m => {
+    if (m.status === "cancelled") return "";
     if (m.status === "held") return `
     <section class="panel"><header><h2>${L("การประชุมคณะกรรมการพิจารณางบประมาณ", "Budget committee")} ${tx(m.no)}</h2><span class="sp"></span>${historyBtn(m.id + "|" + m.no[0] + "|" + m.no[1], tx(m.no))}${tag(L("ประชุมแล้ว", "Held"), "p-ok")}</header>
       <div class="body row"><span>${fdate(m.date)}</span><span class="sub">·</span><span>${L("ผู้เข้าประชุม", "Attendees")} ${m.attendees} ${L("คน", "")}</span><span class="sub">·</span>${m.docs.map(d => tag(esc(d), "p-mute")).join("")}</div>
@@ -71,8 +72,7 @@ REV_BIND.meetings = () => {
     });
     m.status = "held"; m.attendees = Number($("#m-att").value) || m.attendees; m.date = m.date > TODAY ? TODAY : m.date;
     m.docs = [L(`รายงานการประชุม${tx(m.no)}.pdf`, `Minutes ${tx(m.no)}.pdf`)];
-    const n = S.meetings.length + 1;
-    S.meetings.push({ id: "M-" + n, no: [`ครั้งที่ ${n}/2570`, `Meeting ${n}/2570`], date: addDays(TODAY, 30), status: "scheduled", attendees: 0, docs: [], items: {} });
+    // Round C2: the next meeting is set up by Planning in the meetings list (no automatic meeting with a fixed year).
     audit(["บันทึกมติคณะกรรมการพิจารณางบประมาณ", "Recorded budget committee resolutions"], `${m.id} ${tx(m.no)}${onBehalf("exec", "committee")} ·${agenda.length} ${L("วาระ", "items")}`);
     notify(["plan", "div"], [`บันทึกมติการประชุม ${m.no[0]} แล้ว`, `Resolutions for ${m.no[1]} are recorded`], "review");
     commit(); renderShell(); route(); toast(L("บันทึกมติแล้ว · ปรับสถานะคำขอตามมติ", "Resolutions recorded · request statuses updated"));

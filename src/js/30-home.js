@@ -64,7 +64,7 @@ function myTasks() {
   }
   // Round 9: hearings, parliament appeals, releases and carry-over.
   const H = S.hearings || [], C = S.carry || { prev: [], reqs: [] };
-  if (ROLE === "div") H.filter(h => h.unit === me().unit && h.status !== "held" && openQs(h).length).forEach(h => R(`${L("ตอบคำถามการชี้แจงงบประมาณ", "Answer budget hearing questions")} ${h.id}`, `${openQs(h).length} ${L("ข้อ", "questions")} · ${L("ประชุม", "hearing")} ${fdate(h.date)}`, h.date, "requests", "p-warn"));
+  if (ROLE === "div") H.filter(h => h.unit === me().unit && !["held", "cancelled"].includes(h.status) && openQs(h).length).forEach(h => R(`${L("ตอบคำถามการชี้แจงงบประมาณ", "Answer budget hearing questions")} ${h.id}`, `${openQs(h).length} ${L("ข้อ", "questions")} · ${L("ประชุม", "hearing")} ${fdate(h.date)}`, h.date, "requests", "p-warn"));
   if (ROLE === "plan") {
     const toCheck = H.flatMap(h => h.qs).filter(q => q.ans && q.ok == null).length;
     if (toCheck) R(L("ตรวจคำชี้แจงของหน่วยงาน", "Check units' hearing answers"), `${toCheck} ${L("ข้อ", "answers")}`, TODAY, "rev-hearings", "p-info");

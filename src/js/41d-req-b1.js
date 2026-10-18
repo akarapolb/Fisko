@@ -259,7 +259,7 @@ const PSRC = { bb: ["ราคามาตรฐานสำนักงบป�
 const TYPE_ORDER = ["per", "ope", "inv", "sub", "oth"];
 function syncBudget() {
   if (!S || !S.requests || !S.cons) return;
-  const live = S.requests.filter(r => r.status !== "rejected"), by = {};
+  const live = S.requests.filter(r => !["rejected", "cancelled"].includes(r.status)), by = {};
   live.forEach(r => { const v = by[r.unit] || (by[r.unit] = [0, 0, 0, 0, 0]); r.items.forEach(it => { const k = TYPE_ORDER.indexOf(it.type); if (k >= 0) v[k] += itemTotal(it) / 1e6; }); });
   S.cons.units = Object.keys(by).map(u => ({ unit: u, v: by[u].map(x => Math.round(x * 10) / 10) })).sort((a, b) => sumv(b.v) - sumv(a.v));
   const inRev = S.requests.filter(r => ["plan", "committee", "exec", "approved"].includes(r.status)), old = {};

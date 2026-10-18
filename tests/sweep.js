@@ -74,6 +74,18 @@
         }
         crClose(); ALLOC_FY = 2570; await tick();
       }
+      // Round C2: requests, the department ceiling, duplicates, meetings and hearings, for every role that sees them
+      if (o.suites.includes("render") && typeof CRUD !== "undefined" && CRUD.defs.rqReq) for (const role of ["div", "divhead", "plan", "exec", "audit"].filter(r => o.roles.includes(r))) {
+        ROLE = role; LANG = o.langs[0]; safe("shell", renderShell);
+        const where = { rqReq: ["requests", () => {}], csCeil: ["consolidation", () => (CONS_TAB = "ceilings")], csDup: ["consolidation", () => (CONS_TAB = "overview")], rvMeet: ["review", () => (REV_TAB = "meetings")], rvHear: ["review", () => (REV_TAB = "hearings")] };
+        for (const [k, [page, set]] of Object.entries(where)) {
+          if (!allowed(page)) continue;
+          const sp = CRUD.defs[k], open = (id, mode, t) => safe(`${org}/${role}/${k}/${id || "new"}/${mode}${t ? "/" + t : ""}`, () => { set(); crOpen(k, id, mode); if (t) CR_OPEN.tab = t; go2(page); chk(`${org}/${role}/${k}/${id || "new"}/${mode}${t || ""}`); if (!document.querySelector(".cr-drawer")) errs.push(`${org}/${role}/${k}/${id}: no drawer`); });
+          for (const r of (sp.list() || [])) { const id = sp.id(r); open(id, "view"); for (const [t] of (sp.tabs ? sp.tabs(r) : [])) open(id, "view", t); if (sp.edit && sp.edit.can(r)) open(id, "edit"); }
+          if (sp.create && sp.create.can()) open("", "edit");
+        }
+        crClose(); CONS_TAB = "overview"; REV_TAB = "queue"; await tick();
+      }
       // Budget pages (round 47): every old tab key on the page that holds it, and the old deep links
       if (o.suites.includes("render") && typeof BUD_PAGES !== "undefined") for (const lang of o.langs) { LANG = lang; for (const role of o.roles) {
         ROLE = role; safe("shell", renderShell);

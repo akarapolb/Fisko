@@ -4,7 +4,7 @@ const HQ_ST = q => (q.ok === true ? [["ยอมรับคำชี้แจ�
 const openQs = h => h.qs.filter(q => !q.ans);
 
 REV_PANELS.hearings = () => {
-  const pl = ROLE === "plan", H = S.hearings || [];
+  const pl = ROLE === "plan", H = (S.hearings || []).filter(h => h.status !== "cancelled");
   return `
   <div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("การชี้แจงงบประมาณภายในกรม", "Internal budget hearings")}</b>
     <p>${L("กองแผนงานส่งคำถามล่วงหน้า หน่วยงานตอบในหน้าคำของบประมาณ (M02) ก่อนวันประชุมชี้แจง", "Planning sends questions ahead; units answer on their M02 requests page before the hearing")}</p></div></div>
@@ -63,7 +63,7 @@ REV_BIND.hearings = () => {
 
 // The unit's side: answer Planning's questions on the M02 requests page.
 function hearingBanner() {
-  const H = (S.hearings || []).filter(h => h.unit === me().unit && h.status !== "held");
+  const H = (S.hearings || []).filter(h => h.unit === me().unit && !["held", "cancelled"].includes(h.status));
   if (!H.length) return "";
   return H.map(h => `<section class="panel" id="hear-${h.id}"><header><h2>${L("ชี้แจงงบประมาณกับกองแผนงาน", "Budget hearing with Planning")}</h2><span class="sub">${fdate(h.date)} · ${h.time} ${L("น.", "")}</span><span class="sp"></span>
       ${openQs(h).length ? tag(`${openQs(h).length} ${L("คำถามรอตอบ", "to answer")}`, "p-warn") : tag(L("ตอบครบแล้ว", "All answered"), "p-ok")}</header>

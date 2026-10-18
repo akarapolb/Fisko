@@ -134,3 +134,7 @@ Fisko Budget now has 11 pages B1 to B11 in four groups, declared in `src/js/75-b
 ## Round 48 (Budget CRUD round C1)
 
 The Budget CRUD design (`Fisko_Budget_CRUD_Design.html` v0.1) is approved; round C1 built the shared list + drawer (`76-crud.js`) and moved B7 Allocation onto it (`77-alloc-crud.js`, `HANDOFF.md` section 48). Next: round C2 (formulation FY2571), then C3 (submission and parliament with Simulate), C4 (B8 and B9 on FY2570), C5 (strategy and master data), C6 (B10/B11, the end-to-end demo script and sweep).
+
+## Round 49 (Budget CRUD round C2)
+
+Formulation FY2571 is on the list + drawer (`78-form-crud.js`, `HANDOFF.md` section 49). Next: C3 (submission and parliament with Simulate, act into allocation), C4 (B8 and B9 on FY2570), C5 (strategy and master data), C6 (B10/B11, end-to-end demo script and sweep).
