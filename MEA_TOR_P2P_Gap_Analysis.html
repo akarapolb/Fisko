@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MEA P2P TOR Gap Analysis</title>
+<style>
+:root{--bg:#f6f7fa;--card:#fff;--ink:#1c2433;--mute:#5c6678;--line:#dfe3ec;--accent:#34498c;
+--ok:#1f8a4c;--okbg:#e4f4ea;--part:#a66a00;--partbg:#fdf1d9;--gap:#b3261e;--gapbg:#fbe5e3;--plat:#5b4db3;--platbg:#ebe8fa}
+@media (prefers-color-scheme:dark){:root{--bg:#12161f;--card:#1a2030;--ink:#e6e9f1;--mute:#9aa4b8;--line:#2b3347;--accent:#8fa5e8;
+--ok:#59c98a;--okbg:#17301f;--part:#e6b24d;--partbg:#35290e;--gap:#f08a82;--gapbg:#3a1a18;--plat:#b3a8f0;--platbg:#2a2548}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:1080px;margin:0 auto;padding:24px 16px 64px}
+h1{font-size:26px;margin:0 0 4px}h2{font-size:19px;margin:36px 0 10px}h3{font-size:16px;margin:22px 0 6px}
+.sub{color:var(--mute);font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:10px 0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:14px 0}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.kpi b{display:block;font-size:24px}
+.tag{display:inline-block;padding:1px 9px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
+.Covered{background:var(--okbg);color:var(--ok)}.Partial{background:var(--partbg);color:var(--part)}
+.Gap{background:var(--gapbg);color:var(--gap)}.Platform{background:var(--platbg);color:var(--plat)}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:13.5px}
+th{background:var(--bg);font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--mute)}
+td.ref{white-space:nowrap;font-family:ui-monospace,Consolas,monospace;font-size:12.5px;color:var(--mute)}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.filters button{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:99px;padding:5px 13px;font:inherit;font-size:13px;cursor:pointer}
+.filters button[aria-pressed=true]{background:var(--accent);color:#fff;border-color:var(--accent)}
+.tw{overflow-x:auto}
+ol li,ul li{margin:4px 0}
+@media (max-width:640px){th,td{padding:6px 7px;font-size:12.5px}}
+</style>
+</head>
+<body>
+<main>
+<h1>MEA P2P TOR: requirements and prototype gap analysis</h1>
+<div class="sub">Source: TOR draft 01 July 2026 (e-bidding DT7-4616-TGZ, 91 pages, RPA removed) · Compared with: Fisko Procurement (P1–P17) and Fisko Finance (F1–F3), build at commit b96cf0d · Prepared 18 Oct 2026</div>
+
+<h2>1. Headline</h2>
+<div class="card">
+<p>The TOR asks for a <b>P2P system</b> for MEA (การไฟฟ้านครหลวง): procurement management plus payment, integrated with <b>SAP S/4HANA</b> (PS, PM, CO, BU, MM, FI), bundled with a commercial <b>ECM</b>, a <b>no-code workflow engine</b> and an RDBMS, delivered in 540 days. The prototype is a <b>procurement case-management layer</b> designed for a budget agency: it is strong on the case lifecycle, rules, committees, contracts and analytics, and weak or absent on everything that makes this TOR a P2P and a platform bid.</p>
+<ul>
+<li><b>Biggest mismatch:</b> the prototype assumes the Thai government chain (Budget → e-GP → GFMIS, file based). The TOR's money side is <b>SAP</b> (AP posting, payment voucher, bank e-payment, WHT, VAT). Fisko Finance reconciles GFMIS files and has none of the SAP-side functions.</li>
+<li><b>Three whole TOR packages have no prototype counterpart:</b> ECM (TOR 5.3), workflow and form designer (5.4), and SAP integration (5.2).</li>
+<li><b>Real functional gaps inside Procurement:</b> vendor-facing role, sample and type-test workflow, drawing approval, serial numbers, committee fees, bid security, appeal forwarding to the Comptroller General's Department (อธ.1), RFQ, e-mail delivery and e-signature.</li>
+<li><b>Good news:</b> a large share of the Annex 12 detail (plan versions, TOR library, committees and conflict of interest, evaluation scoring, appeal window, contract guarantee, penalties, warranty claims, supplier register, สขร.1 report, dashboards, audit dossier) is already demonstrable.</li>
+</ul>
+</div>
+<div class="kpis" id="kpis"></div>
+
+<h2>2. Requirement-to-prototype matrix</h2>
+<p class="sub">Status: <span class="tag Covered">Covered</span> demonstrable in the prototype · <span class="tag Partial">Partial</span> some of it, or simulated · <span class="tag Gap">Gap</span> not in the prototype · <span class="tag Platform">Platform</span> non-functional or product requirement the prototype cannot show; it needs an architecture answer, not a screen.</p>
+<div class="filters" id="filters" role="group" aria-label="Filter by status"></div>
+<div class="tw"><table><thead><tr><th>TOR ref</th><th>Requirement (extracted)</th><th>Status</th><th>Prototype evidence or gap</th></tr></thead><tbody id="rows"></tbody></table></div>
+
+<h2>3. Recommended order of work</h2>
+<div class="card">
+<ol>
+<li><b>Decide the money-side stance first.</b> Either rename Finance to a P2P "AP and payment" app with a SAP posting layer (simulated SAP interface, invoice posting, payment voucher, bank e-payment advice, WHT and VAT), or keep GFMIS for government customers and add a switchable "SAP mode". Everything under 4.8–4.11 depends on this.</li>
+<li><b>Close the Procurement functional gaps</b> that are cheap and demoable: vendor portal role (RFQ reply, price list, invoice upload, bank-account change form), RFQ and invitation letters with e-mail simulation, sample and type-test tracking, drawing approval, bid security, appeal forwarding (อธ.1) with reminders, committee fee calculation, Serial Number capture, SME and MiT tracking in evaluation.</li>
+<li><b>Add the three platform packages as design pages, then thin demos:</b> ECM (folder, metadata form, version, full-text search, watermark view, retention), a form and workflow designer (drag and drop, multi-position, out-of-office, SLA, e-mail approval), and an integration console (SAP, COI system, GDX, ThaID, PDPA consent, SMTP, Smart Office).</li>
+<li><b>Write the non-functional answers</b> for the bid: 3-tier on MEA Cloud sizing, 50 transactions a minute, TLS 1.2, 90-day logs, backup, OWASP, Gartner-leader AST.</li>
+</ol>
+</div>
+
+<h2>4. Open questions for the customer or bid team</h2>
+<div class="card"><ul>
+<li>Does MEA follow the Government Procurement Act 2560 methods exactly (e-bidding, selective, specific, small-budget under ministry rules)? The TOR says yes (3 workflow diagrams in Annex 13). The prototype's method rules are placeholders to be confirmed.</li>
+<li>Is e-GP integrated by API or by file? The TOR only says "send/receive via API, Batch or Web Service as MEA specifies".</li>
+<li>The TOR points to Annex 12 as an "example overview" and Annexes 1, 2 and 6 are blank placeholders. Which parts of Annex 12 are binding requirements?</li>
+<li>Marked as removed or struck through in the draft (5.2.5.1, 5.2.6.2, 5.2.6.3, 5.4.7): confirm they are out of scope.</li>
+<li>Training: at least 245 users, 10 + 10 admin, 10 + 10 developer seats on ECM and workflow. Is Fisko in the 245?</li>
+</ul></div>
+
+<h2>5. Reading notes and limits</h2>
+<div class="card">
+<ul>
+<li>The PDF has no usable Thai text layer, so every page was read as an image. Pages 35–38 (maintenance, SLA, change-request terms), 53–55 (licence and warranty terms) were read for scope only; they hold no functional requirements for the prototype.</li>
+<li>Requirement numbering in the TOR is inconsistent (for example 5.1.12.x under 5.1.13 and 5.2.6.7 used twice). References below use the TOR's printed numbers.</li>
+<li>Highlighted passages in the TOR (cyan, yellow, magenta) mark late edits: the 50-transactions-per-minute performance test (3.4.5), the COI reporting interface (4.10.2), DOPA ThaID (4.10.11), PR/PO send and receive (5.1.12.7–8), bid-security and contract-guarantee process (5.1.16, red), log monitoring (5.4.32), and the Web designer for integrations (5.4.40.1).</li>
+<li>Status is judged from the code in <code>src/js/6*.js</code> and the design documents, not from a full click-through of every screen.</li>
+</ul>
+</div>
+</main>
+<script>
+const R = [
+// [section, ref, requirement, status, evidence]
+["A. Plan and request (Annex 12 system 1)"],
+["1.1","Create, store, edit, delete, search plan items with budget data and attachments","Covered","Procurement plan with versions proposed by the officer, approved by the executive, recorded as published in e-GP (P2)."],
+["1.2, 5.2.1","Import plan and budget data MEA already holds: SAP PS (WBS) and operating budget","Gap","Plan lines come from Fisko Budget FY2570 allocation lines and M06 demand. No WBS concept, no operating-budget (งบทำการ) or SAP import."],
+["1.3","Create RFQ (ใบสอบถามราคา) and e-invitation letters and send them to vendors","Partial","Letters to suppliers from templates with sent dates (Q2). No RFQ document, no real e-mail; the e-mail channel is only a listed interface (IF-07)."],
+["1.4","Vendor records the reply to an RFQ in the system","Gap","No vendor role or portal. Quotations are keyed in by the officer."],
+["1.5","Alert when a vendor adds items outside the reference-price list","Gap","Not modelled."],
+["1.6","Budget amount with and without VAT; VAT calculated from line detail","Gap","VAT appears only in invoice checks (V-rules), not in budget or plan."],
+["1.7","Reference-price data pool: equipment history (evaluation, test, claims), % vs last purchase, oil and LME prices, equipment reports","Partial","Reference price with evidence, market research, price trend by category (F-03). No equipment history linked to claims, no commodity or FX index feed."],
+["2.1–2.3","Search plan by procurement code, project, material code, WBS or e-GP no.; add item with 24 plan fields (method, authority, hearing y/n, criteria, SME/MiT, spec, commercial terms, attachments)","Partial","Case file has method, committee, reference price, TOR, e-GP data pack. Missing: hearing flag, MiT and SME flags, short list, test-report and quality-standard fields, drawing and spec numbers, WBS."],
+["2.2","Edit, return to reviewer, alert on corrected data","Partial","Return and re-approve exist on plan versions and requisitions. No alert-on-change for corrected records."],
+["B. Procurement execution (system 2)"],
+["2.3.2","Operation memo and committee appointment records with e-GP project no., payment terms, status","Covered","Case file with 12 steps, committees (TOR, evaluation, acceptance) with checks, e-GP data pack and timeline."],
+["Annex 12 s.2","Methods: e-bidding, selective, specific, small budget under ministry rule","Partial","Method advisor with rules table in M10: specific, e-bidding, selective, e-market. No small-budget (วงเงินเล็กน้อย) method. Legal thresholds are placeholders."],
+["Annex 12 s.2","Public hearing (รับฟังความคิดเห็น) of TOR and hearing report, loop back to revise TOR","Gap","No hearing step; TOR library has versions but no hearing."],
+["Annex 12 s.2","Ask-answer on TOR / e-mail confirmation / open bids in e-GP","Partial","Q&A and amendments during announcement are built (Q1). Opening of bids is done in e-GP; the prototype records the result by file."],
+["2.3.2.8–9","Send procurement announcement and e-invitation to vendors after it is displayed on MEA site; close bids by date and time","Partial","Announcement data pack and closing date recorded; no outbound publishing to the MEA website and no e-mail."],
+["Annex 12 s.2","Request TOR approval memo; auto form plus e-sign through Smart Office","Partial","AI document drafts with edit tracking (AI-02/11). No e-sign, no Smart Office routing."],
+["C. Evaluation and award (system 3)"],
+["3.1.1.1","Evaluation record per bid: catalog/type/drawing no., maker, country, brand, model, bidder list, documents, price, qualification","Partial","Bidders, quotations and committee scoring matrix with published criteria exist. Maker, catalog, drawing and country fields are not captured."],
+["3.1.1.1.4–7","SME and MiT tracking (annual contract balance, SME price preference table, MiT certificate, ordinary and juristic person)","Partial","Supplier register flags SME and local. No MiT, no preference table, no cumulative contract balance."],
+["3.1.1.1.8–9","Bid-price calculation table; sample and Type Test process (create sample request, record dates sent, received, started, finished, result, reply)","Gap","No sample or type-test workflow. Also needed in 4.5–4.7 and 4.7.1.4–9."],
+["3.1.1.1.17","Price Performance of bids","Gap","Not modelled. Also required from claims data (5.2.12)."],
+["3.1.1.1.19","Approval memo for buy/hire (and cancel); award announcement with e-GP evidence","Covered","Award with minutes and announcement, appeal window, contract gate (steps 7–8)."],
+["3.1.1.4, 5.1.16","Bid security (หลักประกันการเสนอราคา): type, amount, validity, extension, return date, reason; return process","Gap","Only contract guarantee exists (Q2). No bid security."],
+["3.1.1.5–6","Price analysis (% vs last purchase), import oil price, LME, FX","Partial","Price trend exists; no external index import and no FX or commodity data."],
+["3.1.1.7–9","Attach files by file-folder type; alert on bid-security return date; publish results to MEA website","Gap","Attachments are filenames only. No folder types, no web publishing."],
+["3.2.1–3.2.2","Vendor master: search, create with GDX and Linkage Center (DOPA), 15 fields, status, bank account from ERP, bidding history","Partial","Supplier register with tax-ID check, history and abandoned-work list. No GDX or DOPA lookup, no bank data, no status such as 'may be terminated'."],
+["3.3","Equipment master: code, name, picture, group, history, catalog, MiT, ISO, Price Performance, bidders, spec, claim history","Gap","Stock and assets belong to Fisko Assets (D-P11). No equipment master in Procurement."],
+["3.4, Annex 12 s.3","Appeal (อุทธรณ์) tracking: deadline, appellant, decision by MEA, send to Comptroller General (แบบ อธ.1), their decision, notify the appellant; alerts 3 and 7 days before deadlines","Partial","Appeal window, filing, head-of-procurement decision and effects are built. Missing: อธ.1 form and forwarding, Comptroller General's decision, reminder schedule."],
+["D. Contract and delivery (system 4)"],
+["4.1.1–4.1.2","Contract search and record: 40+ fields incl. BOQ, installments, penalty rate, warranty, cumulative progress %, 9% penalty cap date","Partial","Contracts with phases, penalty rate and cap warning, versions, guarantee, delivery notices (P5). No BOQ, no drawing or asset code, no cumulative progress, no WBS."],
+["4.1.2.4–5","Contract owner and committees linked to the staff database","Partial","Committees link to users. No HR import."],
+["4.1.2.6–9","Contract guarantee details: bank, branch, letter no., value, expiry, extension","Covered","Contract guarantee with expiry warnings and return (Q2)."],
+["4.1.2.17–19","Advance payment, installments, penalty, warranty claim with letters and closure","Covered","Penalties, 3-way payment gate, warranty and defect claims with letters (Q2)."],
+["4.1.2.20","Spend report: actual vs plan, early or late","Covered","Analytics and forecast pages."],
+["4.1.3","E-mail attachments to committees or related people","Gap","No e-mail sending."],
+["4.2","Drawing and design approval ('Approve แบบ'): loose-part or turnkey, first-submission date, serial no., letters (MN), reply deadline 45 days, alerts to inspection committee","Gap","Not modelled."],
+["4.3","Vendor master change requests and bank-account change form, linked to ERP vendor creation","Gap","No vendor change request; no ERP vendor master link."],
+["4.4","Contract guarantee: type (cash, cashier cheque, bank guarantee), details, extension, return, reminders, return letters","Covered","Guarantee types cash, bank, bond; return and expiry warnings; letters from templates."],
+["4.5–4.6","Sample-submission and test-report-submission steps with status, alerts, history by item and period","Gap","No sample or test-report steps."],
+["4.7","Inspection (ตรวจรับ): actual dates and quantities, test numbers, e-GP inspection no., status, check list of e-documents, alerts for contract end, warranty end","Partial","Acceptance with partial results, recorded dissent and deadlines (P5). No test fields, no e-GP inspection no., no check list of e-documents (audit dossier is related)."],
+["Annex 12 s.4","Serial Number of equipment (5.1.10)","Gap","No serial number anywhere."],
+["E. Invoice, AP and payment (4.8–4.11, 5.2.6)"],
+["4.8, 4.9","Post vendor invoice and tax invoice into ERP (AP): indirect and direct posting, 14 types of payment postings (loan repayment, taxes, social fund, payroll, bonus, fees)","Gap","Fisko Finance has payment requests and GFMIS file reconciliation. No invoice posting, no SAP document simulation, no payment types beyond contract phases."],
+["4.8.4, 5.2.6.7","ERP postings: advance payment, down payment, retention, guarantee deposit and return, penalty and compensation","Gap","Retention and guarantee are tracked in Procurement, but nothing posts to a ledger."],
+["4.8.5, 4.9.4","Simulate the posting before sending it to ERP","Gap","Not modelled."],
+["4.8.6, 4.9.5, 5.2.6.10–11","Simulate, create, cancel payment proposal (ใบสำคัญจ่าย) for approval","Gap","Payment request approval exists but no payment voucher document, no cancel in ERP."],
+["4.10.1–4.10.9","Auto-assign payment work to checkers; unblock vendor invoices; e-mail reminders to vendors; payment cycles; attach files; payment voucher with checker, payment and tax data","Gap","None. No e-mail reminders, no cycles."],
+["4.10.11–4.10.12","Re-pay when a bank transfer fails; alert when payment result is missing","Gap","Not modelled."],
+["4.10.13–4.10.16","Import e-documents from the bank, send e-signed docs to vendors, create bank e-approval, auto-update receipts","Gap","No bank file, no e-signature, no vendor delivery."],
+["4.10.22, 5.2.6.24","Reports: payment status and result, payment control, document status, purchase-VAT summary, cover-letter report, WHT and VAT detail by document type, payment-voucher register","Gap","Reports exist for procurement (สขร.1, monthly summary), not for payment or tax."],
+["5.2.6.13–18","Automatic payment program, background posting, auto cancel on failed transfer, VAT running no., unblock","Gap","Not modelled."],
+["5.2.6.14","E-documents e-signed through MEA API: payment voucher, purchase VAT report, penalty letter","Gap","No e-signature."],
+["8.2.2 (TOR terms)","Payment letters to vendors: bank advice by e-mail and SMS, WHT certificate by post within 3 days, receipt after payment","Gap","Not modelled."],
+["F. Committee fees (4.11, 5.1.6)"],
+["4.11, 5.1.6","Committee fee (ค่าตอบแทนกรรมการ): pull contract and committee data, calculate per MEA rules, approval chain, configurable rates, caps, attendance rules, holiday calendar, payroll link, reports","Gap","Committees and attendance exist for the procurement case; no fee calculation, rates, caps or payroll link."],
+["G. Support: documents and forms (Annex 12 s.5)"],
+["2.1.1","Auto document number by type, department, year","Gap","No numbering service."],
+["2.1.2–2.1.4","About 45 forms: approval memo, committee appointment, reference-price approval, price offer, unit-price form, source list, บก.06, PR form, return-guarantee letters, evaluation forms, appeal form, contract letters, inspection record (กนก.001), bank letters (Thai and English)","Partial","Letter templates (Q2), AI document drafts, minutes drafts, สขร.1 layout. The listed MEA forms are not built."],
+["2.2","Equipment defect, claim and complaint management: claim process, dashboards, defect rate by vendor, Excel import, Price Performance feed","Partial","Warranty and defect claims with letters are built (Q2). No equipment-level data (serial, location, failure mode), no complaint stage after warranty, no claim dashboard by vendor."],
+["H. ERP integration (TOR 5.2, 5.1.12–13)"],
+["5.1.12, 5.2.1–5.2.6","Two-way integration with SAP PS, PM, CO, BU, MM, FI: budget, WBS, maintenance and internal orders, service orders, PR, PO, goods receipt, contract, purchasing info records, master data, vendor, asset, payment","Gap","Only a listed interface row (IF-03 'ERP / Financial', simulated, M10). No SAP object model, no mapping, no send and receive of PR, PO, GR, contract or WBS."],
+["5.1.12.13","E-mail alerts to owners on closing WBS, maintenance order, internal order, service order","Gap","No e-mail; notifications are in-app."],
+["5.1.12.14, 5.2.6.26, Annex 15","Data migration of master data and in-flight PR, PO, GR, contract, postings, payments","Gap","Not in prototype. Also needs an export tool for work-in-progress."],
+["I. Dashboards and reports (5.1.14–5.1.15)"],
+["5.1.14","Dashboard with filters and download: process dates and duration, job counts, assignment summary, plan vs actual, late vs early, user change history, monthly spend vs target","Covered","Analytics (funnel, KPI-01–14, time per step), forecast, timeline, dashboard cards per role."],
+["5.1.15","Standard reports: annual spend plan and monitoring, procurement plan, announcements, monthly procurement summary (สขร.1), procurement result, summary and tracking report groups","Covered","Monthly report in สขร.1 layout, plan, timeline, audit dossier, OCDS export. Download as Excel or CSV is limited."],
+["5.1.7","Vendor self-service: material data for quotations and the reference price; invoices, tax invoices with attachments","Gap","No vendor role."],
+["5.1.8–5.1.9","Run the e-bidding sale process; assign work to staff with workload and alert","Partial","Task assignment and officer workload (F-05) exist; the e-bidding sale itself runs in e-GP."],
+["5.1.11","Appoint committees per ministry regulation","Covered","Committees with composition checks, conflict-of-interest declarations and replacement."],
+["5.1.12","Receive and send procurement documents electronically between MEA and vendors","Gap","No external party channel."],
+["5.1.3–5.1.4, 4.10.2","Conflict-of-interest reporting process and sending data to MEA's COI Reporting System (staff, approval, risk department, alerts, summary)","Partial","COI declarations per case with duty rule SD-07 and member replacement. No staff COI reporting, no approval chain, no outbound interface."],
+["5.1.5","Create announcements: manual, automatic from process steps, publish to the public","Partial","e-GP data pack and announcement dates. No announcement builder and no publishing."],
+["J. ECM (TOR 5.3, 56 requirements)"],
+["5.3.1–5.3.2","Document lifecycle: store, full-text and metadata index, classify, retain, secure, distribute, publish, hold, archive, dispose; recycle bin; Major/Minor version control","Gap","None. The case file keeps attachments as names only."],
+["5.3.3","Bulk upload, drag and drop, web scanning with page split, folder structure per department, auto folder deploy","Gap","None."],
+["5.3.4–5.3.5","Search (Thai and English, Boolean, saved search, highlighting, export), viewer without plug-ins (Office, PDF, TIFF, media), thumbnails, rotate and zoom, watermark with employee code","Gap","The global search covers records, not documents."],
+["5.3.6–5.3.7","Document security: PDF encryption, SSO, AD or LDAP, read-only, audit log of preview, copy, move, delete, download, login, NTP, session timeout, folder and group permission, share links with expiry","Gap","Audit log and role permissions exist for records but not for documents."],
+["5.3.8","Check-out and check-in with lock; concurrency control","Gap","None."],
+["5.3.1.1–5.3.1.3","Commercial perpetual licence, 3 environments, Windows or Linux","Platform","Product choice. The bid must name an ECM brand and model."],
+["K. Workflow engine (TOR 5.4, 40 requirements)"],
+["5.4.8, 5.4.11, 5.4.25, 5.4.30","No-code Web designer of workflows and forms by drag and drop; field types (text, number, date, choice, dropdown, table, rich text, attachment, image); version management of forms and workflows","Gap","The prototype has fixed flows. Approval ladders are settings in M10, not a designer."],
+["5.4.12, 5.4.27","Multi-position staff; out-of-office with full or partial hand-over","Partial","Delegation of authority with audit is built (acting for another user). No multi-position approval rule, no partial hand-over."],
+["5.4.20, 5.4.16","Approve by e-mail; push notification to mobile","Gap","In-app notifications only."],
+["5.4.29, 5.4.28","SLA per process; track and control the process","Partial","SLA escalation (M10) and case timeline. Not per workflow designer."],
+["5.4.35–5.4.39","Document routing actions (draft, approve, reject, send back, assign, ask opinion), error display, reuse of workflows, process and event reports, analysis tools","Partial","Return and reject exist in several flows; there is no generic engine, event report or Data Audit report."],
+["5.4.40","Integration designer: drag and drop, data mapping and transformation, Web Service, REST, file, DB, Java, standard REST API, hot-pluggable extensions","Gap","None; interface register in M10 is a list."],
+["5.4.32","Log and monitor of system activity with configurable logging","Partial","Audit log with retention setting (M10). No system monitor."],
+["L. General and security (TOR 4, 5.5)"],
+["4.1–4.3","Web-based, responsive, Chrome, Safari, Edge (and Firefox in 5.3.1.4)","Covered","Responsive web prototype, checked at phone width."],
+["4.6, 5.3.7.2–3, 5.4.19","SSO by OAuth 2.0 / OpenID / SAML with AD or LDAP","Partial","Simulated SSO with sample accounts. Real IdP is interface IF-06."],
+["4.7, 4.21.2, 5.4.24","User management and RBAC","Covered","Roles, permissions per page in M10, duty-separation rules, delegation."],
+["5.4.21","Password policy and MFA (TOTP or OTP), lockout","Partial","Two-factor step and QR set-up are simulated."],
+["4.8, 4.18","E-mail notifications, editable e-mail templates","Partial","Notification templates in M10; no real SMTP, no template editor for e-mail."],
+["4.11, 4.22","Log of use for 90 days with sign-in time, IP, device; audit log with before and after","Partial","Audit log of actions and record history; IP, device and 90-day rule not shown."],
+["4.19","Working-day calculation per MEA calendar","Covered","Holiday calendar and appeal-period rules in M10."],
+["4.10.3–4.10.11","Interfaces: e-signature, HR data, e-mail, central price program, MEA website, GDX, Linkage Center, PDPA consent system, DOPA ThaID","Gap","Interface list only (IF-01–07). None of these is simulated."],
+["4.4–4.5, 4.14–4.17, 5.5.x, Annex 8","3-tier on MEA Cloud (24 vCores, 192 GB), scale up and out, backup, TLS 1.2, RDBMS with partitioning and FILESTREAM, Windows 874","Platform","Architecture and sizing answer, not a prototype screen."],
+["3.4.5, 4.20–4.21, 5.4.33","Performance test at 50 transactions a minute; Gartner-leader AST; OWASP ZAP, Nessus or Fortify test","Platform","Test plan and evidence at delivery."],
+["3.1, 3.8, 5.7, Annex 5","Design deliverables (workflow, mockup, architecture), project plan in 30 days, 4 deliveries in 540 days (10, 30, 40, 20 percent payments), training for 245 users","Platform","Project and delivery scope. The prototype itself helps with the TOR 3.9 'prototype' requirement."],
+["Annex 10, 11","NDA and PDPA data processing agreement","Platform","Contract terms; PDPA features (consent, erasure, breach 24-hour notice) are not in the prototype."]
+];
+let cur = "All", rowsEl = document.getElementById("rows");
+const order = ["Covered","Partial","Gap","Platform"];
+function render(){
+  rowsEl.innerHTML = "";
+  R.forEach(r => {
+    if (r.length === 1) { const tr = document.createElement("tr"); const td = document.createElement("td"); td.colSpan = 4; td.style.cssText = "background:var(--bg);font-weight:600"; td.textContent = r[0]; tr.appendChild(td); rowsEl.appendChild(tr); return; }
+    if (cur !== "All" && r[2] !== cur) return;
+    const tr = document.createElement("tr");
+    [r[0], r[1]].forEach((t,i) => { const td = document.createElement("td"); if (i===0) td.className="ref"; td.textContent = t; tr.appendChild(td); });
+    const s = document.createElement("td"); const g = document.createElement("span"); g.className = "tag " + r[2]; g.textContent = r[2]; s.appendChild(g); tr.appendChild(s);
+    const e = document.createElement("td"); e.textContent = r[3]; tr.appendChild(e);
+    rowsEl.appendChild(tr);
+  });
+  if (cur !== "All") [...rowsEl.querySelectorAll("tr")].forEach((tr,i,all) => { if (tr.children.length === 1 && (!all[i+1] || all[i+1].children.length === 1)) tr.remove(); });
+}
+const data = R.filter(r => r.length > 1), counts = {};
+order.forEach(o => counts[o] = data.filter(r => r[2] === o).length);
+document.getElementById("kpis").innerHTML = `<div class="kpi"><b>${data.length}</b><span class="sub">requirement groups</span></div>` + order.map(o => `<div class="kpi"><b>${counts[o]}</b><span class="tag ${o}">${o}</span></div>`).join("");
+const f = document.getElementById("filters");
+["All", ...order].forEach(o => { const b = document.createElement("button"); b.type = "button"; b.textContent = o === "All" ? "All" : `${o} (${counts[o]})`; b.setAttribute("aria-pressed", o === cur); b.onclick = () => { cur = o; [...f.children].forEach(x => x.setAttribute("aria-pressed", x === b)); render(); }; f.appendChild(b); });
+render();
+</script>
+</body>
+</html>
