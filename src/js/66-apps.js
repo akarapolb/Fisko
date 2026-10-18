@@ -18,7 +18,7 @@ function ensureApp() {
 function appOfLink(l) {
   if (!l) return "budget";
   if (l.startsWith("prc-") || l.startsWith("case:") || l === "procurement") return "procurement";
-  if (l.startsWith("fnc-") || l === "finance") return "finance";
+  if (l.startsWith("fnc-") || l === "finance" || l === "advances") return "finance";
   if (l.startsWith("admin") || l === "home" || l === "delegation") return "all";
   return "budget";
 }

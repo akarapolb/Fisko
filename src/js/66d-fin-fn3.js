@@ -259,7 +259,7 @@ BIND.advances = () => {
 }
 
 // ---------- menu, clocks, badges, tasks ----------
-NAV.push({ id: "advances", code: "WS", group: "overview", app: "all", roles: Object.keys(ROLES), label: ["เงินยืมของฉัน", "My advances"] });
+NAV.push({ id: "advances", code: "F5", group: "finance", app: "finance", roles: Object.keys(ROLES), label: ["เงินยืมของฉัน", "My advances"] });
 NAV_ICON.advances = "wallet"; NAV_ICON.adv = "wallet";
 {
   const n = NAV.find(x => x.id === "finance");

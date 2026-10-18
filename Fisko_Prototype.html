@@ -6334,9 +6334,13 @@ function planFromQ(r, amount) {
 //   FY2570 against quarterly targets that are settings (FR-B-31, BR-20, BR-21).
 const B4_FY = 2570;
 const lineStruct = l => { const lin = lineage(l.act); return { prog: (lin[0] || {}).id || "", out: (lin.find(n => n.lvl === "output") || {}).id || "" }; };
-const linePaid = id => sumv(S.payreqs.filter(p => p.status === "approved" && (S.contracts.find(c => c.id === p.contract) || {}).line === id).map(p => p.amount));
+// Actual spending of a line: approved contract payments, plus (Fisko Finance FN5) paid vouchers outside contracts
+// and budget advances (lent until cleared, then what was spent), so M06 and M07 show what Finance paid.
+const linePaid = id => sumv(S.payreqs.filter(p => p.status === "approved" && (S.contracts.find(c => c.id === p.contract) || {}).line === id).map(p => p.amount))
+  + sumv((S.vouchers || []).filter(v => v.line === id && !v.contract && v.state === "paid").map(v => v.gross - (v.penalty || 0)))
+  + sumv((S.advances || []).filter(a => a.line === id && a.source === "budget" && ["paid", "clearing", "objected", "cleared"].includes(a.state)).map(a => (a.state === "cleared" ? Math.min(a.clearing.spent, a.approvedAmt || a.amount) : a.approvedAmt || a.amount)));
 function bal(l) {
-  const res = typeof famReserved === "function" ? famReserved(l.id) : 0, com = typeof famCommitted === "function" ? famCommitted(l.id) : 0, paid = linePaid(l.id);
+  const res = typeof famReserved === "function" ? famReserved(l.id) : 0, com = (typeof famCommitted === "function" ? famCommitted(l.id) : 0) + (typeof famOther === "function" ? famOther(l.id) : 0), paid = linePaid(l.id);
   return { allot: l.amount, res, com, paid, avail: l.amount - res - com };
 }
 const TR_WHY = { fix: ["แก้ไขปัญหาการปฏิบัติงาน", "Fix an operational problem"], eff: ["เพิ่มประสิทธิภาพการให้บริการ", "Make services more efficient"], qual: ["เพิ่มคุณภาพการให้บริการ", "Improve service quality"], staff: ["พัฒนาบุคลากร", "Develop staff"], tech: ["พัฒนาเทคโนโลยี", "Develop technology"] };
@@ -10543,7 +10547,7 @@ function ensureApp() {
 function appOfLink(l) {
   if (!l) return "budget";
   if (l.startsWith("prc-") || l.startsWith("case:") || l === "procurement") return "procurement";
-  if (l.startsWith("fnc-") || l === "finance") return "finance";
+  if (l.startsWith("fnc-") || l === "finance" || l === "advances") return "finance";
   if (l.startsWith("admin") || l === "home" || l === "delegation") return "all";
   return "budget";
 }
@@ -11294,6 +11298,7 @@ function vPaid(v, ref) {
     }
     const gm = $("#gf-make");
     if (gm) gm.onclick = () => {
+      if (typeof gfOk === "function" && !gfOk("record")) return;
       const rows = (S.vouchers || []).filter(v => v.state === "ready" && !v.gfFile), f = { id: `GO-${FAM_FY}-${String((S.gfOut || []).length + 1).padStart(2, "0")}`, t: nowIso(), by: me().id, rows: rows.map(v => v.id), state: "sent" };
       rows.forEach(v => { v.gfFile = f.id; vLog(v, ["อยู่ในไฟล์ส่ง GFMIS", "Included in the GFMIS file"], f.id); });
       (S.gfOut = S.gfOut || []).push(f);
@@ -11680,7 +11685,7 @@ BIND.advances = () => {
 }
 
 // ---------- menu, clocks, badges, tasks ----------
-NAV.push({ id: "advances", code: "WS", group: "overview", app: "all", roles: Object.keys(ROLES), label: ["เงินยืมของฉัน", "My advances"] });
+NAV.push({ id: "advances", code: "F5", group: "finance", app: "finance", roles: Object.keys(ROLES), label: ["เงินยืมของฉัน", "My advances"] });
 NAV_ICON.advances = "wallet"; NAV_ICON.adv = "wallet";
 {
   const n = NAV.find(x => x.id === "finance");
@@ -11937,6 +11942,7 @@ const bindRecv = () => {
     audit(["ยกเลิกใบเสร็จรับเงิน", "Cancelled a receipt"], `${rcNo(r)} · ${why}`); done(L("ยกเลิกแล้ว · ใบเดิมยังอยู่ในทะเบียน", "Cancelled · the original stays in the register"));
   }));
   $$("[data-rmk]").forEach(b => (b.onclick = () => {
+    if (typeof gfOk === "function" && !gfOk("remit")) return;
     const k = b.dataset.rmk, xs = rcOpen().filter(r => rcClass(r) === k), id = `RM-${FAM_FY}-${String((S.remits || []).length + 1).padStart(3, "0")}`, late = xs.filter(r => daysUntil(rcDue(r)) < 0).length;
     const m = { id, cls: k, rows: xs.map(r => r.id), amount: sumv(xs.map(r => r.amount)), t: nowIso(), by: me().id, ref: `KTB-${id.slice(-3)}${TODAY.replace(/-/g, "").slice(2)}`, late };
     xs.forEach(r => (r.remit = id)); (S.remits = S.remits || []).push(m);
