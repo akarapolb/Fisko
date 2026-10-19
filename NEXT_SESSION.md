@@ -154,3 +154,7 @@ Strategy and master data are on the list + drawer (`81-master-crud.js`, `HANDOFF
 ## Round 53 (Budget CRUD round C6, design complete)
 
 The Budget CRUD design is fully built (rounds C1 to C6, `76-crud.js` to `82-intel-crud.js`, `HANDOFF.md` sections 48 to 53). The demo guide holds the end-to-end script E-01 to E-16 and the sweep walks it. Still open from before: FR-FN-33 and Excel/PDF exports, a demo step for F11, a full demo rehearsal (now with the E-script), then Fisko Assets or the real-AI plan. Ideas noticed during C1 to C6: the formulation year (2571) and the parliament timetable are still fixed values; Fisko Procurement and Finance could adopt the shared list + drawer.
+
+## Round 54 (Budget CRUD follow-ups)
+
+Years come from `CUR_FY` and `FORM_FY`; request basics edit in the drawer; M10 users, approval route and rules are lists (`83-admin-crud.js`, `HANDOFF.md` section 54). Budget types stay fixed by design. Open: Fisko Procurement and Fisko Finance on the shared list + drawer (each needs its own design pass), FR-FN-33 and exports, a demo step for F11, a full rehearsal with the E-script, then Fisko Assets or the real-AI plan.

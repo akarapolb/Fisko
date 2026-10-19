@@ -133,7 +133,7 @@ function cwAnswer(agentId, text, files, recs) {
   }
   const r = cwReqOf(text, recs);
   if (id === "AG-02" || (id === "AG-01" && !r && /ตรวจ|check/i.test(t))) {
-    if (!r) return { agent: id, steps, html: `<p>${L("บอกเลขคำขอ (เช่น REQ-2571-014) หรือเปิดคำขอแล้วถามจากหน้านั้น หรือแนบคำขอด้วยปุ่ม +", "Tell me the request number (e.g. REQ-2571-014), open the request and ask from there, or attach it with the + button.")}</p>`, actions: [cwAct(L("ไปที่คำขอ", "Go to requests"), "go", "requests")] };
+    if (!r) return { agent: id, steps, html: `<p>${L(`บอกเลขคำขอ (เช่น REQ-${FORM_FY}-014) หรือเปิดคำขอแล้วถามจากหน้านั้น หรือแนบคำขอด้วยปุ่ม +`, `Tell me the request number (e.g. REQ-${FORM_FY}-014), open the request and ask from there, or attach it with the + button.`)}</p>`, actions: [cwAct(L("ไปที่คำขอ", "Go to requests"), "go", "requests")] };
     steps.push(step("rules.run", `${L("ตรวจกฎ BR กับ", "Ran the BR rules on")} ${r.id}`));
     const c = checks(r), bad = c.filter(x => x.s !== "ok");
     return { agent: id, steps, html: `<p><b>${r.id}</b> ${esc(tx(r.name))} · ${bad.length ? `${L("พบ", "found")} ${bad.length} ${L("ประเด็น", "issues")}` : L("ผ่านทุกข้อ พร้อมส่ง", "passes every check and is ready to send")}</p>
@@ -166,7 +166,7 @@ function cwAnswer(agentId, text, files, recs) {
     return { agent: id, steps, html: answer(0), actions: [cwAct(L("เปิดติดตามการใช้จ่าย", "Open execution monitoring"), "go", "dashboard", true)] };
   }
   if (id === "AG-03") {
-    steps.push(step("requests.read", L("อ่านคำขอปี 2571", "Read the FY2571 requests")));
+    steps.push(step("requests.read", L(`อ่านคำขอปี ${FORM_FY}`, `Read the FY${FORM_FY} requests`)));
     if (/เกินเกณฑ์|threshold|ปีก่อน|last year/i.test(t)) return { agent: id, steps, html: r ? `<p><b>${r.id}</b> ${r.prev ? `${L("เปลี่ยนจากปีก่อน", "changed from last year by")} <b>${fmt((r.amount / r.prev - 1) * 100, 1)}%</b> (${mb(r.prev)} → ${mb(r.amount)} ${L("ลบ.", "M")})` : L("เป็นโครงการใหม่ ไม่มีวงเงินปีก่อน", "is a new project with no amount last year")}</p>` : answer(2), actions: [] };
     const by = {}, byT = {}; S.requests.forEach(x => { by[x.status] = (by[x.status] || 0) + x.amount; x.items.forEach(i => (byT[i.type] = (byT[i.type] || 0) + itemTotal(i))); });
     return { agent: id, steps, html: `<p>${L("คำขอ", "Requests")} ${S.requests.length} ${L("รายการ รวม", "totalling")} <b>${mb(sumv(S.requests.map(x => x.amount)))}</b> ${L("ลบ.", "M")}</p>
@@ -175,7 +175,7 @@ function cwAnswer(agentId, text, files, recs) {
   if (id === "AG-06") {
     steps.push(step("overview", L("รวบรวมภาพรวมจาก M02 M06 M07", "Pulled the overview from M02, M06 and M07")));
     const lines = typeof famLines === "function" && S.allocs && S.allocs[FAM_FY] ? famLines() : [], al = sumv(lines.map(l => l.amount));
-    return { agent: id, steps, html: `<ul><li>${L("คำขอปี 2571", "FY2571 requests")}: ${S.requests.length} ${L("รายการ", "")} · ${mb(sumv(S.requests.map(x => x.amount)))} ${L("ลบ.", "M")} · ${S.requests.filter(x => x.status === "plan" || x.status === "committee").length} ${L("รอพิจารณา", "in review")}</li>
+    return { agent: id, steps, html: `<ul><li>${L(`คำขอปี ${FORM_FY}`, `FY${FORM_FY} requests`)}: ${S.requests.length} ${L("รายการ", "")} · ${mb(sumv(S.requests.map(x => x.amount)))} ${L("ลบ.", "M")} · ${S.requests.filter(x => x.status === "plan" || x.status === "committee").length} ${L("รอพิจารณา", "in review")}</li>
       ${al ? `<li>${L("งบปี", "FY")} ${FAM_FY} ${L("จัดสรรแล้ว", "allocated")}: ${mb(al)} ${L("ลบ.", "M")}</li>` : ""}<li>${L("เบิกจ่ายสะสมถึง", "Spent to")} ${fdate(S.dash.asOf)}: ${fmt(sumv(S.dash.units.map(u => u.actual)) / Math.max(1, sumv(S.dash.units.map(u => u.alloc))) * 100, 1)}% ${L("ของวงเงิน", "of the budget")}</li></ul>`, actions: [cwAct(L("เปิดติดตามการใช้จ่าย", "Open execution monitoring"), "go", "dashboard")] };
   }
   if (id === "AG-08" || id === "AG-12") {

@@ -12,7 +12,7 @@ function searchItems() {
     add("request", "requests", `${r.id} ${tx(r.name)}`, `${unitName(r.unit)} · ${tx(STATUS[r.status][0])}`, () => openReq(r.id), [].concat(r.name).join(" ") + " " + budgetCode(r)));
   allKpis().forEach(({ k, st }) => add("kpi", "strategy", `${k.id} ${tx(k.name)}`, `${st.id} · ${unitName(k.owner)}`, () => jump("strat-kpis"), k.name.join(" ")));
   S.strategy.items.forEach(st => add("strategy", "strategy", `${st.id} ${tx(st.name)}`, natName(st.nat), () => jump("strat-map"), st.name.join(" ")));
-  (S.structure[2571] || []).filter(a => a.lvl === "activity").forEach(a => add("activity", "strategy", `${a.code} ${tx(a.name)}`, fyLabel(2571), () => jump("strat-links"), a.name.join(" ")));
+  (S.structure[FORM_FY] || []).filter(a => a.lvl === "activity").forEach(a => add("activity", "strategy", `${a.code} ${tx(a.name)}`, fyLabel(FORM_FY), () => jump("strat-links"), a.name.join(" ")));
   S.dash.projects.forEach(p => add("project", "dashboard", tx(p.name), unitName(p.unit), () => { MON_TAB = "drill"; DRILL_U = p.unit; DRILL_P = p.id; go("dashboard"); }, [].concat(p.name).join(" ")));
   Object.values(S.allocs).forEach(A => {
     A.lines.forEach(l => add("line", "allocation", `${l.id} ${tx(l.name)}`, `${unitName(l.unit)} · ${fyLabel(A.fy)}`, () => { ALLOC_FY = A.fy; ALLOC_TAB = "allocate"; OPEN_UNIT.add(l.unit); go("allocation"); }, [].concat(l.name).join(" ")));

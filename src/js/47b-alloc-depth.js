@@ -18,7 +18,7 @@ ALLOC.releases = () => {
     <div class="kpi"><span class="l">${L("คำของวดเงินรออนุมัติ", "Release requests pending")}</span><span class="v">${R.filter(r => r.status === "pending").length}</span></div>
   </section>
   <section class="panel"><header><h2>${L("แผนและการอนุมัติงวดเงินรายไตรมาส", "Quarterly plan and releases")} · ${fyLabel(ALLOC_FY)}</h2><span class="sp"></span><span class="sub">${L("ล้านบาท · แผนจากแผนการใช้จ่ายรายเดือน", "M baht · plan from the monthly spending plan")}</span></header>
-    <div class="tbl-wrap"><table><thead><tr><th>${L("งบรายจ่าย", "Budget type")}</th><th class="n">${L("ทั้งปี", "Year")}</th>${[1, 2, 3, 4].map(q => `<th class="n">${L("ไตรมาส", "Q")} ${q}${q === CUR_Q && ALLOC_FY === 2570 ? ` <span class="sub">(${L("ปัจจุบัน", "now")})</span>` : ""}</th>`).join("")}</tr></thead>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("งบรายจ่าย", "Budget type")}</th><th class="n">${L("ทั้งปี", "Year")}</th>${[1, 2, 3, 4].map(q => `<th class="n">${L("ไตรมาส", "Q")} ${q}${q === CUR_Q && ALLOC_FY === CUR_FY ? ` <span class="sub">(${L("ปัจจุบัน", "now")})</span>` : ""}</th>`).join("")}</tr></thead>
       <tbody>${types.map(t => { const ls = A.lines.filter(l => l.type === t.id);
         return `<tr><td>${typeName(t.id)}</td><td class="n">${mb(allocated(t.id))}</td>${[0, 1, 2, 3].map(n => { const ok = rel(t.id, n + 1, "approved"), pe = rel(t.id, n + 1, "pending");
           return `<td class="n">${mb(qPlan(ls, n))}<div>${ok ? tag(`${L("ได้รับ", "Released")} ${mb(ok)}`, "p-ok") : pe ? tag(`${L("รอ", "Pending")} ${mb(pe)}`, "p-warn") : `<span class="sub">${L("ยังไม่ขอ", "Not requested")}</span>`}</div></td>`; }).join("")}</tr>`; }).join("")}</tbody></table></div>
@@ -74,11 +74,11 @@ const cfChecks = c => [
   [TODAY <= FY_END, L("ยื่นก่อนสิ้นปีงบประมาณ", "Filed before the fiscal year ends")],
 ];
 ALLOC.carry = () => {
-  if (ALLOC_FY !== CUR_FY) return `<section class="panel"><div class="body sub">${L("การกันเงินเหลื่อมปีใช้กับปีงบประมาณที่กำลังใช้จ่าย (2570)", "Carry-over applies to the year being spent (FY2570)")}</div></section>`;
+  if (ALLOC_FY !== CUR_FY) return `<section class="panel"><div class="body sub">${L(`การกันเงินเหลื่อมปีใช้กับปีงบประมาณที่กำลังใช้จ่าย (2570)`, `Carry-over applies to the year being spent (FY2570)`)}</div></section>`;
   const C = S.carry, fin = canAlloc(), ex = ROLE === "exec";
   const lines = AL().lines.filter(l => l.type === "inv" || l.type === "ope");
   return `
-  <section class="panel"><header><h2>${L(`เงินกันเหลื่อมปีจากปี ${CUR_FY - 1}`, `Funds carried over from FY${CUR_FY - 1}`)}</h2><span class="sp"></span><span class="sub">${L("ต้องเบิกจ่ายภายใน 31 มี.ค. 2570 หากไม่ขยายเวลา", "Must be paid by 31 Mar 2027 unless extended")}</span></header>
+  <section class="panel"><header><h2>${L(`เงินกันเหลื่อมปีจากปี ${CUR_FY - 1}`, `Funds carried over from FY${CUR_FY - 1}`)}</h2><span class="sp"></span><span class="sub">${L(`ต้องเบิกจ่ายภายใน 31 มี.ค. 2570 หากไม่ขยายเวลา`, "Must be paid by 31 Mar 2027 unless extended")}</span></header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("รายการ", "Item")}</th><th>${L("สัญญา", "Contract")}</th><th class="n">${L("กันไว้ (ลบ.)", "Carried (M)")}</th><th style="width:150px">${L("เบิกจ่ายแล้ว", "Paid")}</th><th>${L("กำหนด", "Deadline")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
       <tbody>${C.prev.map(c => { const p = c.amount ? c.paid / c.amount : 0, left = c.amount - c.paid;
         return `<tr><td class="mono">${c.id}</td><td>${esc(tx(c.name))}<div class="sub">${unitName(c.unit)}</div></td><td class="mono sub">${c.po}</td><td class="n">${mb(c.amount)}</td>

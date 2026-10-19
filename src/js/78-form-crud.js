@@ -104,7 +104,7 @@ document.addEventListener("click", e => { const b = e.target.closest("[data-reqf
 const consS = () => S.cons;
 const csResponded = () => Object.values(consS().resp || {}).some(x => x.st && x.st !== "pending");
 CRUD.def("csCeil", {
-  noun: ["กรอบวงเงินของกรม", "Department ceiling"], list: () => [consS()], id: () => "dept", title: () => `${L("กรอบวงเงินปี 2571", "FY2571 ceiling")} ${fmt(consS().ceiling)} ${L("ลบ.", "M")}`,
+  noun: ["กรอบวงเงินของกรม", "Department ceiling"], list: () => [consS()], id: () => "dept", title: () => `${L(`กรอบวงเงินปี ${FORM_FY}`, `FY${FORM_FY} ceiling`)} ${fmt(consS().ceiling)} ${L("ลบ.", "M")}`,
   st: { draft: [["ยังไม่ออกกรอบ", "Not issued"], "p-mute"], issued: [["ออกกรอบแล้ว", "Issued"], "p-ok"] }, status: () => (consS().issued ? "issued" : "draft"), cols: [],
   fields: () => [
     { id: "ceiling", label: ["กรอบวงเงินรวมของกรม (ล้านบาท)", "Department ceiling (million baht)"], type: "number", req: true, min: 1, value: consS().ceiling },
@@ -117,7 +117,7 @@ CRUD.def("csCeil", {
     const C = consS(), tot = sumv(Object.values(C.unitCeil || {})), gap = Math.round((tot - C.ceiling) * 10) / 10;
     const issue = (ver, why) => { C.issued = TODAY; C.due = C.due && C.due > TODAY ? C.due : addDays(TODAY, 7); C.ver = ver; C.resp = {};
       audit([ver > 1 ? "ออกกรอบวงเงินใหม่" : "ออกกรอบวงเงินให้หน่วยงาน", ver > 1 ? "Reissued the ceilings" : "Issued the ceilings to units"], `${L("ฉบับที่", "version")} ${ver}${why ? " · " + why : ""}`);
-      notify(["div", "divhead"], [`กองแผนงานแจ้งกรอบวงเงินปี 2571 ${ver > 1 ? `ฉบับที่ ${ver} ` : ""}ตอบรับภายใน ${fdate(C.due)}`, `Planning issued the FY2571 ceilings${ver > 1 ? ` (version ${ver})` : ""}; reply by ${fdate(C.due)}`], "requests"); };
+      notify(["div", "divhead"], [`กองแผนงานแจ้งกรอบวงเงินปี ${FORM_FY} ${ver > 1 ? `ฉบับที่ ${ver} ` : ""}ตอบรับภายใน ${fdate(C.due)}`, `Planning issued the FY${FORM_FY} ceilings${ver > 1 ? ` (version ${ver})` : ""}; reply by ${fdate(C.due)}`], "requests"); };
     const warn = Math.abs(gap) >= 0.1 ? `${L("กรอบรายหน่วยรวม", "Unit ceilings add up to")} ${fmt(tot, 1)} ${L("ไม่เท่ากรอบกรม", "and don't match the department's")} ${fmt(C.ceiling)} (${gap > 0 ? "+" : ""}${fmt(gap, 1)})` : `${L("กรอบรายหน่วยรวมเท่ากรอบกรม", "Unit ceilings match the department")} ${fmt(C.ceiling)} ${L("ลบ.", "M")}`;
     if (!C.issued) return [{ id: "issue", label: L("ออกกรอบวงเงินให้หน่วยงาน", "Issue ceilings to units"), kind: "primary", impact: () => warn, confirm: L("หน่วยงานจะเห็นกรอบในหน้าคำขอ (B3) และตอบรับหรือขอทบทวน", "Units will see their ceiling on B3 and accept or appeal"), run: () => { issue(1); return L("ออกกรอบวงเงินแล้ว · แจ้งหน่วยงาน", "Ceilings issued · units notified"); } }];
     const out = [{ id: "reissue", label: `${L("ออกกรอบใหม่ (ฉบับที่", "Reissue (version")} ${(C.ver || 1) + 1})`, why: true, impact: () => `${warn} · ${L("คำตอบเดิมของหน่วยงานจะถูกล้าง", "units' earlier replies are cleared")}`, run: (_, why) => { issue((C.ver || 1) + 1, why); return L("ออกกรอบใหม่แล้ว", "Ceilings reissued"); } }];

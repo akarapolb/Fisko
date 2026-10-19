@@ -49,7 +49,7 @@ CRUD.def("sbBatch", {
   },
   create: { can: () => ROLE === "plan" && sbReady().length > 0 && !sbBatches().some(b => b.status === "prep"), label: ["สร้างชุดส่ง", "New batch"],
     run: v => { const sb = sbS(); sb.seq = Math.max(sb.seq || 0, sbBatches().length) + 1;
-      const b = { id: `SUB-2571-${String(sb.seq).padStart(2, "0")}`, t: nowIso(), by: me().id, status: "prep", reqs: Object.keys(v).filter(k => k.startsWith("in_") && v[k]).map(k => k.slice(3)) };
+      const b = { id: `SUB-${FORM_FY}-${String(sb.seq).padStart(2, "0")}`, t: nowIso(), by: me().id, status: "prep", reqs: Object.keys(v).filter(k => k.startsWith("in_") && v[k]).map(k => k.slice(3)) };
       sb.batches.push(b); b.reqs.forEach(id => (S.requests.find(r => r.id === id).sub = b.id));
       audit(["เตรียมชุดส่งสำนักงบประมาณ", "Prepared a Budget Bureau batch"], `${b.id} · ${b.reqs.length}`); sbSync(); return b; } },
   edit: { can: b => ROLE === "plan" && ["prep", "reviewing", "result"].includes(b.status),
@@ -116,7 +116,7 @@ CRUD.def("sbRev", {
   SUB.status = () => {
     sbSync();
     const full = prev(), box = full.slice(0, full.indexOf("</section>") + 10), sb = sbS(), idx = SUB_STEPS.findIndex(s => s[0] === sb.status), ready = sbReady();
-    return box + `<section class="panel"><header><h2>${L("สถานะการส่งคำของบประมาณ ปี 2571", "FY2571 submission status")}</h2><span class="sp"></span><span class="sub">${L("กำหนดส่งตามปฏิทิน", "Calendar deadline")} ${fdate(cal("c6").date)}</span></header>
+    return box + `<section class="panel"><header><h2>${L(`สถานะการส่งคำของบประมาณ ปี ${FORM_FY}`, `FY${FORM_FY} submission status`)}</h2><span class="sp"></span><span class="sub">${L("กำหนดส่งตามปฏิทิน", "Calendar deadline")} ${fdate(cal("c6").date)}</span></header>
       <div class="body"><ol class="hsteps">${SUB_STEPS.map(([k, n], i) => `<li class="${i < idx ? "done" : i === idx ? "now" : ""}"><span class="dot"></span>${tx(n)}</li>`).join("")}</ol>
       ${ready.length ? `<p class="sub" style="margin-top:12px">${ready.length} ${L("คำขอเห็นชอบแล้วแต่ยังไม่อยู่ในชุดส่ง", "approved requests are not in a batch yet")}: ${ready.map(r => `<span class="mono">${r.id}</span>`).join(", ")}</p>` : ""}</div></section>`
       + crudList("sbBatch", { head: `<h2>${L("ชุดส่งสำนักงบประมาณ", "Budget Bureau batches")}</h2><span class="sp"></span><span class="sub">${L("ส่งได้หลายชุด ชุดเพิ่มเติมรวมเฉพาะคำขอที่ยังไม่ส่ง", "Several batches; a later one takes only requests not sent yet")}</span>`, empty: L("ยังไม่มีชุดส่ง", "No batches yet") })
@@ -190,7 +190,7 @@ SUB.parliament = () => {
   const tot = k => items.reduce((s, it) => s + k(it), 0), cutT = tot(it => (P.cuts[it.id] ? P.cuts[it.id].amt : 0)), grT = tot(it => (P.appeals[it.id] && P.appeals[it.id].granted) || 0);
   const pend = plAppRows().filter(a => a.granted == null).length;
   const canNext = pl && st < PARL_STEPS.length && (st > 0 || closed);
-  return `<section class="panel"><header><h2>${L("ร่าง พ.ร.บ. งบประมาณรายจ่ายประจำปี 2571 ในรัฐสภา", "FY2571 budget bill in parliament")}</h2><span class="sp"></span>
+  return `<section class="panel"><header><h2>${L(`ร่าง พ.ร.บ. งบประมาณรายจ่ายประจำปี ${FORM_FY} ในรัฐสภา`, `FY${FORM_FY} budget bill in parliament`)}</h2><span class="sp"></span>
       ${st >= PARL_STEPS.length ? tag(L("มีผลใช้บังคับ", "In force"), "p-ok") : tag(`${L("ขั้นปัจจุบัน", "Now")}: ${tx(PARL_STEPS[st][0])}`, "p-info")}</header>
     <div class="body"><ol class="hsteps parl">${PARL_STEPS.map(([n, d], i) => `<li class="${i < st ? "done" : i === st ? "now" : ""}"><span class="dot"></span>${tx(n)}<small class="sub">${D[i] ? `${fdate(D[i])} ✓` : `${L("กำหนด", "plan")} ${fdate(d)}`}</small></li>`).join("")}</ol>
       <div class="row" style="margin-top:14px;flex-wrap:wrap;gap:8px">
@@ -208,7 +208,7 @@ SUB.parliament = () => {
     <div class="kpi hl"><span class="l">${L("วงเงินตาม พ.ร.บ.", "Appropriated")}</span><span class="v">${fmt(tot(parlFinal), 1)}<small>${L("ลบ.", "M")}</small></span></div></section>
   ${crudList("plCut", { head: `<h2>${L("การปรับลดของกรรมาธิการ", "Committee cuts")}</h2><span class="sp"></span><span class="sub">${L("บันทึกในขั้นกรรมาธิการ", "Recorded at the committee stage")}</span>`, empty: st < PL_CUT ? L("ยังไม่ถึงขั้นกรรมาธิการ", "Not at the committee stage yet") : L("ไม่มีการปรับลด", "No cuts") })}
   ${crudList("plApp", { head: `<h2>${L("แปรญัตติขอคืน", "Appeals to restore")}</h2><span class="sp"></span><span class="sub">${L("ยื่นในขั้นแปรญัตติ บันทึกผลหลังจากนั้น", "Filed at the appeals stage; results recorded after it")}</span>`, empty: st < PL_APPEAL ? L("ยื่นได้ในขั้นแปรญัตติ", "Opens at the appeals stage") : L("ยังไม่มีคำแปรญัตติ", "No appeals") })}
-  <section class="panel"><header><h2>${L("ผลรายโครงการ", "Result by project")}</h2><span class="sp"></span><span class="sub">${L("ล้านบาท · ใช้เป็นวงเงินตั้งต้นของการจัดสรรปี 2571 (B7)", "M baht · the starting point for the FY2571 allocation (B7)")}</span></header>
+  <section class="panel"><header><h2>${L("ผลรายโครงการ", "Result by project")}</h2><span class="sp"></span><span class="sub">${L(`ล้านบาท · ใช้เป็นวงเงินตั้งต้นของการจัดสรรปี ${FORM_FY} (B7)`, `M baht · the starting point for the FY${FORM_FY} allocation (B7)`)}</span></header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("โครงการ", "Project")}</th><th class="n">${L("ในร่าง", "In bill")}</th><th class="n">${L("ปรับลด", "Cut")}</th><th class="n">${L("ได้คืน", "Restored")}</th><th class="n">${L("สุดท้าย", "Final")}</th></tr></thead>
       <tbody>${items.map(it => { const c = P.cuts[it.id], a = P.appeals[it.id]; return `<tr><td><span class="mono sub">${it.id}</span> ${esc(tx(it.name))}</td><td class="n">${fmt(it.amt, 1)}</td><td class="n" style="color:var(--${c ? "bad" : "ink-2"})">${c ? "−" + fmt(c.amt, 1) : "—"}</td><td class="n">${a && a.granted ? "+" + fmt(a.granted, 1) : "—"}</td><td class="n"><b>${fmt(parlFinal(it), 1)}</b></td></tr>`; }).join("")}</tbody></table></div></section>`;
 };
@@ -220,7 +220,7 @@ function bindParl2() {
     if (P.stage === PL_CUT && !P.items) P.items = parlItems().map(x => Object.assign({}, x)); // the bill is fixed when the committee starts
     audit(["บันทึกขั้นตอนร่าง พ.ร.บ. งบประมาณ", "Recorded a budget bill stage"], `${tx(step)} · ${fdate(d)}`);
     if (P.stage === PL_CUT) notify(["plan", "exec"], ["ร่าง พ.ร.บ. เข้าสู่ขั้นกรรมาธิการ บันทึกการปรับลดเมื่อทราบผล", "The bill is with the scrutiny committee; record cuts as they come"], "sub-parliament");
-    if (P.stage === PARL_STEPS.length) notify(["fin", "plan", "exec"], ["พ.ร.บ. งบประมาณปี 2571 ประกาศใช้แล้ว พร้อมจัดสรร", "The FY2571 Budget Act is in force; ready to allocate"], "allocation");
+    if (P.stage === PARL_STEPS.length) notify(["fin", "plan", "exec"], [`พ.ร.บ. งบประมาณปี ${FORM_FY} ประกาศใช้แล้ว พร้อมจัดสรร`, `The FY${FORM_FY} Budget Act is in force; ready to allocate`], "allocation");
     commit(); route(); crUndoOffer(snap, `${tx(step)} · ${L("บันทึกแล้ว", "recorded")}`);
   };
   const bk = $("#pl-back"); if (bk) bk.onclick = () => { $("#pl-back-box").hidden = false; $("#pl-back-why").focus(); };

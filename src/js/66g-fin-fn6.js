@@ -24,8 +24,8 @@ function seedFinanceFN6(s) {
   Object.keys(F_AG).forEach(id => { if (!s.agents.some(a => a.id === id)) s.agents.push({ id, on: true, uses: 0, name: F_AG[id].name, what: F_AG[id].goal }); });
   s.fRuns = []; s.fSig = {}; s.fWhatifs = [];
   // A water bill keyed twice, for SG-F01.
-  const w = (s.vouchers || []).find(v => v.id === "VC-2570-006");
-  if (w) s.vouchers.push(Object.assign(JSON.parse(JSON.stringify(w)), { id: "VC-2570-008", t: "2026-10-16T11:20", desc: ["ค่าน้ำประปา เดือนกันยายน 2569 (สำนักงานสาขา)", "Water, September 2026 (branch office)"], log: [] }));
+  const w = (s.vouchers || []).find(v => v.id === `VC-2570-006`);
+  if (w) s.vouchers.push(Object.assign(JSON.parse(JSON.stringify(w)), { id: `VC-2570-008`, t: "2026-10-16T11:20", desc: ["ค่าน้ำประปา เดือนกันยายน 2569 (สำนักงานสาขา)", "Water, September 2026 (branch office)"], log: [] }));
   // An earlier advance cleared late by the same Planning user, for SG-F04.
   const pl = s.users.find(u => u.role === "plan" && u.primary);
   if (pl && s.advances) s.advances.unshift({ id: "AD-2569-041", borrower: pl.id, unit: pl.unit, type: "other", purpose: ["ประชุมเชิงปฏิบัติการไตรมาส 3", "Q3 workshop"], start: "2026-06-10", end: "2026-06-11", returned: null, items: [{ k: "material", amt: 15000 }], amount: 15000, approvedAmt: 15000, source: "budget", line: s.advances[1].line, temp: false, collateral: "", contract: { no: "สย.041/2569", t: "2026-06-01T10:00" }, state: "cleared", t: "2026-06-01T10:00", paid: { t: "2026-06-05T10:00", ref: "EP-ADV-041" }, clearing: { t: "2026-07-20T10:00", spent: 15000, note: "", receipts: true }, receipt: { no: "RB-2569-088", t: "2026-07-21T10:00" }, log: [] });
@@ -311,13 +311,13 @@ NAV_ICON.ai = NAV_ICON.ai || "sparkle";
 DEMO.push(
   { t: "52:00", role: "fin", link: "fnc-home", title: ["Fisko Finance: นาฬิกาตามระเบียบ", "Fisko Finance: regulation clocks"],
     say: ["ทุกกำหนดเวลาในระเบียบกระทรวงการคลังฯ 2562 เป็นนาฬิกา ขอเบิก 5 วันทำการหลังตรวจรับ ส่งใช้เงินยืม 15 หรือ 30 วัน นำส่งเงินเกิน 1 หมื่นบาทภายใน 3 วันทำการ พร้อมเลขข้อ", "Every deadline in the 2562 Finance Ministry regulation is a clock: request payment within 5 working days of acceptance, clear advances in 15 or 30 days, remit over 10,000 baht within 3 working days, each with its clause."],
-    do: ["ชี้นาฬิกาที่เลยกำหนด → เปิด F2 → “เตรียมข้อมูล PO” ของ CM-2570-002 → ใส่เลข 10 หลัก → บันทึก", "Point at the overdue clocks → open F2 → Prepare PO data for CM-2570-002 → enter 10 digits → Save"] },
+    do: [`ชี้นาฬิกาที่เลยกำหนด → เปิด F2 → “เตรียมข้อมูล PO” ของ CM-2570-002 → ใส่เลข 10 หลัก → บันทึก`, `Point at the overdue clocks → open F2 → Prepare PO data for CM-2570-002 → enter 10 digits → Save`] },
   { t: "53:00", role: "div", link: "advances", title: ["เงินยืมของฉัน", "My advances"],
     say: ["พนักงานขอยืมและส่งใช้เองได้ ระบบกันการยืมใหม่เมื่อยังมีเงินยืมค้าง ตามข้อ 59 โดยไม่มีปุ่มข้ามกฎ", "Staff borrow and clear by themselves. The system blocks a new advance while one is open (clause 59), with no override."],
-    do: ["ชี้ข้อความ “ยังขอยืมใหม่ไม่ได้” → “ส่งใช้” AD-2570-001 → ใส่ยอดใช้จริงและติ๊กใบเสร็จ → ส่งใบสำคัญ", "Point at “You can't ask for a new advance yet” → Clear AD-2570-001 → enter the amount spent and tick receipts → Send the evidence"] },
+    do: [`ชี้ข้อความ “ยังขอยืมใหม่ไม่ได้” → “ส่งใช้” AD-2570-001 → ใส่ยอดใช้จริงและติ๊กใบเสร็จ → ส่งใบสำคัญ`, `Point at “You can't ask for a new advance yet” → Clear AD-2570-001 → enter the amount spent and tick receipts → Send the evidence`] },
   { t: "54:00", role: "finhead", link: "fnc-adv", title: ["ทะเบียนเงินยืมและการเรียกชดใช้", "Advance register and demands"],
     say: ["หัวหน้าการเงินเห็นอายุหนี้ ออกหนังสือเรียกชดใช้ภายใน 30 วันตามข้อ 68 และรายงานหัวหน้าส่วนราชการเมื่อไม่ชดใช้", "The head of finance sees the ageing, issues a demand within 30 days (clause 68) and reports to the head of the agency if it isn't repaid."],
-    do: ["กรอง “เลยกำหนด” → เปิด AD-2570-002 → “ออกหนังสือเรียกชดใช้”", "Filter Overdue → open AD-2570-002 → Issue a demand"] },
+    do: [`กรอง “เลยกำหนด” → เปิด AD-2570-002 → “ออกหนังสือเรียกชดใช้”`, `Filter Overdue → open AD-2570-002 → Issue a demand`] },
   { t: "55:00", role: "fin", link: "fnc-recv", title: ["รับเงิน นำส่ง และเงินคงเหลือประจำวัน", "Receipts, remittance and the daily cash report"],
     say: ["ใบเสร็จมีเลขเล่มเลขที่ แก้ไม่ได้ ยกเลิกได้พร้อมเหตุผล นำส่งตามข้อ 101 และกรรมการเก็บรักษาเงินนับและลงนามรายคน ยอดไม่ตรงรายงานหัวหน้าทันที", "Receipts carry book and number, can't be edited, only cancelled with a reason. Money is remitted per clause 101, and each cash committee member counts and signs; a difference goes to the head at once."],
     do: ["“บันทึกรับเงินในระบบ” → “นำส่ง” เงินเบิกเกินส่งคืนที่เลยกำหนด → เปิด F6 → “จัดทำรายงานและส่งมอบให้กรรมการ”", "Record in the system → Remit the overdue refund → open F6 → Prepare the report and hand over"] },

@@ -37,7 +37,7 @@ function buildOrg(cfg) {
     { t: "2026-10-14T10:02", user: by("div"), role: "div", action: ["ส่งคำขอให้กองแผนงาน", "Submitted a request to Planning"], target: inPlan[0].id },
     { t: "2026-10-11T15:18", user: by("plan"), role: "plan", action: ["ส่งคำขอกลับแก้ไข", "Returned a request for revision"], target: returned.id },
     { t: "2026-10-10T09:00", user: by("admin"), role: "admin", action: ["แก้ไขกฎ BR-04 เกณฑ์ 25% เป็น 20%", "Changed rule BR-04 threshold from 25% to 20%"], target: "BR-04" },
-    { t: "2026-10-01T08:00", user: by("admin"), role: "admin", action: ["เปิดปีงบประมาณ 2571 รับคำขอ", "Opened FY2571 for requests"], target: "FY2571" },
+    { t: "2026-10-01T08:00", user: by("admin"), role: "admin", action: [`เปิดปีงบประมาณ ${FORM_FY} รับคำขอ`, `Opened FY${FORM_FY} for requests`], target: `FY${FORM_FY}` },
     { t: "2026-10-16T08:31", user: story ? by("div") : by("plan"), role: "div", action: ["บันทึกร่างคำขอ", "Saved a request draft"], target: s.story },
   ].sort((a, b) => (a.t < b.t ? 1 : -1));
   s.requests.forEach(r => (r.amount = reqAmount(r)));
@@ -70,8 +70,8 @@ function buildOrg(cfg) {
   A.lines.forEach(l => { const d = l.amount - sum(l.plan); l.plan[11] += d; });
   A.byType = {}; BUDGET_TYPES.forEach(t => (A.byType[t.id] = sum(A.lines.filter(l => l.type === t.id).map(l => l.amount))));
   A.byType.ope += A.total - sum(A.lines.map(l => l.amount)); // unallocated reserve sits in operating
-  A.transfers = A.transfers.map((t, i) => Object.assign({ id: "TR-2570-" + String(i + 1).padStart(3, "0"), by: s.users.find(u => u.role === "fin").id }, t, { from: A.lines[t.from].id, to: A.lines[t.to].id }));
-  s.allocs = { 2570: A };
+  A.transfers = A.transfers.map((t, i) => Object.assign({ id: `TR-2570-` + String(i + 1).padStart(3, "0"), by: s.users.find(u => u.role === "fin").id }, t, { from: A.lines[t.from].id, to: A.lines[t.to].id }));
+  s.allocs = { [CUR_FY]: A };
   delete s.alloc;
   s.dash.projects = [];
   s.dash.units.forEach(u => {
@@ -104,31 +104,31 @@ function buildOrg(cfg) {
 
   // round 7: delegation of authority — the executive is travelling and has delegated transfer approvals
   s.delegations = [
-    { id: "D-2570-001", from: U("exec"), to: U("plan"), scopes: ["transfer", "spend"], start: "2026-10-14", end: "2026-10-24", status: "active", t: "2026-10-13T17:00",
+    { id: `D-2570-001`, from: U("exec"), to: U("plan"), scopes: ["transfer", "spend"], start: "2026-10-14", end: "2026-10-24", status: "active", t: "2026-10-13T17:00",
       why: ["เดินทางไปราชการต่างประเทศ", "Official travel abroad"] },
     { id: "D-2569-014", from: U("fin"), to: (s.users.find(u => u.role === "fin" && !u.primary) || s.users.find(u => u.role === "plan" && !u.primary) || { id: U("plan") }).id, scopes: ["transfer"], start: "2026-08-01", end: "2026-08-05", status: "active", t: "2026-07-30T09:00",
       why: ["ลาพักผ่อน", "Annual leave"] },
-    { id: "D-2570-002", from: U("exec"), to: U("fin"), scopes: ["spend"], start: "2026-10-14", end: "2026-10-24", status: "active", t: "2026-10-13T17:05",
+    { id: `D-2570-002`, from: U("exec"), to: U("fin"), scopes: ["spend"], start: "2026-10-14", end: "2026-10-24", status: "active", t: "2026-10-13T17:05",
       why: ["เดินทางไปราชการต่างประเทศ", "Official travel abroad"] },
   ];
-  s.audit.unshift({ t: "2026-10-13T17:00", user: U("exec"), role: "exec", action: ["มอบอำนาจ", "Delegated authority"], target: "D-2570-001" });
+  s.audit.unshift({ t: "2026-10-13T17:00", user: U("exec"), role: "exec", action: ["มอบอำนาจ", "Delegated authority"], target: `D-2570-001` });
 
   // round 8: project bank, plan revisions, ceiling responses, forward-estimate assumptions
   const divOf = unit => (s.users.find(u => u.role === "div" && u.unit === unit) || { id: null }).id; // null: no demo user in that unit
   s.ideas = (s.ideas || []).map(([unit, kpi, name, est, years, status, sc, note], i) => ({
-    id: "PB-2571-" + String(i + 1).padStart(3, "0"), unit, kpi, name, est, years, status, scores: sc, note: note || null,
+    id: `PB-${FORM_FY}-` + String(i + 1).padStart(3, "0"), unit, kpi, name, est, years, status, scores: sc, note: note || null,
     by: divOf(unit), t: `2026-0${9 - (i % 3)}-1${i}T10:00`, req: null,
   }));
   const ks = [];
   s.strategy.items.forEach(st => st.goals.forEach(g => g.kpis.forEach(k => ks.push(k))));
   const kr = ks.find(k => k.acts.length) || ks[0], kd = ks.find(k => k !== kr && k.targets[2] > k.base) || ks[1];
   s.planRevs = [
-    { id: "PR-2571-002", kpi: kr.id, y: 1, from: kr.targets[1], to: Math.round(kr.targets[1] * 1.2 * 10) / 10, by: U("plan"), t: "2026-10-15T14:20", status: "pending",
-      why: ["ผลการดำเนินงานปี 2570 สูงกว่าเป้า จึงปรับค่าเป้าหมายให้ท้าทายขึ้น", "FY2570 results beat the target, so the target is raised"] },
-    { id: "PR-2571-001", kpi: kd.id, y: 2, from: kd.targets[2], to: kd.targets[2], by: U("plan"), t: "2026-09-20T10:00", status: "approved", decided: "2026-09-25T09:30", dBy: U("exec"),
+    { id: `PR-${FORM_FY}-002`, kpi: kr.id, y: 1, from: kr.targets[1], to: Math.round(kr.targets[1] * 1.2 * 10) / 10, by: U("plan"), t: "2026-10-15T14:20", status: "pending",
+      why: [`ผลการดำเนินงานปี 2570 สูงกว่าเป้า จึงปรับค่าเป้าหมายให้ท้าทายขึ้น`, `FY2570 results beat the target, so the target is raised`] },
+    { id: `PR-${FORM_FY}-001`, kpi: kd.id, y: 2, from: kd.targets[2], to: kd.targets[2], by: U("plan"), t: "2026-09-20T10:00", status: "approved", decided: "2026-09-25T09:30", dBy: U("exec"),
       why: ["ทบทวนกลางแผนตามมติ ครม. ยืนยันค่าเป้าหมายเดิม", "Mid-plan review: target confirmed unchanged"] },
   ];
-  s.audit.push({ t: "2026-10-15T14:20", user: U("plan"), role: "plan", action: ["เสนอทบทวนค่าเป้าหมายตัวชี้วัด", "Proposed a KPI target revision"], target: `PR-2571-002 ${kr.id}` });
+  s.audit.push({ t: "2026-10-15T14:20", user: U("plan"), role: "plan", action: ["เสนอทบทวนค่าเป้าหมายตัวชี้วัด", "Proposed a KPI target revision"], target: `PR-${FORM_FY}-002 ${kr.id}` });
   // Ceilings were issued on 12 Oct; the unit asked to cut the most has appealed, two have accepted.
   const cut = u => { const r = sum(u.v); return r ? 1 - s.cons.unitCeil[u.unit] / r : 0; };
   const byCut = s.cons.units.slice().sort((a, b) => cut(b) - cut(a));
@@ -158,7 +158,7 @@ function buildOrg(cfg) {
     { id: "H-05", unit: hu[1] || hu[0], date: "2026-10-22", time: "13:30", status: "scheduled", qs: [qa("H-05", 1)] },
   ];
   s.parl = { stage: 0, items: null, cuts: {}, appeals: {} };
-  const A70 = s.allocs[2570], q = (l, n) => sum(l.plan.slice(n * 3, n * 3 + 3));
+  const A70 = s.allocs[CUR_FY], q = (l, n) => sum(l.plan.slice(n * 3, n * 3 + 3));
   A70.releases = [];
   BUDGET_TYPES.forEach(t => {
     const ls = A70.lines.filter(l => l.type === t.id); if (!ls.length) return;
@@ -166,7 +166,7 @@ function buildOrg(cfg) {
     if (q1) A70.releases.push({ id: "", q: 1, type: t.id, amount: q1, status: "approved", t: "2026-10-01T09:00", dt: "2026-10-03T10:00", by: U("fin") });
     if (q2 && (t.id === "per" || t.id === "ope")) A70.releases.push({ id: "", q: 2, type: t.id, amount: q2, status: "pending", t: "2026-10-15T14:00", by: U("fin") });
   });
-  A70.releases.forEach((r, i) => (r.id = "RL-2570-" + String(i + 1).padStart(2, "0")));
+  A70.releases.forEach((r, i) => (r.id = `RL-2570-` + String(i + 1).padStart(2, "0")));
   const invL = A70.lines.filter(l => l.type === "inv").slice(0, 3), paid = [0.82, 0.35, 0];
   s.carry = {
     prev: invL.map((l, i) => ({ id: "CF-2569-0" + (i + 1), unit: l.unit, name: [`${l.name[0]} (ผูกพันจากปี 2569)`, `${l.name[1]} (committed in FY2569)`], po: `PO-69-0${412 + i * 37}`,
@@ -236,12 +236,12 @@ function buildOrg(cfg) {
   const months = ["2026-11-15", "2026-12-15", "2027-01-15", "2027-02-15", "2027-03-15", "2027-04-15"];
   s.pplan = FL.map((l, i) => {
     const est = Math.max(1e5, Math.round(l.amount * 0.5 / 1e5) * 1e5);
-    return { id: "PP-2570-" + String(i + 1).padStart(3, "0"), line: l.id, name: l.name, est, method: est <= 5e5 ? "specific" : "ebid", month: months[i], by: PO, status: "planned", egp: null, kind: guessKind(l, l.name) };
+    return { id: `PP-2570-` + String(i + 1).padStart(3, "0"), line: l.id, name: l.name, est, method: est <= 5e5 ? "specific" : "ebid", month: months[i], by: PO, status: "planned", egp: null, kind: guessKind(l, l.name) };
   });
   // The last two items are small, same kind, same unit: raising both in a row trips the split-purchase check (R-02).
   [[s.pplan.length - 2, 4e5], [s.pplan.length - 1, 3.5e5]].forEach(([i, est]) => Object.assign(s.pplan[i], { est, method: "specific", kind: "goods" }));
-  const why = ["จำเป็นต่อการดำเนินงานตามแผนปีงบประมาณ 2570", "Needed to deliver the FY2570 work plan"];
-  const mkReq = (i, st, t) => ({ id: "RQ-2570-" + String(i + 1).padStart(3, "0"), plan: s.pplan[i].id, by: reqBy(FL[i].unit), amount: s.pplan[i].est, why, status: st, t,
+  const why = [`จำเป็นต่อการดำเนินงานตามแผนปีงบประมาณ 2570`, `Needed to deliver the FY2570 work plan`];
+  const mkReq = (i, st, t) => ({ id: `RQ-2570-` + String(i + 1).padStart(3, "0"), plan: s.pplan[i].id, by: reqBy(FL[i].unit), amount: s.pplan[i].est, why, status: st, t,
     decided: st === "pending" ? null : { by: EX, holder: EX, via: null, t: t.slice(0, 10) + "T16:00" } });
   s.reqn = [mkReq(0, "contracted", "2026-08-03T09:00"), mkReq(1, "contracted", "2026-08-04T09:00"), mkReq(2, "approved", "2026-09-01T09:00"), mkReq(3, "pending", "2026-10-15T09:00")];
   [0, 1].forEach(i => (s.pplan[i].status = "contracted"));
@@ -259,13 +259,13 @@ function buildOrg(cfg) {
   };
   const mkCon = (i, vi, no, signed, dues, t) => {
     const r = s.reqn[i], amount = Math.round(r.amount * 0.97 / 1e3) * 1e3;
-    return { id: "CT-2570-" + String(i + 1).padStart(3, "0"), reqn: r.id, plan: r.plan, line: s.pplan[i].line, vendor: vend[vi], no, signed, amount, by: PO, inspectors: [PL, DV], status: "active", phases: mkPhases(amount, dues, t) };
+    return { id: `CT-2570-` + String(i + 1).padStart(3, "0"), reqn: r.id, plan: r.plan, line: s.pplan[i].line, vendor: vend[vi], no, signed, amount, by: PO, inspectors: [PL, DV], status: "active", phases: mkPhases(amount, dues, t) };
   };
   s.contracts = [mkCon(0, 0, "CT-70/001", "2026-10-06", ["2026-10-14", "2026-11-30", "2027-01-31"], "2026-10-14T10:00"),
     mkCon(1, 1, "CT-70/002", "2026-10-07", ["2026-10-15", "2026-12-15", "2027-02-28"], "2026-10-15T10:00")];
-  s.payreqs = [{ id: "PY-2570-001", contract: "CT-2570-001", phase: 1, amount: s.contracts[0].phases[0].amount, by: FN, status: "approved", t: "2026-10-14T15:00",
-    decided: { by: EX, holder: EX, via: null, t: "2026-10-15T10:00" }, recon: { state: "matched", file: "GF-2570-01", t: "2026-10-16T08:00" } }];
-  s.gfmisFiles = [{ id: "GF-2570-01", t: "2026-10-16T08:00", by: FN, rows: [{ pay: "PY-2570-001", doc: "GF-70-000417", amount: s.payreqs[0].amount, date: "2026-10-16", state: "matched" }] }];
+  s.payreqs = [{ id: `PY-2570-001`, contract: `CT-2570-001`, phase: 1, amount: s.contracts[0].phases[0].amount, by: FN, status: "approved", t: "2026-10-14T15:00",
+    decided: { by: EX, holder: EX, via: null, t: "2026-10-15T10:00" }, recon: { state: "matched", file: `GF-2570-01`, t: "2026-10-16T08:00" } }];
+  s.gfmisFiles = [{ id: `GF-2570-01`, t: "2026-10-16T08:00", by: FN, rows: [{ pay: `PY-2570-001`, doc: "GF-70-000417", amount: s.payreqs[0].amount, date: "2026-10-16", state: "matched" }] }];
   s.egpImports = [];
   s.sod = { rules: ["SD-01", "SD-02", "SD-03", "SD-04", "SD-05", "SD-06", "SD-07", "SD-08"].map(id => ({ id, on: true })), blocks: [] };
   seedCases(s, { PO, PL, DV, EX, FN, vend });
@@ -296,10 +296,10 @@ function buildOrg(cfg) {
   if (typeof seedLiveYear === "function") seedLiveYear(s);
   if (typeof seedMasterData === "function") seedMasterData(s);
   s.audit.unshift(
-    { t: "2026-10-15T10:00", user: EX, role: "exec", action: ["อนุมัติเบิกจ่าย", "Approved a payment"], target: "PY-2570-001 CT-2570-001" },
-    { t: "2026-10-14T15:00", user: FN, role: "fin", action: ["ขออนุมัติเบิกจ่าย", "Requested a payment approval"], target: "PY-2570-001 CT-2570-001" },
-    { t: "2026-10-14T11:00", user: DV, role: "div", action: ["ลงนามตรวจรับงาน", "Signed an acceptance"], target: "CT-2570-001 งวดที่ 1" },
-    { t: "2026-10-06T14:00", user: PO, role: "proc", action: ["สร้างสัญญา", "Created a contract"], target: "CT-2570-001 RQ-2570-001" },
+    { t: "2026-10-15T10:00", user: EX, role: "exec", action: ["อนุมัติเบิกจ่าย", "Approved a payment"], target: `PY-2570-001 CT-2570-001` },
+    { t: "2026-10-14T15:00", user: FN, role: "fin", action: ["ขออนุมัติเบิกจ่าย", "Requested a payment approval"], target: `PY-2570-001 CT-2570-001` },
+    { t: "2026-10-14T11:00", user: DV, role: "div", action: ["ลงนามตรวจรับงาน", "Signed an acceptance"], target: `CT-2570-001 งวดที่ 1` },
+    { t: "2026-10-06T14:00", user: PO, role: "proc", action: ["สร้างสัญญา", "Created a contract"], target: `CT-2570-001 RQ-2570-001` },
   );
   s.audit.sort((a, b) => (a.t < b.t ? 1 : -1));
   return s;

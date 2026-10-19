@@ -16,7 +16,7 @@ function allKpis() {
 const kpisForAct = actId => allKpis().filter(x => x.k.acts.includes(actId));
 const isPersonnel = r => r.items.length && r.items.every(i => i.type === "per");
 const reqsForKpi = k => S.requests.filter(r => k.acts.includes(r.act));
-const actLabel = id => { const a = (S.structure[2571] || []).find(x => x.id === id); return a ? `${a.code} · ${tx(a.name)}` : id; };
+const actLabel = id => { const a = (S.structure[FORM_FY] || []).find(x => x.id === id); return a ? `${a.code} · ${tx(a.name)}` : id; };
 
 const STRAT = {};
 STRAT.map = () => {
@@ -33,7 +33,7 @@ STRAT.map = () => {
     <summary><span class="pill p-mute">${L("ยุทธศาสตร์ชาติ", "National strategy")}: ${natName(st.nat)}</span><b>${st.id} · ${esc(tx(st.name))}</b></summary>
     <div class="body" style="display:flex;flex-direction:column;gap:14px">
       ${st.goals.map(g => `<div class="goal"><div class="goal-h"><span class="lvl output">${L("เป้าประสงค์", "Goal")}</span>${esc(tx(g.name))}</div>
-        <div class="tbl-wrap"><table><thead><tr><th>${L("ตัวชี้วัด", "KPI")}</th><th class="n">${L("ฐาน", "Baseline")}</th><th class="n">${L("เป้าปี 2571", "2571 target")}</th><th class="n">${L("เป้าปี 2575", "2575 target")}</th><th>${L("เจ้าของ", "Owner")}</th><th>${L("กิจกรรม / คำขอ", "Activities / requests")}</th></tr></thead>
+        <div class="tbl-wrap"><table><thead><tr><th>${L("ตัวชี้วัด", "KPI")}</th><th class="n">${L("ฐาน", "Baseline")}</th><th class="n">${L(`เป้าปี ${FORM_FY}`, `${FORM_FY} target`)}</th><th class="n">${L(`เป้าปี ${FORM_FY + 4}`, `${FORM_FY + 4} target`)}</th><th>${L("เจ้าของ", "Owner")}</th><th>${L("กิจกรรม / คำขอ", "Activities / requests")}</th></tr></thead>
           <tbody>${g.kpis.map(k => { const rq = reqsForKpi(k); return `<tr><td><span class="mono sub">${k.id}</span> ${esc(tx(k.name))}</td><td class="n">${fmt(k.base, k.base % 1 ? 1 : 0)} <span class="sub">${tx(k.unit)}</span></td>
             <td class="n"><b>${fmt(k.targets[0], k.targets[0] % 1 ? 1 : 0)}</b></td><td class="n">${fmt(k.targets[4], k.targets[4] % 1 ? 1 : 0)}</td><td class="sub">${unitName(k.owner)}</td>
             <td>${k.acts.length ? `${k.acts.length} ${L("กิจกรรม", "activities")} · ${rq.length ? rq.map(r => `<a href="#" data-req="${r.id}" class="mono">${r.id}</a>`).join(" ") : `<span class="sub">${L("ยังไม่มีคำขอ", "no requests")}</span>`}` : tag(L("ยังไม่ผูกกิจกรรม", "No activity linked"), "p-warn")}</td></tr>`; }).join("")}</tbody></table></div></div>`).join("")}
@@ -53,12 +53,12 @@ STRAT.kpis = () => {
       <div class="f"><label for="nk-goal">${L("ภายใต้เป้าประสงค์", "Under goal")}</label><select id="nk-goal">${S.strategy.items.flatMap(st => st.goals.map(g => `<option value="${g.id}">${st.id} · ${esc(tx(g.name))}</option>`)).join("")}</select></div>
       <div class="f"><label for="nk-name">${L("ชื่อตัวชี้วัดใหม่", "New KPI name")}</label><input type="text" id="nk-name" required></div>
       <div class="f" style="flex:0 1 110px"><label for="nk-unit">${L("หน่วย", "Unit")}</label><input type="text" id="nk-unit" required></div>
-      <div class="f" style="flex:0 1 110px"><label for="nk-t">${L("เป้าปี 2571", "2571 target")}</label><input type="number" step="any" id="nk-t" required></div>
+      <div class="f" style="flex:0 1 110px"><label for="nk-t">${L(`เป้าปี ${FORM_FY}`, `${FORM_FY} target`)}</label><input type="number" step="any" id="nk-t" required></div>
       <button class="btn primary" type="submit">+ ${L("เพิ่มตัวชี้วัด", "Add KPI")}</button></form></div>` : ""}</section>`;
 };
 
 STRAT.links = () => {
-  const ed = canPlan(), acts = (S.structure[2571] || []).filter(a => a.lvl === "activity"), ks = allKpis();
+  const ed = canPlan(), acts = (S.structure[FORM_FY] || []).filter(a => a.lvl === "activity"), ks = allKpis();
   return `
   <section class="panel"><header><h2>${L("กิจกรรมตามโครงสร้างงบประมาณ กับตัวชี้วัดที่รองรับ", "Budget activities and the KPIs they serve")}</h2><span class="sp"></span><span class="sub">${L("คำขอที่ใช้กิจกรรมเหล่านี้จะผูกกับตัวชี้วัดอัตโนมัติ", "Requests under these activities link to the KPIs automatically")}</span></header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("กิจกรรม", "Activity")}</th><th>${L("ตัวชี้วัดที่ผูก", "Linked KPIs")}</th><th class="n">${L("คำขอ", "Requests")}</th><th class="n">${L("วงเงินที่ขอ (ลบ.)", "Requested (M)")}</th></tr></thead>

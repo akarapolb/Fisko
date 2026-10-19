@@ -146,7 +146,7 @@ function caseOnDecide(p, r, ok) {
 }
 function caseOnContract(cs, con) { cs.contract = con.id; cs.state = 9; famPlan(cs.plan).status = "contracted"; caseLog(cs, "contract", `${con.id} · ${mb(con.amount)}`); }
 function caseNew(p) {
-  const c = { id: "PC-2570-" + String(S.cases.length + 1).padStart(3, "0"), plan: p.id, reqn: null, line: p.line, kind: p.kind, state: 1, method: null, methodWhy: null, special: null, methodApproval: null, committees: {}, ref: null, tor: null, egp: null, quotes: [], award: null, appeal: null, appealElapsed: false, closeElapsed: false, contract: null, cancelled: null };
+  const c = { id: `PC-2570-` + String(S.cases.length + 1).padStart(3, "0"), plan: p.id, reqn: null, line: p.line, kind: p.kind, state: 1, method: null, methodWhy: null, special: null, methodApproval: null, committees: {}, ref: null, tor: null, egp: null, quotes: [], award: null, appeal: null, appealElapsed: false, closeElapsed: false, contract: null, cancelled: null };
   S.cases.push(c); caseLog(c, "created", p.id); return c;
 }
 function guessKind(line, name) { return line.type === "inv" ? (/ปรับปรุง|ก่อสร้าง|อาคาร|ซ่อม|เขื่อน|ตลิ่ง|ถนน|renovat|construct|building|repair|embank/i.test(name.join(" ")) ? "construction" : "goods") : "service"; }
@@ -463,7 +463,7 @@ function seedCases(s, K) {
   const states = [9, 9, 5, 2, 1, 1];
   s.cases = s.pplan.map((p, i) => {
     const n = states[i] || 1, rq = s.reqn[i], ct = s.contracts[i];
-    const c = { id: "PC-2570-" + String(i + 1).padStart(3, "0"), plan: p.id, reqn: rq ? rq.id : null, line: p.line, kind: p.kind, state: n, method: null, methodWhy: null, special: null, methodApproval: null, committees: {}, ref: null, tor: null, egp: null, quotes: [], award: null, appeal: null, appealElapsed: false, closeElapsed: false, contract: null, cancelled: null };
+    const c = { id: `PC-2570-` + String(i + 1).padStart(3, "0"), plan: p.id, reqn: rq ? rq.id : null, line: p.line, kind: p.kind, state: n, method: null, methodWhy: null, special: null, methodApproval: null, committees: {}, ref: null, tor: null, egp: null, quotes: [], award: null, appeal: null, appealElapsed: false, closeElapsed: false, contract: null, cancelled: null };
     ev(c, "2026-07-15T09:00", "created", K.PO, p.id);
     if (n >= 2) ev(c, rq.t, "requested", rq.by, rq.id);
     if (n >= 3) ev(c, rq.decided.t, "approved", K.EX, rq.id);

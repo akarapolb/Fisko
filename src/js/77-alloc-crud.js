@@ -8,7 +8,7 @@ const CR_ST = {
 };
 const crSeq = (A, k) => { A.seq = A.seq || {}; A.seq[k] = (A.seq[k] || 0) + 1; return A.seq[k]; };
 const crNo = (A, k, pre, w = 3) => `${pre}-${ALLOC_FY}-${String(crSeq(A, k)).padStart(w, "0")}`;
-const actOpts = () => (S.structure[2571] || []).filter(n => n.lvl === "activity").map(n => [n.id, `${n.code} · ${tx(n.name)}`]);
+const actOpts = () => (S.structure[FORM_FY] || []).filter(n => n.lvl === "activity").map(n => [n.id, `${n.code} · ${tx(n.name)}`]);
 const unitOpts = () => S.units.filter(u => u.parent).map(u => [u.id, tx(u.name)]);
 const typeOpts = () => BUDGET_TYPES.map(t => [t.id, tx(t.name)]);
 const typeRoom = t => (AL().byType[t] || 0) - allocated(t);
@@ -293,7 +293,7 @@ ALLOC.transfers = () => crudList("alTr", {
 // Savings: a decision can be reversed while no transfer has been made from it (FR-C-33).
 const savTrOf = c => AL().transfers.find(t => t.from === c.line && t.saving === c.id && !["withdrawn", "rejected"].includes(t.status));
 ALLOC.savings = () => {
-  if (ALLOC_FY !== B4_FY) return `<section class="panel"><div class="body sub">${L("เงินเหลือจ่ายมีเฉพาะปีที่กำลังใช้จ่าย (2570)", "Savings exist for the year being spent (2570)")}</div></section>`;
+  if (ALLOC_FY !== B4_FY) return `<section class="panel"><div class="body sub">${L(`เงินเหลือจ่ายมีเฉพาะปีที่กำลังใช้จ่าย (2570)`, `Savings exist for the year being spent (2570)`)}</div></section>`;
   const rows = S.contracts.map(c => { const p = famPlan(c.plan), sav = (p.est || 0) - c.amount; return { c, p, sav, l: lineOf(c.line) }; }).filter(x => x.sav > 0);
   const opt = x => {
     if (x.c.savUse) { const t = savTrOf(x.c);

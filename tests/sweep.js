@@ -83,7 +83,8 @@
           stNode: ["strategy", () => (STRAT_TAB = "map")], stKpi: ["strategy", () => (STRAT_TAB = "kpis")], stIdea: ["strategy", () => (STRAT_TAB = "bank")], stRev: ["strategy", () => (STRAT_TAB = "revise")], pfOut: ["performance", () => (PERF_TAB = "kpis")],
           adUnit: ["admin", () => (ADMIN_TAB = "master")], adPrice: ["admin", () => (ADMIN_TAB = "master")], adFy: ["admin", () => (ADMIN_TAB = "fiscal")], adCal: ["admin", () => (ADMIN_TAB = "fiscal")], adNode: ["admin", () => (ADMIN_TAB = "structure")],
           adCm: ["admin", () => (ADMIN_TAB = "bmaster")], adMp: ["admin", () => (ADMIN_TAB = "bmaster")], adCs: ["admin", () => (ADMIN_TAB = "bmaster")],
-          wiSc: ["insight", () => (INTEL_TAB = "whatif")], anDone: ["insight", () => (INTEL_TAB = "anoms")], agRun: ["assistant", () => (INTEL_TAB = "bagents")] };
+          wiSc: ["insight", () => (INTEL_TAB = "whatif")], anDone: ["insight", () => (INTEL_TAB = "anoms")], agRun: ["assistant", () => (INTEL_TAB = "bagents")],
+          adUser: ["admin", () => (ADMIN_TAB = "users")], adWf: ["admin", () => (ADMIN_TAB = "workflow")], adRule: ["admin", () => (ADMIN_TAB = "rules")] };
         for (const [k, [page, set]] of Object.entries(where)) {
           if (!allowed(page) || (page === "admin" && !ADMIN_TABS.some(x => x.roles.includes(ROLE) && (set(), x.id === ADMIN_TAB)))) continue;
           const sp = CRUD.defs[k], open = (id, mode, t) => safe(`${org}/${role}/${k}/${id || "new"}/${mode}${t ? "/" + t : ""}`, () => { set(); crOpen(k, id, mode); if (t) CR_OPEN.tab = t; go2(page); chk(`${org}/${role}/${k}/${id || "new"}/${mode}${t || ""}`); if (!document.querySelector(".cr-drawer") && !(page === "strategy" && STRAT_TAB !== want)) errs.push(`${org}/${role}/${k}/${id}: no drawer`); });

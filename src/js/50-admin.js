@@ -1,6 +1,6 @@
 // M10 System Administration. Admin edits everything; auditors read the audit log; finance watches integrations.
 let ADMIN_TAB = "master";
-let STRUCT_FY = 2571;
+let STRUCT_FY = FORM_FY;
 const ADMIN_TABS = [
   { id: "master", roles: ["admin"], label: ["ข้อมูลหลัก", "Master data"] },
   { id: "fiscal", roles: ["admin"], label: ["ปีงบประมาณและปฏิทิน", "Fiscal years & calendar"] },
@@ -63,7 +63,7 @@ ADMIN.fiscal = () => `
         <tbody>${S.fyList.map((f, i) => `<tr><td><b>${f.fy}</b></td><td class="sub">${fdate(f.start)} – ${fdate(f.end)}</td><td>${tag(tx(FY_STATUS[f.status][0]), FY_STATUS[f.status][1])}</td>
           <td><select data-fy="${i}" aria-label="${L("สถานะปี", "Status for")} ${f.fy}">${Object.keys(FY_STATUS).map(k => `<option value="${k}" ${k === f.status ? "selected" : ""}>${tx(FY_STATUS[k][0])}</option>`).join("")}</select></td></tr>`).join("")}</tbody></table></div>
       <div class="body sub">${L("ปีงบประมาณเริ่ม 1 ตุลาคม สิ้นสุด 30 กันยายน", "Fiscal years run from 1 October to 30 September")}</div></section>
-    <section class="panel"><header><h2>${L("ปฏิทินงบประมาณ ปี 2571", "FY2571 budget calendar")}</h2><span class="sp"></span>${tag(L("ตัวอย่าง", "Sample"), "p-warn")}</header>
+    <section class="panel"><header><h2>${L(`ปฏิทินงบประมาณ ปี ${FORM_FY}`, `FY${FORM_FY} budget calendar`)}</h2><span class="sp"></span>${tag(L("ตัวอย่าง", "Sample"), "p-warn")}</header>
       <div class="tbl-wrap"><table><thead><tr><th>${L("กิจกรรม", "Milestone")}</th><th>${L("ผู้รับผิดชอบ", "Owner")}</th><th style="width:170px">${L("วันที่", "Date")}</th></tr></thead>
         <tbody>${S.calendar.map((c, i) => `<tr><td>${tx(c.name)}</td><td class="sub">${tx(ROLES[c.role])}</td><td><input type="date" data-cal="${i}" value="${c.date}" aria-label="${esc(tx(c.name))}"></td></tr>`).join("")}</tbody></table></div>
       <div class="body sub">${L("กำหนดส่งใช้ในหน้าแรก งานของฉัน และกฎ BR-06", "Dates drive My Workspace deadlines and rule BR-06")}</div></section>
@@ -79,7 +79,7 @@ ADMIN.structure = () => {
   walk(null);
   st.filter(n => !order.includes(n)).forEach(n => order.push(n));
   const depth = n => { let d = 0, p = st.find(x => x.id === n.parent); while (p) { d++; p = st.find(x => x.id === p.parent); } return d; };
-  const outputs = (S.structure[2571] || []).filter(n => n.lvl === "output");
+  const outputs = (S.structure[FORM_FY] || []).filter(n => n.lvl === "output");
   const name = (fy, id) => { const n = (S.structure[fy] || []).find(x => x.id === id); return n ? `${n.code} · ${tx(n.name)}` : id; };
   return `
   <div class="grid2">
@@ -87,14 +87,14 @@ ADMIN.structure = () => {
       <label class="field-inline" for="sfy">${L("ปี", "Year")} <select id="sfy">${Object.keys(S.structure).sort().reverse().map(y => `<option ${Number(y) === STRUCT_FY ? "selected" : ""}>${y}</option>`).join("")}</select></label></header>
       <div class="tbl-wrap"><table><thead><tr><th>${L("รหัส", "Code")}</th><th>${L("ชื่อ", "Name")}</th><th class="n">${L("คำขอ", "Requests")}</th></tr></thead>
         <tbody>${order.map(n => `<tr class="tree-row"><td class="mono">${n.code}</td><td><span style="display:inline-block;width:${depth(n) * 20}px"></span><span class="lvl ${n.lvl}">${tx(LEVELS[n.lvl])}</span>${esc(tx(n.name))}</td>
-          <td class="n">${STRUCT_FY === 2571 && n.lvl === "activity" ? S.requests.filter(r => r.act === n.id).length : ""}</td></tr>`).join("")}</tbody></table></div>
-      ${STRUCT_FY === 2571 ? `<div class="body"><form class="inline-form" id="act-form">
+          <td class="n">${STRUCT_FY === FORM_FY && n.lvl === "activity" ? S.requests.filter(r => r.act === n.id).length : ""}</td></tr>`).join("")}</tbody></table></div>
+      ${STRUCT_FY === FORM_FY ? `<div class="body"><form class="inline-form" id="act-form">
         <div class="f"><label for="a-parent">${L("ภายใต้ผลผลิต", "Under output")}</label><select id="a-parent">${outputs.map(o => `<option value="${o.id}">${o.code} · ${esc(tx(o.name))}</option>`).join("")}</select></div>
         <div class="f"><label for="a-name">${L("ชื่อกิจกรรมใหม่", "New activity name")}</label><input type="text" id="a-name" required></div>
         <button class="btn primary" type="submit">+ ${L("เพิ่มกิจกรรม", "Add activity")}</button></form></div>` : `<div class="body sub">${L("ปีที่ผ่านมาแก้ไขไม่ได้ เพื่อรักษาข้อมูลย้อนหลัง", "Past years are read-only to protect history")}</div>`}</section>
-    <section class="panel"><header><h2>${L("การจับคู่รหัสข้ามปี 2570 → 2571", "Code mapping 2570 → 2571")}</h2></header>
-      <div class="tbl-wrap"><table><thead><tr><th>2570</th><th>2571</th><th>${L("ประเภท", "Type")}</th></tr></thead>
-        <tbody>${S.mapping.map(m => `<tr><td class="sub">${esc(name(2570, m.from))}</td><td>${esc(name(2571, m.to))}</td><td>${tag(tx(MAP_TYPE[m.type][0]), MAP_TYPE[m.type][1])}</td></tr>`).join("")}</tbody></table></div>
+    <section class="panel"><header><h2>${L(`การจับคู่รหัสข้ามปี ${CUR_FY} → ${FORM_FY}`, `Code mapping ${CUR_FY} → ${FORM_FY}`)}</h2></header>
+      <div class="tbl-wrap"><table><thead><tr><th>${CUR_FY}</th><th>${FORM_FY}</th><th>${L("ประเภท", "Type")}</th></tr></thead>
+        <tbody>${S.mapping.map(m => `<tr><td class="sub">${esc(name(CUR_FY, m.from))}</td><td>${esc(name(FORM_FY, m.to))}</td><td>${tag(tx(MAP_TYPE[m.type][0]), MAP_TYPE[m.type][1])}</td></tr>`).join("")}</tbody></table></div>
       <div class="body sub">${L("ใช้เปรียบเทียบงบประมาณหลายปีแม้โครงสร้างเปลี่ยน", "Lets reports compare years even when the structure changes")}</div></section>
   </div>`;
 };
@@ -103,7 +103,7 @@ BIND_ADMIN.structure = () => {
   const f = $("#act-form");
   if (f) f.onsubmit = e => {
     e.preventDefault();
-    const parent = $("#a-parent").value, nm = $("#a-name").value.trim(), st = S.structure[2571];
+    const parent = $("#a-parent").value, nm = $("#a-name").value.trim(), st = S.structure[FORM_FY];
     const sibs = st.filter(n => n.parent === parent), p = st.find(n => n.id === parent);
     const id = `${parent}-A${sibs.length + 1}`;
     st.push({ id, lvl: "activity", code: `${p.code}.A${sibs.length + 1}`, parent, name: [nm, nm] });
@@ -161,7 +161,7 @@ BIND_ADMIN.workflow = () => {
 };
 
 ADMIN.rules = () => `
-  <section class="panel"><header><h2>${L("กฎทางธุรกิจปี 2571", "FY2571 business rules")}</h2><span class="sp"></span><span class="sub">${L("ใช้ตรวจความครบถ้วนใน M02 ทันทีที่บันทึก", "Applied to M02 checks as soon as you save")}</span></header>
+  <section class="panel"><header><h2>${L(`กฎทางธุรกิจปี ${FORM_FY}`, `FY${FORM_FY} business rules`)}</h2><span class="sp"></span><span class="sub">${L("ใช้ตรวจความครบถ้วนใน M02 ทันทีที่บันทึก", "Applied to M02 checks as soon as you save")}</span></header>
     <div class="tbl-wrap"><table><thead><tr><th class="c" style="width:70px">${L("ใช้งาน", "On")}</th><th>${L("รหัส", "ID")}</th><th>${L("กฎ", "Rule")}</th><th style="width:160px">${L("ค่ากำหนด", "Setting")}</th><th style="width:170px">${L("เมื่อไม่ผ่าน", "If it fails")}</th></tr></thead>
       <tbody>${S.rules.map((r, i) => `<tr><td class="c">${sw("rule-" + i, r.on)}</td><td class="mono">${r.id}</td><td>${tx(r.name)} ${historyBtn(r.id, r.id)}</td>
         <td>${r.param != null ? `<label class="field-inline"><input type="number" min="0" data-rp="${i}" value="${r.param}" style="width:80px" aria-label="${r.id}"> ${tx(r.unit)}</label>` : `<span class="sub">—</span>`}</td>

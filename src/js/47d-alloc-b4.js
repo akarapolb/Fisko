@@ -69,7 +69,7 @@ let B4_PREFILL = null;
 ALLOC_TABS.push({ id: "balance", label: ["ยอดคงเหลือ 4 ระดับ", "Four-level balances"] }, { id: "savings", label: ["เงินเหลือจ่าย", "Savings"] });
 let BAL_OPEN = null;
 ALLOC.balance = () => {
-  if (ALLOC_FY !== B4_FY) return `<section class="panel"><div class="body sub">${L("ยอดจอง ผูกพัน และเบิกจ่ายมีเฉพาะปีที่กำลังใช้จ่าย (2570)", "Reservations, commitments and payments exist for the year being spent (2570)")}</div></section>`;
+  if (ALLOC_FY !== B4_FY) return `<section class="panel"><div class="body sub">${L(`ยอดจอง ผูกพัน และเบิกจ่ายมีเฉพาะปีที่กำลังใช้จ่าย (2570)`, `Reservations, commitments and payments exist for the year being spent (2570)`)}</div></section>`;
   const A = AL(), L4 = A.lines.map(l => ({ l, b: bal(l) })), T = k => sumv(L4.map(x => x.b[k]));
   const bar = b => { const w = v => (b.allot ? v / b.allot * 100 : 0).toFixed(1); return `<div class="bal4" title=""><i class="p" style="width:${w(b.paid)}%"></i><i class="c" style="width:${w(b.com - b.paid)}%"></i><i class="r" style="width:${w(b.res)}%"></i></div>`; };
   const open = BAL_OPEN && A.lines.find(l => l.id === BAL_OPEN);
@@ -99,7 +99,7 @@ function balDetail(l) {
 
 // ---------- savings ----------
 ALLOC.savings = () => {
-  if (ALLOC_FY !== B4_FY) return `<section class="panel"><div class="body sub">${L("เงินเหลือจ่ายมีเฉพาะปีที่กำลังใช้จ่าย (2570)", "Savings exist for the year being spent (2570)")}</div></section>`;
+  if (ALLOC_FY !== B4_FY) return `<section class="panel"><div class="body sub">${L(`เงินเหลือจ่ายมีเฉพาะปีที่กำลังใช้จ่าย (2570)`, `Savings exist for the year being spent (2570)`)}</div></section>`;
   const rows = S.contracts.map(c => { const p = famPlan(c.plan), sav = (p.est || 0) - c.amount; return { c, p, sav, l: lineOf(c.line) }; }).filter(x => x.sav > 0);
   return `<section class="panel"><header>${chipIco("coins", "info")}<h2>${L("เงินเหลือจ่ายจากการจัดซื้อจัดจ้าง", "Savings from procurement")}</h2><span class="sp"></span><b class="num">${mb(sumv(rows.map(x => x.sav)))}</b>&nbsp;${L("ลบ.", "M")}</header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("สัญญา", "Contract")}</th><th>${L("บรรทัด", "Line")}</th><th class="n">${L("ประมาณการ", "Estimate")}</th><th class="n">${L("ราคาสัญญา", "Contract price")}</th><th class="n">${L("เหลือจ่าย", "Saving")}</th><th>${L("ทางเลือก", "Options")}</th></tr></thead>

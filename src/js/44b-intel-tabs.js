@@ -11,11 +11,11 @@ function intelTabsBar() {
 
 // ---- trends ----
 function trendRows() {
-  const A = S.allocs[2570], perShare = A ? A.byType.per / A.total : 0.4;
+  const A = S.allocs[CUR_FY], perShare = A ? A.byType.per / A.total : 0.4;
   const rows = S.trend.map(([fy, total, rate, inv]) => { const sh = { per: perShare, inv, sub: 0.02, oth: 0.01 }; sh.ope = 1 - sh.per - sh.inv - sh.sub - sh.oth; return { fy, total, rate, sh }; });
   const U = S.cons.units, tot = sumv(U.map(u => sumv(u.v)));
   const sh = {}; BUDGET_TYPES.forEach((t, i) => (sh[t.id] = sumv(U.map(u => u.v[i])) / tot));
-  rows.push({ fy: 2571, total: tot, rate: null, sh, req: true });
+  rows.push({ fy: FORM_FY, total: tot, rate: null, sh, req: true });
   return rows;
 }
 function trendChart(rows) {
@@ -42,11 +42,11 @@ INTEL.trends = () => {
     <div class="kpi"><span class="l">${L("เติบโตเฉลี่ยต่อปี", "Average yearly growth")} ${first.fy}–${last.fy}</span><span class="v">${fmt(cagr, 1)}%</span></div>
     <div class="kpi"><span class="l">${L("สัดส่วนงบลงทุน", "Investment share")} ${last.fy}</span><span class="v">${fmt(last.sh.inv * 100, 1)}%</span><span class="d sub">${L("จาก", "from")} ${fmt(first.sh.inv * 100, 1)}% ${L("ในปี", "in")} ${first.fy}</span></div>
     <div class="kpi"><span class="l">${L("อัตราเบิกจ่ายทั้งปีเฉลี่ย", "Average full-year disbursement")}</span><span class="v">${fmt(sumv(rates.map(r => r.rate)) / rates.length, 1)}%</span></div>
-    <div class="kpi hl"><span class="l">${L("คำขอปี 2571 เทียบปี 2570", "FY2571 request vs FY2570")}</span><span class="v">${fmt((rows[rows.length - 1].total / last.total - 1) * 100, 1)}%</span></div>
+    <div class="kpi hl"><span class="l">${L(`คำขอปี ${FORM_FY} เทียบปี ${CUR_FY}`, `FY${FORM_FY} request vs FY${CUR_FY}`)}</span><span class="v">${fmt((rows[rows.length - 1].total / last.total - 1) * 100, 1)}%</span></div>
   </section>
   <section class="panel chart"><header><h2>${L("งบประมาณรายปีแยกตามงบรายจ่าย", "Budget by year and budget type")}</h2><span class="sp"></span>
     <div class="legend">${BUDGET_TYPES.map((t, i) => `<span><span class="sw c${i + 1}"></span>${tx(t.name)}</span>`).join("")}<span><i style="background:var(--ch-1)"></i>${L("อัตราเบิกจ่ายทั้งปี (แกนขวา)", "Full-year disbursement (right axis)")}</span></div></header>
-    <div class="body">${trendChart(rows)}<div class="sub">${L("ล้านบาท · ปี 2566–2569 ข้อมูลตัวอย่าง · ปี 2570 ตามพระราชบัญญัติ (M06) · ปี 2571 ตามคำขอ (M03)", "Million baht · 2566–2569 sample data · 2570 appropriation (M06) · 2571 requests (M03)")}</div></div></section>
+    <div class="body">${trendChart(rows)}<div class="sub">${L(`ล้านบาท · ปี 2566–2569 ข้อมูลตัวอย่าง · ปี ${CUR_FY} ตามพระราชบัญญัติ (M06) · ปี ${FORM_FY} ตามคำขอ (M03)`, `Million baht · 2566–2569 sample data · ${CUR_FY} appropriation (M06) · ${FORM_FY} requests (M03)`)}</div></div></section>
   <section class="panel"><div class="tbl-wrap"><table><thead><tr><th>${L("ปีงบประมาณ", "Fiscal year")}</th><th class="n">${L("วงเงิน (ลบ.)", "Budget (M)")}</th><th class="n">${L("เปลี่ยนแปลง", "Change")}</th><th class="n">${L("งบลงทุน", "Investment")}</th><th class="n">${L("เบิกจ่ายทั้งปี", "Full-year disbursement")}</th></tr></thead>
     <tbody>${rows.map((r, i) => `<tr><td>${r.fy}${r.req ? ` <span class="sub">(${L("คำขอ", "request")})</span>` : ""}</td><td class="n">${fmt(r.total, 1)}</td><td class="n">${i ? `${r.total >= rows[i - 1].total ? "+" : ""}${fmt((r.total / rows[i - 1].total - 1) * 100, 1)}%` : "—"}</td><td class="n">${fmt(r.sh.inv * 100, 1)}%</td><td class="n">${r.rate == null ? "—" : fmt(r.rate, 1) + "%"}</td></tr>`).join("")}</tbody></table></div></section>`;
 };

@@ -247,17 +247,17 @@ function seedFinanceNB(s) {
     { id: "NB-02", name: ["เงินบริจาคเพื่อพัฒนาบุคลากร", "Donations for staff development"], basis: ["เงินบริจาคที่ผู้บริจาคระบุวัตถุประสงค์ (ตัวอย่าง)", "Donations given for a stated purpose (sample)"], openA: 20000, openT: 60000 },
   ];
   s.nbPlans = [
-    { id: "NP-2570-01", fund: "NB-01", fy: 2570, income: 200000, status: "approved", by: FN, t: "2026-09-20T10:00", approved: { by: EX, t: "2026-09-25T15:00" }, log: [],
+    { id: `NP-2570-01`, fund: "NB-01", fy: CUR_FY, income: 200000, status: "approved", by: FN, t: "2026-09-20T10:00", approved: { by: EX, t: "2026-09-25T15:00" }, log: [],
       lines: [{ id: "NB-01-1", name: ["ซ่อมบำรุงห้องประชุมและระบบเสียง", "Meeting room and sound system upkeep"], cat: "ope", amount: 120000 }, { id: "NB-01-2", name: ["วัสดุและค่าสาธารณูปโภคของห้องประชุม", "Meeting room supplies and utilities"], cat: "ope", amount: 60000 }, { id: "NB-01-3", name: ["ครุภัณฑ์ห้องประชุม", "Meeting room equipment"], cat: "inv", amount: 150000 }] },
-    { id: "NP-2570-02", fund: "NB-02", fy: 2570, income: 30000, status: "submitted", by: FN, t: "2026-10-12T10:00", log: [],
+    { id: `NP-2570-02`, fund: "NB-02", fy: CUR_FY, income: 30000, status: "submitted", by: FN, t: "2026-10-12T10:00", log: [],
       lines: [{ id: "NB-02-1", name: ["ทุนฝึกอบรมบุคลากร", "Training grants"], cat: "train", amount: 60000 }, { id: "NB-02-2", name: ["ศึกษาดูงาน", "Study visits"], cat: "train", amount: 30000 }] },
   ];
-  s.nbWd = [{ id: "WD-2570-01", fund: "NB-01", amount: 50000, why: "ซ่อมระบบเสียงห้องประชุมใหญ่", status: "done", by: FN, t: "2026-10-02T10:00", approver: { by: EX, t: "2026-10-05T10:00" }, done: { t: "2026-10-05T10:00", doc: "GF-WD-3600000350" } }];
+  s.nbWd = [{ id: `WD-2570-01`, fund: "NB-01", amount: 50000, why: "ซ่อมระบบเสียงห้องประชุมใหญ่", status: "done", by: FN, t: "2026-10-02T10:00", approver: { by: EX, t: "2026-10-05T10:00" }, done: { t: "2026-10-05T10:00", doc: "GF-WD-3600000350" } }];
   const rc = (s.receipts || []).find(r => r.kind === "nonbudget"); if (rc) rc.fund = "NB-01";
   const base = { contract: null, phase: null, commit: null, line: null, penalty: 0, other: 0, method: "epay", methodWhy: "", maker: FN, log: [], fund: "NB-01" };
   s.vouchers.push(
-    Object.assign({}, base, { id: "VC-2570-009", type: "service", nbLine: "NB-01-1", desc: ["ซ่อมระบบเสียงห้องประชุมใหญ่", "Repair of the main hall sound system"], payee: { name: ["บริษัท ตัวอย่างเครื่องเสียง จำกัด", "Sample Audio Co., Ltd."], kind: "corp", taxId: "" }, gross: 32100, vat: true, due: "2026-10-12", ev: { inv: true, acc: true }, state: "paid", checker: U("finhead").id, approver: { by: EX, holder: EX, via: null, t: "2026-10-08T10:00", auth: "A1" }, t: "2026-10-06T10:00", funded: { t: "2026-10-08T10:00", nb: true }, paid: { t: "2026-10-09T10:00", ref: "EP-NB-001" } }),
-    Object.assign({}, base, { id: "VC-2570-010", type: "utility", nbLine: "NB-01-2", desc: ["ค่าไฟฟ้าห้องประชุมให้เช่า เดือนกันยายน", "Electricity for the rented hall, September"], payee: { name: ["การไฟฟ้านครหลวง", "Metropolitan Electricity Authority"], kind: "gov", taxId: "" }, gross: 8400, vat: false, due: "2026-10-25", ev: { bill: true }, state: "draft", t: "2026-10-16T09:00" }),
+    Object.assign({}, base, { id: `VC-2570-009`, type: "service", nbLine: "NB-01-1", desc: ["ซ่อมระบบเสียงห้องประชุมใหญ่", "Repair of the main hall sound system"], payee: { name: ["บริษัท ตัวอย่างเครื่องเสียง จำกัด", "Sample Audio Co., Ltd."], kind: "corp", taxId: "" }, gross: 32100, vat: true, due: "2026-10-12", ev: { inv: true, acc: true }, state: "paid", checker: U("finhead").id, approver: { by: EX, holder: EX, via: null, t: "2026-10-08T10:00", auth: "A1" }, t: "2026-10-06T10:00", funded: { t: "2026-10-08T10:00", nb: true }, paid: { t: "2026-10-09T10:00", ref: "EP-NB-001" } }),
+    Object.assign({}, base, { id: `VC-2570-010`, type: "utility", nbLine: "NB-01-2", desc: ["ค่าไฟฟ้าห้องประชุมให้เช่า เดือนกันยายน", "Electricity for the rented hall, September"], payee: { name: ["การไฟฟ้านครหลวง", "Metropolitan Electricity Authority"], kind: "gov", taxId: "" }, gross: 8400, vat: false, due: "2026-10-25", ev: { bill: true }, state: "draft", t: "2026-10-16T09:00" }),
   );
   s.vouchers.filter(v => v.fund).forEach(v => v.log.push({ t: v.t, by: FN, role: "fin", act: ["สร้างใบขอเบิก", "Created"], note: v.fund }));
 }

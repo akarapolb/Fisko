@@ -31,9 +31,9 @@ REQ_PANELS.years = (r, ed) => {
   const ok = Math.abs(diff) < 1;
   return `<section class="panel"><header><h2>${L("แบ่งวงเงินตามปีงบประมาณ", "Amount by fiscal year")}</h2><span class="sp"></span>${tag(ok ? L("ผลรวมตรงกับวงเงินรวม", "Adds up to the total") : `${L("ต่าง", "Off by")} ${fmt(diff)}`, ok ? "p-ok" : "p-bad")}</header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("ปีงบประมาณ", "Fiscal year")}</th><th class="n" style="width:200px">${L("วงเงิน (บาท)", "Amount (baht)")}</th><th class="n">${L("สัดส่วน", "Share")}</th><th></th></tr></thead>
-      <tbody>${yrs.map(y => `<tr><td><b>${y}</b> <span class="sub">${y === "2571" ? L("ปีที่ขอ", "request year") : L("ผูกพันปีถัดไป", "future commitment")}</span></td>
+      <tbody>${yrs.map(y => `<tr><td><b>${y}</b> <span class="sub">${y === `${FORM_FY}` ? L("ปีที่ขอ", "request year") : L("ผูกพันปีถัดไป", "future commitment")}</span></td>
         <td class="n"><input type="number" min="0" step="1000" data-yr="${y}" value="${r.years[y]}" ${ds} aria-label="${y}"></td><td class="n">${fmt(r.amount ? Number(r.years[y]) / r.amount * 100 : 0, 1)}%</td>
-        <td>${ed && y !== "2571" ? `<button class="btn ghost danger" type="button" data-rmyr="${y}" aria-label="${L("ลบปี", "Remove year")} ${y}" style="padding:4px 8px">×</button>` : ""}</td></tr>`).join("")}</tbody>
+        <td>${ed && y !== `${FORM_FY}` ? `<button class="btn ghost danger" type="button" data-rmyr="${y}" aria-label="${L("ลบปี", "Remove year")} ${y}" style="padding:4px 8px">×</button>` : ""}</td></tr>`).join("")}</tbody>
       <tfoot><tr><td>${L("รวม", "Total")}</td><td class="n">${fmt(sum)}</td><td class="n">${L("วงเงินรวม", "Request total")} ${fmt(r.amount)}</td><td></td></tr></tfoot></table></div>
     <div class="body row">${ed && yrs.length < 4 ? `<button class="btn" type="button" id="add-yr">+ ${L("เพิ่มปี", "Add year")} ${Number(yrs[yrs.length - 1]) + 1}</button>` : ""}
       ${ed ? `<button class="btn" type="button" id="fill-yr">${L("ใส่ส่วนที่เหลือในปีสุดท้าย", "Put the remainder in the last year")}</button>` : ""}
@@ -41,7 +41,7 @@ REQ_PANELS.years = (r, ed) => {
 };
 REQ_BIND.years = r => {
   const re = () => { commit(); route(); };
-  const mm = $("#make-multi"); if (mm) mm.onclick = () => { r.multi = true; r.years = { 2571: r.amount, 2572: 0 }; audit(["เปลี่ยนเป็นคำขอผูกพันหลายปี", "Made the request multi-year"], r.id); re(); };
+  const mm = $("#make-multi"); if (mm) mm.onclick = () => { r.multi = true; r.years = { [FORM_FY]: r.amount, [FORM_FY + 1]: 0 }; audit(["เปลี่ยนเป็นคำขอผูกพันหลายปี", "Made the request multi-year"], r.id); re(); };
   $$("[data-yr]").forEach(inp => (inp.onchange = () => { r.years[inp.dataset.yr] = Number(inp.value); re(); }));
   $$("[data-rmyr]").forEach(b => (b.onclick = () => { delete r.years[b.dataset.rmyr]; re(); }));
   const ay = $("#add-yr"); if (ay) ay.onclick = () => { const ys = Object.keys(r.years).sort(); r.years[Number(ys[ys.length - 1]) + 1] = 0; re(); };

@@ -46,7 +46,7 @@ function ceilingBanner() {
   const u = S.cons.units.find(x => x.unit === me().unit);
   if (!u || !S.cons.issued) return "";
   const r = consResp(u.unit), req = sumV(u.v), ceil = S.cons.unitCeil[u.unit];
-  return `<section class="panel" id="ceil-panel"><header><h2>${L("กรอบวงเงินของหน่วยงาน ปี 2571", "Your FY2571 ceiling")}</h2><span class="sp"></span>${tag(tx(CRESP[r.st][0]), CRESP[r.st][1])}</header>
+  return `<section class="panel" id="ceil-panel"><header><h2>${L(`กรอบวงเงินของหน่วยงาน ปี ${FORM_FY}`, `Your FY${FORM_FY} ceiling`)}</h2><span class="sp"></span>${tag(tx(CRESP[r.st][0]), CRESP[r.st][1])}</header>
     <div class="body" style="display:flex;flex-direction:column;gap:10px">
       <div class="row"><span>${L("คำขอรวม", "Requested")} <b class="num">${fmt(req, 1)}</b></span><span>·</span><span>${L("กรอบที่ได้รับ", "Ceiling")} <b class="num">${fmt(ceil, 1)}</b> ${L("ล้านบาท", "M baht")}</span>
         ${req > ceil ? `<span>·</span><span style="color:var(--bad)">${L("ต้องปรับลด", "To cut")} ${fmt(req - ceil, 1)}</span>` : ""}<span class="sub">${L("แจ้งเมื่อ", "Issued")} ${fdate(S.cons.issued)}</span></div>
@@ -73,16 +73,16 @@ function bindCeilingBanner() {
 }
 
 // ---------- forward estimates ----------
-const FWD_Y = [2571, 2572, 2573, 2574];
+const FWD_Y = [0, 1, 2, 3].map(i => FORM_FY + i);
 function forwardRows() {
   const a = S.fwd || { per: 3, ope: 2, ceil: 3 }, tot = i => sumV(S.cons.units.map(u => u.v[i]));
   const g = (base, pct, n) => base * Math.pow(1 + pct / 100, n);
-  const multi = FWD_Y.map(y => sumV(S.requests.filter(r => r.multi && r.years && r.status !== "rejected").map(r => y > 2571 ? Number(r.years[y] || 0) / 1e6 : 0)));
+  const multi = FWD_Y.map(y => sumV(S.requests.filter(r => r.multi && r.years && r.status !== "rejected").map(r => y > FORM_FY ? Number(r.years[y] || 0) / 1e6 : 0)));
   const bank = FWD_Y.map((y, n) => sumV((S.ideas || []).filter(i => ["proposed", "screened", "accepted"].includes(i.status)).map(i => (n >= 1 && n <= i.years ? i.est / i.years : 0))));
   const rows = [
     { k: "per", c: "c1", name: ["งบบุคลากร (ต่อเนื่อง)", "Personnel (continuing)"], v: FWD_Y.map((y, n) => g(tot(0), a.per, n)) },
     { k: "ope", c: "c3", name: ["งบดำเนินงาน อุดหนุน และอื่น ๆ (ต่อเนื่อง)", "Operating, subsidies and other (continuing)"], v: FWD_Y.map((y, n) => g(tot(1) + tot(3) + tot(4), a.ope, n)) },
-    { k: "inv", c: "c2", name: ["งบลงทุนปี 2571 และภาระผูกพันหลายปี", "FY2571 investment and multi-year commitments"], v: FWD_Y.map((y, n) => (n ? 0 : tot(2)) + multi[n]) },
+    { k: "inv", c: "c2", name: [`งบลงทุนปี ${FORM_FY} และภาระผูกพันหลายปี`, `FY${FORM_FY} investment and multi-year commitments`], v: FWD_Y.map((y, n) => (n ? 0 : tot(2)) + multi[n]) },
     { k: "new", c: "c4", name: ["โครงการใหม่ในคลังโครงการ (ยังไม่เป็นคำขอ)", "New project-bank ideas (not yet requests)"], v: bank },
   ];
   const total = FWD_Y.map((y, n) => sumV(rows.map(r => r.v[n]))), ceil = FWD_Y.map((y, n) => g(S.cons.ceiling, a.ceil, n));

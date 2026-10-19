@@ -202,6 +202,6 @@ function seedPlanReports(s, K) {
   s.pcat = [C("C01", "ครุภัณฑ์คอมพิวเตอร์และอุปกรณ์", "Computers and equipment", "goods"), C("C02", "บริการและระบบสารสนเทศ", "Services and information systems", "service"), C("C03", "ฝึกอบรมและพัฒนาบุคลากร", "Training", "service"),
     C("C04", "ก่อสร้างและปรับปรุงอาคาร", "Building works", "construction"), C("C05", "งานโยธา ถนน และเขื่อน", "Civil works", "construction"), C("C06", "ยานพาหนะ", "Vehicles", "goods"), C("C07", "วัสดุสำนักงาน", "Office supplies", "goods"), C("C08", "ที่ปรึกษาและออกแบบ", "Consulting and design", "consult")];
   s.pplan.forEach(p => (p.cat = guessCat(p.kind, p.name)));
-  s.planDoc = { fy: FAM_FY, versions: [{ v: 1, t: "2026-09-25T10:00", by: K.PO, why: "แผนจัดซื้อจัดจ้างประจำปีงบประมาณ 2570", status: "approved", items: s.pplan.map(snap), appr: { by: K.EX, t: "2026-09-30T15:00" }, published: { date: "2026-10-01", ref: "EGP-PLAN-70-0001", by: K.PO } }] };
+  s.planDoc = { fy: FAM_FY, versions: [{ v: 1, t: "2026-09-25T10:00", by: K.PO, why: `แผนจัดซื้อจัดจ้างประจำปีงบประมาณ 2570`, status: "approved", items: s.pplan.map(snap), appr: { by: K.EX, t: "2026-09-30T15:00" }, published: { date: "2026-10-01", ref: "EGP-PLAN-70-0001", by: K.PO } }] };
   s.monthly = [];
 }
