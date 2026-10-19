@@ -77,7 +77,8 @@
       // Round C2: requests, the department ceiling, duplicates, meetings and hearings, for every role that sees them
       if (o.suites.includes("render") && typeof CRUD !== "undefined" && CRUD.defs.rqReq) for (const role of ["div", "divhead", "plan", "exec", "audit"].filter(r => o.roles.includes(r))) {
         ROLE = role; LANG = o.langs[0]; safe("shell", renderShell);
-        const where = { rqReq: ["requests", () => {}], csCeil: ["consolidation", () => (CONS_TAB = "ceilings")], csDup: ["consolidation", () => (CONS_TAB = "overview")], rvMeet: ["review", () => (REV_TAB = "meetings")], rvHear: ["review", () => (REV_TAB = "hearings")] };
+        const where = { rqReq: ["requests", () => {}], csCeil: ["consolidation", () => (CONS_TAB = "ceilings")], csDup: ["consolidation", () => (CONS_TAB = "overview")], rvMeet: ["review", () => (REV_TAB = "meetings")], rvHear: ["review", () => (REV_TAB = "hearings")],
+          sbBatch: ["submission", () => (SUB_TAB = "status")], sbRev: ["submission", () => (SUB_TAB = "status")], plCut: ["submission", () => (SUB_TAB = "parliament")], plApp: ["submission", () => (SUB_TAB = "parliament")] };
         for (const [k, [page, set]] of Object.entries(where)) {
           if (!allowed(page)) continue;
           const sp = CRUD.defs[k], open = (id, mode, t) => safe(`${org}/${role}/${k}/${id || "new"}/${mode}${t ? "/" + t : ""}`, () => { set(); crOpen(k, id, mode); if (t) CR_OPEN.tab = t; go2(page); chk(`${org}/${role}/${k}/${id || "new"}/${mode}${t || ""}`); if (!document.querySelector(".cr-drawer")) errs.push(`${org}/${role}/${k}/${id}: no drawer`); });
@@ -86,6 +87,29 @@
         }
         crClose(); CONS_TAB = "overview"; REV_TAB = "queue"; await tick();
       }
+      // Round C3 walk: a batch through the Budget Bureau, the bill through parliament, the act into allocation; every drawer on the way
+      if (o.suites.includes("render") && typeof CRUD !== "undefined" && CRUD.defs.sbBatch && o.roles.includes("plan")) safe(`${org}/C3 walk`, () => {
+        ROLE = "plan"; LANG = o.langs[0]; renderShell(); S.submission.minister = { no: "TEST", date: TODAY, by: me().id };
+        const B = CRUD.defs.sbBatch, act = (sp, r, id, why) => { crOpen(Object.keys(CRUD.defs).find(k => CRUD.defs[k] === sp), sp.id(r)); const a = sp.acts(r).find(x => x && x.id === id); if (!a) { errs.push(`${org}/C3: no action ${id}`); return; } a.run(r, why || "ทดสอบเหตุผลยาวพอ"); };
+        const v = {}; sbReady().filter(r => !sbBlocked(r)).forEach(r => (v["in_" + r.id] = true));
+        if (!Object.keys(v).length) return;
+        const b = B.create.run(v); act(B, b, "send"); act(B, b, "recv");
+        const res = {}; sbReqs(b).forEach(r => (res["res_" + r.id] = sbSim(r))); B.edit.run(b, res);
+        const rv = CRUD.defs.sbRev.create.run({ req: sbReqs(b)[0].id, due: addDays(TODAY, 7), issue: "ทดสอบ" });
+        SUB_TAB = "status"; for (const [k, r] of [["sbBatch", b], ["sbRev", rv]]) { crOpen(k, CRUD.defs[k].id(r)); go2("submission"); chk(`${org}/C3/${k}`); }
+        act(CRUD.defs.sbRev, rv, "reply", "ตอบแล้ว"); act(B, b, "close");
+        if (b.status !== "closed") errs.push(`${org}/C3: batch not closed (${b.status})`);
+        SUB_TAB = "parliament";
+        while (S.parl.stage < PL_CUT) { S.parl.stage++; } if (!S.parl.items) S.parl.items = parlItems().map(x => Object.assign({}, x));
+        const it = parlItems()[0]; if (!it) return;
+        const c = CRUD.defs.plCut.create.run({ item: it.id, amt: Math.max(0.1, Math.round(it.amt * 0.1 * 10) / 10), why: "ทดสอบ" }); S.parl.stage = PL_APPEAL;
+        const a = CRUD.defs.plApp.create.run({ item: it.id, amt: c.amt, why: "ทดสอบ" }); S.parl.stage = PL_APPEAL + 1; CRUD.defs.plApp.edit.run(a, { amt: c.amt, why: "ทดสอบ", granted: c.amt / 2 });
+        for (const [k, r] of [["plCut", c], ["plApp", a]]) { crOpen(k, r.id); go2("submission"); chk(`${org}/C3/${k}`); if (CRUD.defs[k].edit.can(r)) { CR_OPEN.mode = "edit"; go2("submission"); chk(`${org}/C3/${k}/edit`); } }
+        S.parl.stage = PARL_STEPS.length; crClose(); go2("submission"); chk(`${org}/C3/parliament done`);
+        ROLE = "fin"; renderShell(); ALLOC_FY = 2570; ALLOC_TAB = "appropriation"; go2("allocation"); const mk = document.getElementById("mk-2571");
+        if (!S.allocs[2571]) { if (!mk) errs.push(`${org}/C3: no button to create FY2571 lines`); else { mk.click(); if (!S.allocs[2571] || !S.allocs[2571].fromAct) errs.push(`${org}/C3: FY2571 lines not from the act`); } }
+        ALLOC_FY = 2570; SUB_TAB = "checks"; crClose();
+      });
       // Budget pages (round 47): every old tab key on the page that holds it, and the old deep links
       if (o.suites.includes("render") && typeof BUD_PAGES !== "undefined") for (const lang of o.langs) { LANG = lang; for (const role of o.roles) {
         ROLE = role; safe("shell", renderShell);

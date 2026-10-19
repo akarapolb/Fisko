@@ -138,3 +138,7 @@ The Budget CRUD design (`Fisko_Budget_CRUD_Design.html` v0.1) is approved; round
 ## Round 49 (Budget CRUD round C2)
 
 Formulation FY2571 is on the list + drawer (`78-form-crud.js`, `HANDOFF.md` section 49). Next: C3 (submission and parliament with Simulate, act into allocation), C4 (B8 and B9 on FY2570), C5 (strategy and master data), C6 (B10/B11, end-to-end demo script and sweep).
+
+## Round 50 (Budget CRUD round C3)
+
+Submission batches, Budget Bureau results and revisions, parliament cuts and appeals are on the list + drawer (`79-sub-crud.js`, `HANDOFF.md` section 50). Next: C4 (B8 and B9 on FY2570), C5 (strategy and master data), C6 (B10/B11, end-to-end demo script and sweep).

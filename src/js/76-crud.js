@@ -11,7 +11,7 @@
 //   check: (vals, r | null) => [{ f: fieldId | null, m: message }],
 //   create: { can: () => bool, label: [th, en], run: vals => record },   // run returns the new record
 //   edit: { can: r => bool, run: (r, vals, why) => void, why: r => bool },  // why: ask for a reason when saving
-//   acts: r => [{ id, label, kind: primary|danger|ghost, why: bool, confirm: text, impact: () => text, run: (r, why) => toastText }],
+//   acts: r => [{ id, label, kind: primary|danger|ghost, why: bool, whyLabel, whyMin, confirm: text, impact: () => text, undo: false, run: (r, why) => toastText }],
 //   view: r => html (the details tab), tabs: r => [[id, label, html]], hist: r => history key,
 //   prefill: () => vals (for a new record),
 // }
@@ -76,7 +76,7 @@ function crActBar(sp, r) {
   if (o.ask) {
     const a = acts.find(x => x.id === o.ask);
     if (a) return `<form class="cr-ask" id="cr-ask"><b>${a.label}</b>${a.impact ? `<div class="sub">${a.impact()}</div>` : ""}${a.confirm ? `<div>${a.confirm}</div>` : ""}
-      ${a.why ? `<label for="cr-why">${L("เหตุผล (อย่างน้อย 10 ตัวอักษร)", "Reason (at least 10 characters)")}</label><textarea id="cr-why" rows="2" required minlength="10"></textarea>${o.err ? `<div class="cr-err">${esc(o.err)}</div>` : ""}` : ""}
+      ${a.why ? `<label for="cr-why">${a.whyLabel || L("เหตุผล (อย่างน้อย 10 ตัวอักษร)", "Reason (at least 10 characters)")}</label><textarea id="cr-why" rows="2" required minlength="${a.whyMin || 10}"></textarea>${o.err ? `<div class="cr-err">${esc(o.err)}</div>` : ""}` : ""}
       <div class="row"><button class="btn ${a.kind === "danger" ? "danger" : "primary"}" type="submit">${L("ยืนยัน", "Confirm")}</button><button class="btn ghost" type="button" data-crask="">${L("ยกเลิก", "Back")}</button></div></form>`;
   }
   if (!acts.length && !canEd) return "";
@@ -168,7 +168,7 @@ document.addEventListener("submit", e => {
     e.preventDefault();
     const sp = crSpec(CR_OPEN.key), r = crRec(CR_OPEN.key, CR_OPEN.id), a = (sp.acts(r) || []).find(x => x && x.id === CR_OPEN.ask), w = $("#cr-why"), why = w ? w.value.trim() : "";
     if (!a) return;
-    if (a.why && why.length < 10) { CR_OPEN.err = L("ใส่เหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters"); route(); const x = $("#cr-why"); if (x) { x.value = why; x.focus(); } return; }
+    if (a.why && why.length < (a.whyMin || 10)) { CR_OPEN.err = a.whyMin ? L("กรอกข้อความก่อนยืนยัน", "Fill this in before confirming") : L("ใส่เหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters"); route(); const x = $("#cr-why"); if (x) { x.value = why; x.focus(); } return; }
     return crRun(sp, r, a, why);
   }
   if (e.target.id !== "cr-form") return;
