@@ -3,8 +3,8 @@
 ADMIN_TABS.push({ id: "notify", roles: ["admin"], label: ["การแจ้งเตือนและ SLA", "Notifications & SLAs"] }, { id: "data", roles: ["admin", "audit"], label: ["เก็บรักษาและสำรองข้อมูล", "Retention & backup"] });
 let TPL_OPEN = "T-01";
 const TPL_SAMPLE = () => LANG === "en"
-  ? { no: "REQ-2571-014", project: "Online service platform", name: "Somjai Jaidee", count: "3", due: fdate(addDays(TODAY, 5)), days: "2", task: "Planning review", escalate_to: "Executive", unit: "Infrastructure Bureau", pct: "59", date: fdate(TODAY) }
-  : { "เลขที่": "REQ-2571-014", "โครงการ": "แพลตฟอร์มบริการออนไลน์", "ชื่อ": "สมใจ ใจดี", "จำนวน": "3", "กำหนด": fdate(addDays(TODAY, 5)), "วัน": "2", "งาน": "กองแผนงานกลั่นกรอง", "ผู้รับยกระดับ": "ผู้บริหาร", "หน่วยงาน": "สำนักโครงสร้างพื้นฐาน", "ร้อยละ": "59", "วันที่": fdate(TODAY) };
+  ? { no: `REQ-${FORM_FY}-014`, project: "Online service platform", name: "Somjai Jaidee", count: "3", due: fdate(addDays(TODAY, 5)), days: "2", task: "Planning review", escalate_to: "Executive", unit: "Infrastructure Bureau", pct: "59", date: fdate(TODAY) }
+  : { "เลขที่": `REQ-${FORM_FY}-014`, "โครงการ": "แพลตฟอร์มบริการออนไลน์", "ชื่อ": "สมใจ ใจดี", "จำนวน": "3", "กำหนด": fdate(addDays(TODAY, 5)), "วัน": "2", "งาน": "กองแผนงานกลั่นกรอง", "ผู้รับยกระดับ": "ผู้บริหาร", "หน่วยงาน": "สำนักโครงสร้างพื้นฐาน", "ร้อยละ": "59", "วันที่": fdate(TODAY) };
 const fillTpl = (s, v) => String(s).replace(/\{([^}]+)\}/g, (m, k) => (v[k] != null ? `<mark>${esc(v[k])}</mark>` : esc(m)));
 // Requests waiting at a workflow step, with their due date from the step's SLA.
 function slaItems() {

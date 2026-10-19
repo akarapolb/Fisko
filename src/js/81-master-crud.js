@@ -104,7 +104,7 @@ CRUD.def("stIdea", {
     ];
   },
   create: { can: () => ROLE === "div" || ROLE === "plan", label: ["เสนอแนวคิดโครงการ", "Propose an idea"],
-    run: v => { const i = { id: `PB-2571-${String(maxNo((S.ideas || []).map(x => x.id), /-(\d+)$/) + 1).padStart(3, "0")}`, unit: me().unit, kpi: v.kpi, name: [v.name, v.name], est: Number(v.est), years: Number(v.years), status: "proposed", scores: null, note: null, by: me().id, t: nowIso(), req: null };
+    run: v => { const i = { id: `PB-${FORM_FY}-${String(maxNo((S.ideas || []).map(x => x.id), /-(\d+)$/) + 1).padStart(3, "0")}`, unit: me().unit, kpi: v.kpi, name: [v.name, v.name], est: Number(v.est), years: Number(v.years), status: "proposed", scores: null, note: null, by: me().id, t: nowIso(), req: null };
       S.ideas.push(i); audit(["เสนอแนวคิดโครงการ", "Proposed a project idea"], `${i.id} ${v.name}`); notify(["plan"], [`แนวคิดโครงการใหม่ ${i.id} รอกลั่นกรอง`, `New project idea ${i.id} is waiting for screening`], "strat-bank"); return i; } },
   edit: { can: i => (ROLE === "plan" && ["proposed", "screened"].includes(i.status)) || (ideaMine(i) && i.status === "proposed"),
     run: (i, v) => {
@@ -127,7 +127,7 @@ CRUD.def("stIdea", {
 {
   const bk = STRAT.bank;
   // keep the KPI cards and the conversion button wiring; the table and form become the list
-  STRAT.bank = () => { const h = bk(), i = h.indexOf('<section class="panel">'); return (i > 0 ? h.slice(0, i) : "") + crudList("stIdea", { head: `<h2>${L("คลังโครงการ ปีงบประมาณ 2571", "FY2571 project bank")}</h2><span class="sp"></span><span class="sub">${L("เกณฑ์", "Criteria")}: ${CRIT.map(c => `${tx(c[0])} ${c[1]}%`).join(" · ")}</span>` })
+  STRAT.bank = () => { const h = bk(), i = h.indexOf('<section class="panel">'); return (i > 0 ? h.slice(0, i) : "") + crudList("stIdea", { head: `<h2>${L(`คลังโครงการ ปีงบประมาณ ${FORM_FY}`, `FY${FORM_FY} project bank`)}</h2><span class="sp"></span><span class="sub">${L("เกณฑ์", "Criteria")}: ${CRIT.map(c => `${tx(c[0])} ${c[1]}%`).join(" · ")}</span>` })
     + `<div hidden>${(S.ideas || []).filter(x => x.status === "accepted").map(x => `<button type="button" data-iconv="${x.id}"></button>`).join("")}</div>`; };
 }
 
@@ -147,7 +147,7 @@ CRUD.def("stRev", {
   ],
   check: (x, v) => { const k = findKpi(v ? v.kpi : x.kpi); return k && Number(x.to) === k.targets[Number(x.y)] ? [{ f: "to", m: L("ค่าใหม่เท่ากับค่าเดิม", "The new value equals the current one") }] : []; },
   create: { can: () => ROLE === "plan", label: ["เสนอทบทวนค่าเป้าหมาย", "Propose a target revision"],
-    run: x => { const k = findKpi(x.kpi), y = Number(x.y), v = { id: `PR-2571-${String(maxNo((S.planRevs || []).map(r => r.id), /-(\d+)$/) + 1).padStart(3, "0")}`, kpi: k.id, y, from: k.targets[y], to: Number(x.to), why: [x.why, x.why], by: me().id, t: nowIso(), status: "pending" };
+    run: x => { const k = findKpi(x.kpi), y = Number(x.y), v = { id: `PR-${FORM_FY}-${String(maxNo((S.planRevs || []).map(r => r.id), /-(\d+)$/) + 1).padStart(3, "0")}`, kpi: k.id, y, from: k.targets[y], to: Number(x.to), why: [x.why, x.why], by: me().id, t: nowIso(), status: "pending" };
       S.planRevs.unshift(v); audit(["เสนอทบทวนค่าเป้าหมายตัวชี้วัด", "Proposed a KPI target revision"], `${v.id} ${k.id}`); notify(["exec"], [`คำขอทบทวนค่าเป้าหมาย ${v.id} (${k.id}) รอพิจารณา`, `Target revision ${v.id} (${k.id}) is waiting for you`], "strat-revise"); return v; } },
   edit: { can: v => ROLE === "plan" && v.status === "pending", run: (v, x) => { const k = findKpi(v.kpi); v.y = Number(x.y); v.from = k.targets[v.y]; v.to = Number(x.to); v.why = [x.why, x.why]; audit(["แก้ไขคำขอทบทวนค่าเป้าหมาย", "Edited a target revision"], v.id); } },
   acts: v => {
@@ -202,7 +202,7 @@ CRUD.def("pfOut", {
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-recidea]"); if (!b) return;
   const x = S.recs.find(r => r.id === b.dataset.recidea), snap = crSnap(), k = allKpis().find(y => y.k.owner === x.unit) || allKpis()[0];
-  const i = { id: `PB-2571-${String(maxNo((S.ideas || []).map(y => y.id), /-(\d+)$/) + 1).padStart(3, "0")}`, unit: x.unit || me().unit, kpi: k ? k.k.id : "", name: x.text.slice(), est: 1, years: 1, status: "proposed", scores: null, note: [`จากข้อเสนอแนะ ${x.id}`, `From recommendation ${x.id}`], by: me().id, t: nowIso(), req: null, rec: x.id };
+  const i = { id: `PB-${FORM_FY}-${String(maxNo((S.ideas || []).map(y => y.id), /-(\d+)$/) + 1).padStart(3, "0")}`, unit: x.unit || me().unit, kpi: k ? k.k.id : "", name: x.text.slice(), est: 1, years: 1, status: "proposed", scores: null, note: [`จากข้อเสนอแนะ ${x.id}`, `From recommendation ${x.id}`], by: me().id, t: nowIso(), req: null, rec: x.id };
   S.ideas.push(i); x.idea = i.id; audit(["สร้างแนวคิดโครงการจากข้อเสนอแนะ", "Created a project idea from a recommendation"], `${x.id} → ${i.id}`);
   notify(["div", "plan"], [`ข้อเสนอแนะ ${x.id} เข้าคลังโครงการเป็น ${i.id}`, `Recommendation ${x.id} is now idea ${i.id}`], "strat-bank"); commit(); route(); crUndoOffer(snap, `${L("สร้าง", "Created")} ${i.id}`);
 });
@@ -286,7 +286,7 @@ CRUD.def("adFy", {
     : [{ id: "_new", label: ["ปีที่จะเปิด", "Year to open"], type: "info", wide: true, html: `${L("ปีงบประมาณ", "FY")} ${Math.max(...S.fyList.map(x => x.fy)) + 1} · ${L("สถานะเตรียมโครงสร้าง · คัดลอกโครงสร้างงบประมาณจากปีล่าสุด", "structure setup · the latest budget structure is copied")}` }]),
   create: { can: () => isAdmin(), label: ["เปิดปีงบประมาณถัดไป", "Open the next fiscal year"],
     run: () => { const last = Math.max(...S.fyList.map(f => f.fy)), fy = last + 1, ce = fy - 543, f = { fy, status: "setup", start: `${ce - 1}-10-01`, end: `${ce}-09-30` };
-      S.fyList.push(f); const src = S.structure[last] || S.structure[2571] || [], pre = `${String(fy).slice(2)}-`, strip = id => String(id).replace(/^\d\d-/, "");
+      S.fyList.push(f); const src = S.structure[last] || S.structure[FORM_FY] || [], pre = `${String(fy).slice(2)}-`, strip = id => String(id).replace(/^\d\d-/, "");
       S.structure[fy] = src.map(n => Object.assign({}, n, { id: pre + strip(n.id), parent: n.parent ? pre + strip(n.parent) : null }));
       audit(["เปิดปีงบประมาณใหม่", "Opened a new fiscal year"], `${fy} · ${S.structure[fy].length} ${L("รายการโครงสร้างคัดลอกจาก", "structure nodes copied from")} ${last}`); return f; } },
   edit: { can: () => isAdmin(), why: () => true, run: (f, v, why) => { const old = f.status; f.status = v.status; audit(["เปลี่ยนสถานะปีงบประมาณ", "Changed fiscal year status"], `${f.fy}: ${old} → ${v.status} · ${why}`); } },

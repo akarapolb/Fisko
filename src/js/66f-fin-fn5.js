@@ -294,7 +294,7 @@ function seedFinanceFN5(s) {
   s.bankAccts = { budget: { no: "xxx-x-x1234-5", open: { "2026-09": 50000 } }, nonbudget: { no: "xxx-x-x6789-0", open: { "2026-09": 120000 } } };
   s.bookAdj = [];
   // September: the statement and the reconciliation are done; the trial balance is not imported yet.
-  const a2 = s.advances.find(a => a.id === "AD-2570-002"), d2 = a2.paid.t.slice(0, 10);
+  const a2 = s.advances.find(a => a.id === `AD-2570-002`), d2 = a2.paid.t.slice(0, 10);
   s.bankStmts = [
     { acct: "budget", month: "2026-09", open: 50000, lines: [{ d: d2, ref: `GF-FUND-${a2.id}`, amt: 28000, desc: ["เงินเข้าจาก GFMIS", "Funds from GFMIS"] }, { d: d2, ref: a2.paid.ref, amt: -28000, desc: ["จ่ายเงินยืม", "Advance paid"] }], t: "2026-10-02T10:00", by: FN },
     { acct: "nonbudget", month: "2026-09", open: 120000, lines: [], t: "2026-10-02T10:05", by: FN },
@@ -303,7 +303,7 @@ function seedFinanceFN5(s) {
   s.tbs = [];
   s.periods = [{ month: "2026-09", status: "open", log: [] }, { month: "2026-10", status: "open", log: [] }];
   s.dayCloses = [{ date: "2026-10-15", by: FH, t: "2026-10-15T17:30", why: "" }];
-  s.auditQs = [{ id: "AQ-2570-01", from: "สตง.", subject: ["การจ่ายเงินยืมรายใหม่ก่อนส่งใช้รายเดิม ปีงบประมาณ 2569", "New advances paid before earlier ones were cleared, FY2569"], date: "2026-10-08", due: "2026-10-23", answer: null }];
+  s.auditQs = [{ id: `AQ-2570-01`, from: "สตง.", subject: ["การจ่ายเงินยืมรายใหม่ก่อนส่งใช้รายเดิม ปีงบประมาณ 2569", "New advances paid before earlier ones were cleared, FY2569"], date: "2026-10-08", due: "2026-10-23", answer: null }];
   (s.remits || []).forEach(r => (r.gf = { doc: "3600000377", t: "2026-10-14T09:00" }));
   void EX;
 }

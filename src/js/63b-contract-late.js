@@ -243,7 +243,7 @@ function seedLate(s, K) {
   const names = [...new Set([...s.contracts.map(c => c.vendor[0]), ...s.cases.flatMap(c => (c.bids || []).map(b => b.name)), "บริษัท ตัวอย่างอบรม จำกัด", "สถาบันตัวอย่างพัฒนาบุคลากร"])];
   s.vendors = names.map((n, i) => ({ id: "V-" + String(i + 1).padStart(3, "0"), name: n, taxId: tax(10555000000 + i * 7919), type: /ห้างหุ้นส่วน/.test(n) ? "partnership" : /สถาบัน/.test(n) ? "person" : "company", sme: i % 2 === 1, local: i % 3 === 0, contact: "", status: "active" }));
   s.blacklist = { rows: [{ name: "บริษัท ทิ้งงานตัวอย่าง จำกัด", taxId: tax(10555999001), since: "2025-03-01", ref: "หนังสือแจ้งเวียน (ตัวอย่าง) 12/2568" }, { name: "ห้างหุ้นส่วนจำกัด ตัวอย่างละทิ้งงาน", taxId: tax(10555999002), since: "2026-01-15", ref: "หนังสือแจ้งเวียน (ตัวอย่าง) 3/2569" }],
-    imports: [{ id: "BL-2570-01", t: "2026-10-01T09:00", by: K.PO, n: 2 }] };
+    imports: [{ id: `BL-2570-01`, t: "2026-10-01T09:00", by: K.PO, n: 2 }] };
   s.contracts.forEach((c, i) => { c.warrantyMonths = 12 * (i + 1); c.defects = []; c.letters = []; c.supervision = null; });
   const c2 = s.contracts[1];
   if (c2) c2.supervision = { who: "นายช่างตัวอย่าง ใจดี", reports: [{ d: "2026-10-09", actual: 6, note: "เริ่มงานตามแผน", by: K.PO }, { d: "2026-10-16", actual: 9, note: "งานงวดแรกส่งมอบช้า 1 วัน", by: K.PO }], assess: [] };

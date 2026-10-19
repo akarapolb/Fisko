@@ -41,7 +41,7 @@ function remainingStages(c, opt) {
   return st;
 }
 function simCase(c, opt = {}) {
-  const N = S.pcfg.fcRuns, r = rng(hashId(c.id) + 2570), sample = makeSampler(opt), p = famPlan(c.plan), stages = remainingStages(c, opt), cut = opt.cutoff || FC_CUT || S.pcfg.signCutoff;
+  const N = S.pcfg.fcRuns, r = rng(hashId(c.id) + CUR_FY), sample = makeSampler(opt), p = famPlan(c.plan), stages = remainingStages(c, opt), cut = opt.cutoff || FC_CUT || S.pcfg.signCutoff;
   const dates = [], stageSum = {};
   for (let i = 0; i < N; i++) {
     let d = TODAY;

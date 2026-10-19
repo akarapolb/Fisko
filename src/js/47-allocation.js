@@ -39,10 +39,10 @@ ALLOC.appropriation = () => {
       <tbody>${BUDGET_TYPES.map(t => { const ap = A.byType[t.id] || 0, al = allocated(t.id); return ap || al ? `<tr><td>${tx(t.name)}</td><td class="n">${mb(ap)}</td><td class="n">${mb(al)}</td><td class="n" style="color:var(--${ap - al < 0 ? "bad" : "ink"})">${mb(ap - al)}</td>
         <td><div class="bar"><i style="width:${ap ? Math.min(100, al / ap * 100) : 0}%"></i></div></td></tr>` : ""; }).join("")}</tbody>
       <tfoot><tr><td>${L("รวม", "Total")}</td><td class="n">${mb(A.total)}</td><td class="n">${mb(allocated())}</td><td class="n">${mb(A.total - allocated())}</td><td></td></tr></tfoot></table></div></section>
-  ${ALLOC_FY === CUR_FY ? `<section class="panel"><header><h2>${L("ปีงบประมาณ 2571", "FY2571")}</h2></header><div class="body row">
-    ${S.allocs[2571] ? `<span>${L("สร้างร่างการจัดสรรปี 2571 แล้ว", "The FY2571 draft allocation exists")}</span><button class="btn" type="button" data-fy="2571">${L("เปิดปี 2571", "Open FY2571")}</button>`
-      : closed ? `<span>${L("ผลพิจารณาจากสำนักงบประมาณพร้อมแล้ว", "The Budget Bureau's results are ready")}</span>${canAlloc() || ROLE === "plan" ? `<button class="btn primary" type="button" id="mk-2571">${L("สร้างร่างการจัดสรรปี 2571 จากผลพิจารณา", "Create the FY2571 draft from the results")}</button>` : ""}`
-      : `<span class="sub">${L("ปี 2571 จะเปิดเมื่อกองแผนงานส่งต่อผลพิจารณาจาก M05", "FY2571 opens once Planning hands over the results from M05")}</span>`}</div></section>` : ""}`;
+  ${ALLOC_FY === CUR_FY ? `<section class="panel"><header><h2>${L(`ปีงบประมาณ ${FORM_FY}`, `FY${FORM_FY}`)}</h2></header><div class="body row">
+    ${S.allocs[FORM_FY] ? `<span>${L(`สร้างร่างการจัดสรรปี ${FORM_FY} แล้ว`, `The FY${FORM_FY} draft allocation exists`)}</span><button class="btn" type="button" data-fy="${FORM_FY}">${L(`เปิดปี ${FORM_FY}`, `Open FY${FORM_FY}`)}</button>`
+      : closed ? `<span>${L("ผลพิจารณาจากสำนักงบประมาณพร้อมแล้ว", "The Budget Bureau's results are ready")}</span>${canAlloc() || ROLE === "plan" ? `<button class="btn primary" type="button" id="mk-${FORM_FY}">${L(`สร้างร่างการจัดสรรปี ${FORM_FY} จากผลพิจารณา`, `Create the FY${FORM_FY} draft from the results`)}</button>` : ""}`
+      : `<span class="sub">${L(`ปี ${FORM_FY} จะเปิดเมื่อกองแผนงานส่งต่อผลพิจารณาจาก M05`, `FY${FORM_FY} opens once Planning hands over the results from M05`)}</span>`}</div></section>` : ""}`;
 };
 
 ALLOC.allocate = () => {
@@ -130,7 +130,7 @@ BIND.allocation = () => {
   const A = AL(), re = () => { commit(); route(); };
   $$("[data-atab]").forEach(b => (b.onclick = () => { ALLOC_TAB = b.dataset.atab; route(); }));
   $$("[data-fy]").forEach(b => (b.onclick = () => { ALLOC_FY = Number(b.dataset.fy); route(); }));
-  const mk = $("#mk-2571");
+  const mk = $(`#mk-${FORM_FY}`);
   if (mk) mk.onclick = () => {
     const rs = S.requests.filter(r => S.submission.results[r.id] != null);
     const lines = rs.map((r, i) => {
@@ -140,10 +140,10 @@ BIND.allocation = () => {
     });
     lines.forEach(l => (l.plan[11] += l.amount - sumv(l.plan)));
     const byType = {}; BUDGET_TYPES.forEach(t => (byType[t.id] = sumv(lines.filter(l => l.type === t.id).map(l => l.amount))));
-    S.allocs[2571] = { fy: 2571, draft: true, act: ["ร่างการจัดสรรปี 2571 จากผลพิจารณาของสำนักงบประมาณ", "FY2571 draft allocation from the Budget Bureau result"], date: TODAY, total: sumv(lines.map(l => l.amount)), byType, lines, transfers: [] };
-    ALLOC_FY = 2571;
-    audit(["สร้างร่างการจัดสรรปี 2571 จากผลพิจารณา", "Created the FY2571 draft allocation from the result"], `${lines.length} ${L("รายการ", "lines")}`); re();
-    toast(L("สร้างร่างการจัดสรรปี 2571 แล้ว", "FY2571 draft allocation created"));
+    S.allocs[FORM_FY] = { fy: FORM_FY, draft: true, act: [`ร่างการจัดสรรปี ${FORM_FY} จากผลพิจารณาของสำนักงบประมาณ`, `FY${FORM_FY} draft allocation from the Budget Bureau result`], date: TODAY, total: sumv(lines.map(l => l.amount)), byType, lines, transfers: [] };
+    ALLOC_FY = FORM_FY;
+    audit([`สร้างร่างการจัดสรรปี ${FORM_FY} จากผลพิจารณา`, `Created the FY${FORM_FY} draft allocation from the result`], `${lines.length} ${L("รายการ", "lines")}`); re();
+    toast(L(`สร้างร่างการจัดสรรปี ${FORM_FY} แล้ว`, `FY${FORM_FY} draft allocation created`));
   };
   $$("[data-unit]").forEach(tr => { const t = () => { const u = tr.dataset.unit; OPEN_UNIT.has(u) ? OPEN_UNIT.delete(u) : OPEN_UNIT.add(u); route(); };
     tr.onclick = e => { if (!e.target.closest("input")) t(); }; tr.onkeydown = e => { if (e.key === "Enter") t(); }; });

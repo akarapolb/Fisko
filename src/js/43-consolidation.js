@@ -5,7 +5,7 @@ VIEWS.consolidation = () => {
   const max = Math.max(...U.map(u => sum(u.v))), over = tot - S.cons.ceiling, M = L("ล้านบาท", "M baht");
   const open = S.dupes.filter(d => !d.done);
   return `
-  <div class="head"><div><div class="eyebrow">M03 · Budget Consolidation</div><h1>${L("ภาพรวมคำขอระดับกรม ปี 2571", "Department-level requests, FY2571")}</h1>
+  <div class="head"><div><div class="eyebrow">M03 · Budget Consolidation</div><h1>${L(`ภาพรวมคำขอระดับกรม ปี ${FORM_FY}`, `Department-level requests, FY${FORM_FY}`)}</h1>
     <p>${L("รวมจาก", "From")} ${U.length} ${L("หน่วยงาน เทียบกับกรอบวงเงินเบื้องต้น", "units, against the initial ceiling of")} ${fmt(S.cons.ceiling)} ${M}</p></div></div>
   ${consTabsBar()}
   ${CONS_TAB !== "overview" ? CONS_PANELS[CONS_TAB]() : `

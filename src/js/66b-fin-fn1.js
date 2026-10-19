@@ -228,7 +228,7 @@ FS.byKind = () => {
     };
     $$("[data-fncf]").forEach(b => (b.onclick = () => {
       const x = finCommits().find(y => y.id === b.dataset.fncf), C = S.carry;
-      const c = { id: `CF-2570-${String(C.reqs.length + 1).padStart(2, "0")}`, line: x.line, amount: fcLeft(x), po: x.gfPo ? x.gfPo.no : x.id, poDate: x.signed, vendor: tx(x.vendor), status: "pending", t: nowIso(), by: me().id, src: x.id };
+      const c = { id: `CF-${CUR_FY}-${String(C.reqs.length + 1).padStart(2, "0")}`, line: x.line, amount: fcLeft(x), po: x.gfPo ? x.gfPo.no : x.id, poDate: x.signed, vendor: tx(x.vendor), status: "pending", t: nowIso(), by: me().id, src: x.id };
       const bad = cfChecks(c).filter(k => !k[0]);
       if (bad.length) { toast(`${L("ยังเสนอไม่ได้", "Can't propose yet")}: ${bad.map(k => k[1]).join(", ")}`); return; }
       C.reqs.push(c);
@@ -290,12 +290,12 @@ function seedFinanceFN1(s) {
   s.fcfg = {};
   // The two running contracts already have their POs; contracts created in the demo start without one.
   (s.contracts || []).forEach((c, i) => (c.gfPo = { no: String(7000012345 + i * 111), t: c.signed + "T15:00", by: fin ? fin.id : "" }));
-  const ope = s.allocs[2570].lines.filter(l => l.type === "ope").sort((a, b) => b.amount - a.amount), L0 = ope[0], L1 = ope[1] || ope[0], L2 = ope[2] || ope[0];
+  const ope = s.allocs[CUR_FY].lines.filter(l => l.type === "ope").sort((a, b) => b.amount - a.amount), L0 = ope[0], L1 = ope[1] || ope[0], L2 = ope[2] || ope[0];
   const by = fin ? fin.id : "";
   s.fcommit = [
-    { id: "CM-2570-001", kind: "utility", name: ["ค่าไฟฟ้า ปีงบประมาณ 2570 (ประมาณการ)", "Electricity, FY2570 (estimate)"], vendor: ["การไฟฟ้านครหลวง", "Metropolitan Electricity Authority"], line: L0.id, amount: 1800000, released: 0, paid: 150000, signed: "2026-10-01", due: "2027-09-30", gfPo: null, by, t: "2026-10-01T09:00" },
-    { id: "CM-2570-002", kind: "rent", name: ["ค่าเช่าอาคารสำนักงานสาขา 12 เดือน", "Branch office rent, 12 months"], vendor: ["บริษัท ตัวอย่างพร็อพเพอร์ตี้ จำกัด", "Sample Property Co., Ltd."], line: L1.id, amount: 960000, released: 0, paid: 0, signed: "2026-10-05", due: "2027-09-30", gfPo: null, by, t: "2026-10-05T10:00" },
-    { id: "CM-2570-003", kind: "service", name: ["บำรุงรักษาระบบสารสนเทศ (สัญญาต่อเนื่อง)", "IT system maintenance (continuing agreement)"], vendor: ["บริษัท ตัวอย่างระบบ จำกัด", "Sample Systems Co., Ltd."], line: L2.id, amount: 1200000, released: 0, paid: 300000, signed: "2026-10-01", due: "2027-11-30", gfPo: { no: "7000012001", t: "2026-10-02T11:00", by }, by, t: "2026-10-01T09:30" },
-    { id: "CM-2570-004", kind: "travel", name: ["คำสั่งเดินทางไปราชการ ตรวจติดตามโครงการภาคเหนือ", "Travel order: northern project monitoring"], vendor: ["ผู้เดินทางตามคำสั่ง", "Travellers on the order"], line: L0.id, amount: 4800, released: 0, paid: 0, signed: "2026-10-12", due: "2026-11-20", gfPo: null, by, t: "2026-10-12T14:00" },
+    { id: `CM-2570-001`, kind: "utility", name: [`ค่าไฟฟ้า ปีงบประมาณ 2570 (ประมาณการ)`, `Electricity, FY2570 (estimate)`], vendor: ["การไฟฟ้านครหลวง", "Metropolitan Electricity Authority"], line: L0.id, amount: 1800000, released: 0, paid: 150000, signed: "2026-10-01", due: "2027-09-30", gfPo: null, by, t: "2026-10-01T09:00" },
+    { id: `CM-2570-002`, kind: "rent", name: ["ค่าเช่าอาคารสำนักงานสาขา 12 เดือน", "Branch office rent, 12 months"], vendor: ["บริษัท ตัวอย่างพร็อพเพอร์ตี้ จำกัด", "Sample Property Co., Ltd."], line: L1.id, amount: 960000, released: 0, paid: 0, signed: "2026-10-05", due: "2027-09-30", gfPo: null, by, t: "2026-10-05T10:00" },
+    { id: `CM-2570-003`, kind: "service", name: ["บำรุงรักษาระบบสารสนเทศ (สัญญาต่อเนื่อง)", "IT system maintenance (continuing agreement)"], vendor: ["บริษัท ตัวอย่างระบบ จำกัด", "Sample Systems Co., Ltd."], line: L2.id, amount: 1200000, released: 0, paid: 300000, signed: "2026-10-01", due: "2027-11-30", gfPo: { no: "7000012001", t: "2026-10-02T11:00", by }, by, t: "2026-10-01T09:30" },
+    { id: `CM-2570-004`, kind: "travel", name: ["คำสั่งเดินทางไปราชการ ตรวจติดตามโครงการภาคเหนือ", "Travel order: northern project monitoring"], vendor: ["ผู้เดินทางตามคำสั่ง", "Travellers on the order"], line: L0.id, amount: 4800, released: 0, paid: 0, signed: "2026-10-12", due: "2026-11-20", gfPo: null, by, t: "2026-10-12T14:00" },
   ];
 }

@@ -72,7 +72,7 @@ function myTasks() {
   }
   if (ROLE === "fin") {
     C.prev.filter(c => c.status === "open" && c.paid / c.amount < 0.5).forEach(c => R(`${L("เร่งเบิกจ่ายหรือขอขยายเวลาเงินกัน", "Speed up or extend carried funds")} ${c.id}`, `${L("เบิกแล้ว", "Paid")} ${fmt(c.paid / c.amount * 100, 0)}%`, c.due, "alloc-carry", "p-warn"));
-    const A70 = S.allocs[2570];
+    const A70 = S.allocs[CUR_FY];
     if (A70 && A70.releases && !A70.releases.some(r => r.q === 2 && r.type === "inv")) R(L("ขออนุมัติงวดเงินไตรมาส 2 งบลงทุน", "Request the Q2 investment release"), "", "2026-12-15", "alloc-releases", "p-info");
   }
   if (ROLE === "exec") [...C.prev.filter(c => c.status === "extension"), ...C.reqs.filter(c => c.status === "pending")].forEach(c => R(`${L("อนุมัติเรื่องเงินกันเหลื่อมปี", "Decide a carry-over")} ${c.id}`, mb(c.amount) + " " + L("ลบ.", "M"), TODAY, "alloc-carry", "p-warn"));
@@ -92,8 +92,8 @@ function myTasks() {
     S.integrations.filter(i => i.status === "error").forEach(i => R(`${L("ตรวจสอบการเชื่อมต่อ", "Check integration")} ${i.id} · ${i.sys}`, tx(i.msg), TODAY, "admin-integrations", "p-bad"));
     Object.values(S.allocs).forEach(A => A.transfers.filter(x => x.status === "pending").forEach(x => { const a = A.lines.find(l => l.id === x.from), b = A.lines.find(l => l.id === x.to);
       if (a.type === b.type && a.unit === b.unit) R(`${L("อนุมัติการโอนภายในหน่วยงาน", "Approve in-unit transfer")} ${x.id}`, `${mb(x.amount)} ${L("ลบ.", "M")}`, TODAY, "alloc-transfers", "p-warn"); }));
-    if (S.submission.status === "closed" && !S.allocs[2571]) R(L("สร้างร่างการจัดสรรปี 2571 จากผลพิจารณา", "Create the FY2571 draft allocation"), "", TODAY, "alloc-appropriation", "p-info");
-    R(L("ทบทวนแผนการใช้จ่ายรายเดือน", "Review the monthly spending plan"), fyLabel(2570), TODAY, "alloc-plan", "p-mute");
+    if (S.submission.status === "closed" && !S.allocs[FORM_FY]) R(L(`สร้างร่างการจัดสรรปี ${FORM_FY} จากผลพิจารณา`, `Create the FY${FORM_FY} draft allocation`), "", TODAY, "alloc-appropriation", "p-info");
+    R(L("ทบทวนแผนการใช้จ่ายรายเดือน", "Review the monthly spending plan"), fyLabel(CUR_FY), TODAY, "alloc-plan", "p-mute");
   }
   if (ROLE === "audit") {
     R(L("ตรวจประวัติการปรับวงเงินระหว่างพิจารณา", "Check amount changes made in review"), `${S.log.length} ${L("เวอร์ชัน", "versions")}`, TODAY, "review", "p-info");
@@ -102,7 +102,7 @@ function myTasks() {
   if (ROLE === "admin") {
     S.users.filter(x => !x.mfa).forEach(x => R(`${L("เปิด MFA ให้ผู้ใช้", "Turn on MFA for")} ${tx(x.name)}`, unitName(x.unit), TODAY, "admin-users", "p-bad"));
     S.integrations.filter(i => i.status === "error").forEach(i => R(`${L("แก้ไขการเชื่อมต่อ", "Fix integration")} ${i.id} · ${i.sys}`, tx(i.msg), TODAY, "admin-integrations", "p-bad"));
-    R(L("เตรียมโครงสร้างงบประมาณปี 2572", "Prepare the FY2572 budget structure"), "", "2027-06-30", "admin-structure", "p-warn");
+    R(L(`เตรียมโครงสร้างงบประมาณปี ${FORM_FY + 1}`, `Prepare the FY${FORM_FY + 1} budget structure`), "", `${FORM_FY - 544}-06-30`, "admin-structure", "p-warn");
   }
   return t;
 }
@@ -128,7 +128,7 @@ VIEWS.home = () => {
     <section class="panel"><header><h2>${L("งานของฉัน", "My tasks")}</h2><span class="sp"></span><span class="sub">${tx(ROLES[ROLE])}</span></header>
       <ul class="tasks">${tasks.map(k => `<li><span class="pill ${k.cls}" style="padding:2px 8px"></span>
         <div>${appChip(k.link)}<a href="#" data-link="${k.link}">${esc(k.title)}</a>${k.sub ? `<div class="sub">${esc(k.sub)}</div>` : ""}</div>${dueText(k.due)}</li>`).join("")}</ul></section>
-    <section class="panel"><header><h2>${L("ปฏิทินงบประมาณ ปี 2571", "FY2571 budget calendar")}</h2><span class="sp"></span><span class="pill p-warn">${L("ตัวอย่าง", "Sample")}</span></header>
+    <section class="panel"><header><h2>${L(`ปฏิทินงบประมาณ ปี ${FORM_FY}`, `FY${FORM_FY} budget calendar`)}</h2><span class="sp"></span><span class="pill p-warn">${L("ตัวอย่าง", "Sample")}</span></header>
       <ul class="tasks">${next.slice(0, 5).map(c => `<li><span class="pill ${c.role === ROLE ? "p-ok" : "p-mute"}" style="padding:2px 8px"></span>
         <div><b style="font-weight:600">${tx(c.name)}</b><div class="sub">${tx(ROLES[c.role])}</div></div>${dueText(c.date)}</li>`).join("")}</ul></section>
   </div>

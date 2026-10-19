@@ -35,7 +35,7 @@ PERF.kpis = () => {
     <div class="tbl-wrap"><table><thead><tr><th>${L("ตัวชี้วัด", "KPI")}</th><th>${L("เจ้าของ", "Owner")}</th><th class="n">${L("เป้ากลางปี", "Mid-year target")}</th><th class="n" style="width:150px">${L("ผล", "Result")}</th><th>${L("ผลสำเร็จ", "Achievement")}</th></tr></thead>
       <tbody>${rows.map(({ k, st, p }) => `<tr><td><span class="mono sub">${st.id}·${k.id}</span> ${esc(tx(k.name))}</td><td class="sub">${unitName(k.owner)}</td>
         <td class="n">${p ? fmtv(p.target) : "—"} <span class="sub">${tx(k.unit)}</span></td>
-        <td class="n">${p ? (canEnterKpi(k) ? `<input type="number" step="any" min="0" data-kr="${k.id}" value="${p.result == null ? "" : p.result}" placeholder="${L("กรอกผล", "Enter")}" aria-label="${L("ผล", "Result")} ${esc(tx(k.name))}">` : p.result == null ? "—" : fmtv(p.result)) : `<span class="sub">${L("ตัวชี้วัดใหม่ปี 2571", "New for 2571")}</span>`}</td>
+        <td class="n">${p ? (canEnterKpi(k) ? `<input type="number" step="any" min="0" data-kr="${k.id}" value="${p.result == null ? "" : p.result}" placeholder="${L("กรอกผล", "Enter")}" aria-label="${L("ผล", "Result")} ${esc(tx(k.name))}">` : p.result == null ? "—" : fmtv(p.result)) : `<span class="sub">${L(`ตัวชี้วัดใหม่ปี ${FORM_FY}`, `New for ${FORM_FY}`)}</span>`}</td>
         <td>${p ? achTag(achv(p.result, p.target)) : ""}</td></tr>`).join("")}</tbody></table></div></section>`;
 };
 
@@ -102,10 +102,10 @@ function reportDraft() {
   const miss = allKpis().filter(x => { const p = S.perf.kpis[x.k.id]; return p && p.result != null && achv(p.result, p.target) < 80; });
   const th = [`1. เร่งรัดโครงการที่ได้ระดับต่ำ ได้แก่ ${weak.map(w => w.p.name[0]).join(", ") || "-"} โดยให้หน่วยงานเสนอแผนเร่งรัดการเบิกจ่ายภายใน 30 วัน`,
     `2. ทบทวนแนวทางของตัวชี้วัดที่ต่ำกว่าเป้า ได้แก่ ${miss.map(m => m.k.id + " " + m.k.name[0]).join(", ") || "-"} และพิจารณาปรับค่าเป้าหมายรอบ 12 เดือนหากจำเป็น`,
-    "3. ใช้ผลการประเมินนี้ประกอบการจัดลำดับความสำคัญของคำของบประมาณปี 2571 ใน M03"].join("\n");
+    `3. ใช้ผลการประเมินนี้ประกอบการจัดลำดับความสำคัญของคำของบประมาณปี ${FORM_FY} ใน M03`].join("\n");
   const en = [`1. Speed up the lowest-graded projects: ${weak.map(w => w.p.name[1]).join(", ") || "-"}. Ask each unit for a recovery plan within 30 days.`,
     `2. Review the approach for KPIs below target: ${miss.map(m => m.k.id + " " + m.k.name[1]).join(", ") || "-"}, and adjust 12-month targets if needed.`,
-    "3. Feed these results into FY2571 request prioritisation in M03."].join("\n");
+    `3. Feed these results into FY${FORM_FY} request prioritisation in M03.`].join("\n");
   return [th, en];
 }
 PERF.report = () => {

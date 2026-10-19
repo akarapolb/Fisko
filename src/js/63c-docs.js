@@ -17,8 +17,8 @@ const CONF_MIN = 0.8;
 
 // ---------- sample documents (fixed extraction results) ----------
 function sampleDocs() {
-  const c1 = famCon("CT-2570-001"), c2 = famCon("CT-2570-002"), v2 = vendorBy(tx(c2.vendor)), v1 = vendorBy(tx(c1.vendor)), p21 = c2.phases[0];
-  const net = Math.round(p21.amount / 1.07), vat = p21.amount - net, c5 = caseByPlan("PP-2570-005");
+  const c1 = famCon(`CT-2570-001`), c2 = famCon(`CT-2570-002`), v2 = vendorBy(tx(c2.vendor)), v1 = vendorBy(tx(c1.vendor)), p21 = c2.phases[0];
+  const net = Math.round(p21.amount / 1.07), vat = p21.amount - net, c5 = caseByPlan(`PP-2570-005`);
   const f = (v, conf) => ({ v: String(v), conf, orig: String(v) });
   return {
     inv: { type: "inv", name: "scan_invoice_INV-70-0201.jpg", fields: { vendor: f(tx(c2.vendor), 0.97), taxId: f(v2 ? v2.taxId : "", 0.93), no: f("INV-70-0201", 0.95), date: f(TODAY, 0.9), contract: f(c2.no, 0.96), phase: f(1, 0.92), subtotal: f(net, 0.91), vat: f(vat, 0.9), total: { v: String(p21.amount + 6000), conf: 0.62, orig: String(p21.amount + 6000), truth: String(p21.amount) } } },

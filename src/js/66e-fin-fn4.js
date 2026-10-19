@@ -301,20 +301,20 @@ function seedFinanceFN4(s) {
   const U = r => s.users.find(u => u.role === r && u.primary) || s.users.find(u => u.role === r) || {}, FN = U("fin").id, FH = U("finhead").id, dv = U("div");
   s.cashCmte = { order: "คำสั่งที่ 15/2569", members: [U("plan").id, U("divhead").id], subs: [] };
   s.rbooks = [
-    { id: "BK-2570-01", no: "1/2570", fy: 2570, from: 1, to: 100, holder: FN, issued: "2026-10-01", returned: null },
+    { id: `BK-2570-01`, no: `1/2570`, fy: CUR_FY, from: 1, to: 100, holder: FN, issued: "2026-10-01", returned: null },
     { id: "BK-2569-07", no: "7/2569", fy: 2569, from: 1, to: 100, holder: FN, issued: "2026-06-01", returned: "2026-09-30", used: 64 },
     { id: "BK-2569-08", no: "8/2569", fy: 2569, from: 1, to: 50, holder: null, unit: dv.unit, issued: "2026-08-01", returned: null, used: 23 },
   ];
   const rec = (d, t) => ({ t: `${d}T${t}`, by: FN, doc: "" });
-  const mk = (n, o) => Object.assign({ id: `RC-2570-000${n}`, book: "BK-2570-01", n, by: FN, recorded: rec(o.date, "16:30"), remit: null, cancelled: null, t: `${o.date}T10:00` }, o);
+  const mk = (n, o) => Object.assign({ id: `RC-${CUR_FY}-000${n}`, book: `BK-2570-01`, n, by: FN, recorded: rec(o.date, "16:30"), remit: null, cancelled: null, t: `${o.date}T10:00` }, o);
   s.receipts = [
     mk(1, { date: "2026-10-02", kind: "revenue", payer: ["บริษัท ตัวอย่างก่อสร้าง จำกัด", "Sample Construction Co., Ltd."], desc: ["ค่าขายเอกสารประกวดราคา", "Sale of bid documents"], amount: 3500, method: "cash" }),
-    mk(2, { date: "2026-10-09", kind: "revenue", payer: ["ห้างหุ้นส่วนจำกัด ตัวอย่างพัสดุ", "Sample Supplies Ltd. Partnership"], desc: ["ค่าปรับผิดสัญญาที่ผู้ขายนำมาชำระ", "Contract penalty paid by the supplier"], amount: 12400, method: "cash", remit: "RM-2570-001" }),
+    mk(2, { date: "2026-10-09", kind: "revenue", payer: ["ห้างหุ้นส่วนจำกัด ตัวอย่างพัสดุ", "Sample Supplies Ltd. Partnership"], desc: ["ค่าปรับผิดสัญญาที่ผู้ขายนำมาชำระ", "Contract penalty paid by the supplier"], amount: 12400, method: "cash", remit: `RM-2570-001` }),
     mk(3, { date: "2026-10-14", kind: "refund", payer: ["นายตัวอย่าง คืนเงิน", "Mr Tuayang Khuenngoen"], desc: ["คืนเงินค่าตอบแทนที่จ่ายเกิน", "Return of an overpaid fee"], amount: 8000, method: "cheque" }),
     mk(4, { date: TODAY, kind: "nonbudget", payer: ["มูลนิธิตัวอย่าง", "Sample Foundation"], desc: ["ค่าธรรมเนียมใช้ห้องประชุม", "Meeting room fee"], amount: 2000, method: "cash", recorded: null }),
     mk(5, { date: TODAY, kind: "revenue", payer: ["นายตัวอย่าง ประมูล", "Mr Tuayang Pramun"], desc: ["ขายครุภัณฑ์ชำรุดตามมติคณะกรรมการ", "Sale of written-off equipment"], amount: 9000, method: "cash", recorded: null }),
   ];
-  s.remits = [{ id: "RM-2570-001", cls: "revenue", rows: ["RC-2570-0002"], amount: 12400, t: "2026-10-13T11:00", by: FN, ref: "KTB-001261013", late: 0 }];
+  s.remits = [{ id: `RM-2570-001`, cls: "revenue", rows: [`RC-2570-0002`], amount: 12400, t: "2026-10-13T11:00", by: FN, ref: "KTB-001261013", late: 0 }];
   // Reports signed on the days with money in the safe before today.
   const sys = (cash, chq, by) => ({ cash, cheque: chq, by });
   const signed = (d, s_) => ({ date: d, by: FN, t: `${d}T16:00`, sys: s_, counts: { [s.cashCmte.members[0]]: { cash: s_.cash, cheque: s_.cheque, t: `${d}T16:20` }, [s.cashCmte.members[1]]: { cash: s_.cash, cheque: s_.cheque, t: `${d}T16:25` } }, status: "signed", ack: { by: U("exec").id, t: `${d}T17:00` } });

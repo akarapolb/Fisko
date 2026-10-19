@@ -23,7 +23,7 @@ const NATIONAL = [
   { id: "N6", name: ["ด้านการปรับสมดุลและพัฒนาระบบการบริหารจัดการภาครัฐ", "Public sector rebalancing and development"] },
 ];
 const natName = id => tx((NATIONAL.find(n => n.id === id) || { name: ["-", "-"] }).name);
-const PLAN_YEARS = [2571, 2572, 2573, 2574, 2575];
+const PLAN_YEARS = [0, 1, 2, 3, 4].map(i => FORM_FY + i); // the five-year plan starts with the year being formulated
 
 function sharedSeed() {
   return {
@@ -36,12 +36,12 @@ function sharedSeed() {
     ],
     fyList: [
       { fy: 2569, status: "closed", start: "2025-10-01", end: "2026-09-30" },
-      { fy: 2570, status: "execution", start: "2026-10-01", end: "2027-09-30" },
-      { fy: 2571, status: "request", start: "2027-10-01", end: "2028-09-30" },
+      { fy: CUR_FY, status: "execution", start: "2026-10-01", end: "2027-09-30" },
+      { fy: FORM_FY, status: "request", start: "2027-10-01", end: "2028-09-30" },
       { fy: 2572, status: "setup", start: "2028-10-01", end: "2029-09-30" },
     ],
     calendar: [
-      { id: "c1", date: "2026-10-01", role: "admin", name: ["เปิดระบบรับคำของบประมาณปี 2571", "FY2571 request window opens"] },
+      { id: "c1", date: "2026-10-01", role: "admin", name: [`เปิดระบบรับคำของบประมาณปี ${FORM_FY}`, `FY${FORM_FY} request window opens`] },
       { id: "c2", date: "2026-11-30", role: "div", name: ["สำนัก / กอง ส่งคำขอให้กองแผนงาน", "Divisions submit requests to Planning"] },
       { id: "c3", date: "2026-12-18", role: "plan", name: ["กองแผนงานกลั่นกรองรอบที่ 2 แล้วเสร็จ", "Planning completes review round 2"] },
       { id: "c4", date: "2027-01-08", role: "exec", name: ["คณะกรรมการพิจารณางบประมาณ", "Budget committee meeting"] },

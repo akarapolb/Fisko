@@ -10,7 +10,7 @@ const CRIT = [[["สอดคล้องยุทธศาสตร์", "Strat
 const ideaScore = i => (i.scores ? Math.round(i.scores.reduce((s, v, n) => s + v / 5 * CRIT[n][1], 0)) : null);
 const findKpi = id => (allKpis().find(x => x.k.id === id) || {}).k;
 let IDEA_OPEN = null; // idea being scored
-const nextReqId = () => `REQ-2571-${String(Math.max(0, ...S.requests.map(r => Number(r.id.split("-")[2]) || 0)) + 1).padStart(3, "0")}`;
+const nextReqId = () => `REQ-${FORM_FY}-${String(Math.max(0, ...S.requests.map(r => Number(r.id.split("-")[2]) || 0)) + 1).padStart(3, "0")}`;
 
 STRAT.bank = () => {
   const ideas = S.ideas || [], canAdd = ROLE === "div" || ROLE === "plan", pl = ROLE === "plan";
@@ -24,7 +24,7 @@ STRAT.bank = () => {
     <div class="kpi"><span class="l">${L("รอกลั่นกรอง", "Awaiting screening")}</span><span class="v">${ideas.filter(i => i.status === "proposed").length}</span></div>
     <div class="kpi"><span class="l">${L("รับเข้าแผน / เป็นคำขอแล้ว", "Accepted / now requests")}</span><span class="v">${ideas.filter(i => i.status === "accepted").length}<small>/ ${ideas.filter(i => i.status === "converted").length}</small></span></div>
   </section>
-  <section class="panel"><header><h2>${L("คลังโครงการ ปีงบประมาณ 2571", "FY2571 project bank")}</h2><span class="sp"></span>
+  <section class="panel"><header><h2>${L(`คลังโครงการ ปีงบประมาณ ${FORM_FY}`, `FY${FORM_FY} project bank`)}</h2><span class="sp"></span>
       <span class="sub">${L("เกณฑ์", "Criteria")}: ${CRIT.map(c => `${tx(c[0])} ${c[1]}%`).join(" · ")}</span></header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("แนวคิดโครงการ", "Idea")}</th><th>${L("ตัวชี้วัด", "KPI")}</th><th class="n">${L("ประมาณการ (ลบ.)", "Estimate (M)")}</th><th class="n">${L("ปี", "Years")}</th><th style="width:150px">${L("คะแนน", "Score")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
       <tbody>${sorted.map(i => { const sc = ideaScore(i), k = findKpi(i.kpi), mine = ROLE === "div" && i.unit === me().unit;
@@ -78,7 +78,7 @@ STRAT_BIND.bank = () => {
     const r = { id, unit: i.unit, act: k && k.acts[0] || "", prev: 0, status: "draft", updated: TODAY, name: i.name.slice(), kpi: k ? [`${k.id} ${k.name[0]}`, `${k.id} ${k.name[1]}`] : "",
       reason: "", docs: [], items: [{ type: "ope", name: ["ค่าใช้จ่ายโครงการ (ประมาณการจากคลังโครงการ)", "Project cost (estimate from the project bank)"], qty: 1, unitName: ["งาน", "job"], price: first }],
       amount: first, versions: [], comments: [], idea: i.id };
-    if (i.years > 1) { r.multi = true; r.years = {}; for (let y = 0; y < i.years; y++) r.years[2571 + y] = y ? 0 : first; }
+    if (i.years > 1) { r.multi = true; r.years = {}; for (let y = 0; y < i.years; y++) r.years[FORM_FY + y] = y ? 0 : first; }
     S.requests.unshift(r); snapshot(r, ["สร้างจากคลังโครงการ", "Created from the project bank"], true);
     i.status = "converted"; i.req = id;
     audit(["สร้างร่างคำขอจากคลังโครงการ", "Created a draft request from the project bank"], `${i.id} → ${id}`); commit();
@@ -87,7 +87,7 @@ STRAT_BIND.bank = () => {
   const f = $("#idea-form");
   if (f) f.onsubmit = e => {
     e.preventDefault();
-    const nm = $("#id-name").value.trim(), id = `PB-2571-${String(S.ideas.length + 1).padStart(3, "0")}`;
+    const nm = $("#id-name").value.trim(), id = `PB-${FORM_FY}-${String(S.ideas.length + 1).padStart(3, "0")}`;
     S.ideas.push({ id, unit: me().unit, kpi: $("#id-kpi").value, name: [nm, nm], est: Number($("#id-est").value), years: Number($("#id-yrs").value), status: "proposed", scores: null, note: null, by: me().id, t: nowIso(), req: null });
     audit(["เสนอแนวคิดโครงการ", "Proposed a project idea"], `${id} ${nm}`);
     notify(["plan"], [`แนวคิดโครงการใหม่ ${id} รอกลั่นกรอง`, `New project idea ${id} is waiting for screening`], "strat-bank");
@@ -138,7 +138,7 @@ STRAT_BIND.revise = () => {
     e.preventDefault();
     const k = findKpi($("#rv-kpi").value), y = Number($("#rv-y").value), to = Number($("#rv-to").value), why = $("#rv-why").value.trim();
     if (to === k.targets[y]) { toast(L("ค่าใหม่เท่ากับค่าเดิม", "The new value equals the current one")); return; }
-    const id = `PR-2571-${String(S.planRevs.length + 1).padStart(3, "0")}`;
+    const id = `PR-${FORM_FY}-${String(S.planRevs.length + 1).padStart(3, "0")}`;
     S.planRevs.unshift({ id, kpi: k.id, y, from: k.targets[y], to, why: [why, why], by: me().id, t: nowIso(), status: "pending" });
     audit(["เสนอทบทวนค่าเป้าหมายตัวชี้วัด", "Proposed a KPI target revision"], `${id} ${k.id}`);
     notify(["exec"], [`คำขอทบทวนค่าเป้าหมาย ${id} (${k.id}) รอพิจารณา`, `Target revision ${id} (${k.id}) is waiting for you`], "strat-revise");

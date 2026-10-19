@@ -154,14 +154,14 @@ VIEWS.btoday = () => {
   <section class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
     <div class="kpi hl"><span class="l">${L("งานของฉัน", "My work")}</span><span class="v">${t.length}</span><span class="d" style="color:var(--rail-ink)">${t.filter(x => x.due <= TODAY).length} ${L("ถึงกำหนดหรือเลยแล้ว", "due or overdue")}</span></div>
     <div class="kpi"><span class="l">${L("กำหนดการถัดไป", "Next deadline")}</span><span class="v">${next.length ? daysUntil(next[0].date) : "–"}</span><span class="d sub">${next.length ? `${L("วัน", "days")} · ${esc(tx(next[0].name))}` : ""}</span></div>
-    <div class="kpi"><span class="l">${ROLE === "div" ? L("คำขอของหน่วยงาน ปี 2571", "Your unit's FY2571 requests") : L("คำขอ ปี 2571 ที่ส่งแล้ว", "FY2571 requests sent")}</span><span class="v">${sent.length}/${R.length}</span></div>
+    <div class="kpi"><span class="l">${ROLE === "div" ? L(`คำขอของหน่วยงาน ปี ${FORM_FY}`, `Your unit's FY${FORM_FY} requests`) : L(`คำขอ ปี ${FORM_FY} ที่ส่งแล้ว`, `FY${FORM_FY} requests sent`)}</span><span class="v">${sent.length}/${R.length}</span></div>
     <div class="kpi"><span class="l">${L(`การแจ้งเตือนการใช้จ่าย ปี ${CUR_FY}`, `FY${CUR_FY} spending alerts`)}</span><span class="v">${ROLE === "div" ? "–" : al.length}</span><span class="d sub">${ROLE === "div" ? L("ดูที่ B8", "See B8") : al.filter(a => a.lv === "bad").length + " " + L("รุนแรง", "serious")}</span></div>
   </section>
   <div class="grid2">
     <section class="panel"><header><h2>${L("งานของฉันในแอปงบประมาณ", "My work in Budget")}</h2><span class="sp"></span><span class="sub">${t.length} ${L("รายการ", "items")}</span></header>
       ${t.length ? `<div class="tbl-wrap"><table><tbody>${t.slice(0, 10).map(x => `<tr><td>${dotI(x.cls === "p-bad" ? "bad" : x.cls === "p-warn" ? "warn" : "ok")}<b style="font-weight:600">${esc(x.title)}</b>${x.sub ? `<div class="sub">${esc(x.sub)}</div>` : ""}</td><td class="sub" style="white-space:nowrap">${clockTxt(x.due)}</td><td>${go2(x.link)}</td></tr>`).join("")}</tbody></table></div>`
         : `<div class="body sub">${dotI("ok")}${L("ไม่มีงานค้างในแอปงบประมาณ", "Nothing waiting for you in Budget")}</div>`}</section>
-    <section class="panel"><header><h2>${L("ปฏิทินงบประมาณ ปี 2571", "FY2571 budget calendar")}</h2><span class="sp"></span><span class="pill p-warn">${L("ตัวอย่าง", "Sample")}</span></header>
+    <section class="panel"><header><h2>${L(`ปฏิทินงบประมาณ ปี ${FORM_FY}`, `FY${FORM_FY} budget calendar`)}</h2><span class="sp"></span><span class="pill p-warn">${L("ตัวอย่าง", "Sample")}</span></header>
       <ul class="tasks">${next.slice(0, 6).map(c => `<li><span class="pill ${c.role === ROLE ? "p-ok" : "p-mute"}" style="padding:2px 8px"></span>
         <div><b style="font-weight:600">${tx(c.name)}</b><div class="sub">${tx(ROLES[c.role])}</div></div>${dueText(c.date)}</li>`).join("") || `<li class="sub">${L("ไม่มีกำหนดการ", "No dates ahead")}</li>`}</ul></section>
   </div>

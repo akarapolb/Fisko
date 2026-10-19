@@ -2,7 +2,7 @@
 const QUESTIONS = [
   ["หน่วยงานใดมีอัตราเบิกจ่ายต่ำกว่าแผนมากที่สุด?", "Which units are furthest behind their spending plan?"],
   ["หากได้รับงบประมาณลดลง 15% ควรจัดสรรอย่างไรเพื่อรักษาโครงการสำคัญ?", "If the budget is cut by 15%, how should we allocate it to protect key projects?"],
-  ["สรุปคำของบประมาณปี 2571 ที่เพิ่มขึ้นจากปีก่อนเกินเกณฑ์", "Which FY2571 requests grew more than the threshold over last year?"],
+  [`สรุปคำของบประมาณปี ${FORM_FY} ที่เพิ่มขึ้นจากปีก่อนเกินเกณฑ์`, `Which FY${FORM_FY} requests grew more than the threshold over last year?`],
 ];
 function answer(i) {
   if (i === 0) {
@@ -18,7 +18,7 @@ function answer(i) {
   if (i === 2) {
     const lim = (rule("BR-04") || {}).param || 20;
     const rows = S.requests.filter(r => r.prev > 0 && (r.amount / r.prev - 1) * 100 > lim);
-    return rows.length ? `<p>${L(`มีคำขอ ${rows.length} รายการที่เพิ่มขึ้นเกิน ${lim}% จากปี 2570:`, `${rows.length} requests grew more than ${lim}% over FY2570:`)}</p>
+    return rows.length ? `<p>${L(`มีคำขอ ${rows.length} รายการที่เพิ่มขึ้นเกิน ${lim}% จากปี ${CUR_FY}:`, `${rows.length} requests grew more than ${lim}% over FY${CUR_FY}:`)}</p>
       <ul>${rows.map(r => `<li><b>${esc(tx(r.name))}</b> +${fmt((r.amount / r.prev - 1) * 100, 1)}% (${mb(r.prev)} → ${mb(r.amount)} ${L("ลบ.", "M")})</li>`).join("")}</ul>
       <h4>${L("ข้อแนะนำ", "Suggestion")}</h4><span class="sub">${L("ขอคำอธิบายส่วนเพิ่มก่อนกลั่นกรองรอบที่ 2 · เกณฑ์จากกฎ BR-04 ใน M10", "Ask for an explanation before review round 2 · threshold from rule BR-04 in M10")}</span>`
       : `<p>${L(`ไม่มีคำขอที่เพิ่มขึ้นเกิน ${lim}%`, `No request grew more than ${lim}%`)}</p>`;
