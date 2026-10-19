@@ -51,7 +51,8 @@ const BUD_PAGES = [
 ];
 BUD_PAGES.forEach(p => (p.tabs = (p.tabs || []).map(t => (typeof t === "string" ? { id: t } : t)).map(t => ({ ...t, keys: t.keys || [t.id] }))));
 const bPage = id => BUD_PAGES.find(p => p.id === id);
-const bTabs = p => p.tabs.filter(t => !t.roles || t.roles.includes(ROLE));
+// The division director sees what the division sees.
+const bTabs = p => p.tabs.filter(t => !t.roles || t.roles.includes(ROLE) || (ROLE === "divhead" && t.roles.includes("div")));
 const bSees = p => allowed(p.id) && (!p.tabs.length || bTabs(p).length > 0);
 const bTabOf = (p, k) => bTabs(p).find(t => t.keys.includes(k));
 // The visible page that holds an old key of a module (the M09 keys live on B10 or B11).

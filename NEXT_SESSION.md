@@ -146,3 +146,7 @@ Submission batches, Budget Bureau results and revisions, parliament cuts and app
 ## Round 51 (Budget CRUD round C4)
 
 B8 and B9 read FY2570 (`80-live-year.js`, `HANDOFF.md` section 51); the demo date can be moved month by month (`S.asOf`, `TODAY` is now `let`). `DATA_V = 37`. Next: C5 (strategy tree and master data), C6 (B10/B11, end-to-end demo script and sweep).
+
+## Round 52 (Budget CRUD round C5)
+
+Strategy and master data are on the list + drawer (`81-master-crud.js`, `HANDOFF.md` section 52); master data is retired, not deleted, once used. `DATA_V = 38`. Next: C6 (B10/B11 records, the end-to-end demo script E-01 to E-16 in the in-app guide, a sweep that walks the whole cycle).

@@ -158,7 +158,7 @@ document.addEventListener("click", e => {
 });
 function crRun(sp, r, a, why) {
   const snap = crSnap(), msg = a.run(r, why);
-  CR_OPEN.ask = null; CR_OPEN.err = null;
+  if (CR_OPEN) { CR_OPEN.ask = null; CR_OPEN.err = null; }
   if (CR_OPEN && !crRec(CR_OPEN.key, CR_OPEN.id)) crClose();
   crDone(msg, a.undo === false ? null : snap);
 }
