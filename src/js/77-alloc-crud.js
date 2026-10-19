@@ -218,7 +218,7 @@ CRUD.def("alCf", {
     { id: "vendor", label: ["คู่สัญญา", "Supplier"], value: c ? c.vendor : "" },
   ],
   check: v => cfChecks({ ...v }).filter(x => !x[0]).map(x => ({ f: null, m: x[1] })),
-  create: { can: () => canAlloc() && ALLOC_FY === 2570, label: ["ยื่นคำขอกันเงิน", "File carry-over request"],
+  create: { can: () => canAlloc() && ALLOC_FY === CUR_FY, label: ["ยื่นคำขอกันเงิน", "File carry-over request"],
     run: v => { const C = S.carry; C.seq = (C.seq || C.reqs.length) + 1; const c = { id: `CF-${ALLOC_FY}-${String(C.seq).padStart(2, "0")}`, line: v.line, amount: v.amount, po: v.po, poDate: v.poDate, vendor: v.vendor, status: "pending", t: nowIso(), by: me().id };
       C.reqs.push(c); audit(["ยื่นคำขอกันเงินไว้เบิกเหลื่อมปี", "Filed a carry-over request"], `${c.id} · ${c.po} · ${mb(c.amount)} M`);
       notify(["exec"], [`คำขอกันเงินเหลื่อมปี ${c.id} รออนุมัติ`, `Carry-over ${c.id} is waiting for approval`], "alloc-carry"); return c; } },
@@ -285,9 +285,9 @@ ALLOC.transfers = () => crudList("alTr", {
 }
 {
   const cr = ALLOC.carry;
-  ALLOC.carry = () => { const h = cr(); if (ALLOC_FY !== 2570) return h;
-    const i = h.lastIndexOf(`<section class="panel"><header><h2>${L("ขอกันเงินปี 2570 ไว้เบิกเหลื่อมปี", "FY2570 carry-over requests")}`);
-    return (i > 0 ? h.slice(0, i) : h) + crudList("alCf", { head: `<h2>${L("ขอกันเงินปี 2570 ไว้เบิกเหลื่อมปี", "FY2570 carry-over requests")}</h2><span class="sp"></span><span class="sub">${L("ยื่นได้ถึง", "File by")} ${fdate(FY_END)} · ${daysUntil(FY_END)} ${L("วัน", "days")}</span>`,
+  ALLOC.carry = () => { const h = cr(); if (ALLOC_FY !== CUR_FY) return h;
+    const i = h.lastIndexOf(`<section class="panel"><header><h2>${L(`ขอกันเงินปี ${CUR_FY} ไว้เบิกเหลื่อมปี`, `FY${CUR_FY} carry-over requests`)}`);
+    return (i > 0 ? h.slice(0, i) : h) + crudList("alCf", { head: `<h2>${L(`ขอกันเงินปี ${CUR_FY} ไว้เบิกเหลื่อมปี`, `FY${CUR_FY} carry-over requests`)}</h2><span class="sp"></span><span class="sub">${L("ยื่นได้ถึง", "File by")} ${fdate(FY_END)} · ${daysUntil(FY_END)} ${L("วัน", "days")}</span>`,
       after: `<div class="body sub">${L("ต้องมีสัญญาที่ลงนามภายในปีงบประมาณ และบันทึกในระบบ GFMIS ก่อนสิ้นปี", "Needs a contract signed within the fiscal year, recorded in GFMIS before year end")}</div>`, empty: L("ยังไม่มีคำขอกันเงิน", "No carry-over requests yet") }); };
 }
 // Savings: a decision can be reversed while no transfer has been made from it (FR-C-33).

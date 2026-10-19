@@ -142,3 +142,7 @@ Formulation FY2571 is on the list + drawer (`78-form-crud.js`, `HANDOFF.md` sect
 ## Round 50 (Budget CRUD round C3)
 
 Submission batches, Budget Bureau results and revisions, parliament cuts and appeals are on the list + drawer (`79-sub-crud.js`, `HANDOFF.md` section 50). Next: C4 (B8 and B9 on FY2570), C5 (strategy and master data), C6 (B10/B11, end-to-end demo script and sweep).
+
+## Round 51 (Budget CRUD round C4)
+
+B8 and B9 read FY2570 (`80-live-year.js`, `HANDOFF.md` section 51); the demo date can be moved month by month (`S.asOf`, `TODAY` is now `let`). `DATA_V = 37`. Next: C5 (strategy tree and master data), C6 (B10/B11, end-to-end demo script and sweep).

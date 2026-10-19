@@ -87,6 +87,18 @@
         }
         crClose(); CONS_TAB = "overview"; REV_TAB = "queue"; await tick();
       }
+      // Round C4: every B8 and B9 tab with the demo date moved to March and to September (simulated GFMIS imports)
+      if (o.suites.includes("render") && typeof simDisb === "function" && S.y2569) for (const mi of [5, 11]) {
+        S.asOf = FY_MONTH_ENDS()[mi]; TODAY = S.asOf; simDisb(mi);
+        for (const role of ["plan", "exec", "div", "fin", "audit"].filter(r => o.roles.includes(r))) {
+          ROLE = role; LANG = o.langs[0]; safe("shell", renderShell);
+          for (const [page, set, tabs] of [["dashboard", v => (MON_TAB = v), ["live", "drill", "forecast", "alerts", "progress", "procure", "import", "overview"]], ["performance", v => (PERF_TAB = v), ["kpis", "chain", "scorecard", "quarter", "cost", "report", "evaluate", "stages", "recs", "public"]], ["btoday", () => {}, [""]]])
+            if (allowed(page)) for (const t of tabs) safe(`${org}/m${mi + 1}/${role}/${page}/${t}`, () => { set(t); go2(page); chk(`${org}/m${mi + 1}/${role}/${page}/${t}`); if (!document.querySelector(".asof-bar")) errs.push(`${org}/m${mi + 1}/${page}: no demo-date banner`); });
+          await tick();
+        }
+        if (S.dash.fy !== CUR_FY || !S.dash.live) errs.push(`${org}/m${mi + 1}: dashboard is not the live year`);
+      }
+      if (typeof REAL_TODAY !== "undefined") { S.asOf = null; TODAY = REAL_TODAY; MON_TAB = "live"; PERF_TAB = "kpis"; }
       // Round C3 walk: a batch through the Budget Bureau, the bill through parliament, the act into allocation; every drawer on the way
       if (o.suites.includes("render") && typeof CRUD !== "undefined" && CRUD.defs.sbBatch && o.roles.includes("plan")) safe(`${org}/C3 walk`, () => {
         ROLE = "plan"; LANG = o.langs[0]; renderShell(); S.submission.minister = { no: "TEST", date: TODAY, by: me().id };

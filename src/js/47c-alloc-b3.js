@@ -18,7 +18,7 @@ function planFromQ(r, amount) {
   ALLOC.appropriation = () => {
     let html = bv();
     const P = S.parl, done = P && P.stage >= PARL_STEPS.length;
-    if (ALLOC_FY === 2570 && !S.allocs[2571]) if (done) html = html.replace(L("สร้างร่างการจัดสรรปี 2571 จากผลพิจารณา", "Create the FY2571 draft from the results"), L("สร้างบรรทัดจัดสรรปี 2571 ตาม พ.ร.บ.", "Create FY2571 lines from the appropriation act"));
+    if (ALLOC_FY === CUR_FY && !S.allocs[2571]) if (done) html = html.replace(L("สร้างร่างการจัดสรรปี 2571 จากผลพิจารณา", "Create the FY2571 draft from the results"), L("สร้างบรรทัดจัดสรรปี 2571 ตาม พ.ร.บ.", "Create FY2571 lines from the appropriation act"));
     if (ALLOC_FY === 2571 && S.allocs[2571]) {
       const A = S.allocs[2571], linked = A.lines.filter(l => l.req).length;
       html = `<div class="alert"><div class="ic">i</div><div><b>${A.fromAct ? L("บรรทัดจัดสรรสร้างจาก พ.ร.บ. งบประมาณรายจ่ายประจำปี 2571", "Lines created from the FY2571 appropriation act") : L("ร่างการจัดสรรจากผลพิจารณาของสำนักงบประมาณ", "Draft allocation from the Budget Bureau result")}</b><p>${linked}/${A.lines.length} ${L("บรรทัดผูกกับคำขอ · แผนรายเดือนมาจากแผนรายไตรมาสของคำขอ", "lines linked to a request · monthly plans come from the request's quarterly plan")}${A.fromAct ? "" : ` · ${L("เมื่อ พ.ร.บ. มีผลใช้บังคับ ปรับวงเงินตามกฎหมายได้ที่ปุ่มด้านล่าง", "once the act is in force, update to the law's amounts with the button below")}`}</p>

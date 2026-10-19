@@ -1,7 +1,7 @@
 // M07 deeper features (round 10): year-end disbursement forecast against the cabinet's quarterly
 // targets, and e-GP procurement milestones for investment projects. Both use the M07 snapshot.
-const CAB = { all: [32, 54, 77, 100], inv: [25, 45, 65, 75] }; // sample cumulative % targets by quarter end
-const SNAP_M = 7; // the snapshot is month 7 of 12
+let CAB = { all: [32, 54, 77, 100], inv: [25, 45, 65, 75] }; // sample cumulative % targets by quarter end
+let SNAP_M = 7; // the month of the year the figures run to (round C4 sets it from the demo date)
 // Remaining plan is assumed to be delivered at the same pace as so far (actual ÷ plan), capped at 105%.
 function fcast(x, m) {
   const r = Math.min(1.05, x.plan ? x.actual / x.plan : 1), planAt = Math.min(x.alloc, x.plan * PLAN_F[m - 1] / PLAN_F[SNAP_M - 1]);

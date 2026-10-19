@@ -1263,6 +1263,13 @@ ul.plain { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-di
 .cr-undo { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); z-index: 60; display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 16px; border-radius: 12px; background: var(--ink); color: var(--bg); box-shadow: 0 8px 24px rgba(10, 11, 34, .25); max-width: calc(100vw - 32px); }
 .cr-undo .btn { background: transparent; color: var(--bg); border-color: currentColor; }
 @media (max-width: 560px) { .cr-grid { grid-template-columns: 1fr; } .cr-kv { grid-template-columns: 1fr; gap: 2px 0; } .cr-kv dd { margin-bottom: 8px; } .cr-bar .cr-q { max-width: none; } }
+
+/* Round C4: the demo date */
+.asof { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: -4px 0 14px; }
+.asof label { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px; }
+.asof label svg { width: 16px; height: 16px; }
+.asof-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; margin: 0 0 14px; border: 1px solid var(--warn); background: var(--warn-soft); color: var(--ink); border-radius: 10px; font-size: 13px; }
+.asof-bar svg { width: 15px; height: 15px; vertical-align: -3px; }
 /* ==========================================================================
    AI co-work (round 27): side panel and full page. Loaded after calm.css.
    ========================================================================== */
@@ -1422,7 +1429,12 @@ ul.plain { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-di
 
 /* ---- 00-core.js ---- */
 // Core runtime: i18n, formatting, per-organization state, roles, router, audit, notifications.
-const TODAY = "2026-10-16";
+// TODAY is the demo date. Round C4 lets the demo move it ("as of month"); REAL_TODAY keeps the starting date.
+let TODAY = "2026-10-16";
+const REAL_TODAY = TODAY;
+// Thai fiscal year (B.E.) of a date: October starts the next year. CUR_FY is the year being spent.
+const fyOf = iso => { const [y, m] = String(iso).split("-").map(Number); return y + 543 + (m >= 10 ? 1 : 0); };
+const CUR_FY = fyOf(TODAY);
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
 const store = {
@@ -1451,7 +1463,7 @@ const fyLabel = fy => L(`ปีงบประมาณ พ.ศ. ${fy}`, `FY${fy
 
 // ---------- organizations and state ----------
 const SEEDS = {}; // id -> { name: [th, en], seed: () => state }, registered by data files
-const DATA_V = 36; // bump when the seed shape changes so saved demo state is reseeded
+const DATA_V = 37; // bump when the seed shape changes so saved demo state is reseeded
 let ORG = "sample";
 let S = null;
 const key = () => "fisko-v1-" + ORG;
@@ -2033,6 +2045,7 @@ function buildOrg(cfg) {
   seedFinanceFN5(s);
   seedFinanceFN6(s);
   seedFinanceNB(s);
+  if (typeof seedLiveYear === "function") seedLiveYear(s);
   s.audit.unshift(
     { t: "2026-10-15T10:00", user: EX, role: "exec", action: ["อนุมัติเบิกจ่าย", "Approved a payment"], target: "PY-2570-001 CT-2570-001" },
     { t: "2026-10-14T15:00", user: FN, role: "fin", action: ["ขออนุมัติเบิกจ่าย", "Requested a payment approval"], target: "PY-2570-001 CT-2570-001" },
@@ -2869,7 +2882,7 @@ function monAlerts() {
   const out = [];
   S.dash.projects.forEach(p => { const v = pct(p.actual, p.plan); if (v < 90) out.push({ id: "beh-" + p.id, lv: v < 70 ? "bad" : "warn", t: `${unitName(p.unit)} · ${tx(p.name)}`, d: `${L("เบิกจ่ายต่ำกว่าแผน", "Behind plan by")} ${fmt(100 - v, 0)}%`, go: () => { MON_TAB = "drill"; DRILL_U = p.unit; DRILL_P = p.id; } }); });
   Object.keys(S.progress).forEach(id => { const pr = S.progress[id], p = S.dash.projects.find(x => x.id === id); if (p && pr.status !== "on") out.push({ id: "rep-" + id + pr.t, lv: pr.status === "risk" ? "bad" : "warn", t: `${unitName(p.unit)} · ${tx(p.name)}`, d: `${tx(PSTAT[pr.status][0])}: ${tx(pr.issue)}`, go: () => { MON_TAB = "progress"; } }); });
-  (S.allocs[2570] ? S.allocs[2570].transfers : []).filter(t => t.status === "pending").forEach(t => out.push({ id: "tr-" + t.id, lv: "info", t: `${L("โอนเปลี่ยนแปลงรออนุมัติ", "Transfer waiting for approval")} ${t.id}`, d: `${mb(t.amount)} ${L("ลบ.", "M")} · ${tx(t.why)}`, go: () => { ALLOC_TAB = "transfers"; go("allocation"); } }));
+  (S.allocs[CUR_FY] ? S.allocs[CUR_FY].transfers : []).filter(t => t.status === "pending").forEach(t => out.push({ id: "tr-" + t.id, lv: "info", t: `${L("โอนเปลี่ยนแปลงรออนุมัติ", "Transfer waiting for approval")} ${t.id}`, d: `${mb(t.amount)} ${L("ลบ.", "M")} · ${tx(t.why)}`, go: () => { ALLOC_TAB = "transfers"; go("allocation"); } }));
   const op = S.gfmis.filter(x => !x.ok).length;
   if (op) out.push({ id: "gf-open", lv: "warn", t: L("ผลเบิกจ่ายยังกระทบยอดไม่ครบ", "Disbursement not fully reconciled"), d: `${op} ${L("รายการต่างจาก GFMIS", "rows differ from GFMIS")}`, go: () => { MON_TAB = "import"; } });
   return out;
@@ -2892,8 +2905,8 @@ MON_BIND.alerts = () => {
 /* ---- 40c-monitor-depth.js ---- */
 // M07 deeper features (round 10): year-end disbursement forecast against the cabinet's quarterly
 // targets, and e-GP procurement milestones for investment projects. Both use the M07 snapshot.
-const CAB = { all: [32, 54, 77, 100], inv: [25, 45, 65, 75] }; // sample cumulative % targets by quarter end
-const SNAP_M = 7; // the snapshot is month 7 of 12
+let CAB = { all: [32, 54, 77, 100], inv: [25, 45, 65, 75] }; // sample cumulative % targets by quarter end
+let SNAP_M = 7; // the month of the year the figures run to (round C4 sets it from the demo date)
 // Remaining plan is assumed to be delivered at the same pace as so far (actual ÷ plan), capped at 105%.
 function fcast(x, m) {
   const r = Math.min(1.05, x.plan ? x.actual / x.plan : 1), planAt = Math.min(x.alloc, x.plan * PLAN_F[m - 1] / PLAN_F[SNAP_M - 1]);
@@ -5706,7 +5719,7 @@ function seedBudgetB3Sub(s) {
 /* ---- 47-allocation.js ---- */
 // M06 Budget Allocation (round 4): the appropriation, allocation lines by unit and project,
 // monthly spending plans, and budget transfers approved at the right level of authority.
-let ALLOC_TAB = "appropriation", ALLOC_FY = 2570, PLAN_UNIT = "";
+let ALLOC_TAB = "appropriation", ALLOC_FY = CUR_FY, PLAN_UNIT = "";
 const OPEN_UNIT = new Set();
 const ALLOC_TABS = [
   { id: "appropriation", label: ["วงเงินที่ได้รับ", "Appropriation"] },
@@ -5745,7 +5758,7 @@ ALLOC.appropriation = () => {
       <tbody>${BUDGET_TYPES.map(t => { const ap = A.byType[t.id] || 0, al = allocated(t.id); return ap || al ? `<tr><td>${tx(t.name)}</td><td class="n">${mb(ap)}</td><td class="n">${mb(al)}</td><td class="n" style="color:var(--${ap - al < 0 ? "bad" : "ink"})">${mb(ap - al)}</td>
         <td><div class="bar"><i style="width:${ap ? Math.min(100, al / ap * 100) : 0}%"></i></div></td></tr>` : ""; }).join("")}</tbody>
       <tfoot><tr><td>${L("รวม", "Total")}</td><td class="n">${mb(A.total)}</td><td class="n">${mb(allocated())}</td><td class="n">${mb(A.total - allocated())}</td><td></td></tr></tfoot></table></div></section>
-  ${ALLOC_FY === 2570 ? `<section class="panel"><header><h2>${L("ปีงบประมาณ 2571", "FY2571")}</h2></header><div class="body row">
+  ${ALLOC_FY === CUR_FY ? `<section class="panel"><header><h2>${L("ปีงบประมาณ 2571", "FY2571")}</h2></header><div class="body row">
     ${S.allocs[2571] ? `<span>${L("สร้างร่างการจัดสรรปี 2571 แล้ว", "The FY2571 draft allocation exists")}</span><button class="btn" type="button" data-fy="2571">${L("เปิดปี 2571", "Open FY2571")}</button>`
       : closed ? `<span>${L("ผลพิจารณาจากสำนักงบประมาณพร้อมแล้ว", "The Budget Bureau's results are ready")}</span>${canAlloc() || ROLE === "plan" ? `<button class="btn primary" type="button" id="mk-2571">${L("สร้างร่างการจัดสรรปี 2571 จากผลพิจารณา", "Create the FY2571 draft from the results")}</button>` : ""}`
       : `<span class="sub">${L("ปี 2571 จะเปิดเมื่อกองแผนงานส่งต่อผลพิจารณาจาก M05", "FY2571 opens once Planning hands over the results from M05")}</span>`}</div></section>` : ""}`;
@@ -5822,7 +5835,7 @@ ALLOC.transfers = () => {
 };
 
 VIEWS.allocation = () => {
-  if (!S.allocs[ALLOC_FY]) ALLOC_FY = 2570;
+  if (!S.allocs[ALLOC_FY]) ALLOC_FY = CUR_FY;
   const fys = Object.keys(S.allocs).map(Number).sort();
   return `
   <div class="head"><div><div class="eyebrow">M06 · Budget Allocation</div><h1>${L("จัดสรรงบประมาณ", "Budget allocation")} ${fyLabel(ALLOC_FY)}</h1>
@@ -5912,7 +5925,8 @@ BIND.allocation = () => {
 // M06 deeper features (round 9): quarterly allotment releases requested by Finance, and carry-over of
 // committed funds into the next fiscal year (with contract evidence and deadline checks).
 ALLOC_TABS.push({ id: "releases", label: ["งวดเงิน", "Allotment releases"] }, { id: "carry", label: ["กันเงินเหลื่อมปี", "Carry-over"] });
-const CUR_Q = 1; // 16 Oct 2026 falls in Q1 of FY2570 (Oct–Dec)
+// The quarter of the fiscal year being spent (1 to 4); round C4 moves it with the demo date.
+let CUR_Q = 1;
 const qPlan = (lines, n) => sumv(lines.map(l => sumv(l.plan.slice(n * 3, n * 3 + 3))));
 const REL_ST = { approved: [["อนุมัติแล้ว", "Released"], "p-ok"], pending: [["รออนุมัติ", "Pending"], "p-warn"] };
 
@@ -5974,21 +5988,21 @@ function bindReleases() {
 }
 
 // ---------- carry-over ----------
-const FY_END = "2027-09-30";
+const FY_END = `${CUR_FY - 543}-09-30`;
 const CF_ST = { open: [["อยู่ระหว่างเบิกจ่าย", "Being paid"], "p-info"], extension: [["ขอขยายเวลา", "Extension requested"], "p-warn"], extended: [["ขยายเวลาแล้ว", "Extended"], "p-ok"],
   closed: [["เบิกจ่ายครบ", "Fully paid"], "p-mute"], pending: [["รออนุมัติ", "Awaiting approval"], "p-warn"], approved: [["อนุมัติกันเงิน", "Approved"], "p-ok"], rejected: [["ไม่อนุมัติ", "Rejected"], "p-bad"] };
 const cfChecks = c => [
   [!!(c.po || "").trim(), L("มีเลขที่สัญญา / ใบสั่งซื้อ", "Contract or PO number")],
-  [!!c.poDate && c.poDate <= FY_END, L("ลงนามสัญญาภายใน 30 ก.ย. 2570", "Signed by 30 Sep 2027")],
+  [!!c.poDate && c.poDate <= FY_END, L(`ลงนามสัญญาภายใน 30 ก.ย. ${CUR_FY}`, `Signed by 30 Sep ${CUR_FY - 543}`)],
   [c.amount > 0 && c.amount <= (lineOf(c.line) || { amount: 0 }).amount, L("ไม่เกินวงเงินของรายการ", "Within the line's amount")],
   [TODAY <= FY_END, L("ยื่นก่อนสิ้นปีงบประมาณ", "Filed before the fiscal year ends")],
 ];
 ALLOC.carry = () => {
-  if (ALLOC_FY !== 2570) return `<section class="panel"><div class="body sub">${L("การกันเงินเหลื่อมปีใช้กับปีงบประมาณที่กำลังใช้จ่าย (2570)", "Carry-over applies to the year being spent (FY2570)")}</div></section>`;
+  if (ALLOC_FY !== CUR_FY) return `<section class="panel"><div class="body sub">${L("การกันเงินเหลื่อมปีใช้กับปีงบประมาณที่กำลังใช้จ่าย (2570)", "Carry-over applies to the year being spent (FY2570)")}</div></section>`;
   const C = S.carry, fin = canAlloc(), ex = ROLE === "exec";
   const lines = AL().lines.filter(l => l.type === "inv" || l.type === "ope");
   return `
-  <section class="panel"><header><h2>${L("เงินกันเหลื่อมปีจากปี 2569", "Funds carried over from FY2569")}</h2><span class="sp"></span><span class="sub">${L("ต้องเบิกจ่ายภายใน 31 มี.ค. 2570 หากไม่ขยายเวลา", "Must be paid by 31 Mar 2027 unless extended")}</span></header>
+  <section class="panel"><header><h2>${L(`เงินกันเหลื่อมปีจากปี ${CUR_FY - 1}`, `Funds carried over from FY${CUR_FY - 1}`)}</h2><span class="sp"></span><span class="sub">${L("ต้องเบิกจ่ายภายใน 31 มี.ค. 2570 หากไม่ขยายเวลา", "Must be paid by 31 Mar 2027 unless extended")}</span></header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("รายการ", "Item")}</th><th>${L("สัญญา", "Contract")}</th><th class="n">${L("กันไว้ (ลบ.)", "Carried (M)")}</th><th style="width:150px">${L("เบิกจ่ายแล้ว", "Paid")}</th><th>${L("กำหนด", "Deadline")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
       <tbody>${C.prev.map(c => { const p = c.amount ? c.paid / c.amount : 0, left = c.amount - c.paid;
         return `<tr><td class="mono">${c.id}</td><td>${esc(tx(c.name))}<div class="sub">${unitName(c.unit)}</div></td><td class="mono sub">${c.po}</td><td class="n">${mb(c.amount)}</td>
@@ -5997,7 +6011,7 @@ ALLOC.carry = () => {
           <td><div class="row" style="flex-wrap:nowrap">${fin && left > 0 && c.status !== "closed" ? `<input type="number" min="0.01" step="0.01" id="cp-${c.id}" style="width:84px" aria-label="${L("เบิกจ่าย (ลบ.)", "Payment (M)")}" placeholder="${L("ลบ.", "M")}"><button class="btn" type="button" data-cpay="${c.id}">${L("บันทึกเบิกจ่าย", "Record payment")}</button>` : ""}
             ${fin && c.status === "open" && p < 0.5 ? `<button class="btn" type="button" data-cext="${c.id}">${L("ขอขยายเวลา", "Ask to extend")}</button>` : ""}
             ${ex && c.status === "extension" ? `<button class="btn primary" type="button" data-cextok="${c.id}">${L("อนุมัติขยายเวลา", "Approve extension")}</button>` : ""}${historyBtn(c.id, c.id)}</div></td></tr>`; }).join("")}</tbody></table></div></section>
-  <section class="panel"><header><h2>${L("ขอกันเงินปี 2570 ไว้เบิกเหลื่อมปี", "FY2570 carry-over requests")}</h2><span class="sp"></span><span class="sub">${L("ยื่นได้ถึง", "File by")} ${fdate(FY_END)} · ${daysUntil(FY_END)} ${L("วัน", "days")}</span></header>
+  <section class="panel"><header><h2>${L(`ขอกันเงินปี ${CUR_FY} ไว้เบิกเหลื่อมปี`, `FY${CUR_FY} carry-over requests`)}</h2><span class="sp"></span><span class="sub">${L("ยื่นได้ถึง", "File by")} ${fdate(FY_END)} · ${daysUntil(FY_END)} ${L("วัน", "days")}</span></header>
     ${C.reqs.length ? `<div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("รายการ", "Line")}</th><th>${L("สัญญา", "Contract")}</th><th class="n">${L("ขอกัน (ลบ.)", "Amount (M)")}</th><th>${L("ผลตรวจ", "Checks")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
       <tbody>${C.reqs.map(c => { const l = lineOf(c.line), ch = cfChecks(c);
         return `<tr><td class="mono">${c.id}</td><td>${l ? esc(lineLabel(l)) : c.line}</td><td class="sub"><span class="mono">${esc(c.po)}</span> · ${fdate(c.poDate)}${c.vendor ? `<div>${esc(c.vendor)}</div>` : ""}</td><td class="n">${mb(c.amount)}</td>
@@ -6023,13 +6037,13 @@ function bindCarry() {
   $$("[data-cext]").forEach(b => (b.onclick = () => {
     const c = cf(b.dataset.cext); c.status = "extension";
     audit(["ขอขยายเวลาเบิกจ่ายเงินกันเหลื่อมปี", "Asked to extend a carry-over deadline"], c.id);
-    notify(["exec"], [`ขอขยายเวลาเบิกจ่ายเงินกัน ${c.id} ถึง 30 ก.ย. 2570`, `Request to extend ${c.id} to 30 Sep 2027`], "alloc-carry");
+    notify(["exec"], [`ขอขยายเวลาเบิกจ่ายเงินกัน ${c.id} ถึง 30 ก.ย. ${CUR_FY}`, `Request to extend ${c.id} to 30 Sep ${CUR_FY - 543}`], "alloc-carry");
     commit(); route(); toast(L("ส่งคำขอขยายเวลาแล้ว", "Extension requested"));
   }));
   $$("[data-cextok]").forEach(b => (b.onclick = () => {
     const c = cf(b.dataset.cextok); c.status = "extended"; c.due = FY_END;
     audit(["อนุมัติขยายเวลาเบิกจ่ายเงินกันเหลื่อมปี", "Approved a carry-over extension"], c.id);
-    notify(["fin"], [`อนุมัติขยายเวลา ${c.id} ถึง 30 ก.ย. 2570`, `${c.id} extended to 30 Sep 2027`], "alloc-carry"); commit(); route();
+    notify(["fin"], [`อนุมัติขยายเวลา ${c.id} ถึง 30 ก.ย. ${CUR_FY}`, `${c.id} extended to 30 Sep ${CUR_FY - 543}`], "alloc-carry"); commit(); route();
   }));
   const dec = (id, ok) => {
     const c = cf(id); c.status = ok ? "approved" : "rejected";
@@ -6041,7 +6055,7 @@ function bindCarry() {
   const f = $("#cf-form");
   if (f) f.onsubmit = e => {
     e.preventDefault();
-    const c = { id: `CF-2570-${String(C.reqs.length + 1).padStart(2, "0")}`, line: $("#cf-line").value, amount: Math.round(Number($("#cf-amt").value) * 1e6), po: $("#cf-po").value.trim(), poDate: $("#cf-date").value, vendor: $("#cf-vendor").value.trim(), status: "pending", t: nowIso(), by: me().id };
+    const c = { id: `CF-${CUR_FY}-${String(C.reqs.length + 1).padStart(2, "0")}`, line: $("#cf-line").value, amount: Math.round(Number($("#cf-amt").value) * 1e6), po: $("#cf-po").value.trim(), poDate: $("#cf-date").value, vendor: $("#cf-vendor").value.trim(), status: "pending", t: nowIso(), by: me().id };
     const bad = cfChecks(c).filter(x => !x[0]);
     if (bad.length) { toast(`${L("ยังยื่นไม่ได้", "Can't file yet")}: ${bad.map(x => x[1]).join(", ")}`); return; }
     C.reqs.push(c);
@@ -6076,7 +6090,7 @@ function planFromQ(r, amount) {
   ALLOC.appropriation = () => {
     let html = bv();
     const P = S.parl, done = P && P.stage >= PARL_STEPS.length;
-    if (ALLOC_FY === 2570 && !S.allocs[2571]) if (done) html = html.replace(L("สร้างร่างการจัดสรรปี 2571 จากผลพิจารณา", "Create the FY2571 draft from the results"), L("สร้างบรรทัดจัดสรรปี 2571 ตาม พ.ร.บ.", "Create FY2571 lines from the appropriation act"));
+    if (ALLOC_FY === CUR_FY && !S.allocs[2571]) if (done) html = html.replace(L("สร้างร่างการจัดสรรปี 2571 จากผลพิจารณา", "Create the FY2571 draft from the results"), L("สร้างบรรทัดจัดสรรปี 2571 ตาม พ.ร.บ.", "Create FY2571 lines from the appropriation act"));
     if (ALLOC_FY === 2571 && S.allocs[2571]) {
       const A = S.allocs[2571], linked = A.lines.filter(l => l.req).length;
       html = `<div class="alert"><div class="ic">i</div><div><b>${A.fromAct ? L("บรรทัดจัดสรรสร้างจาก พ.ร.บ. งบประมาณรายจ่ายประจำปี 2571", "Lines created from the FY2571 appropriation act") : L("ร่างการจัดสรรจากผลพิจารณาของสำนักงบประมาณ", "Draft allocation from the Budget Bureau result")}</b><p>${linked}/${A.lines.length} ${L("บรรทัดผูกกับคำขอ · แผนรายเดือนมาจากแผนรายไตรมาสของคำขอ", "lines linked to a request · monthly plans come from the request's quarterly plan")}${A.fromAct ? "" : ` · ${L("เมื่อ พ.ร.บ. มีผลใช้บังคับ ปรับวงเงินตามกฎหมายได้ที่ปุ่มด้านล่าง", "once the act is in force, update to the law's amounts with the button below")}`}</p>
@@ -6125,7 +6139,7 @@ function planFromQ(r, amount) {
 // - Spending plan versions with the clause-15 reasons and the "15 days before the year" check (FR-B-27, BR-14).
 // - Savings from contracts below the estimate (FR-B-33), carry-over rule banner (BR-17), live monitoring of
 //   FY2570 against quarterly targets that are settings (FR-B-31, BR-20, BR-21).
-const B4_FY = 2570;
+const B4_FY = CUR_FY;
 const lineStruct = l => { const lin = lineage(l.act); return { prog: (lin[0] || {}).id || "", out: (lin.find(n => n.lvl === "output") || {}).id || "" }; };
 // Actual spending of a line: approved contract payments, plus (Fisko Finance FN5) paid vouchers outside contracts
 // and budget advances (lent until cleared, then what was spent), so M06 and M07 show what Finance paid.
@@ -6502,7 +6516,8 @@ PERF_TABS.push({ id: "evaluate", label: ["ประเมินโครงก�
 const EV_CRIT = [["ความสอดคล้อง", "Relevance"], ["ประสิทธิผล", "Effectiveness"], ["ประสิทธิภาพ", "Efficiency"], ["ผลกระทบ", "Impact"], ["ความยั่งยืน", "Sustainability"]];
 let EV_OPEN = null;
 const evScore = e => { const r = e.ratings.filter(Boolean); return r.length ? r.reduce((a, b) => a + b, 0) / r.length : null; };
-const evProj = e => S.dash.projects.find(p => p.id === e.proj);
+// An evaluation can be of last year's project (round C4 keeps FY2569 in S.y2569).
+const evProj = e => S.dash.projects.find(p => p.id === e.proj) || ((S.y2569 || {}).dash || { projects: [] }).projects.find(p => p.id === e.proj);
 
 PERF.evaluate = () => {
   const E = S.evals || [], pl = ROLE === "plan";
@@ -6542,7 +6557,7 @@ function bindEvaluate() {
   const nf = $("#ev-new");
   if (nf) nf.onsubmit = ev => {
     ev.preventDefault();
-    const id = `EV-2569-${String(S.evals.length + 1).padStart(2, "0")}`;
+    const fy = fyOf(TODAY), id = `EV-${fy}-${String(S.evals.filter(x => String(x.id).startsWith(`EV-${fy}-`)).length + 1).padStart(2, "0")}`;
     S.evals.push({ id, proj: $("#ev-proj").value, status: "draft", t: nowIso(), by: me().id, ratings: [0, 0, 0, 0, 0], findings: ["", ""], lessons: [] });
     EV_OPEN = id; audit(["สร้างแบบประเมินโครงการ", "Started a project evaluation"], id); commit(); route();
   };
@@ -6586,13 +6601,15 @@ function bindEvaluate() {
 // - Recommendations to act on with deadlines (FR-B-39, section 48) and a public summary (FR-B-40, section 47).
 // Data year: FY2569, the year shown in M07 and M08.
 PERF_TABS.push({ id: "quarter", label: ["รายงานรายไตรมาส", "Quarterly reports"] }, { id: "cost", label: ["ต้นทุนต่อผลผลิต", "Cost per output"] }, { id: "stages", label: ["ประเมิน 3 จังหวะ", "Three-stage evaluation"] }, { id: "recs", label: ["ข้อเสนอแนะ", "Recommendations"] }, { id: "public", label: ["เผยแพร่", "Public page"] });
-const QR_ROUNDS = () => [
-  { id: "Q1", label: L("ไตรมาส 1 (ต.ค.–ธ.ค. 2568)", "Q1 (Oct–Dec 2025)"), end: "2025-12-31", days: 15 },
-  { id: "Q2", label: L("ไตรมาส 2 (ม.ค.–มี.ค. 2569)", "Q2 (Jan–Mar 2026)"), end: "2026-03-31", days: 15 },
-  { id: "Q3", label: L("ไตรมาส 3 (เม.ย.–มิ.ย. 2569)", "Q3 (Apr–Jun 2026)"), end: "2026-06-30", days: 15 },
-  { id: "Q4", label: L("ไตรมาส 4 (ก.ค.–ก.ย. 2569)", "Q4 (Jul–Sep 2026)"), end: "2026-09-30", days: 15 },
-  { id: "Y", label: L("รายงานประจำปี 2569", "Annual report FY2569"), end: "2026-09-30", days: 45 },
-].map(x => Object.assign(x, { due: addDays(x.end, x.days) }));
+// Rounds of the fiscal year being spent (round C4: from CUR_FY instead of FY2569).
+const QR_ROUNDS = () => { const fy = CUR_FY, ce = fy - 543, be = fy;
+  return [
+    { id: "Q1", label: L(`ไตรมาส 1 (ต.ค.–ธ.ค. ${be - 1})`, `Q1 (Oct–Dec ${ce - 1})`), end: `${ce - 1}-12-31`, days: 15 },
+    { id: "Q2", label: L(`ไตรมาส 2 (ม.ค.–มี.ค. ${be})`, `Q2 (Jan–Mar ${ce})`), end: `${ce}-03-31`, days: 15 },
+    { id: "Q3", label: L(`ไตรมาส 3 (เม.ย.–มิ.ย. ${be})`, `Q3 (Apr–Jun ${ce})`), end: `${ce}-06-30`, days: 15 },
+    { id: "Q4", label: L(`ไตรมาส 4 (ก.ค.–ก.ย. ${be})`, `Q4 (Jul–Sep ${ce})`), end: `${ce}-09-30`, days: 15 },
+    { id: "Y", label: L(`รายงานประจำปี ${be}`, `Annual report FY${be}`), end: `${ce}-09-30`, days: 45 },
+  ].map(x => Object.assign(x, { due: addDays(x.end, x.days) })); };
 let QR_ROUND = "Q4", QR_UNIT = null;
 const PERF_BIND_B5 = {};
 const qrUnits = () => [...new Set(Object.values(S.perf.outputs).length ? S.dash.projects.map(p => p.unit) : [])];
@@ -6707,7 +6724,7 @@ PERF.recs = () => {
 PERF_BIND_B5.recs = () => {
   $$("[data-recst]").forEach(s => (s.onchange = () => { const x = S.recs[s.dataset.recst]; x.status = s.value; audit(["ปรับสถานะข้อเสนอแนะ", "Updated a recommendation"], `${x.id}: ${s.value}`); commit(); route(); }));
   $$("[data-recact]").forEach(i => (i.onchange = () => { S.recs[i.dataset.recact].action = i.value; commit(); }));
-  const f = $("#rec-form"); if (f) f.onsubmit = e => { e.preventDefault(); S.recs = S.recs || []; const x = { id: `RC-2569-${String(S.recs.length + 1).padStart(2, "0")}`, text: [$("#rec-t").value, $("#rec-t").value], src: $("#rec-s").value, unit: $("#rec-u").value, due: $("#rec-d").value, status: "open" }; S.recs.push(x); notify(["div"], [`ข้อเสนอแนะใหม่ ${x.id} รอการแก้ไข`, `New recommendation ${x.id} to act on`], "perf-recs"); audit(["เพิ่มข้อเสนอแนะ", "Added a recommendation"], x.id); commit(); route(); };
+  const f = $("#rec-form"); if (f) f.onsubmit = e => { e.preventDefault(); S.recs = S.recs || []; const x = { id: `RC-${fyOf(TODAY)}-${String(S.recs.filter(r => String(r.id).startsWith(`RC-${fyOf(TODAY)}-`)).length + 1).padStart(2, "0")}`, text: [$("#rec-t").value, $("#rec-t").value], src: $("#rec-s").value, unit: $("#rec-u").value, due: $("#rec-d").value, status: "open" }; S.recs.push(x); notify(["div"], [`ข้อเสนอแนะใหม่ ${x.id} รอการแก้ไข`, `New recommendation ${x.id} to act on`], "perf-recs"); audit(["เพิ่มข้อเสนอแนะ", "Added a recommendation"], x.id); commit(); route(); };
 };
 
 // ---------- public page ----------
@@ -15261,7 +15278,7 @@ const BUD_MOD = {
   performance: { get: () => PERF_TAB, set: v => (PERF_TAB = v) },
   intel: { get: () => INTEL_TAB, set: v => (INTEL_TAB = v) },
 };
-Object.assign(GROUPS, { bud: ["งบประมาณ", "Budget"], form: ["จัดทำงบประมาณ ปี 2571", "Formulation, FY2571"], exec: ["บริหารงบประมาณ ปี 2570", "Execution, FY2570"], intel: ["ผลสัมฤทธิ์และวิเคราะห์", "Results and analysis"] });
+Object.assign(GROUPS, { bud: ["งบประมาณ", "Budget"], form: [`จัดทำงบประมาณ ปี ${CUR_FY + 1}`, `Formulation, FY${CUR_FY + 1}`], exec: [`บริหารงบประมาณ ปี ${CUR_FY}`, `Execution, FY${CUR_FY}`], intel: ["ผลสัมฤทธิ์และวิเคราะห์", "Results and analysis"] });
 APPS.budget.groups = ["bud", "form", "exec", "intel"];
 // A tab is an old key, or { id, label, keys, roles } for several keys behind one tab.
 const BUD_PAGES = [
@@ -15281,7 +15298,7 @@ const BUD_PAGES = [
     tabs: [{ id: "money", label: ["วงเงินและการจัดสรร", "Appropriation and allocation"], keys: ["appropriation", "allocate"] }, "plan", "balance", "transfers", "releases",
       { id: "carry", label: ["กันเงินและเงินเหลือจ่าย", "Carry-over and savings"], keys: ["carry", "savings"] }, "nb"] },
   { id: "dashboard", code: "B8", m: "M07", group: "exec", mod: "dashboard",
-    tabs: ["live", "drill", "forecast", "alerts", "progress", "procure", { id: "import", roles: ["plan", "exec", "fin", "audit"] }, { id: "overview", label: ["ปี 2569", "FY2569"] }] },
+    tabs: ["live", "drill", "forecast", "alerts", "progress", "procure", { id: "import", roles: ["plan", "exec", "fin", "audit"] }, { id: "overview", label: [`ปี ${CUR_FY - 1}`, `FY${CUR_FY - 1}`] }] },
   { id: "performance", code: "B9", m: "M08", group: "intel", mod: "performance",
     tabs: [{ id: "kpis", label: ["ตัวชี้วัดและ Scorecard", "KPIs and scorecard"], keys: ["kpis", "scorecard"] }, "chain", "quarter", { id: "cost", roles: ["plan", "exec", "audit"] },
       { id: "evals", label: ["รายงานและประเมินผล", "Reports and evaluation"], keys: ["report", "evaluate", "stages"], roles: ["plan", "exec", "audit"] }, "recs", { id: "public", roles: ["plan", "exec", "audit"] }] },
@@ -15398,7 +15415,7 @@ VIEWS.btoday = () => {
     <div class="kpi hl"><span class="l">${L("งานของฉัน", "My work")}</span><span class="v">${t.length}</span><span class="d" style="color:var(--rail-ink)">${t.filter(x => x.due <= TODAY).length} ${L("ถึงกำหนดหรือเลยแล้ว", "due or overdue")}</span></div>
     <div class="kpi"><span class="l">${L("กำหนดการถัดไป", "Next deadline")}</span><span class="v">${next.length ? daysUntil(next[0].date) : "–"}</span><span class="d sub">${next.length ? `${L("วัน", "days")} · ${esc(tx(next[0].name))}` : ""}</span></div>
     <div class="kpi"><span class="l">${ROLE === "div" ? L("คำขอของหน่วยงาน ปี 2571", "Your unit's FY2571 requests") : L("คำขอ ปี 2571 ที่ส่งแล้ว", "FY2571 requests sent")}</span><span class="v">${sent.length}/${R.length}</span></div>
-    <div class="kpi"><span class="l">${L("การแจ้งเตือนการใช้จ่าย ปี 2570", "FY2570 spending alerts")}</span><span class="v">${ROLE === "div" ? "–" : al.length}</span><span class="d sub">${ROLE === "div" ? L("ดูที่ B8", "See B8") : al.filter(a => a.lv === "bad").length + " " + L("รุนแรง", "serious")}</span></div>
+    <div class="kpi"><span class="l">${L(`การแจ้งเตือนการใช้จ่าย ปี ${CUR_FY}`, `FY${CUR_FY} spending alerts`)}</span><span class="v">${ROLE === "div" ? "–" : al.length}</span><span class="d sub">${ROLE === "div" ? L("ดูที่ B8", "See B8") : al.filter(a => a.lv === "bad").length + " " + L("รุนแรง", "serious")}</span></div>
   </section>
   <div class="grid2">
     <section class="panel"><header><h2>${L("งานของฉันในแอปงบประมาณ", "My work in Budget")}</h2><span class="sp"></span><span class="sub">${t.length} ${L("รายการ", "items")}</span></header>
@@ -15408,7 +15425,7 @@ VIEWS.btoday = () => {
       <ul class="tasks">${next.slice(0, 6).map(c => `<li><span class="pill ${c.role === ROLE ? "p-ok" : "p-mute"}" style="padding:2px 8px"></span>
         <div><b style="font-weight:600">${tx(c.name)}</b><div class="sub">${tx(ROLES[c.role])}</div></div>${dueText(c.date)}</li>`).join("") || `<li class="sub">${L("ไม่มีกำหนดการ", "No dates ahead")}</li>`}</ul></section>
   </div>
-  ${al.length ? `<section class="panel"><header><h2>${L("ต้องดูในปี 2570", "To watch in FY2570")}</h2><span class="sp"></span>${go2("mon-alerts", `${L("การแจ้งเตือนทั้งหมด", "All alerts")} (${al.length})`)}</header>
+  ${al.length ? `<section class="panel"><header><h2>${L(`ต้องดูในปี ${CUR_FY}`, `To watch in FY${CUR_FY}`)}</h2><span class="sp"></span>${go2("mon-alerts", `${L("การแจ้งเตือนทั้งหมด", "All alerts")} (${al.length})`)}</header>
     <div class="tbl-wrap"><table><tbody>${al.slice(0, 5).map(a => `<tr><td>${dotI(a.lv === "bad" ? "bad" : a.lv === "warn" ? "warn" : "ok")}<b style="font-weight:600">${esc(a.t)}</b><div class="sub">${esc(a.d)}</div></td></tr>`).join("")}</tbody></table></div></section>` : ""}
   <section class="panel"><header><h2>${L("หน้าในแอปงบประมาณ", "Pages in Budget")}</h2></header>
     <div class="body" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">${pages.map(x => { const n = NAV.find(y => y.id === x.id); return `<button class="btn ghost" type="button" data-bjump="${x.id}" style="justify-content:flex-start;text-align:left"><span class="mono">${x.code}</span>&nbsp;${esc(tx(x.label || n.label))}${x.m ? ` <span class="sub">· ${x.m}</span>` : ""}</button>`; }).join("")}</div></section>`;
@@ -15864,7 +15881,7 @@ CRUD.def("alCf", {
     { id: "vendor", label: ["คู่สัญญา", "Supplier"], value: c ? c.vendor : "" },
   ],
   check: v => cfChecks({ ...v }).filter(x => !x[0]).map(x => ({ f: null, m: x[1] })),
-  create: { can: () => canAlloc() && ALLOC_FY === 2570, label: ["ยื่นคำขอกันเงิน", "File carry-over request"],
+  create: { can: () => canAlloc() && ALLOC_FY === CUR_FY, label: ["ยื่นคำขอกันเงิน", "File carry-over request"],
     run: v => { const C = S.carry; C.seq = (C.seq || C.reqs.length) + 1; const c = { id: `CF-${ALLOC_FY}-${String(C.seq).padStart(2, "0")}`, line: v.line, amount: v.amount, po: v.po, poDate: v.poDate, vendor: v.vendor, status: "pending", t: nowIso(), by: me().id };
       C.reqs.push(c); audit(["ยื่นคำขอกันเงินไว้เบิกเหลื่อมปี", "Filed a carry-over request"], `${c.id} · ${c.po} · ${mb(c.amount)} M`);
       notify(["exec"], [`คำขอกันเงินเหลื่อมปี ${c.id} รออนุมัติ`, `Carry-over ${c.id} is waiting for approval`], "alloc-carry"); return c; } },
@@ -15931,9 +15948,9 @@ ALLOC.transfers = () => crudList("alTr", {
 }
 {
   const cr = ALLOC.carry;
-  ALLOC.carry = () => { const h = cr(); if (ALLOC_FY !== 2570) return h;
-    const i = h.lastIndexOf(`<section class="panel"><header><h2>${L("ขอกันเงินปี 2570 ไว้เบิกเหลื่อมปี", "FY2570 carry-over requests")}`);
-    return (i > 0 ? h.slice(0, i) : h) + crudList("alCf", { head: `<h2>${L("ขอกันเงินปี 2570 ไว้เบิกเหลื่อมปี", "FY2570 carry-over requests")}</h2><span class="sp"></span><span class="sub">${L("ยื่นได้ถึง", "File by")} ${fdate(FY_END)} · ${daysUntil(FY_END)} ${L("วัน", "days")}</span>`,
+  ALLOC.carry = () => { const h = cr(); if (ALLOC_FY !== CUR_FY) return h;
+    const i = h.lastIndexOf(`<section class="panel"><header><h2>${L(`ขอกันเงินปี ${CUR_FY} ไว้เบิกเหลื่อมปี`, `FY${CUR_FY} carry-over requests`)}`);
+    return (i > 0 ? h.slice(0, i) : h) + crudList("alCf", { head: `<h2>${L(`ขอกันเงินปี ${CUR_FY} ไว้เบิกเหลื่อมปี`, `FY${CUR_FY} carry-over requests`)}</h2><span class="sp"></span><span class="sub">${L("ยื่นได้ถึง", "File by")} ${fdate(FY_END)} · ${daysUntil(FY_END)} ${L("วัน", "days")}</span>`,
       after: `<div class="body sub">${L("ต้องมีสัญญาที่ลงนามภายในปีงบประมาณ และบันทึกในระบบ GFMIS ก่อนสิ้นปี", "Needs a contract signed within the fiscal year, recorded in GFMIS before year end")}</div>`, empty: L("ยังไม่มีคำขอกันเงิน", "No carry-over requests yet") }); };
 }
 // Savings: a decision can be reversed while no transfer has been made from it (FR-C-33).
@@ -16576,6 +16593,129 @@ function bindParl2() {
   const bb = BIND.submission;
   BIND.submission = () => { bb(); if (SUB_TAB === "parliament") bindParl2(); };
 }
+
+/* ---- 80-live-year.js ---- */
+// B8 Monitoring and B9 Performance on the year being spent (round C4, Budget CRUD design chapters 9 and 10).
+// - S.dash, which every B8/B9 screen reads, is rebuilt on each route from the FY2570 allocation lines (one project per
+//   line): plan to date from the line's monthly plan, actual from the imported GFMIS disbursement (S.disb) or what
+//   Finance has paid, whichever is higher. FY2569 stays as read-only history in S.y2569 (its dashboard, progress
+//   reports, procurement milestones, outputs, quarterly reports, unit costs and GFMIS rows); the "FY2569" tab and old
+//   evaluations read it.
+// - "As of month" moves the demo date (TODAY) to the end of a month of the year; going forward imports simulated
+//   GFMIS disbursement for the months that have none (SIM-04). A banner shows on every page while the date is moved.
+// - Quarter, forecast month and targets come from the date and the M10 settings instead of fixed values.
+const ACT_F_2569 = ACT_F.slice(); // the FY2569 sample shape, for the history tab
+const monthIdx = () => { const [y, m] = TODAY.split("-").map(Number); return Math.max(0, Math.min(11, (y - (CUR_FY - 544)) * 12 + (m - 10))); };
+// Deterministic "random" factor so a simulated import gives the same figures every time.
+const simF = (id, m) => { let h = 0; for (const c of `${id}|${m}`) h = (h * 31 + c.charCodeAt(0)) >>> 0; return 0.7 + (h % 36) / 100; };
+const lineActual = (l, mi) => { const d = (S.disb || {})[l.id], imp = d ? sumv(d.slice(0, mi + 1).map(x => x || 0)) : 0; return Math.max(imp, typeof linePaid === "function" ? linePaid(l.id) : 0); };
+
+function liveDash() {
+  const A = S.allocs && S.allocs[CUR_FY]; if (!A) return S.dash;
+  const mi = monthIdx(), L2 = A.lines.filter(l => !l.cancelled && l.amount > 0);
+  const projects = L2.map(l => ({ id: l.id, line: l.id, unit: l.unit, name: l.name, type: l.type, alloc: l.amount / 1e6, plan: sumv((l.plan || []).slice(0, mi + 1)) / 1e6, actual: lineActual(l, mi) / 1e6 }));
+  const units = [...new Set(projects.map(p => p.unit))].map(u => { const ps = projects.filter(p => p.unit === u), sum = k => sumv(ps.map(p => p[k]));
+    const risk = ps.map(p => S.progress[p.id]).find(pr => pr && pr.status === "risk");
+    return { unit: u, alloc: sum("alloc"), plan: sum("plan"), actual: sum("actual"), reason: risk ? risk.issue : undefined }; });
+  return { fy: CUR_FY, asOf: TODAY, live: true, month: mi + 1, units, projects };
+}
+function syncDash() {
+  if (!S || !S.allocs || !S.allocs[CUR_FY] || !S.y2569) return;
+  S.dash = liveDash();
+  const mi = monthIdx(); CUR_Q = Math.floor(mi / 3) + 1; SNAP_M = mi + 1;
+  if (typeof spendT === "function") { const T = spendT(); CAB = { all: T.q, inv: CAB.inv }; }
+  // The forecast scales past months by the cumulative actual shape (ACT_F); for the live year that shape is the real one.
+  const A = S.allocs[CUR_FY], cum = Array.from({ length: mi + 1 }, (_, m) => sumv(A.lines.filter(l => !l.cancelled).map(l => lineActual(l, m))));
+  ACT_F.length = 0; cum.forEach((v, m) => ACT_F.push(cum[mi] ? Math.max(0.0001, v / cum[mi]) * PLAN_F[mi] : PLAN_F[m]));
+  // Every KPI can take a result this year, including ones created in B2 (FR-C-37).
+  if (S.perf && typeof allKpis === "function") allKpis().forEach(({ k }) => { if (!S.perf.kpis[k.id]) S.perf.kpis[k.id] = { target: k.targets[0], result: null, t: "" }; });
+}
+{
+  const br = route;
+  route = function () { TODAY = (S && S.asOf) || REAL_TODAY; syncDash(); const r = br.apply(this, arguments); asOfBanner(); return r; };
+}
+// Seeding always starts from the real date.
+Object.keys(SEEDS).forEach(k => { const sd = SEEDS[k].seed; SEEDS[k].seed = function () { TODAY = REAL_TODAY; return sd.apply(this, arguments); }; });
+
+// ---------- simulated GFMIS import (SIM-04) ----------
+function simDisb(toIdx) {
+  const A = S.allocs[CUR_FY]; S.disb = S.disb || {}; let n = 0;
+  A.lines.filter(l => !l.cancelled && l.plan).forEach(l => { const d = (S.disb[l.id] = S.disb[l.id] || Array(12).fill(null));
+    for (let m = 0; m <= toIdx; m++) if (d[m] == null) { d[m] = Math.round(l.plan[m] * simF(l.id, m)); n++; } });
+  // reconciliation rows: one per unit for the latest month, one of them off by a posting-period difference
+  const units = [...new Set(A.lines.filter(l => !l.cancelled).map(l => l.unit))];
+  S.gfmis = units.map((u, i) => { const gf = sumv(A.lines.filter(l => l.unit === u && S.disb[l.id]).map(l => S.disb[l.id][toIdx] || 0)), off = i === 1 ? Math.round(gf * 0.04) : 0;
+    return { id: "G" + (i + 1), code: `${unitOf(u).code || u}-${CUR_FY}-M${String(toIdx + 1).padStart(2, "0")}`, unit: u, gf, fk: gf - off, ok: !off, reason: off ? "" : "timing" }; });
+  const g = S.integrations.find(i => i.id === "IF-02"); if (g) { g.last = `${TODAY}T06:00`; g.records = (g.records || 0) + n; g.status = S.gfmis.some(x => !x.ok) ? "warn" : "ok"; }
+  return n;
+}
+
+// ---------- as of month ----------
+const FY_MONTH_ENDS = () => Array.from({ length: 12 }, (_, i) => { const y = CUR_FY - 544 + (i >= 3 ? 1 : 0), m = ((i + 9) % 12) + 1, last = new Date(Date.UTC(y, m, 0)).getUTCDate(); return `${y}-${String(m).padStart(2, "0")}-${last}`; });
+const asOfOpts = () => FY_MONTH_ENDS().map((d, i) => [i === 0 ? REAL_TODAY : d, `${FY_MONTHS[LANG][i]} ${i < 3 ? CUR_FY - 1 : CUR_FY}`]);
+function setAsOf(iso) {
+  const snap = crSnap(), was = TODAY;
+  S.asOf = iso === REAL_TODAY ? null : iso; TODAY = S.asOf || REAL_TODAY; syncDash();
+  if (typeof QR_ROUND !== "undefined") QR_ROUND = "Q" + CUR_Q; // the quarterly report opens on the quarter the demo is in
+  const n = TODAY > was ? simDisb(monthIdx()) : 0;
+  audit(["เปลี่ยนวันที่สาธิต", "Moved the demo date"], `${was} → ${TODAY}${n ? ` · ${L("นำเข้าผลเบิกจ่ายจำลอง", "simulated disbursement imported")} ${n}` : ""}`);
+  commit(); renderShell(); route(); crUndoOffer(snap, `${L("ณ", "As of")} ${fdate(TODAY)}`);
+}
+function asOfBanner() {
+  const v = $("#view"); if (!v || !S.asOf || v.querySelector(".asof-bar")) return;
+  const b = document.createElement("div"); b.className = "asof-bar"; b.setAttribute("role", "status");
+  b.innerHTML = `<span>${svgI("cal")} <b>${L("โหมดสาธิต", "Demo mode")}</b> · ${L("ข้อมูล ณ", "as of")} ${fdate(TODAY)} (${L("เดือนที่", "month")} ${monthIdx() + 1}/12 ${L("ของปี", "of FY")} ${CUR_FY})</span><span class="sp"></span><button class="btn ghost" type="button" data-asof-reset>${L("กลับวันจริง", "Back to today")} (${fdate(REAL_TODAY)})</button>`;
+  v.prepend(b);
+}
+document.addEventListener("click", e => { if (e.target.closest("[data-asof-reset]")) setAsOf(REAL_TODAY); const s = e.target.closest("[data-simgf]"); if (s) { const snap = crSnap(), n = simDisb(monthIdx()); audit(["นำเข้าไฟล์ผลเบิกจ่ายจำลอง", "Imported a simulated disbursement file"], `${n}`); commit(); renderShell(); route(); crUndoOffer(snap, `${L("นำเข้าแล้ว", "Imported")} ${n} ${L("รายการ", "rows")}`); } });
+document.addEventListener("change", e => { if (e.target.id === "asof-sel") setAsOf(e.target.value); });
+
+// B8 shows the control; the FY2569 tab reads the history.
+{
+  const v = VIEWS.dashboard, b = BIND.dashboard;
+  const hist = fn => { if (MON_TAB !== "overview" || !S.y2569) return fn(); const live = S.dash, af = ACT_F.slice(); S.dash = S.y2569.dash; ACT_F.length = 0; ACT_F.push(...ACT_F_2569); try { return fn(); } finally { S.dash = live; ACT_F.length = 0; ACT_F.push(...af); } };
+  VIEWS.dashboard = () => {
+    const h = hist(v), sel = `<div class="asof"><label for="asof-sel">${svgI("cal")} ${L("ข้อมูล ณ", "Figures as of")}</label><select id="asof-sel">${asOfOpts().map(([d, l]) => `<option value="${d}" ${d === TODAY || (d === REAL_TODAY && !S.asOf) ? "selected" : ""}>${l}</option>`).join("")}</select><span class="sub">${L("เลื่อนเดือนเพื่อสาธิต · ไปข้างหน้าจะนำเข้าผลเบิกจ่ายจำลอง", "Move the month for a demo · going forward imports simulated disbursement")}</span></div>`;
+    return MON_TAB === "overview" ? h.replace(/(<div class="head">[\s\S]*?<\/div><\/div>)/, `$1<div class="alert"><div class="ic">i</div><div><b>${L("ข้อมูลปี", "FY")} ${CUR_FY - 1} · ${L("ประวัติ อ่านอย่างเดียว", "history, read-only")}</b></div></div>`) : h.replace(/(<div class="head">[\s\S]*?<\/div>)(\s*<div class="tabs")/, `$1${sel}$2`).replace(/<p>[\s\S]*?<\/p>/, `<p>${fyLabel(CUR_FY)} · ${L("ข้อมูลสะสม ณ", "Cumulative to")} ${fdate(TODAY)} (${L("เดือนที่", "month")} ${monthIdx() + 1} ${L("จาก 12", "of 12")}) · ${L("จากบรรทัดจัดสรร B7 และผลเบิกจ่าย GFMIS", "from the B7 allocation lines and GFMIS disbursement")}</p>`);
+  };
+  BIND.dashboard = () => hist(b);
+}
+// The import tab gets the simulated file.
+{
+  const im = MON_PANELS.import;
+  MON_PANELS.import = () => im() + (ROLE === "fin" || ROLE === "plan" ? `<section class="panel"><header><h2>${L("จำลองไฟล์ GFMIS", "Simulated GFMIS file")}</h2><span class="sp"></span><span class="mono sub">SIM-04</span></header>
+    <div class="body row" style="flex-wrap:wrap;gap:10px"><span class="sub">${L("สร้างผลเบิกจ่ายรายบรรทัดถึงเดือนปัจจุบัน ตามแผนรายเดือน × 70–105%", "Creates disbursement per line up to this month: the monthly plan × 70–105%")}</span><button class="btn" type="button" data-simgf>${L("นำเข้าไฟล์จำลองถึง", "Import a simulated file to")} ${FY_MONTHS[LANG][monthIdx()]}</button></div></section>` : "");
+}
+
+// ---------- seed: FY2569 into history, FY2570 records per allocation line ----------
+function seedLiveYear(s) {
+  const A = s.allocs && s.allocs[CUR_FY]; if (!A || !s.dash) return;
+  s.y2569 = { fy: s.dash.fy, dash: s.dash, progress: s.progress, proc: s.proc, outputs: s.perf.outputs, qrep: s.qrep, lastCost: s.lastCost, gfmis: s.gfmis };
+  const L2 = A.lines.filter(l => !l.cancelled);
+  s.progress = {}; s.proc = {}; s.lastCost = {}; s.qrep = { Q1: {}, Q2: {}, Q3: {}, Q4: {}, Y: {} }; s.asOf = null;
+  // last year's unit costs carry over where the line continues an earlier project of the same unit and type
+  s.perf.outputs = {};
+  L2.filter(l => l.type !== "per").forEach(l => {
+    const inv = l.type === "inv", t = inv ? 100 : Math.max(10, Math.round(l.amount / 1e6 * 120));
+    s.perf.outputs[l.id] = { name: inv ? [`ความก้าวหน้าของงาน ${l.name[0]}`, `Progress of ${l.name[1]}`] : [`ผู้รับบริการจาก ${l.name[0]}`, `People served by ${l.name[1]}`], unit: inv ? ["ร้อยละ", "%"] : ["ราย", "people"], target: t, result: null, kpi: null };
+    const old = (s.y2569.dash.projects || []).find(p => p.unit === l.unit && p.type === l.type), oc = old && s.y2569.lastCost && s.y2569.lastCost[old.id];
+    if (oc && !inv) s.lastCost[l.id] = Math.round(l.amount / t * 0.97);
+  });
+  // investment lines: e-GP milestones from early October, two already started
+  const day = (iso, n) => { const [y, m, dd] = iso.split("-").map(Number); return new Date(Date.UTC(y, m - 1, dd + n)).toISOString().slice(0, 10); };
+  L2.filter(l => l.type === "inv").forEach((l, i) => { const start = day(`${CUR_FY - 544}-10-01`, i * 5);
+    s.proc[l.id] = [0, 1, 2, 3, 4].map(n => { const plan = day(start, n * 45 + (n > 2 ? 30 : 0)); return { plan, actual: n === 0 && i < 2 ? day(plan, i * 3) : null }; }); });
+  // October so far: about half a month of the plan, as an imported GFMIS file
+  s.disb = {}; L2.forEach(l => { const d = (s.disb[l.id] = Array(12).fill(null)); d[0] = Math.round((l.plan ? l.plan[0] : 0) * (0.35 + (l.id.length % 3) * 0.1)); });
+  const units = [...new Set(L2.map(l => l.unit))];
+  s.gfmis = units.map((u, i) => { const gf = sumv(L2.filter(l => l.unit === u).map(l => s.disb[l.id][0] || 0)), off = i === 1 ? Math.round(gf * 0.05) : 0;
+    return { id: "G" + (i + 1), code: `${u}-${CUR_FY}-M01`, unit: u, gf, fk: gf - off, ok: !off, reason: off ? "" : "timing" }; });
+  // one unit has already reported progress on a line, with a risk
+  const inv = L2.find(l => l.type === "inv");
+  if (inv) s.progress[inv.id] = { pct: 4, status: "risk", issue: ["ร่าง TOR ยังไม่ผ่านการพิจารณา คาดประกาศเชิญชวนช้ากว่าแผน 3 สัปดาห์", "The TOR draft isn't approved; the invitation will be about three weeks late"], next: Math.round((inv.plan ? inv.plan[1] : 0) / 1e5) / 10, t: `${TODAY}T09:00`, by: (s.users.find(u => u.role === "div") || {}).id };
+}
+// B9 quarterly reports open on the current quarter of the year being spent.
+QR_ROUND = "Q1";
 
 /* ---- 99-boot.js ---- */
 // Boot: pick the saved organization, load its state, draw the shell and the current page.

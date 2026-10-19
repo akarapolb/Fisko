@@ -145,7 +145,7 @@ function monAlerts() {
   const out = [];
   S.dash.projects.forEach(p => { const v = pct(p.actual, p.plan); if (v < 90) out.push({ id: "beh-" + p.id, lv: v < 70 ? "bad" : "warn", t: `${unitName(p.unit)} · ${tx(p.name)}`, d: `${L("เบิกจ่ายต่ำกว่าแผน", "Behind plan by")} ${fmt(100 - v, 0)}%`, go: () => { MON_TAB = "drill"; DRILL_U = p.unit; DRILL_P = p.id; } }); });
   Object.keys(S.progress).forEach(id => { const pr = S.progress[id], p = S.dash.projects.find(x => x.id === id); if (p && pr.status !== "on") out.push({ id: "rep-" + id + pr.t, lv: pr.status === "risk" ? "bad" : "warn", t: `${unitName(p.unit)} · ${tx(p.name)}`, d: `${tx(PSTAT[pr.status][0])}: ${tx(pr.issue)}`, go: () => { MON_TAB = "progress"; } }); });
-  (S.allocs[2570] ? S.allocs[2570].transfers : []).filter(t => t.status === "pending").forEach(t => out.push({ id: "tr-" + t.id, lv: "info", t: `${L("โอนเปลี่ยนแปลงรออนุมัติ", "Transfer waiting for approval")} ${t.id}`, d: `${mb(t.amount)} ${L("ลบ.", "M")} · ${tx(t.why)}`, go: () => { ALLOC_TAB = "transfers"; go("allocation"); } }));
+  (S.allocs[CUR_FY] ? S.allocs[CUR_FY].transfers : []).filter(t => t.status === "pending").forEach(t => out.push({ id: "tr-" + t.id, lv: "info", t: `${L("โอนเปลี่ยนแปลงรออนุมัติ", "Transfer waiting for approval")} ${t.id}`, d: `${mb(t.amount)} ${L("ลบ.", "M")} · ${tx(t.why)}`, go: () => { ALLOC_TAB = "transfers"; go("allocation"); } }));
   const op = S.gfmis.filter(x => !x.ok).length;
   if (op) out.push({ id: "gf-open", lv: "warn", t: L("ผลเบิกจ่ายยังกระทบยอดไม่ครบ", "Disbursement not fully reconciled"), d: `${op} ${L("รายการต่างจาก GFMIS", "rows differ from GFMIS")}`, go: () => { MON_TAB = "import"; } });
   return out;

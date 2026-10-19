@@ -1,7 +1,8 @@
 // M06 deeper features (round 9): quarterly allotment releases requested by Finance, and carry-over of
 // committed funds into the next fiscal year (with contract evidence and deadline checks).
 ALLOC_TABS.push({ id: "releases", label: ["งวดเงิน", "Allotment releases"] }, { id: "carry", label: ["กันเงินเหลื่อมปี", "Carry-over"] });
-const CUR_Q = 1; // 16 Oct 2026 falls in Q1 of FY2570 (Oct–Dec)
+// The quarter of the fiscal year being spent (1 to 4); round C4 moves it with the demo date.
+let CUR_Q = 1;
 const qPlan = (lines, n) => sumv(lines.map(l => sumv(l.plan.slice(n * 3, n * 3 + 3))));
 const REL_ST = { approved: [["อนุมัติแล้ว", "Released"], "p-ok"], pending: [["รออนุมัติ", "Pending"], "p-warn"] };
 
@@ -63,21 +64,21 @@ function bindReleases() {
 }
 
 // ---------- carry-over ----------
-const FY_END = "2027-09-30";
+const FY_END = `${CUR_FY - 543}-09-30`;
 const CF_ST = { open: [["อยู่ระหว่างเบิกจ่าย", "Being paid"], "p-info"], extension: [["ขอขยายเวลา", "Extension requested"], "p-warn"], extended: [["ขยายเวลาแล้ว", "Extended"], "p-ok"],
   closed: [["เบิกจ่ายครบ", "Fully paid"], "p-mute"], pending: [["รออนุมัติ", "Awaiting approval"], "p-warn"], approved: [["อนุมัติกันเงิน", "Approved"], "p-ok"], rejected: [["ไม่อนุมัติ", "Rejected"], "p-bad"] };
 const cfChecks = c => [
   [!!(c.po || "").trim(), L("มีเลขที่สัญญา / ใบสั่งซื้อ", "Contract or PO number")],
-  [!!c.poDate && c.poDate <= FY_END, L("ลงนามสัญญาภายใน 30 ก.ย. 2570", "Signed by 30 Sep 2027")],
+  [!!c.poDate && c.poDate <= FY_END, L(`ลงนามสัญญาภายใน 30 ก.ย. ${CUR_FY}`, `Signed by 30 Sep ${CUR_FY - 543}`)],
   [c.amount > 0 && c.amount <= (lineOf(c.line) || { amount: 0 }).amount, L("ไม่เกินวงเงินของรายการ", "Within the line's amount")],
   [TODAY <= FY_END, L("ยื่นก่อนสิ้นปีงบประมาณ", "Filed before the fiscal year ends")],
 ];
 ALLOC.carry = () => {
-  if (ALLOC_FY !== 2570) return `<section class="panel"><div class="body sub">${L("การกันเงินเหลื่อมปีใช้กับปีงบประมาณที่กำลังใช้จ่าย (2570)", "Carry-over applies to the year being spent (FY2570)")}</div></section>`;
+  if (ALLOC_FY !== CUR_FY) return `<section class="panel"><div class="body sub">${L("การกันเงินเหลื่อมปีใช้กับปีงบประมาณที่กำลังใช้จ่าย (2570)", "Carry-over applies to the year being spent (FY2570)")}</div></section>`;
   const C = S.carry, fin = canAlloc(), ex = ROLE === "exec";
   const lines = AL().lines.filter(l => l.type === "inv" || l.type === "ope");
   return `
-  <section class="panel"><header><h2>${L("เงินกันเหลื่อมปีจากปี 2569", "Funds carried over from FY2569")}</h2><span class="sp"></span><span class="sub">${L("ต้องเบิกจ่ายภายใน 31 มี.ค. 2570 หากไม่ขยายเวลา", "Must be paid by 31 Mar 2027 unless extended")}</span></header>
+  <section class="panel"><header><h2>${L(`เงินกันเหลื่อมปีจากปี ${CUR_FY - 1}`, `Funds carried over from FY${CUR_FY - 1}`)}</h2><span class="sp"></span><span class="sub">${L("ต้องเบิกจ่ายภายใน 31 มี.ค. 2570 หากไม่ขยายเวลา", "Must be paid by 31 Mar 2027 unless extended")}</span></header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("รายการ", "Item")}</th><th>${L("สัญญา", "Contract")}</th><th class="n">${L("กันไว้ (ลบ.)", "Carried (M)")}</th><th style="width:150px">${L("เบิกจ่ายแล้ว", "Paid")}</th><th>${L("กำหนด", "Deadline")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
       <tbody>${C.prev.map(c => { const p = c.amount ? c.paid / c.amount : 0, left = c.amount - c.paid;
         return `<tr><td class="mono">${c.id}</td><td>${esc(tx(c.name))}<div class="sub">${unitName(c.unit)}</div></td><td class="mono sub">${c.po}</td><td class="n">${mb(c.amount)}</td>
@@ -86,7 +87,7 @@ ALLOC.carry = () => {
           <td><div class="row" style="flex-wrap:nowrap">${fin && left > 0 && c.status !== "closed" ? `<input type="number" min="0.01" step="0.01" id="cp-${c.id}" style="width:84px" aria-label="${L("เบิกจ่าย (ลบ.)", "Payment (M)")}" placeholder="${L("ลบ.", "M")}"><button class="btn" type="button" data-cpay="${c.id}">${L("บันทึกเบิกจ่าย", "Record payment")}</button>` : ""}
             ${fin && c.status === "open" && p < 0.5 ? `<button class="btn" type="button" data-cext="${c.id}">${L("ขอขยายเวลา", "Ask to extend")}</button>` : ""}
             ${ex && c.status === "extension" ? `<button class="btn primary" type="button" data-cextok="${c.id}">${L("อนุมัติขยายเวลา", "Approve extension")}</button>` : ""}${historyBtn(c.id, c.id)}</div></td></tr>`; }).join("")}</tbody></table></div></section>
-  <section class="panel"><header><h2>${L("ขอกันเงินปี 2570 ไว้เบิกเหลื่อมปี", "FY2570 carry-over requests")}</h2><span class="sp"></span><span class="sub">${L("ยื่นได้ถึง", "File by")} ${fdate(FY_END)} · ${daysUntil(FY_END)} ${L("วัน", "days")}</span></header>
+  <section class="panel"><header><h2>${L(`ขอกันเงินปี ${CUR_FY} ไว้เบิกเหลื่อมปี`, `FY${CUR_FY} carry-over requests`)}</h2><span class="sp"></span><span class="sub">${L("ยื่นได้ถึง", "File by")} ${fdate(FY_END)} · ${daysUntil(FY_END)} ${L("วัน", "days")}</span></header>
     ${C.reqs.length ? `<div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("รายการ", "Line")}</th><th>${L("สัญญา", "Contract")}</th><th class="n">${L("ขอกัน (ลบ.)", "Amount (M)")}</th><th>${L("ผลตรวจ", "Checks")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
       <tbody>${C.reqs.map(c => { const l = lineOf(c.line), ch = cfChecks(c);
         return `<tr><td class="mono">${c.id}</td><td>${l ? esc(lineLabel(l)) : c.line}</td><td class="sub"><span class="mono">${esc(c.po)}</span> · ${fdate(c.poDate)}${c.vendor ? `<div>${esc(c.vendor)}</div>` : ""}</td><td class="n">${mb(c.amount)}</td>
@@ -112,13 +113,13 @@ function bindCarry() {
   $$("[data-cext]").forEach(b => (b.onclick = () => {
     const c = cf(b.dataset.cext); c.status = "extension";
     audit(["ขอขยายเวลาเบิกจ่ายเงินกันเหลื่อมปี", "Asked to extend a carry-over deadline"], c.id);
-    notify(["exec"], [`ขอขยายเวลาเบิกจ่ายเงินกัน ${c.id} ถึง 30 ก.ย. 2570`, `Request to extend ${c.id} to 30 Sep 2027`], "alloc-carry");
+    notify(["exec"], [`ขอขยายเวลาเบิกจ่ายเงินกัน ${c.id} ถึง 30 ก.ย. ${CUR_FY}`, `Request to extend ${c.id} to 30 Sep ${CUR_FY - 543}`], "alloc-carry");
     commit(); route(); toast(L("ส่งคำขอขยายเวลาแล้ว", "Extension requested"));
   }));
   $$("[data-cextok]").forEach(b => (b.onclick = () => {
     const c = cf(b.dataset.cextok); c.status = "extended"; c.due = FY_END;
     audit(["อนุมัติขยายเวลาเบิกจ่ายเงินกันเหลื่อมปี", "Approved a carry-over extension"], c.id);
-    notify(["fin"], [`อนุมัติขยายเวลา ${c.id} ถึง 30 ก.ย. 2570`, `${c.id} extended to 30 Sep 2027`], "alloc-carry"); commit(); route();
+    notify(["fin"], [`อนุมัติขยายเวลา ${c.id} ถึง 30 ก.ย. ${CUR_FY}`, `${c.id} extended to 30 Sep ${CUR_FY - 543}`], "alloc-carry"); commit(); route();
   }));
   const dec = (id, ok) => {
     const c = cf(id); c.status = ok ? "approved" : "rejected";
@@ -130,7 +131,7 @@ function bindCarry() {
   const f = $("#cf-form");
   if (f) f.onsubmit = e => {
     e.preventDefault();
-    const c = { id: `CF-2570-${String(C.reqs.length + 1).padStart(2, "0")}`, line: $("#cf-line").value, amount: Math.round(Number($("#cf-amt").value) * 1e6), po: $("#cf-po").value.trim(), poDate: $("#cf-date").value, vendor: $("#cf-vendor").value.trim(), status: "pending", t: nowIso(), by: me().id };
+    const c = { id: `CF-${CUR_FY}-${String(C.reqs.length + 1).padStart(2, "0")}`, line: $("#cf-line").value, amount: Math.round(Number($("#cf-amt").value) * 1e6), po: $("#cf-po").value.trim(), poDate: $("#cf-date").value, vendor: $("#cf-vendor").value.trim(), status: "pending", t: nowIso(), by: me().id };
     const bad = cfChecks(c).filter(x => !x[0]);
     if (bad.length) { toast(`${L("ยังยื่นไม่ได้", "Can't file yet")}: ${bad.map(x => x[1]).join(", ")}`); return; }
     C.reqs.push(c);

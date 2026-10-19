@@ -6,13 +6,15 @@
 // - Recommendations to act on with deadlines (FR-B-39, section 48) and a public summary (FR-B-40, section 47).
 // Data year: FY2569, the year shown in M07 and M08.
 PERF_TABS.push({ id: "quarter", label: ["รายงานรายไตรมาส", "Quarterly reports"] }, { id: "cost", label: ["ต้นทุนต่อผลผลิต", "Cost per output"] }, { id: "stages", label: ["ประเมิน 3 จังหวะ", "Three-stage evaluation"] }, { id: "recs", label: ["ข้อเสนอแนะ", "Recommendations"] }, { id: "public", label: ["เผยแพร่", "Public page"] });
-const QR_ROUNDS = () => [
-  { id: "Q1", label: L("ไตรมาส 1 (ต.ค.–ธ.ค. 2568)", "Q1 (Oct–Dec 2025)"), end: "2025-12-31", days: 15 },
-  { id: "Q2", label: L("ไตรมาส 2 (ม.ค.–มี.ค. 2569)", "Q2 (Jan–Mar 2026)"), end: "2026-03-31", days: 15 },
-  { id: "Q3", label: L("ไตรมาส 3 (เม.ย.–มิ.ย. 2569)", "Q3 (Apr–Jun 2026)"), end: "2026-06-30", days: 15 },
-  { id: "Q4", label: L("ไตรมาส 4 (ก.ค.–ก.ย. 2569)", "Q4 (Jul–Sep 2026)"), end: "2026-09-30", days: 15 },
-  { id: "Y", label: L("รายงานประจำปี 2569", "Annual report FY2569"), end: "2026-09-30", days: 45 },
-].map(x => Object.assign(x, { due: addDays(x.end, x.days) }));
+// Rounds of the fiscal year being spent (round C4: from CUR_FY instead of FY2569).
+const QR_ROUNDS = () => { const fy = CUR_FY, ce = fy - 543, be = fy;
+  return [
+    { id: "Q1", label: L(`ไตรมาส 1 (ต.ค.–ธ.ค. ${be - 1})`, `Q1 (Oct–Dec ${ce - 1})`), end: `${ce - 1}-12-31`, days: 15 },
+    { id: "Q2", label: L(`ไตรมาส 2 (ม.ค.–มี.ค. ${be})`, `Q2 (Jan–Mar ${ce})`), end: `${ce}-03-31`, days: 15 },
+    { id: "Q3", label: L(`ไตรมาส 3 (เม.ย.–มิ.ย. ${be})`, `Q3 (Apr–Jun ${ce})`), end: `${ce}-06-30`, days: 15 },
+    { id: "Q4", label: L(`ไตรมาส 4 (ก.ค.–ก.ย. ${be})`, `Q4 (Jul–Sep ${ce})`), end: `${ce}-09-30`, days: 15 },
+    { id: "Y", label: L(`รายงานประจำปี ${be}`, `Annual report FY${be}`), end: `${ce}-09-30`, days: 45 },
+  ].map(x => Object.assign(x, { due: addDays(x.end, x.days) })); };
 let QR_ROUND = "Q4", QR_UNIT = null;
 const PERF_BIND_B5 = {};
 const qrUnits = () => [...new Set(Object.values(S.perf.outputs).length ? S.dash.projects.map(p => p.unit) : [])];
@@ -127,7 +129,7 @@ PERF.recs = () => {
 PERF_BIND_B5.recs = () => {
   $$("[data-recst]").forEach(s => (s.onchange = () => { const x = S.recs[s.dataset.recst]; x.status = s.value; audit(["ปรับสถานะข้อเสนอแนะ", "Updated a recommendation"], `${x.id}: ${s.value}`); commit(); route(); }));
   $$("[data-recact]").forEach(i => (i.onchange = () => { S.recs[i.dataset.recact].action = i.value; commit(); }));
-  const f = $("#rec-form"); if (f) f.onsubmit = e => { e.preventDefault(); S.recs = S.recs || []; const x = { id: `RC-2569-${String(S.recs.length + 1).padStart(2, "0")}`, text: [$("#rec-t").value, $("#rec-t").value], src: $("#rec-s").value, unit: $("#rec-u").value, due: $("#rec-d").value, status: "open" }; S.recs.push(x); notify(["div"], [`ข้อเสนอแนะใหม่ ${x.id} รอการแก้ไข`, `New recommendation ${x.id} to act on`], "perf-recs"); audit(["เพิ่มข้อเสนอแนะ", "Added a recommendation"], x.id); commit(); route(); };
+  const f = $("#rec-form"); if (f) f.onsubmit = e => { e.preventDefault(); S.recs = S.recs || []; const x = { id: `RC-${fyOf(TODAY)}-${String(S.recs.filter(r => String(r.id).startsWith(`RC-${fyOf(TODAY)}-`)).length + 1).padStart(2, "0")}`, text: [$("#rec-t").value, $("#rec-t").value], src: $("#rec-s").value, unit: $("#rec-u").value, due: $("#rec-d").value, status: "open" }; S.recs.push(x); notify(["div"], [`ข้อเสนอแนะใหม่ ${x.id} รอการแก้ไข`, `New recommendation ${x.id} to act on`], "perf-recs"); audit(["เพิ่มข้อเสนอแนะ", "Added a recommendation"], x.id); commit(); route(); };
 };
 
 // ---------- public page ----------

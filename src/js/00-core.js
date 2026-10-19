@@ -1,5 +1,10 @@
 // Core runtime: i18n, formatting, per-organization state, roles, router, audit, notifications.
-const TODAY = "2026-10-16";
+// TODAY is the demo date. Round C4 lets the demo move it ("as of month"); REAL_TODAY keeps the starting date.
+let TODAY = "2026-10-16";
+const REAL_TODAY = TODAY;
+// Thai fiscal year (B.E.) of a date: October starts the next year. CUR_FY is the year being spent.
+const fyOf = iso => { const [y, m] = String(iso).split("-").map(Number); return y + 543 + (m >= 10 ? 1 : 0); };
+const CUR_FY = fyOf(TODAY);
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => Array.from(el.querySelectorAll(s));
 const store = {
@@ -28,7 +33,7 @@ const fyLabel = fy => L(`ปีงบประมาณ พ.ศ. ${fy}`, `FY${fy
 
 // ---------- organizations and state ----------
 const SEEDS = {}; // id -> { name: [th, en], seed: () => state }, registered by data files
-const DATA_V = 36; // bump when the seed shape changes so saved demo state is reseeded
+const DATA_V = 37; // bump when the seed shape changes so saved demo state is reseeded
 let ORG = "sample";
 let S = null;
 const key = () => "fisko-v1-" + ORG;

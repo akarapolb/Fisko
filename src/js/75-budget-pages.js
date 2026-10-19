@@ -17,7 +17,7 @@ const BUD_MOD = {
   performance: { get: () => PERF_TAB, set: v => (PERF_TAB = v) },
   intel: { get: () => INTEL_TAB, set: v => (INTEL_TAB = v) },
 };
-Object.assign(GROUPS, { bud: ["งบประมาณ", "Budget"], form: ["จัดทำงบประมาณ ปี 2571", "Formulation, FY2571"], exec: ["บริหารงบประมาณ ปี 2570", "Execution, FY2570"], intel: ["ผลสัมฤทธิ์และวิเคราะห์", "Results and analysis"] });
+Object.assign(GROUPS, { bud: ["งบประมาณ", "Budget"], form: [`จัดทำงบประมาณ ปี ${CUR_FY + 1}`, `Formulation, FY${CUR_FY + 1}`], exec: [`บริหารงบประมาณ ปี ${CUR_FY}`, `Execution, FY${CUR_FY}`], intel: ["ผลสัมฤทธิ์และวิเคราะห์", "Results and analysis"] });
 APPS.budget.groups = ["bud", "form", "exec", "intel"];
 // A tab is an old key, or { id, label, keys, roles } for several keys behind one tab.
 const BUD_PAGES = [
@@ -37,7 +37,7 @@ const BUD_PAGES = [
     tabs: [{ id: "money", label: ["วงเงินและการจัดสรร", "Appropriation and allocation"], keys: ["appropriation", "allocate"] }, "plan", "balance", "transfers", "releases",
       { id: "carry", label: ["กันเงินและเงินเหลือจ่าย", "Carry-over and savings"], keys: ["carry", "savings"] }, "nb"] },
   { id: "dashboard", code: "B8", m: "M07", group: "exec", mod: "dashboard",
-    tabs: ["live", "drill", "forecast", "alerts", "progress", "procure", { id: "import", roles: ["plan", "exec", "fin", "audit"] }, { id: "overview", label: ["ปี 2569", "FY2569"] }] },
+    tabs: ["live", "drill", "forecast", "alerts", "progress", "procure", { id: "import", roles: ["plan", "exec", "fin", "audit"] }, { id: "overview", label: [`ปี ${CUR_FY - 1}`, `FY${CUR_FY - 1}`] }] },
   { id: "performance", code: "B9", m: "M08", group: "intel", mod: "performance",
     tabs: [{ id: "kpis", label: ["ตัวชี้วัดและ Scorecard", "KPIs and scorecard"], keys: ["kpis", "scorecard"] }, "chain", "quarter", { id: "cost", roles: ["plan", "exec", "audit"] },
       { id: "evals", label: ["รายงานและประเมินผล", "Reports and evaluation"], keys: ["report", "evaluate", "stages"], roles: ["plan", "exec", "audit"] }, "recs", { id: "public", roles: ["plan", "exec", "audit"] }] },
@@ -154,7 +154,7 @@ VIEWS.btoday = () => {
     <div class="kpi hl"><span class="l">${L("งานของฉัน", "My work")}</span><span class="v">${t.length}</span><span class="d" style="color:var(--rail-ink)">${t.filter(x => x.due <= TODAY).length} ${L("ถึงกำหนดหรือเลยแล้ว", "due or overdue")}</span></div>
     <div class="kpi"><span class="l">${L("กำหนดการถัดไป", "Next deadline")}</span><span class="v">${next.length ? daysUntil(next[0].date) : "–"}</span><span class="d sub">${next.length ? `${L("วัน", "days")} · ${esc(tx(next[0].name))}` : ""}</span></div>
     <div class="kpi"><span class="l">${ROLE === "div" ? L("คำขอของหน่วยงาน ปี 2571", "Your unit's FY2571 requests") : L("คำขอ ปี 2571 ที่ส่งแล้ว", "FY2571 requests sent")}</span><span class="v">${sent.length}/${R.length}</span></div>
-    <div class="kpi"><span class="l">${L("การแจ้งเตือนการใช้จ่าย ปี 2570", "FY2570 spending alerts")}</span><span class="v">${ROLE === "div" ? "–" : al.length}</span><span class="d sub">${ROLE === "div" ? L("ดูที่ B8", "See B8") : al.filter(a => a.lv === "bad").length + " " + L("รุนแรง", "serious")}</span></div>
+    <div class="kpi"><span class="l">${L(`การแจ้งเตือนการใช้จ่าย ปี ${CUR_FY}`, `FY${CUR_FY} spending alerts`)}</span><span class="v">${ROLE === "div" ? "–" : al.length}</span><span class="d sub">${ROLE === "div" ? L("ดูที่ B8", "See B8") : al.filter(a => a.lv === "bad").length + " " + L("รุนแรง", "serious")}</span></div>
   </section>
   <div class="grid2">
     <section class="panel"><header><h2>${L("งานของฉันในแอปงบประมาณ", "My work in Budget")}</h2><span class="sp"></span><span class="sub">${t.length} ${L("รายการ", "items")}</span></header>
@@ -164,7 +164,7 @@ VIEWS.btoday = () => {
       <ul class="tasks">${next.slice(0, 6).map(c => `<li><span class="pill ${c.role === ROLE ? "p-ok" : "p-mute"}" style="padding:2px 8px"></span>
         <div><b style="font-weight:600">${tx(c.name)}</b><div class="sub">${tx(ROLES[c.role])}</div></div>${dueText(c.date)}</li>`).join("") || `<li class="sub">${L("ไม่มีกำหนดการ", "No dates ahead")}</li>`}</ul></section>
   </div>
-  ${al.length ? `<section class="panel"><header><h2>${L("ต้องดูในปี 2570", "To watch in FY2570")}</h2><span class="sp"></span>${go2("mon-alerts", `${L("การแจ้งเตือนทั้งหมด", "All alerts")} (${al.length})`)}</header>
+  ${al.length ? `<section class="panel"><header><h2>${L(`ต้องดูในปี ${CUR_FY}`, `To watch in FY${CUR_FY}`)}</h2><span class="sp"></span>${go2("mon-alerts", `${L("การแจ้งเตือนทั้งหมด", "All alerts")} (${al.length})`)}</header>
     <div class="tbl-wrap"><table><tbody>${al.slice(0, 5).map(a => `<tr><td>${dotI(a.lv === "bad" ? "bad" : a.lv === "warn" ? "warn" : "ok")}<b style="font-weight:600">${esc(a.t)}</b><div class="sub">${esc(a.d)}</div></td></tr>`).join("")}</tbody></table></div></section>` : ""}
   <section class="panel"><header><h2>${L("หน้าในแอปงบประมาณ", "Pages in Budget")}</h2></header>
     <div class="body" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">${pages.map(x => { const n = NAV.find(y => y.id === x.id); return `<button class="btn ghost" type="button" data-bjump="${x.id}" style="justify-content:flex-start;text-align:left"><span class="mono">${x.code}</span>&nbsp;${esc(tx(x.label || n.label))}${x.m ? ` <span class="sub">· ${x.m}</span>` : ""}</button>`; }).join("")}</div></section>`;

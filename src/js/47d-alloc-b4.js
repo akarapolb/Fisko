@@ -8,7 +8,7 @@
 // - Spending plan versions with the clause-15 reasons and the "15 days before the year" check (FR-B-27, BR-14).
 // - Savings from contracts below the estimate (FR-B-33), carry-over rule banner (BR-17), live monitoring of
 //   FY2570 against quarterly targets that are settings (FR-B-31, BR-20, BR-21).
-const B4_FY = 2570;
+const B4_FY = CUR_FY;
 const lineStruct = l => { const lin = lineage(l.act); return { prog: (lin[0] || {}).id || "", out: (lin.find(n => n.lvl === "output") || {}).id || "" }; };
 // Actual spending of a line: approved contract payments, plus (Fisko Finance FN5) paid vouchers outside contracts
 // and budget advances (lent until cleared, then what was spent), so M06 and M07 show what Finance paid.

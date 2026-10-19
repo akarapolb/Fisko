@@ -4,7 +4,8 @@ PERF_TABS.push({ id: "evaluate", label: ["ประเมินโครงก�
 const EV_CRIT = [["ความสอดคล้อง", "Relevance"], ["ประสิทธิผล", "Effectiveness"], ["ประสิทธิภาพ", "Efficiency"], ["ผลกระทบ", "Impact"], ["ความยั่งยืน", "Sustainability"]];
 let EV_OPEN = null;
 const evScore = e => { const r = e.ratings.filter(Boolean); return r.length ? r.reduce((a, b) => a + b, 0) / r.length : null; };
-const evProj = e => S.dash.projects.find(p => p.id === e.proj);
+// An evaluation can be of last year's project (round C4 keeps FY2569 in S.y2569).
+const evProj = e => S.dash.projects.find(p => p.id === e.proj) || ((S.y2569 || {}).dash || { projects: [] }).projects.find(p => p.id === e.proj);
 
 PERF.evaluate = () => {
   const E = S.evals || [], pl = ROLE === "plan";
@@ -44,7 +45,7 @@ function bindEvaluate() {
   const nf = $("#ev-new");
   if (nf) nf.onsubmit = ev => {
     ev.preventDefault();
-    const id = `EV-2569-${String(S.evals.length + 1).padStart(2, "0")}`;
+    const fy = fyOf(TODAY), id = `EV-${fy}-${String(S.evals.filter(x => String(x.id).startsWith(`EV-${fy}-`)).length + 1).padStart(2, "0")}`;
     S.evals.push({ id, proj: $("#ev-proj").value, status: "draft", t: nowIso(), by: me().id, ratings: [0, 0, 0, 0, 0], findings: ["", ""], lessons: [] });
     EV_OPEN = id; audit(["สร้างแบบประเมินโครงการ", "Started a project evaluation"], id); commit(); route();
   };

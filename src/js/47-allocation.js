@@ -1,6 +1,6 @@
 // M06 Budget Allocation (round 4): the appropriation, allocation lines by unit and project,
 // monthly spending plans, and budget transfers approved at the right level of authority.
-let ALLOC_TAB = "appropriation", ALLOC_FY = 2570, PLAN_UNIT = "";
+let ALLOC_TAB = "appropriation", ALLOC_FY = CUR_FY, PLAN_UNIT = "";
 const OPEN_UNIT = new Set();
 const ALLOC_TABS = [
   { id: "appropriation", label: ["วงเงินที่ได้รับ", "Appropriation"] },
@@ -39,7 +39,7 @@ ALLOC.appropriation = () => {
       <tbody>${BUDGET_TYPES.map(t => { const ap = A.byType[t.id] || 0, al = allocated(t.id); return ap || al ? `<tr><td>${tx(t.name)}</td><td class="n">${mb(ap)}</td><td class="n">${mb(al)}</td><td class="n" style="color:var(--${ap - al < 0 ? "bad" : "ink"})">${mb(ap - al)}</td>
         <td><div class="bar"><i style="width:${ap ? Math.min(100, al / ap * 100) : 0}%"></i></div></td></tr>` : ""; }).join("")}</tbody>
       <tfoot><tr><td>${L("รวม", "Total")}</td><td class="n">${mb(A.total)}</td><td class="n">${mb(allocated())}</td><td class="n">${mb(A.total - allocated())}</td><td></td></tr></tfoot></table></div></section>
-  ${ALLOC_FY === 2570 ? `<section class="panel"><header><h2>${L("ปีงบประมาณ 2571", "FY2571")}</h2></header><div class="body row">
+  ${ALLOC_FY === CUR_FY ? `<section class="panel"><header><h2>${L("ปีงบประมาณ 2571", "FY2571")}</h2></header><div class="body row">
     ${S.allocs[2571] ? `<span>${L("สร้างร่างการจัดสรรปี 2571 แล้ว", "The FY2571 draft allocation exists")}</span><button class="btn" type="button" data-fy="2571">${L("เปิดปี 2571", "Open FY2571")}</button>`
       : closed ? `<span>${L("ผลพิจารณาจากสำนักงบประมาณพร้อมแล้ว", "The Budget Bureau's results are ready")}</span>${canAlloc() || ROLE === "plan" ? `<button class="btn primary" type="button" id="mk-2571">${L("สร้างร่างการจัดสรรปี 2571 จากผลพิจารณา", "Create the FY2571 draft from the results")}</button>` : ""}`
       : `<span class="sub">${L("ปี 2571 จะเปิดเมื่อกองแผนงานส่งต่อผลพิจารณาจาก M05", "FY2571 opens once Planning hands over the results from M05")}</span>`}</div></section>` : ""}`;
@@ -116,7 +116,7 @@ ALLOC.transfers = () => {
 };
 
 VIEWS.allocation = () => {
-  if (!S.allocs[ALLOC_FY]) ALLOC_FY = 2570;
+  if (!S.allocs[ALLOC_FY]) ALLOC_FY = CUR_FY;
   const fys = Object.keys(S.allocs).map(Number).sort();
   return `
   <div class="head"><div><div class="eyebrow">M06 · Budget Allocation</div><h1>${L("จัดสรรงบประมาณ", "Budget allocation")} ${fyLabel(ALLOC_FY)}</h1>

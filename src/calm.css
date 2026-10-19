@@ -288,3 +288,10 @@ ul.plain { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-di
 .cr-undo { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(20px + env(safe-area-inset-bottom, 0px)); z-index: 60; display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 16px; border-radius: 12px; background: var(--ink); color: var(--bg); box-shadow: 0 8px 24px rgba(10, 11, 34, .25); max-width: calc(100vw - 32px); }
 .cr-undo .btn { background: transparent; color: var(--bg); border-color: currentColor; }
 @media (max-width: 560px) { .cr-grid { grid-template-columns: 1fr; } .cr-kv { grid-template-columns: 1fr; gap: 2px 0; } .cr-kv dd { margin-bottom: 8px; } .cr-bar .cr-q { max-width: none; } }
+
+/* Round C4: the demo date */
+.asof { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin: -4px 0 14px; }
+.asof label { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px; }
+.asof label svg { width: 16px; height: 16px; }
+.asof-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 12px; margin: 0 0 14px; border: 1px solid var(--warn); background: var(--warn-soft); color: var(--ink); border-radius: 10px; font-size: 13px; }
+.asof-bar svg { width: 15px; height: 15px; vertical-align: -3px; }
