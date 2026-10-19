@@ -1,0 +1,607 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fisko Procurement CRUD Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: sticky chapter index on the left, one reading column (~72ch prose, full-width tables and diagrams) on the right */
+:root {
+  --bg: #FFFFFF; --paper: #FFFFFF; --tint: #F4F5FA; --tint-2: #EEF0F7; --line: #DDDEE9;
+  --ink: #1C1D3F; --ink-2: #45465C; --muted: #7A7B92;
+  --navy: #1A1B50; --navy-2: #232366; --navy-ink: #C9CADF;
+  --accent: #1B9E29; --accent-2: #2AD03D; --accent-soft: #E4FBE7;
+  --warn: #A86A0C; --warn-soft: #FCF1DB; --bad: #B9381D; --bad-soft: #FBE3DA; --info: #3A3B9A; --info-soft: #E6E7F7;
+  --font: "IBM Plex Sans Thai", "Leelawadee UI", Tahoma, system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0F1029; --paper: #13153A; --tint: #1A1C44; --tint-2: #20224D; --line: #2D2F5E;
+  --ink: #ECEDF7; --ink-2: #C3C4D8; --muted: #8E90AE;
+  --navy: #0A0B22; --navy-2: #232366; --navy-ink: #B6B8D3;
+  --accent: #3DD552; --accent-2: #2AD03D; --accent-soft: #163A24;
+  --warn: #E7AA45; --warn-soft: #3A2C12; --bad: #F2805F; --bad-soft: #42201A; --info: #A9ABF5; --info-soft: #262862; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0F1029; --paper: #13153A; --tint: #1A1C44; --tint-2: #20224D; --line: #2D2F5E;
+  --ink: #ECEDF7; --ink-2: #C3C4D8; --muted: #8E90AE;
+  --navy: #0A0B22; --navy-2: #232366; --navy-ink: #B6B8D3;
+  --accent: #3DD552; --accent-2: #2AD03D; --accent-soft: #163A24;
+  --warn: #E7AA45; --warn-soft: #3A2C12; --bad: #F2805F; --bad-soft: #42201A; --info: #A9ABF5; --info-soft: #262862; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 20px; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.75 var(--font); }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.mono, code { font-family: var(--mono); font-size: .85em; }
+code { background: var(--tint-2); padding: 1px 5px; border-radius: 4px; }
+
+.layout { display: grid; grid-template-columns: 290px minmax(0, 1fr); }
+.toc { position: sticky; top: 0; height: 100vh; overflow: auto; background: var(--navy); color: var(--navy-ink); padding: 28px 18px 40px; font-size: 14px; }
+.toc .brand { color: #fff; font-weight: 700; font-size: 17px; line-height: 1.3; }
+.toc .brand small { display: block; color: var(--navy-ink); font-weight: 400; font-size: 12.5px; margin-top: 2px; }
+.toc ol { list-style: none; margin: 22px 0 0; padding: 0; counter-reset: c; }
+.toc li { margin: 1px 0; }
+.toc a { display: grid; grid-template-columns: 28px 1fr; gap: 6px; color: var(--navy-ink); text-decoration: none; padding: 6px 8px; border-radius: 7px; line-height: 1.4; }
+.toc a:hover { background: var(--navy-2); color: #fff; }
+.toc a.on { background: var(--navy-2); color: #fff; }
+.toc a .n { font-family: var(--mono); font-size: 11.5px; color: #8A8CB5; padding-top: 2px; }
+.toc a.on .n { color: var(--accent-2); }
+.toc .tools { margin-top: 22px; display: flex; gap: 8px; }
+.toc button { background: var(--navy-2); color: #fff; border: 1px solid #3A3B77; border-radius: 7px; padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+
+main { min-width: 0; padding-block: 0 80px; padding-left: max(28px, env(safe-area-inset-left, 0px)); padding-right: max(28px, env(safe-area-inset-right, 0px)); }
+.doc { max-width: 1080px; margin: 0 auto; }
+.prose { max-width: 74ch; }
+
+.cover { padding: 64px 0 40px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.eyebrow { font-size: 12.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+.cover h1 { font-size: clamp(30px, 4.2vw, 46px); line-height: 1.2; margin: 10px 0 8px; text-wrap: balance; }
+.cover .th { font-size: 20px; color: var(--ink-2); margin: 0; }
+.meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: 30px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.meta div { padding: 12px 16px; border-right: 1px solid var(--line); }
+.meta div:last-child { border-right: 0; }
+.meta span { display: block; font-size: 12px; color: var(--muted); letter-spacing: .04em; }
+.meta b { font-weight: 600; font-size: 15px; }
+.notice { margin-top: 18px; background: var(--warn-soft); color: var(--ink); border-radius: 10px; padding: 12px 16px; font-size: 14.5px; }
+.notice b { color: var(--warn); }
+
+section.ch { padding-top: 56px; }
+h2 { font-size: 28px; line-height: 1.3; margin: 0 0 6px; display: flex; gap: 14px; align-items: baseline; text-wrap: balance; }
+h2 .num { font-family: var(--mono); font-size: 15px; color: var(--accent); font-weight: 600; }
+.lede { color: var(--ink-2); margin: 0 0 22px; max-width: 74ch; }
+h3 { font-size: 19px; margin: 34px 0 10px; line-height: 1.4; }
+h3 .num { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-right: 8px; font-weight: 500; }
+h4 { font-size: 16px; margin: 22px 0 6px; }
+p { margin: 0 0 14px; }
+ul, ol { margin: 0 0 14px; padding-left: 22px; }
+li { margin: 3px 0; }
+.small { font-size: 13.5px; color: var(--muted); }
+
+.tbl { overflow-x: auto; margin: 10px 0 18px; border: 1px solid var(--line); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.55; }
+th { background: var(--tint); text-align: left; font-size: 12.5px; letter-spacing: .03em; color: var(--ink-2); font-weight: 600; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: bottom; }
+td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.id, th.id { white-space: nowrap; font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); }
+td.c, th.c { text-align: center; }
+td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.tag { display: inline-block; border-radius: 99px; padding: 1px 9px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.t-must { background: var(--accent-soft); color: var(--accent); }
+.t-should { background: var(--info-soft); color: var(--info); }
+.t-could { background: var(--tint-2); color: var(--muted); }
+.t-new { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+.t-warn { background: var(--warn-soft); color: var(--warn); }
+.t-bad { background: var(--bad-soft); color: var(--bad); }
+
+.callout { border-radius: 10px; padding: 14px 18px; margin: 14px 0 18px; background: var(--tint); }
+.callout.dark { background: var(--navy); color: #fff; }
+.callout.dark b { color: var(--accent-2); }
+.callout b:first-child { display: block; margin-bottom: 2px; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 12px 0 20px; }
+.card { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; background: var(--paper); }
+.card b { display: block; font-size: 15px; margin-bottom: 2px; }
+.card span { font-size: 13.5px; color: var(--ink-2); line-height: 1.6; display: block; }
+.card .k { font-family: var(--mono); font-size: 12px; color: var(--accent); margin-bottom: 4px; }
+
+/* layered architecture diagram */
+.arch { display: grid; grid-template-columns: minmax(0, 1fr) 210px; gap: 10px; margin: 14px 0 20px; }
+.layers { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.layer { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 10px; align-items: stretch; }
+.layer .lb { background: var(--navy-2); color: #fff; border-radius: 8px; padding: 10px 12px; font-weight: 600; font-size: 14px; line-height: 1.35; }
+.layer .lb small { display: block; color: var(--navy-ink); font-weight: 400; font-size: 12px; }
+.layer.top .lb { background: var(--accent); }
+.layer .chips { display: flex; flex-wrap: wrap; gap: 6px; align-content: center; background: var(--tint); border-radius: 8px; padding: 8px; }
+.chip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; font-size: 13px; }
+.chip.g { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.gov { background: var(--navy); color: #fff; border-radius: 8px; padding: 12px 14px; font-size: 13px; }
+.gov b { color: var(--accent-2); display: block; margin-bottom: 6px; font-size: 14px; }
+.gov ul { padding-left: 16px; margin: 0; }
+.gov li { color: var(--navy-ink); }
+
+/* flow */
+.flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0 20px; }
+.flow .st { background: var(--tint); border-radius: 8px; padding: 8px 12px; font-size: 13.5px; line-height: 1.4; }
+.flow .st b { display: block; font-family: var(--mono); font-size: 11.5px; color: var(--accent); }
+.flow .ar { color: var(--muted); }
+
+/* integration hub */
+.hub { display: grid; grid-template-columns: 1fr minmax(180px, 240px) 1fr; gap: 14px; align-items: center; margin: 14px 0 20px; }
+.hub .side { display: flex; flex-direction: column; gap: 8px; }
+.hub .ext { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 13.5px; background: var(--paper); }
+.hub .ext b { display: block; font-size: 14px; }
+.hub .core { background: var(--navy); color: #fff; border-radius: 12px; padding: 18px; text-align: center; }
+.hub .core b { color: var(--accent-2); font-size: 18px; display: block; }
+.hub .core span { font-size: 12.5px; color: var(--navy-ink); display: block; margin-top: 6px; }
+
+.matrix td.c { font-family: var(--mono); font-size: 12.5px; font-weight: 600; }
+.mx-a { color: var(--accent); } .mx-r { color: var(--muted); } .mx-u { color: var(--info); }
+
+footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+
+@media (max-width: 980px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .toc { position: static; height: auto; padding: 16px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px)); }
+  .toc ol { display: none; }
+  .toc.open ol { display: block; }
+  main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .meta div:nth-child(2) { border-right: 0; }
+  .meta div:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+  .arch { grid-template-columns: minmax(0, 1fr); }
+  .layer { grid-template-columns: minmax(0, 1fr); }
+  .hub { grid-template-columns: minmax(0, 1fr); }
+}
+@media (min-width: 981px) { #toc-toggle { display: none; } }
+@media print {
+  .toc { display: none; }
+  .layout { display: block; }
+  main { padding: 0; }
+  section.ch { break-before: page; padding-top: 0; }
+  .tbl { overflow: visible; }
+  tr, .card, .callout { break-inside: avoid; }
+}
+</style>
+<style>pre.logic { background: var(--tint); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-family: var(--mono); font-size: 12.5px; line-height: 1.65; margin: 12px 0 18px; white-space: pre; }</style>
+<style>
+.wf { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin: 12px 0 20px; background: var(--paper); font-size: 13.5px; }
+.wf-top { background: var(--tint); padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.wf-body { display: grid; grid-template-columns: 200px minmax(0, 1fr) 220px; gap: 0; }
+.wf-steps { list-style: none; margin: 0; padding: 10px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; }
+.wf-steps li { padding: 6px 8px; border-radius: 6px; color: var(--muted); }
+.wf-steps li::before { content: "○ "; }
+.wf-steps li.ok { color: var(--ink-2); } .wf-steps li.ok::before { content: "● "; color: var(--accent); }
+.wf-steps li.now { background: var(--tint-2); color: var(--ink); font-weight: 600; } .wf-steps li.now::before { content: "◐ "; color: var(--info); }
+.wf-main { padding: 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.wf-bars { display: flex; gap: 14px; align-items: flex-end; height: 110px; border-bottom: 1px solid var(--line); padding: 0 8px; }
+.wf-bars i { flex: 1; background: var(--accent); border-radius: 4px 4px 0 0; opacity: .85; }
+.wf-main span, .wf-side span { color: var(--ink-2); font-size: 13px; }
+.wf-side { padding: 14px; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; background: var(--tint); }
+@media (max-width: 760px) { .wf-body { grid-template-columns: minmax(0, 1fr); } .wf-steps, .wf-side { border: 0; } }
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="toc" id="toc" aria-label="สารบัญ">
+  <div class="brand">Fisko Procurement<small>CRUD UI Design · v0.1</small></div>
+  <div class="tools"><button type="button" id="toc-toggle" aria-expanded="false">สารบัญ</button><button type="button" id="theme">ธีม</button></div>
+  <ol>
+    <li><a href="#s1"><span class="n">01</span>เป้าหมายและขอบเขต</a></li>
+    <li><a href="#s2"><span class="n">02</span>สิ่งที่มีแล้วและช่องว่าง</a></li>
+    <li><a href="#s3"><span class="n">03</span>หลักการ CRUD</a></li>
+    <li><a href="#s4"><span class="n">04</span>รายการ + ลิ้นชัก</a></li>
+    <li><a href="#s5"><span class="n">05</span>วงจรชีวิตและกฎ</a></li>
+    <li><a href="#s6"><span class="n">06</span>CRUD รายหน้า</a></li>
+    <li><a href="#s7"><span class="n">07</span>การไหลของข้อมูลข้ามขั้น</a></li>
+    <li><a href="#s8"><span class="n">08</span>ขั้นที่จำลอง</a></li>
+    <li><a href="#s9"><span class="n">09</span>ข้อบกพร่องที่ต้องแก้</a></li>
+    <li><a href="#s10"><span class="n">10</span>ปีงบประมาณและวันที่</a></li>
+    <li><a href="#s11"><span class="n">11</span>สคริปต์สาธิตครบวงจร</a></li>
+    <li><a href="#s12"><span class="n">12</span>สิทธิ์ตามบทบาท</a></li>
+    <li><a href="#s13"><span class="n">13</span>ลำดับการสร้าง</a></li>
+    <li><a href="#s14"><span class="n">14</span>ความเสี่ยงและประเด็น</a></li>
+  </ol>
+</nav>
+
+<main>
+<div class="doc">
+
+<header class="cover">
+  <div class="eyebrow">Fisko Procurement · CRUD UI Design</div>
+  <h1>Fisko Procurement<br><span style="font-size:.55em;color:var(--accent)">ออกแบบหน้าจอสร้าง ดู แก้ไข และยกเลิกข้อมูล เพื่อสาธิตวงจรจัดซื้อจัดจ้างครบตั้งแต่แผนจนจ่ายเงิน</span></h1>
+  <p class="th">ต่อยอดจาก Fisko Procurement Design v0.4 (ผังเมนู P1 ถึง P13 รอบ 44) และส่วนประกอบร่วมของ Budget CRUD (รอบ 48 ถึง 53)</p>
+  <div class="meta">
+    <div><span>เวอร์ชัน</span><b>0.1 ร่างเพื่อตัดสินใจ</b></div>
+    <div><span>วันที่</span><b>19 ตุลาคม 2569</b></div>
+    <div><span>จัดทำโดย</span><b>Avalant</b></div>
+    <div><span>ต่อยอดจาก</span><b>Procurement Design v0.4 · Budget CRUD v0.2</b></div>
+  </div>
+  <div class="callout" style="margin-top:14px"><b>สิ่งที่ตกลงกันแล้ว</b> (1) ขอบเขตเฉพาะวงจรหลัก: แผนจัดซื้อจัดจ้าง (P2) → ขอซื้อขอจ้าง (P3) → แฟ้มจัดซื้อ (P4) → สัญญา งวดงาน ตรวจรับ (P7) → ส่งต่อเบิกจ่ายให้ Fisko Finance หน้าอื่น (P1 P5 P6 P8 ถึง P13) คงเดิม · (2) ใช้รูปแบบ “รายการ + ลิ้นชักด้านข้าง” จาก <span class="mono">76-crud.js</span> ทุกหน้าในขอบเขต แต่แฟ้มจัดซื้อ 12 ขั้นและหน้าสัญญาที่เปิดอยู่คงเป็นหน้าเต็ม ลิ้นชักแสดงสรุปและปุ่มเปลี่ยนสถานะ · (3) ขั้นที่ผลมาจากภายนอก (ผู้ยื่นข้อเสนอ e-GP อุทธรณ์ หนังสือค้ำประกัน ใบแจ้งหนี้) มีฟอร์มบันทึกผลจริงและปุ่ม “จำลอง” ที่เติมค่าในฟอร์มให้ตรวจก่อนบันทึก</div>
+  <div class="notice"><b>สถานะเอกสาร:</b> ร่างเพื่อตัดสินใจก่อนสร้าง ยังไม่ได้สร้าง ตัวเลขทั้งหมดเป็นข้อมูลสมมติ รหัสข้อกำหนดใช้ FR-PC ต่อจาก FR-PR ในเอกสารออกแบบ Fisko Procurement ผลตรวจโค้ด ณ commit a9f7e9b (รอบ 53)</div>
+</header>
+
+<!-- ============================== 01 ============================== -->
+<section class="ch" id="s1">
+<h2><span class="num">01</span>เป้าหมายและขอบเขต</h2>
+<p class="lede">ผู้สาธิตต้องพาผู้ชมเดินหนึ่งโครงการตั้งแต่ใส่ในแผนจัดซื้อจัดจ้าง ขอซื้อ คัดเลือกผู้ขาย ทำสัญญา ตรวจรับ จนส่งเบิกจ่ายและปิดสัญญา บนหน้าจอเดียวกับที่ใช้งานจริง และแก้ไขหรือยกเลิกสิ่งที่ทำผิดระหว่างทางได้โดยไม่ต้องรีเซ็ตข้อมูล</p>
+<div class="cards">
+  <div class="card"><div class="k">G-PC-01</div><b>เดินครบหนึ่งโครงการ</b><span>จากรายการในแผนถึงสัญญาปิด ทุกขั้นมีปุ่มทำต่อ ผลของขั้นก่อนไหลเข้าขั้นถัดไป (ผู้ชนะ ราคา งวด ยอดตรวจรับ ยอดเบิก)</span></div>
+  <div class="card"><div class="k">G-PC-02</div><b>แก้และยกเลิกได้ทุกขั้น</b><span>ทุกข้อมูลในวงจรหลักมีรายการ รายละเอียด สร้าง แก้ไข และลบร่างหรือยกเลิกพร้อมเหตุผลตามสถานะ</span></div>
+  <div class="card"><div class="k">G-PC-03</div><b>หน้าตาเดียวกับ Budget</b><span>ใช้ <span class="mono">CRUD.def</span> และ <span class="mono">crudList</span> ชุดเดียวกัน ผู้ชมที่เห็น Budget แล้วใช้ Procurement ได้ทันที</span></div>
+  <div class="card"><div class="k">G-PC-04</div><b>ทำซ้ำได้ในการสาธิตเดียว</b><span>ยกเลิกหรือเริ่มรอบใหม่ของแฟ้มแล้วข้อมูลเก่าไม่ค้าง ทำรอบที่สองได้ถูกต้อง</span></div>
+</div>
+<h3><span class="num">1.1</span>อยู่ในขอบเขต</h3>
+<ul>
+  <li>P2 แผนจัดซื้อจัดจ้าง: รายการในแผน ฉบับของแผน และความต้องการปีถัดไปจาก Budget</li>
+  <li>P3 ขอซื้อขอจ้าง: ใบขอซื้อขอจ้าง การพิจารณา การถอน และการยกเลิก</li>
+  <li>P4 แฟ้มจัดซื้อ: วิธีจัดหา ราคากลาง TOR ของแฟ้ม คณะกรรมการ การเปิดเผยส่วนได้เสีย เกณฑ์ ประกาศ e-GP ข้อเสนอ ใบเสนอราคา คะแนน ผลการพิจารณา อุทธรณ์ การล้มและยกเลิกแฟ้ม</li>
+  <li>P7 สัญญา: สัญญา งวดงาน การส่งมอบ ตรวจรับ การแก้ไขสัญญา หลักประกัน การควบคุมงาน ข้อบกพร่อง หนังสือ ใบแจ้งหนี้ การปิดและบอกเลิกสัญญา</li>
+  <li>รอยต่อกับ Fisko Finance (ด่านตรวจก่อนจ่ายและใบสำคัญ) และกับ Fisko Budget (บรรทัดจัดสรร วงเงินคงเหลือ ความต้องการปีถัดไป)</li>
+  <li>การเลิกฝังปีงบประมาณ 2570 และเลขที่เอกสารในโค้ด และสคริปต์สาธิตใหม่ (บทที่ 11)</li>
+</ul>
+<h3><span class="num">1.2</span>นอกขอบเขต (คงเดิม)</h3>
+<ul>
+  <li>P1 วันนี้ (อ่านงานจากข้อมูลในขอบเขต จึงได้ผลเองเมื่อข้อมูลถูก)</li>
+  <li>P5 คลัง TOR (สร้างแม่แบบใหม่ ปฏิเสธฉบับร่าง) P6 เอกสารและ OCR P8 ค่าตอบแทนกรรมการ P9 ผู้ขาย (ทะเบียน บัญชีดำ ประเมินผล) P10 ถึง P13 วิเคราะห์ รายงาน e-GP/OCDS และ AI</li>
+  <li>ช่องว่างที่พบในหน้าเหล่านี้บันทึกไว้ในบทที่ 14 เป็นงานรอบถัดไป ยกเว้นจุดที่วงจรหลักใช้ เช่น ทะเบียนผู้ขายเป็นตัวเลือกผู้ยื่นข้อเสนอ</li>
+  <li>การเชื่อมต่อจริงกับ e-GP ธนาคาร และ GFMIS ยังเป็นการจำลอง</li>
+</ul>
+</section>
+
+<!-- ============================== 02 ============================== -->
+<section class="ch" id="s2">
+<h2><span class="num">02</span>สิ่งที่มีแล้วและช่องว่าง</h2>
+<p class="lede">ผลตรวจโค้ดต้นแบบ ณ รอบ 53: สร้างได้เกือบทุกข้อมูล เดินหน้าได้ครบ 12 ขั้น แต่แก้ไขหลังบันทึกแทบไม่ได้ ยกเลิกได้เฉพาะระดับแฟ้มและสัญญา ข้อมูลเก่าค้างเมื่อเริ่มรอบใหม่ และมีจุดที่ทำให้สาธิตต่อไม่ได้ (บทที่ 9)</p>
+<div class="tbl"><table>
+  <thead><tr><th>หน้า</th><th>สร้าง</th><th>แก้ไข</th><th>ลบ / ยกเลิก</th><th>ช่องว่างหลัก</th></tr></thead>
+  <tbody>
+    <tr><td>P2 แผน</td><td>รายการในแผน (สร้างแฟ้มพร้อมกัน) ฉบับของแผน</td><td>—</td><td>ไม่อนุมัติฉบับ</td><td>แก้หรือลบรายการในแผนไม่ได้ ถอนฉบับที่ส่งไม่ได้ อนุมัติไม่ตรวจแบ่งแยกหน้าที่ ความต้องการปีถัดไปแปลงเป็นรายการไม่ได้ เกณฑ์วิธีจัดหาฝัง 500,000 บาท</td></tr>
+    <tr><td>P3 ขอซื้อขอจ้าง</td><td>ใบขอ (เฉพาะ div ของหน่วยตน)</td><td>—</td><td>ไม่อนุมัติ (ไม่มีเหตุผล)</td><td>ไม่มีร่าง ถอน หรือส่งคืนแก้ ยกเลิกได้เฉพาะเมื่อแฟ้มถูกยกเลิก ข้อความอนุมัติบอกว่าทำสัญญาได้แล้ว (ผิด) รายการของหน่วยอื่นขอไม่ได้</td></tr>
+    <tr><td>P4 แฟ้ม</td><td>อัตโนมัติจากรายการในแผน ข้อมูลรายขั้นทุกขั้น</td><td>ราคากลาง เกณฑ์ วิธีจัดหา (ก่อนส่งอนุมัติ) คะแนน</td><td>ล้มแล้วเริ่มใหม่ ยกเลิกแฟ้ม (เหตุผล 5 ตัวอักษร)</td><td>ข้อเสนอ ใบเสนอราคา คณะกรรมการ ตลาด แก้หรือลบไม่ได้ เริ่มรอบใหม่แล้วข้อเสนอ คะแนน และการเปิดเผยส่วนได้เสียค้าง หัวหน้าอนุมัติวิธีที่ตนเลือกเองได้ ผลพิจารณาลงวันที่วันนี้เสมอ</td></tr>
+    <tr><td>P7 สัญญา</td><td>สัญญา การส่งมอบ ลงนามตรวจรับ แก้ไขสัญญา หลักประกัน (ครั้งเดียว) ใบแจ้งหนี้ หนังสือ ข้อบกพร่อง</td><td>กรรมการตรวจรับ (ก่อนลงนาม)</td><td>บอกเลิกสัญญา คืนหลักประกัน ส่งคืนใบแจ้งหนี้จากพอร์ทัล</td><td>ผู้ขายพิมพ์เองไม่ผูกกับผู้ชนะ งวดแบ่งเท่ากันทุก 45 วันแก้ไม่ได้ ถอนการแก้ไขสัญญาไม่ได้ แก้หลักประกันไม่ได้ สัญญาไม่เคยเป็น “ปิด” ตรวจรับคนเดียวไม่มีวันครบ</td></tr>
+    <tr><td>ส่งเบิกจ่าย</td><td>ใบสำคัญจากด่านตรวจ (Finance) ระงับและปล่อยงวด</td><td>—</td><td>ยกเลิกใบสำคัญ (Finance)</td><td>งวดที่ตรวจรับบางส่วนไม่ผ่านด่านข้อ 3 ฟอร์มขอเบิกเก่าใน <span class="mono">62-finance.js</span> ไม่ถูกแสดงแล้ว (โค้ดตาย)</td></tr>
+  </tbody>
+</table></div>
+<p class="small">รายละเอียดรายข้อมูล (ที่เก็บ ฟังก์ชัน บรรทัด) อยู่ในบันทึกผลตรวจของรอบนี้ ส่วนที่สำคัญยกมาไว้ในบทที่ 6 และ 9</p>
+</section>
+
+<!-- ============================== 03 ============================== -->
+<section class="ch" id="s3">
+<h2><span class="num">03</span>หลักการ CRUD</h2>
+<p class="lede">ใช้หลักการ C-P1 ถึง C-P8 ของ Budget CRUD ทั้งหมด (สถานะกำหนดปุ่ม ไม่ลบประวัติราชการ ยอดรวมคำนวณเสมอ ทุกการเปลี่ยนมีร่องรอย ตรวจก่อนบันทึก สิทธิ์ตามบทบาท เลิกทำได้ ปีเป็นบริบท) และเพิ่มสามข้อเฉพาะงานพัสดุ</p>
+<div class="cards">
+  <div class="card"><div class="k">PC-P1</div><b>ขั้นที่ผ่านแล้วล็อก</b><span>ข้อมูลของขั้นใดแก้ได้จนกว่าขั้นถัดไปจะเริ่มใช้ เช่น ข้อเสนอแก้ได้จนกรรมการให้คะแนนคนแรก หลังจากนั้นแก้ได้ด้วย “ล้มแล้วเริ่มใหม่” เท่านั้น</span></div>
+  <div class="card"><div class="k">PC-P2</div><b>รอบใหม่เริ่มสะอาด</b><span>ล้มหรือยกเลิกแฟ้มแล้วข้อมูลของรอบเดิมย้ายไปเก็บเป็นประวัติของรอบ (<span class="mono">c.rounds[]</span>) รอบใหม่ไม่มีข้อเสนอ คะแนน หรือผลค้าง</span></div>
+  <div class="card"><div class="k">PC-P3</div><b>แบ่งแยกหน้าที่ทุกจุดอนุมัติ</b><span>ทุกปุ่มอนุมัติ (ฉบับแผน ใบขอ วิธีจัดหา อุทธรณ์ แก้ไขสัญญา ลดค่าปรับ) เรียก <span class="mono">sodCheck</span> ผู้อนุมัติต้องไม่ใช่ผู้เสนอ และใช้การมอบอำนาจ <span class="mono">canSpend</span> แบบเดียวกัน</span></div>
+</div>
+</section>
+
+<!-- ============================== 04 ============================== -->
+<section class="ch" id="s4">
+<h2><span class="num">04</span>รูปแบบหน้าจอร่วม: รายการ + ลิ้นชัก</h2>
+<p class="lede">ใช้ส่วนประกอบ UI-C1 ถึง UI-C8 ใน <span class="mono">src/js/76-crud.js</span> โดยไม่เพิ่มส่วนประกอบใหม่ ยกเว้นตารางแก้ไขหลายแถวสำหรับงวดงานและข้อเสนอ (UI-PC1) ลบและเลิกใช้ใช้ <span class="mono">retireAct</span> จาก <span class="mono">81-master-crud.js</span></p>
+<h3><span class="num">4.1</span>โครงหน้าจอตัวอย่าง: ขอซื้อขอจ้าง (P3)</h3>
+<div class="wf">
+  <div class="wf-top">P3 · ขอซื้อขอจ้าง · <b>ค้นหา · หน่วยงาน ▾ · สถานะ ▾ · แสดงที่ยกเลิก □ · + ขอซื้อขอจ้าง</b></div>
+  <div class="wf-body">
+    <ol class="wf-steps"><li class="ok">RQ-2570-001 · ทำสัญญาแล้ว</li><li class="ok">RQ-2570-003 · อนุมัติ</li><li class="now">RQ-2570-005 · รอพิจารณา</li><li>RQ-2570-006 · ร่าง</li><li>RQ-2570-004 · ถอน (ซ่อน)</li></ol>
+    <div class="wf-main"><b>ลิ้นชัก: RQ-2570-005 (รอพิจารณา)</b><span>แท็บ: รายละเอียด · แฟ้มจัดซื้อ · ประวัติ</span><span>รายการในแผน (PP-2570-005) · บรรทัดจัดสรร · วงเงินขอ · วงเงินคงเหลือของบรรทัด · เหตุผลความจำเป็น · วันที่ต้องการใช้</span><span>ผลกระทบ: จองวงเงิน 1.20 ล้าน · แฟ้ม PC-2570-005 ไปขั้นที่ 3</span></div>
+    <div class="wf-side"><b>ปุ่มตามสถานะ</b><span>ร่าง: แก้ไข · ส่ง · ลบร่าง</span><span>รอพิจารณา (ผู้ขอ): ถอนพร้อมเหตุผล</span><span>รอพิจารณา (ผู้บริหาร): อนุมัติ · ส่งคืนแก้ · ไม่อนุมัติ</span><span>อนุมัติ: ยกเลิกพร้อมเหตุผล (ก่อนมีสัญญา)</span></div>
+  </div>
+</div>
+<h3><span class="num">4.2</span>หน้าเต็มที่คงไว้</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>หน้า</th><th>บทบาทของลิ้นชัก</th><th>บทบาทของหน้าเต็ม</th></tr></thead>
+  <tbody>
+    <tr><td class="id">UI-PC1</td><td>แฟ้มจัดซื้อ (<span class="mono">caseDetail</span>)</td><td>รายการแฟ้มบน P4 (แทนรายการเดิม กระดานคงเป็นแท็บ) ลิ้นชักแสดงขั้นปัจจุบัน สิ่งที่ขาด ผู้ชนะ ราคา และปุ่ม ล้มแล้วเริ่มใหม่ · ยกเลิกแฟ้ม · เปิดแฟ้ม</td><td>ทำงานรายขั้น 3 ถึง 8 เหมือนเดิม แต่ละส่วนในขั้นเปลี่ยนจากฟอร์มบันทึกครั้งเดียวเป็นตารางเล็กที่แก้และลบแถวได้ (ตลาด คณะกรรมการ ข้อเสนอ ใบเสนอราคา)</td></tr>
+    <tr><td class="id">UI-PC2</td><td>สัญญาที่เปิด (<span class="mono">conDetail</span>)</td><td>รายการสัญญาบน P7 (แทน <span class="mono">conList</span>) ลิ้นชักแสดงสรุปงวด ยอดตรวจรับ ยอดจ่าย หลักประกัน และปุ่ม ลงนาม · ปิดสัญญา · บอกเลิก · เปิดสัญญา</td><td>แท็บงวด แก้ไขสัญญา ควบคุมงาน หลักประกัน หนังสือ แบบ BOQ เหมือนเดิม งวดแก้ได้ด้วยตารางงวด (FR-PC-28)</td></tr>
+    <tr><td class="id">UI-PC3</td><td>ตารางแก้หลายแถว</td><td colspan="2">ใช้ในลิ้นชักหรือหน้าเต็ม: เพิ่มแถว แก้ในแถว ลบแถว แสดงยอดรวมและข้อผิด (เช่น “ยอดงวดรวม 2.35 ล้าน ไม่เท่ากับวงเงินสัญญา 2.40 ล้าน”) บันทึกทั้งตารางครั้งเดียว เป็นชนิดฟิลด์ใหม่ <span class="mono">type: "rows"</span> ใน <span class="mono">crForm</span></td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 05 ============================== -->
+<section class="ch" id="s5">
+<h2><span class="num">05</span>วงจรชีวิตและกฎ</h2>
+<h3><span class="num">5.1</span>สถานะของข้อมูลหลัก</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ข้อมูล</th><th>สถานะ (ใหม่ขีดเส้นใต้)</th><th>ลบได้เมื่อ</th><th>ยกเลิก / ถอน</th></tr></thead>
+  <tbody>
+    <tr><td>รายการในแผน</td><td><u>ร่าง</u> (ยังไม่อยู่ในฉบับที่เผยแพร่) → ในแผน → ขอซื้อแล้ว → ทำสัญญาแล้ว → <u>ปิด</u> · <u>ยกเลิก</u></td><td>ร่างที่แฟ้มยังอยู่ขั้น 1</td><td>ยกเลิกพร้อมเหตุผล เป็น “ตัดออก” ในฉบับถัดไป แฟ้มถูกยกเลิกด้วย</td></tr>
+    <tr><td>ฉบับของแผน</td><td>ส่งแล้ว → อนุมัติ → เผยแพร่ · ไม่อนุมัติ · <u>ถอน</u></td><td>—</td><td>ผู้ส่งถอนได้ขณะรออนุมัติ</td></tr>
+    <tr><td>ใบขอซื้อขอจ้าง</td><td><u>ร่าง</u> → รอพิจารณา → อนุมัติ → ทำสัญญาแล้ว · <u>ส่งคืน</u> · ไม่อนุมัติ · <u>ถอน</u> · ยกเลิก</td><td>ร่างที่ไม่เคยส่ง</td><td>ผู้ขอถอนขณะรอพิจารณา (กลับเป็นร่าง) ผู้บริหารยกเลิกที่อนุมัติแล้วได้ก่อนมีสัญญา</td></tr>
+    <tr><td>แฟ้มจัดซื้อ</td><td>ขั้น 1 ถึง 12 · ยกเลิก (รอบเดิมเก็บใน <span class="mono">c.rounds</span> เมื่อล้ม)</td><td>ไม่ลบ (สร้างและลบตามรายการในแผน)</td><td>ล้มแล้วเริ่มใหม่ (ขั้น 4 ถึง 7) ยกเลิก (ขั้น 2 ถึง 8)</td></tr>
+    <tr><td>สัญญา</td><td><u>ร่าง</u> → มีผล (ลงนาม) → <u>ปิด</u> · บอกเลิก</td><td>ร่าง (แฟ้มกลับขั้น 8)</td><td>บอกเลิกพร้อมเหตุผล (มีแล้ว) ไม่มีเลิกทำ</td></tr>
+    <tr><td>งวดงาน</td><td>รอส่งมอบ → ส่งมอบแล้ว → ตรวจรับ (ครบ / บางส่วน / ไม่รับ) → ส่งเบิก → จ่ายแล้ว · ยกเลิก</td><td>แถวงวดในสัญญาร่าง</td><td>ยกเลิกเมื่อบอกเลิกสัญญา หรือลดงวดผ่านการแก้ไขสัญญา</td></tr>
+    <tr><td>การแก้ไขสัญญา</td><td>รออนุมัติ → อนุมัติ · ไม่อนุมัติ · <u>ถอน</u></td><td>—</td><td>ผู้เสนอถอนขณะรออนุมัติ</td></tr>
+    <tr><td>หลักประกัน</td><td>วางแล้ว → ใกล้หมดอายุ → <u>ต่ออายุ</u> · คืนแล้ว · ริบ (แสดงสถานะ “ริบ” ด้วย)</td><td>บันทึกผิดก่อนงวดแรกส่งเบิก</td><td>คืนเมื่อพ้นประกันความชำรุด ริบเมื่อบอกเลิก</td></tr>
+  </tbody>
+</table></div>
+<h3><span class="num">5.2</span>กฎ</h3>
+<p class="small">ใช้ R-C-01 ถึง R-C-06 ของ Budget (ลบเฉพาะร่าง ยกเลิกต้องมีเหตุผล ห้ามยกเลิกถ้ามีลูกที่มีผล ปีที่ปิดแก้ไม่ได้ เลขเอกสารไม่นำกลับมาใช้ ข้อมูลหลักเลิกใช้แทนลบ) และเพิ่มดังนี้</p>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>กฎ</th><th>ระดับ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">R-PC-01</td><td>รายการในแผนขอซื้อได้เมื่ออยู่ในฉบับที่เผยแพร่ (มีแล้ว) การแก้รายการที่เผยแพร่แล้วทำให้แผนเป็น “มีการเปลี่ยนแปลง” และต้องส่งฉบับใหม่ แต่ใบขอที่อนุมัติแล้วไม่ถูกกระทบ</td><td>ห้าม</td></tr>
+    <tr><td class="id">R-PC-02</td><td>ยกเลิกใบขอหรือรายการในแผนไม่ได้เมื่อมีสัญญาที่มีผล ให้บอกเลิกสัญญาก่อน (ตาม R-C-03)</td><td>ห้าม</td></tr>
+    <tr><td class="id">R-PC-03</td><td>ข้อเสนอแก้หรือลบได้จนกรรมการคนแรกบันทึกคะแนน ใบเสนอราคาแก้ได้จนเลือกผู้ชนะ คณะกรรมการแก้ได้จนกรรมการคนแรกเปิดเผยส่วนได้เสีย</td><td>ห้าม</td></tr>
+    <tr><td class="id">R-PC-04</td><td>ผู้ขายในสัญญาเป็นผู้ชนะตามผลพิจารณาเสมอ วงเงินไม่เกินราคาที่ชนะและวงเงินที่ขอ (มีแล้ว)</td><td>ห้าม</td></tr>
+    <tr><td class="id">R-PC-05</td><td>ยอดงวดรวมเท่ากับวงเงินสัญญา วันส่งมอบเรียงตามงวดและไม่ก่อนวันลงนาม แก้ตารางงวดได้เฉพาะสัญญาร่าง หลังลงนามแก้ผ่านการแก้ไขสัญญาเท่านั้น</td><td>ห้าม</td></tr>
+    <tr><td class="id">R-PC-06</td><td>จำนวนลายมือชื่อที่ต้องการในการตรวจรับ = จำนวนกรรมการตรวจรับของสัญญา สูงสุด 2 (แทนค่าคงที่ 2)</td><td>ห้าม</td></tr>
+    <tr><td class="id">R-PC-07</td><td>ใบแจ้งหนี้ต้องตรงกับยอดตรวจรับของงวด (<span class="mono">okAmount</span>) ไม่ใช่ยอดงวดเต็ม</td><td>ห้าม</td></tr>
+    <tr><td class="id">R-PC-08</td><td>ปิดสัญญาได้เมื่อทุกงวดจ่ายแล้วหรือยกเลิก ไม่มีข้อบกพร่องค้าง และหลักประกันคืนหรือริบแล้ว</td><td>ห้าม</td></tr>
+    <tr><td class="id">R-PC-09</td><td>ผลพิจารณา วันลงนาม และวันส่งมอบ บันทึกวันที่ได้ไม่เกินวันนี้ (วันที่ย้อนหลังต้องมีเหตุผล)</td><td>เตือน</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 06 ============================== -->
+<section class="ch" id="s6">
+<h2><span class="num">06</span>CRUD รายหน้า</h2>
+<p class="lede">ทุกแถวเป็นข้อมูลหนึ่งชนิด ป้าย <span class="tag t-new">ใหม่</span> คือยังไม่มีในต้นแบบ <span class="tag t-should">เพิ่ม</span> คือมีบางส่วนและต้องเติม ไม่มีป้ายคือมีแล้วและย้ายมาใช้รูปแบบร่วม</p>
+
+<h3><span class="num">6.1</span>P2 แผนจัดซื้อจัดจ้าง</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อมูล</th><th>สร้าง</th><th>แก้ไข</th><th>ลบ / ยกเลิก</th><th>บทบาท</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-PC-01</td><td>รายการในแผน (<span class="mono">S.pplan</span>)</td><td>มีแล้ว <span class="tag t-should">เพิ่ม</span> ย้ายเป็น “+ เพิ่มรายการในแผน” ในรายการ วิธีจัดหาที่แนะนำใช้ <span class="mono">S.pcfg.specificMax</span> แทน 500,000</td><td><span class="tag t-new">ใหม่</span> ชื่อ ประเภท บรรทัดจัดสรร ประมาณการ ไตรมาสที่ต้องการ วิธีที่วางแผน ก่อนขอซื้อ</td><td><span class="tag t-new">ใหม่</span> ลบร่าง · ยกเลิกพร้อมเหตุผลเมื่อเผยแพร่แล้ว (R-PC-02)</td><td>พัสดุ</td></tr>
+    <tr><td class="id">FR-PC-02</td><td>ฉบับของแผน (<span class="mono">S.planDoc.versions</span>)</td><td>มีแล้ว (ส่งเมื่อมีการเปลี่ยน) แสดงรายการเพิ่ม แก้ ตัดออก</td><td>—</td><td><span class="tag t-new">ใหม่</span> ถอนขณะรออนุมัติ · <span class="tag t-should">เพิ่ม</span> ไม่อนุมัติต้องมีเหตุผล</td><td>พัสดุส่ง ผู้บริหารอนุมัติ (PC-P3)</td></tr>
+    <tr><td class="id">FR-PC-03</td><td>การเผยแพร่แผน</td><td>มีแล้ว (เลขประกาศ e-GP) <span class="tag t-should">เพิ่ม</span> ปุ่มจำลองเติมเลขประกาศ (SIM-PC-01)</td><td>—</td><td>—</td><td>พัสดุ</td></tr>
+    <tr><td class="id">FR-PC-04</td><td>ความต้องการปีถัดไป (คำขอ Budget)</td><td><span class="tag t-new">ใหม่</span> “ใส่ในแผนปีถัดไป” จากคำขอที่มีครุภัณฑ์หรือสิ่งก่อสร้าง เป็นรายการร่างของแผนปีนั้น (FL-PC-02)</td><td>—</td><td>—</td><td>พัสดุ</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.2</span>P3 ขอซื้อขอจ้าง</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อมูล</th><th>สร้าง</th><th>แก้ไข</th><th>ลบ / ยกเลิก</th><th>บทบาท</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-PC-05</td><td>ใบขอซื้อขอจ้าง (<span class="mono">S.reqn</span>)</td><td>มีแล้ว <span class="tag t-should">เพิ่ม</span> “+ ขอซื้อขอจ้าง” เลือกรายการในแผนที่เผยแพร่แล้วของหน่วยตน บันทึกเป็นร่างหรือส่งทันที ตรวจวงเงินคงเหลือและการแบ่งซื้อ (R-02) เหมือนเดิม</td><td><span class="tag t-new">ใหม่</span> วงเงิน เหตุผล วันที่ต้องการ ขณะร่างหรือส่งคืน</td><td><span class="tag t-new">ใหม่</span> ลบร่าง · ถอนขณะรอพิจารณา</td><td>หน่วยงาน (div divhead ของหน่วยตน) พัสดุขอแทนหน่วยได้ (D-PC-03)</td></tr>
+    <tr><td class="id">FR-PC-06</td><td>การพิจารณา</td><td colspan="3">มีแล้ว (อนุมัติ ไม่อนุมัติ) <span class="tag t-new">ใหม่</span> ส่งคืนแก้พร้อมเหตุผล · ไม่อนุมัติต้องมีเหตุผล · ข้อความอนุมัติบอกขั้นจริง (“แฟ้มไปขั้นเลือกวิธีจัดหา”) · ใบที่รอพิจารณาจองวงเงินด้วย (แสดงเป็น “รอจอง”)</td><td>ผู้บริหาร หรือผู้รับมอบ (<span class="mono">canSpend</span>)</td></tr>
+    <tr><td class="id">FR-PC-07</td><td>การยกเลิกใบที่อนุมัติ</td><td colspan="3"><span class="tag t-new">ใหม่</span> ยกเลิกพร้อมเหตุผลก่อนมีสัญญา แฟ้มถูกยกเลิก วงเงินที่จองคืน รายการในแผนกลับเป็น “ในแผน” (FL-PC-10)</td><td>ผู้บริหาร หัวหน้าพัสดุ</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.3</span>P4 แฟ้มจัดซื้อ</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อมูล</th><th>สร้าง</th><th>แก้ไข</th><th>ลบ / ยกเลิก</th><th>บทบาท</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-PC-08</td><td>แฟ้ม (รายการ + ลิ้นชัก)</td><td>อัตโนมัติจากรายการในแผน (มีแล้ว) เลขแฟ้มใช้ปีของรายการ</td><td>ในหน้าเต็ม (UI-PC1)</td><td><span class="tag t-should">เพิ่ม</span> ล้มแล้วเริ่มใหม่และยกเลิกย้ายมาที่ลิ้นชัก เหตุผลอย่างน้อย 10 ตัวอักษร เก็บรอบเดิมใน <span class="mono">c.rounds</span> และล้างข้อเสนอ คะแนน การเปิดเผย ผลพิจารณา (PC-P2) ยกเลิกแล้วขอซื้อใหม่ เริ่มจากขั้น 2 โดยไม่มีวิธีจัดหาและราคากลางเดิม</td><td>พัสดุ</td></tr>
+    <tr><td class="id">FR-PC-09</td><td>วิธีจัดหา</td><td>มีแล้ว</td><td>มีแล้ว (ก่อนส่งอนุมัติ)</td><td><span class="tag t-should">เพิ่ม</span> หัวหน้าไม่อนุมัติต้องมีเหตุผล · ผู้เลือกอนุมัติเองไม่ได้ (PC-P3) · เลือกวิธีไม่เปลี่ยน <span class="mono">p.method</span> เงียบๆ แต่บอกว่า “ต่างจากแผน จะอยู่ในฉบับถัดไป”</td><td>พัสดุเลือก หัวหน้าพัสดุอนุมัติ</td></tr>
+    <tr><td class="id">FR-PC-10</td><td>ราคากลางและการสำรวจตลาด</td><td>มีแล้ว</td><td><span class="tag t-new">ใหม่</span> แก้แถวสำรวจตลาด</td><td><span class="tag t-new">ใหม่</span> ลบแถวสำรวจตลาดก่อนประกาศ</td><td>พัสดุ</td></tr>
+    <tr><td class="id">FR-PC-11</td><td>TOR ของแฟ้ม</td><td>มีแล้ว (จากแม่แบบใน P5)</td><td><span class="tag t-new">ใหม่</span> เปลี่ยนแม่แบบหรือแนบใหม่ก่อนประกาศ</td><td><span class="tag t-new">ใหม่</span> ถอดก่อนประกาศ</td><td>พัสดุ</td></tr>
+    <tr><td class="id">FR-PC-12</td><td>คณะกรรมการ (TOR พิจารณาผล จัดซื้อ ตรวจรับ)</td><td>มีแล้ว</td><td><span class="tag t-new">ใหม่</span> เลขคำสั่ง วันที่ ประธาน กรรมการ ก่อนเริ่มทำหน้าที่ (R-PC-03) หลังจากนั้นเปลี่ยนตัวพร้อมเหตุผล (เดิมเปลี่ยนได้เฉพาะเมื่อมีส่วนได้เสีย)</td><td><span class="tag t-new">ใหม่</span> ยกเลิกคำสั่งก่อนเริ่มทำหน้าที่</td><td>พัสดุ</td></tr>
+    <tr><td class="id">FR-PC-13</td><td>การเปิดเผยส่วนได้เสีย</td><td>มีแล้ว</td><td><span class="tag t-new">ใหม่</span> แก้คำประกาศของตนพร้อมเหตุผลก่อนให้คะแนน “กับผู้ยื่นรายใด” เลือกจากข้อเสนอ</td><td>—</td><td>กรรมการเอง พัสดุบันทึกแทนจากแบบฟอร์ม</td></tr>
+    <tr><td class="id">FR-PC-14</td><td>เกณฑ์พิจารณา</td><td>มีแล้ว (สองชุดสำเร็จรูป)</td><td><span class="tag t-should">เพิ่ม</span> ตารางเกณฑ์ (UI-PC3) เพิ่ม แก้ ลบเกณฑ์ น้ำหนักรวม 100</td><td>ล็อกเมื่อประกาศ</td><td>พัสดุ</td></tr>
+    <tr><td class="id">FR-PC-15</td><td>ประกาศ e-GP</td><td>มีแล้ว <span class="tag t-should">เพิ่ม</span> ปุ่มจำลองเติมเลขโครงการและวันปิดรับ (SIM-PC-02)</td><td><span class="tag t-new">ใหม่</span> แก้เลขและวันก่อนปิดรับ (ถาม–ตอบที่แก้ประกาศเลื่อนวันได้ มีแล้ว)</td><td>ยกเลิกประกาศ = ล้มแล้วเริ่มใหม่</td><td>พัสดุ</td></tr>
+    <tr><td class="id">FR-PC-16</td><td>ข้อเสนอ (<span class="mono">c.bids</span>)</td><td>มีแล้ว <span class="tag t-should">เพิ่ม</span> ผู้ยื่นเลือกจากทะเบียนผู้ขาย (<span class="mono">S.vendors</span>) หรือพิมพ์ชื่อใหม่ ปุ่มจำลองเติมข้อเสนอ (SIM-PC-03)</td><td><span class="tag t-new">ใหม่</span> ชื่อ ราคา เอกสารครบ ก่อนให้คะแนน (R-PC-03)</td><td><span class="tag t-new">ใหม่</span> ลบแถวก่อนให้คะแนน จำนวนต้องตรงกับที่ปิดรับ</td><td>พัสดุ</td></tr>
+    <tr><td class="id">FR-PC-17</td><td>ใบเสนอราคา (วิธีเฉพาะเจาะจง)</td><td>มีแล้ว</td><td><span class="tag t-new">ใหม่</span> ก่อนเลือกผู้ชนะ</td><td><span class="tag t-new">ใหม่</span> ลบแถวก่อนเลือกผู้ชนะ</td><td>พัสดุ</td></tr>
+    <tr><td class="id">FR-PC-18</td><td>คะแนน</td><td>มีแล้ว</td><td>มีแล้ว (ขณะขั้น 6)</td><td>—</td><td>กรรมการ พัสดุ</td></tr>
+    <tr><td class="id">FR-PC-19</td><td>ผลการพิจารณา</td><td>มีแล้ว <span class="tag t-should">เพิ่ม</span> ช่องวันที่ (ค่าเริ่มต้นวันนี้ R-PC-09)</td><td>—</td><td><span class="tag t-new">ใหม่</span> ถอนผลพิจารณาพร้อมเหตุผลก่อนพ้นระยะอุทธรณ์ (กลับขั้น 6 คะแนนยังอยู่)</td><td>พัสดุเสนอ หัวหน้าพัสดุถอน</td></tr>
+    <tr><td class="id">FR-PC-20</td><td>อุทธรณ์</td><td><span class="tag t-should">เพิ่ม</span> ฟอร์มบันทึกอุทธรณ์ (วันที่ยื่น ผู้อุทธรณ์จากผู้ยื่นข้อเสนอ ประเด็น) แทนปุ่มสาธิตสองปุ่ม และปุ่มจำลอง (SIM-PC-04)</td><td>—</td><td>ยกหรือรับอุทธรณ์ต้องมีเหตุผล <span class="tag t-should">เพิ่ม</span> ผู้ตัดสินเป็นหัวหน้าพัสดุตามที่งานแจ้ง (เอาผู้บริหารออก หรือแจ้งงานให้ทั้งสอง D-PC-07)</td><td>พัสดุบันทึก หัวหน้าพัสดุตัดสิน</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.4</span>P7 สัญญาและงวดงาน</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อมูล</th><th>สร้าง</th><th>แก้ไข</th><th>ลบ / ยกเลิก</th><th>บทบาท</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-PC-21</td><td>สัญญา (รายการ + ลิ้นชัก)</td><td>มีแล้ว <span class="tag t-should">เพิ่ม</span> “+ สร้างสัญญา” เลือกแฟ้มที่ขั้น 8 ผู้ขายล็อกเป็นผู้ชนะ (R-PC-04) เลขที่ระบบ <span class="mono">CT-&lt;ปี&gt;-nnn</span> และเลขสัญญาที่พิมพ์ได้ สร้างเป็นร่าง</td><td><span class="tag t-new">ใหม่</span> วงเงิน วันเริ่ม ระยะเวลา กรรมการตรวจรับ ขณะร่าง (กรรมการตรวจรับแก้ก่อนลงนามตรวจรับได้ มีแล้ว)</td><td><span class="tag t-new">ใหม่</span> ลบร่าง (แฟ้มกลับขั้น 8) · บอกเลิก (มีแล้ว)</td><td>พัสดุ</td></tr>
+    <tr><td class="id">FR-PC-22</td><td>การลงนามสัญญา</td><td colspan="3"><span class="tag t-new">ใหม่</span> ปุ่ม “ลงนามแล้ว” พร้อมวันลงนาม (R-PC-09) ร่างกลายเป็นมีผล ผูกพันวงเงินบรรทัดจัดสรร (FL-PC-06) และแฟ้มไปขั้น 9 ข้อมูลตั้งต้นทุกสัญญาเป็น “มีผล” อยู่แล้ว</td><td>พัสดุ หัวหน้าพัสดุ</td></tr>
+    <tr><td class="id">FR-PC-23</td><td>ตารางงวดงาน</td><td>แบ่งเท่ากันอัตโนมัติเป็นค่าเริ่มต้น</td><td><span class="tag t-new">ใหม่</span> ตารางงวด (UI-PC3): จำนวนงวด ยอด วันส่งมอบ สิ่งที่ส่งมอบ ขณะร่าง (R-PC-05)</td><td>ลบแถวขณะร่าง</td><td>พัสดุ</td></tr>
+    <tr><td class="id">FR-PC-24</td><td>การส่งมอบ</td><td>มีแล้ว ปุ่มจำลองเติมหนังสือส่งมอบจากผู้ขาย (SIM-PC-05)</td><td><span class="tag t-new">ใหม่</span> วันที่และเลขหนังสือก่อนกรรมการลงนาม</td><td><span class="tag t-new">ใหม่</span> ถอนการส่งมอบที่บันทึกผิดก่อนลงนาม</td><td>พัสดุ</td></tr>
+    <tr><td class="id">FR-PC-25</td><td>การตรวจรับ</td><td>มีแล้ว (ครบ บางส่วน เห็นแย้ง)</td><td>—</td><td><span class="tag t-new">ใหม่</span> กรรมการถอนลายมือชื่อของตนพร้อมเหตุผลก่อนออกใบตรวจรับ · จำนวนลายมือชื่อตาม R-PC-06</td><td>กรรมการตรวจรับ</td></tr>
+    <tr><td class="id">FR-PC-26</td><td>การแก้ไขสัญญา (วงเงิน ระยะเวลา)</td><td>มีแล้ว</td><td><span class="tag t-new">ใหม่</span> แก้ขณะรออนุมัติ เลือกงวดที่รับยอดเปลี่ยน (เดิมเป็นงวดเปิดงวดสุดท้าย)</td><td><span class="tag t-new">ใหม่</span> ถอนขณะรออนุมัติ</td><td>พัสดุเสนอ หัวหน้าหรือผู้บริหารตามขั้นอำนาจ (สะสมจากวงเงินเดิม)</td></tr>
+    <tr><td class="id">FR-PC-27</td><td>หลักประกันสัญญา</td><td>มีแล้ว <span class="tag t-should">เพิ่ม</span> ตรวจร้อยละขั้นต่ำ (<span class="mono">guaranteePct</span>) และวันหมดอายุ ปุ่มจำลองเติมหนังสือค้ำประกัน (SIM-PC-06)</td><td><span class="tag t-new">ใหม่</span> ต่ออายุ แก้เลขและธนาคาร</td><td><span class="tag t-new">ใหม่</span> ลบที่บันทึกผิดก่อนงวดแรกส่งเบิก · คืนหรือริบ (มีแล้ว) แสดงสถานะริบ</td><td>พัสดุ</td></tr>
+    <tr><td class="id">FR-PC-28</td><td>ค่าปรับ</td><td>คำนวณอัตโนมัติ (มีแล้ว)</td><td><span class="tag t-new">ใหม่</span> งดหรือลดค่าปรับพร้อมเหตุผลและเอกสาร (D-PC-06)</td><td><span class="tag t-new">ใหม่</span> ยกเลิกการงดหรือลด ก่อนส่งเบิก</td><td>พัสดุเสนอ ผู้บริหารอนุมัติ</td></tr>
+    <tr><td class="id">FR-PC-29</td><td>ควบคุมงาน ข้อบกพร่อง หนังสือ</td><td>มีแล้ว</td><td><span class="tag t-new">ใหม่</span> แก้รายงานควบคุมงานและหนังสือร่าง</td><td><span class="tag t-new">ใหม่</span> ลบหนังสือร่าง ยกเลิกข้อบกพร่องที่บันทึกผิดพร้อมเหตุผล</td><td>พัสดุ ผู้ควบคุมงาน</td></tr>
+    <tr><td class="id">FR-PC-30</td><td>ใบแจ้งหนี้ของงวด</td><td>มีแล้ว ปุ่มจำลองเติมจากพอร์ทัลผู้ขาย (SIM-PC-05) ยอดเริ่มต้นเท่ายอดตรวจรับ</td><td><span class="tag t-new">ใหม่</span> แก้ก่อนผ่านด่านตรวจ</td><td><span class="tag t-new">ใหม่</span> ส่งคืนผู้ขายพร้อมเหตุผล (ใบในงวด เดิมทำได้เฉพาะใบจากพอร์ทัล)</td><td>พัสดุ การเงิน</td></tr>
+    <tr><td class="id">FR-PC-31</td><td>ปิดสัญญา</td><td colspan="3"><span class="tag t-new">ใหม่</span> ปุ่ม “ปิดสัญญา” เมื่อครบ R-PC-08 สถานะ “ปิด” แฟ้มไปขั้น 12 รายการในแผนเป็น “ปิด” วงเงินที่ไม่ได้ใช้คืนบรรทัดจัดสรร (FL-PC-09)</td><td>พัสดุ หัวหน้าพัสดุ</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.5</span>ส่งต่อเบิกจ่าย (รอยต่อกับ Fisko Finance)</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>เรื่อง</th><th>สิ่งที่ต้องทำ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-PC-32</td><td>ด่านตรวจก่อนจ่าย</td><td>ข้อ 3 เทียบใบแจ้งหนี้กับยอดตรวจรับ (R-PC-07) ยอดสุทธิ = ยอดตรวจรับ − ค่าปรับหลังงดหรือลด (มีแล้วใน <span class="mono">phNet</span>)</td></tr>
+    <tr><td class="id">FR-PC-33</td><td>สถานะเบิกจ่ายบนงวด</td><td>แถวงวดใน P7 แสดงเลขใบสั่งซื้อ เลขใบสำคัญ สถานะ (ร่าง ตรวจ อนุมัติ จ่ายแล้ว) และลิงก์ไปใบสำคัญใน Finance ใบสำคัญที่ Finance ยกเลิกทำให้งวดกลับเป็น “ตรวจรับแล้ว” ส่งเบิกใหม่ได้</td></tr>
+    <tr><td class="id">FR-PC-34</td><td>โค้ดเก่า</td><td>ลบตัวจับเหตุการณ์ <span class="mono">#py-form</span> <span class="mono">data-pyok</span> <span class="mono">data-pyno</span> ใน <span class="mono">62-finance.js</span> ที่ไม่มีหน้าจอแล้ว</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 07 ============================== -->
+<section class="ch" id="s7">
+<h2><span class="num">07</span>การไหลของข้อมูลข้ามขั้น</h2>
+<p class="lede">ตัวเลขและชื่อของแต่ละขั้นมาจากขั้นก่อนหน้าเสมอ แก้ที่ต้นทางแล้วปลายทางเปลี่ยนตาม และยกเลิกที่ต้นทางแล้วปลายทางคืนสภาพ</p>
+<div class="flow">
+  <div class="st"><b>P2</b>รายการในแผน</div><span class="ar">→</span>
+  <div class="st"><b>P2</b>ฉบับที่เผยแพร่</div><span class="ar">→</span>
+  <div class="st"><b>P3</b>ใบขอ อนุมัติ</div><span class="ar">→</span>
+  <div class="st"><b>P4</b>ขั้น 3–8 ผู้ชนะ ราคา</div><span class="ar">→</span>
+  <div class="st"><b>P7</b>สัญญา งวด</div><span class="ar">→</span>
+  <div class="st"><b>P7</b>ตรวจรับ ใบแจ้งหนี้</div><span class="ar">→</span>
+  <div class="st"><b>Finance</b>ใบสำคัญ จ่าย</div><span class="ar">→</span>
+  <div class="st"><b>P7</b>ปิดสัญญา ขั้น 12</div>
+</div>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>จาก</th><th>ไป</th><th>สิ่งที่ต้องเกิด</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FL-PC-01</td><td>บรรทัดจัดสรร (Budget B7)</td><td>รายการในแผน ใบขอ</td><td>วงเงินคงเหลือ = จัดสรรหลังโอน − ผูกพันสัญญา − จองจากใบขอที่อนุมัติและรอพิจารณา ใช้ปีของรายการ ไม่ใช่ 2570 คงที่</td></tr>
+    <tr><td class="id">FL-PC-02</td><td>คำขอปีถัดไป (Budget B3)</td><td>รายการร่างในแผนปีถัดไป</td><td>“ใส่ในแผนปีถัดไป” สร้างรายการพร้อมประมาณการจากบรรทัดคำขอ ลิงก์สองทาง</td></tr>
+    <tr><td class="id">FL-PC-03</td><td>ฉบับที่เผยแพร่</td><td>ใบขอ</td><td>ขอได้เฉพาะรายการในฉบับที่เผยแพร่ (มีแล้ว) รายการที่ยกเลิกหายจากตัวเลือก</td></tr>
+    <tr><td class="id">FL-PC-04</td><td>ใบขอ</td><td>แฟ้ม</td><td>ส่ง → ขั้น 2 อนุมัติ → ขั้น 3 (มีแล้ว) ถอนหรือส่งคืน → ขั้น 1 ไม่อนุมัติหรือยกเลิก → ยกเลิกแฟ้มและคืนวงเงินจอง</td></tr>
+    <tr><td class="id">FL-PC-05</td><td>ผลพิจารณา</td><td>สัญญา</td><td>ผู้ขายล็อกเป็นผู้ชนะ วงเงินเริ่มต้นเท่าราคาที่ชนะ ผลพิจารณาที่ถอนหรือรับอุทธรณ์ทำให้สร้างสัญญาไม่ได้</td></tr>
+    <tr><td class="id">FL-PC-06</td><td>สัญญาที่ลงนาม</td><td>บรรทัดจัดสรร (Budget B8 แท็บจัดซื้อ)</td><td>ผูกพันวงเงินตอนลงนาม (ร่างไม่ผูกพัน) การแก้ไขสัญญาด้านวงเงินที่อนุมัติปรับยอดผูกพัน</td></tr>
+    <tr><td class="id">FL-PC-07</td><td>ตรวจรับ</td><td>ใบแจ้งหนี้ ด่านตรวจ ใบสำคัญ</td><td>ยอดตรวจรับเป็นยอดเริ่มต้นของใบแจ้งหนี้และยอดตรวจในด่าน ใบสำคัญที่อนุมัติสร้างคำขอจ่าย (มีแล้ว) สถานะย้อนกลับมาแสดงบนงวด (FR-PC-33)</td></tr>
+    <tr><td class="id">FL-PC-08</td><td>งดหรือลดค่าปรับ</td><td>ยอดสุทธิ</td><td>ค่าปรับหลังอนุมัติเข้าสู่ <span class="mono">phNet</span> และใบสำคัญ</td></tr>
+    <tr><td class="id">FL-PC-09</td><td>ปิดสัญญา</td><td>แฟ้ม แผน บรรทัดจัดสรร</td><td>แฟ้มขั้น 12 รายการในแผน “ปิด” ส่วนต่างระหว่างวงเงินสัญญากับยอดจ่ายคืนวงเงินคงเหลือ</td></tr>
+    <tr><td class="id">FL-PC-10</td><td>ยกเลิกแฟ้มหรือใบขอ</td><td>แผน ใบขอ วงเงิน</td><td>รายการในแผนกลับเป็น “ในแผน” ใบขอเป็นยกเลิก วงเงินจองคืน ขอใหม่แล้วแฟ้มเริ่มรอบใหม่สะอาด (PC-P2)</td></tr>
+    <tr><td class="id">FL-PC-11</td><td>บอกเลิกสัญญา</td><td>หลักประกัน งวด วงเงิน</td><td>งวดที่ยังไม่จ่ายยกเลิก หลักประกันริบ (มีแล้ว) ผูกพันที่เหลือคืนบรรทัดจัดสรร</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 08 ============================== -->
+<section class="ch" id="s8">
+<h2><span class="num">08</span>ขั้นที่จำลอง: บันทึกผลจริงและปุ่มจำลอง</h2>
+<p class="lede">ทุกขั้นที่ผลมาจากภายนอกมีฟอร์มบันทึกผล และปุ่ม “จำลอง” ที่เติมค่าในฟอร์มให้ตรวจก่อนบันทึก ไม่บันทึกเอง ผลจากการจำลองมีป้าย “จำลอง” ในประวัติ ปุ่ม “สาธิต: ...” เดิมเปลี่ยนเป็นแบบนี้ทั้งหมด</p>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ขั้น</th><th>ฟอร์มบันทึกผล</th><th>ปุ่มจำลองเติมอะไร</th></tr></thead>
+  <tbody>
+    <tr><td class="id">SIM-PC-01</td><td>เผยแพร่แผนใน e-GP</td><td>เลขประกาศ วันที่</td><td>เลข <span class="mono">EGP-&lt;ปี&gt;-P0n</span> วันนี้</td></tr>
+    <tr><td class="id">SIM-PC-02</td><td>ประกาศและปิดรับใน e-GP</td><td>เลขโครงการ วันประกาศ วันปิดรับ</td><td>เลขโครงการ วันนี้ วันปิดรับตามระยะขั้นต่ำของวิธี (<span class="mono">rfMinAnnounce</span>) ปุ่ม “ถึงวันปิดรับ” คงไว้แต่ใช้ “ณ วันที่” แบบ Budget (เลื่อน <span class="mono">S.asOf</span>) แทนการข้ามขั้น</td></tr>
+    <tr><td class="id">SIM-PC-03</td><td>ข้อเสนอที่ได้รับ</td><td>ตารางข้อเสนอ: ผู้ยื่น ราคา เอกสารครบ</td><td>3 รายจากทะเบียนผู้ขายที่ไม่อยู่ในบัญชีดำ ราคา 85 ถึง 99% ของราคากลาง หนึ่งรายเอกสารไม่ครบ (แก้หรือลบแถวได้ก่อนบันทึก)</td></tr>
+    <tr><td class="id">SIM-PC-04</td><td>อุทธรณ์</td><td>มีหรือไม่มี ผู้อุทธรณ์ วันที่ ประเด็น</td><td>“ไม่มีอุทธรณ์” หรือ “มีอุทธรณ์จากผู้ยื่นอันดับ 2” (เดิม <span class="mono">#ap-file</span> <span class="mono">#ap-none</span>)</td></tr>
+    <tr><td class="id">SIM-PC-05</td><td>ส่งมอบและใบแจ้งหนี้จากผู้ขาย</td><td>เลขหนังสือส่งมอบ วันที่ · เลขใบแจ้งหนี้ ยอด</td><td>วันนี้ ยอดเท่ายอดตรวจรับ เลขจากปีของสัญญา</td></tr>
+    <tr><td class="id">SIM-PC-06</td><td>หนังสือค้ำประกัน</td><td>ธนาคาร เลขที่ ยอด วันหมดอายุ</td><td>5% ของวงเงิน วันหมดอายุ = งวดสุดท้าย + ระยะประกันความชำรุด</td></tr>
+    <tr><td class="id">SIM-PC-07</td><td>กรรมการให้คะแนนและเปิดเผย</td><td>มีแล้ว (ตารางคะแนน)</td><td>คงปุ่มเดิม แต่เติมเฉพาะกรรมการที่ยังไม่ได้ส่ง</td></tr>
+    <tr><td class="id">SIM-PC-08</td><td>จุดควบคุมงานและสิ้นสุดประกัน</td><td>มีแล้ว</td><td>คงปุ่มเดิม (<span class="mono">data-cpdemo</span> <span class="mono">data-wdemo</span>) และเพิ่มป้าย “จำลอง”</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 09 ============================== -->
+<section class="ch" id="s9">
+<h2><span class="num">09</span>ข้อบกพร่องที่ต้องแก้ก่อนสาธิตครบวงจร</h2>
+<p class="lede">พบระหว่างตรวจโค้ด แต่ละข้อทำให้สาธิตต่อไม่ได้หรือได้ผลผิด แก้ในรอบที่ใช้หน้านั้น</p>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>อาการ</th><th>สาเหตุ</th><th>แก้ใน</th></tr></thead>
+  <tbody>
+    <tr><td class="id">BUG-PC-01</td><td>สัญญาที่มีกรรมการตรวจรับคนเดียวไม่มีวันตรวจรับครบ</td><td>ฟอร์มยอมคนเดียวถ้าไม่เกิน <span class="mono">singleInspectorMax</span> แต่ <span class="mono">PHASE_SIGNS = 2</span> คงที่ (<span class="mono">60-procurement.js:5</span>)</td><td>PC3 (R-PC-06)</td></tr>
+    <tr><td class="id">BUG-PC-02</td><td>งวดที่ตรวจรับบางส่วนไม่ผ่านด่านตรวจข้อ 3 เสมอ</td><td>เทียบใบแจ้งหนี้กับ <span class="mono">ph.amount</span> แทน <span class="mono">okAmount</span> (<span class="mono">63-contracts.js:44</span>)</td><td>PC3 (R-PC-07)</td></tr>
+    <tr><td class="id">BUG-PC-03</td><td>ปุ่ม “เปิดสัญญา” ในแฟ้มไปที่รายการ ไม่เปิดสัญญา</td><td><span class="mono">case-gocon</span> ตั้ง <span class="mono">PROC_TAB</span> แต่ไม่ตั้ง <span class="mono">CON_OPEN</span></td><td>PC2</td></tr>
+    <tr><td class="id">BUG-PC-04</td><td>ล้มแล้วเริ่มใหม่ได้ข้อเสนอและคะแนนรอบเดิม เพิ่มข้อเสนอไม่ได้</td><td><span class="mono">caseFail</span> ล้างเฉพาะจำนวนผู้ยื่น ผลพิจารณา อุทธรณ์</td><td>PC2 (PC-P2)</td></tr>
+    <tr><td class="id">BUG-PC-05</td><td>สัญญาไม่เคยเป็น “ปิด” แม้หน้าอ่านสถานะนี้</td><td>ไม่มีที่ใดตั้ง <span class="mono">status = "closed"</span> <span class="mono">closeChecks</span> ปิดเฉพาะแฟ้ม</td><td>PC3 (FR-PC-31)</td></tr>
+    <tr><td class="id">BUG-PC-06</td><td>หลักประกันที่ริบแสดงเป็น “วางแล้ว”</td><td><span class="mono">guarSt</span> ไม่รู้จัก forfeited</td><td>PC3</td></tr>
+    <tr><td class="id">BUG-PC-07</td><td>ข้อความอนุมัติใบขอบอกว่าทำสัญญาได้แล้ว</td><td>ข้อความใน <span class="mono">60-procurement.js:183</span> แฟ้มอยู่ขั้น 3</td><td>PC1</td></tr>
+    <tr><td class="id">BUG-PC-08</td><td>ใบขอในข้อมูลตั้งต้นลงวันที่ก่อนแผนที่เผยแพร่</td><td>ใบขอสิงหาคม 2569 แผนอนุมัติ 25 กันยายน เผยแพร่ 1 ตุลาคม</td><td>PC1 (ข้อมูลตั้งต้นใหม่ <span class="mono">DATA_V</span>)</td></tr>
+    <tr><td class="id">BUG-PC-09</td><td>หัวหน้าพัสดุอนุมัติวิธีจัดหาที่ตนเลือกเองได้</td><td>ไม่เรียก <span class="mono">sodCheck</span> (TOR ตรวจแล้ว)</td><td>PC2 (PC-P3)</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 10 ============================== -->
+<section class="ch" id="s10">
+<h2><span class="num">10</span>ปีงบประมาณและวันที่</h2>
+<ul>
+  <li><b>ปีจัดซื้อเป็นบริบท:</b> <span class="mono">FAM_FY = 2570</span> (ค่าคงที่) เปลี่ยนเป็น <span class="mono">PROC_FY</span> ที่ตั้งต้นจาก <span class="mono">CUR_FY</span> (รอบ C4) P2 มีตัวเลือกปี (ปีที่ใช้จ่าย และปีถัดไปสำหรับแผนล่วงหน้าจาก FL-PC-02) หน้าอื่นใช้ปีของข้อมูลแต่ละรายการ</li>
+  <li><b>เลขที่เอกสาร:</b> <span class="mono">PP RQ PC CT</span> ใช้ปีของรายการและนับต่อปี ไม่นำกลับมาใช้ (R-C-05) เลิกฝัง <span class="mono">"PC-2570-"</span> <span class="mono">"CT-70/"</span> <span class="mono">EGP-70-</span> และข้อความ “ปีงบประมาณ 2570” ในเหตุผลใบขอ</li>
+  <li><b>วันที่สาธิต:</b> ใช้ <span class="mono">TODAY</span> และ “ณ เดือน” ของ Budget (<span class="mono">S.asOf</span>) เดียวกัน ไม่ทำตัวเลื่อนแยก ระยะอุทธรณ์ วันปิดรับ ค่าปรับ และหลักประกันใกล้หมดอายุคำนวณจากวันนี้นั้น</li>
+  <li><b>ปฏิทินวันหยุด:</b> ขยายรายการวันหยุดให้ครอบคลุมปีงบประมาณที่ใช้ (ตอนนี้มีเฉพาะ 2569) และแผนภูมิแกนต์ใช้ช่วงของปีที่เลือก แทน 1 กรกฎาคม 2569 ถึง 30 กันยายน 2570</li>
+  <li><b>ข้อมูลตั้งต้น:</b> เรียงวันที่ใหม่ (แผนเผยแพร่ก่อนใบขอ) และเพิ่มรายการในแผนของหน่วยที่ผู้ใช้สาธิต div เป็นเจ้าของ ให้เริ่มสคริปต์บทที่ 11 ได้ทันที เพิ่ม <span class="mono">DATA_V</span></li>
+</ul>
+</section>
+
+<!-- ============================== 11 ============================== -->
+<section class="ch" id="s11">
+<h2><span class="num">11</span>สคริปต์สาธิตครบวงจร</h2>
+<p class="lede">ประมาณ 35 นาที หนึ่งโครงการจากแผนถึงปิดสัญญา ทุกขั้นสร้างหรือเปลี่ยนข้อมูลจริงบนจอ ปุ่ม “จำลอง” ใช้เฉพาะขั้นที่ผลมาจากภายนอก ขั้น P-E15 เป็นทางเลือกที่แสดงการยกเลิก</p>
+<div class="tbl"><table>
+  <thead><tr><th class="id">ขั้น</th><th>บทบาท</th><th>หน้า</th><th>ทำอะไร</th></tr></thead>
+  <tbody>
+    <tr><td class="id">P-E01</td><td>พัสดุ</td><td>P2</td><td>เพิ่มรายการในแผน (ครุภัณฑ์คอมพิวเตอร์ บรรทัดจัดสรรของหน่วย) แก้ประมาณการ เพิ่มรายการที่ผิดแล้วลบร่าง</td></tr>
+    <tr><td class="id">P-E02</td><td>พัสดุ → ผู้บริหาร → พัสดุ</td><td>P2</td><td>ส่งฉบับที่ 2 (เห็นรายการเพิ่มและแก้) ผู้บริหารอนุมัติ พัสดุเผยแพร่ด้วยปุ่มจำลองเลขประกาศ</td></tr>
+    <tr><td class="id">P-E03</td><td>หน่วยงาน</td><td>P3</td><td>ขอซื้อจากรายการนั้น บันทึกร่าง แก้วงเงิน ส่ง แล้วถอนพร้อมเหตุผล แก้และส่งใหม่</td></tr>
+    <tr><td class="id">P-E04</td><td>ผู้บริหาร</td><td>P3</td><td>ส่งคืนให้แก้เหตุผลความจำเป็น หน่วยงานแก้และส่ง ผู้บริหารอนุมัติ เห็นวงเงินคงเหลือของบรรทัดลด</td></tr>
+    <tr><td class="id">P-E05</td><td>พัสดุ → หัวหน้าพัสดุ</td><td>P4</td><td>เปิดแฟ้มจากลิ้นชัก เลือกวิธี e-bidding หัวหน้าพัสดุอนุมัติ (หัวหน้าอนุมัติวิธีที่ตนเลือกไม่ได้)</td></tr>
+    <tr><td class="id">P-E06</td><td>พัสดุ</td><td>P4 ขั้น 4</td><td>ราคากลางจากการสำรวจตลาด (ลบแถวที่ผิดหนึ่งแถว) แนบ TOR จากแม่แบบ ตั้งคณะกรรมการ แก้กรรมการหนึ่งคน ตั้งเกณฑ์ ประกาศด้วยปุ่มจำลอง</td></tr>
+    <tr><td class="id">P-E07</td><td>พัสดุ</td><td>P4 ขั้น 5–6</td><td>เลื่อน “ณ วันที่” ถึงวันปิดรับ บันทึกข้อเสนอด้วยปุ่มจำลอง แก้ราคาหนึ่งแถว ลบผู้ยื่นที่เอกสารไม่ครบ</td></tr>
+    <tr><td class="id">P-E08</td><td>กรรมการ → พัสดุ → หัวหน้าพัสดุ</td><td>P4 ขั้น 6–7</td><td>เปิดเผยส่วนได้เสียและให้คะแนน (จำลอง) ประกาศผล บันทึกอุทธรณ์จากผู้ยื่นอันดับ 2 (จำลอง) หัวหน้าพัสดุยกอุทธรณ์พร้อมเหตุผล</td></tr>
+    <tr><td class="id">P-E09</td><td>พัสดุ</td><td>P7</td><td>สร้างสัญญาร่างจากแฟ้ม (ผู้ขายล็อกเป็นผู้ชนะ) แก้ตารางงวดเป็น 2 งวดยอดไม่เท่ากัน ลงนาม เห็นยอดผูกพันใน Budget B8</td></tr>
+    <tr><td class="id">P-E10</td><td>พัสดุ</td><td>P7</td><td>บันทึกหนังสือค้ำประกัน (จำลอง) บันทึกส่งมอบงวด 1 (จำลอง)</td></tr>
+    <tr><td class="id">P-E11</td><td>กรรมการตรวจรับ</td><td>P7</td><td>ลงนามตรวจรับบางส่วน กรรมการคนหนึ่งถอนลายมือชื่อที่ผิดแล้วลงใหม่ ใบแจ้งหนี้ (จำลอง) ยอดเท่ายอดตรวจรับ ผ่านด่านตรวจ</td></tr>
+    <tr><td class="id">P-E12</td><td>การเงิน → ผู้บริหาร</td><td>Finance → P7</td><td>ทำใบสำคัญจากด่านตรวจ ตรวจ อนุมัติ จ่าย กลับมาเห็นสถานะ “จ่ายแล้ว” บนงวด 1</td></tr>
+    <tr><td class="id">P-E13</td><td>พัสดุ → หัวหน้าพัสดุ</td><td>P7</td><td>เสนอขยายเวลางวด 2 ถอน แก้จำนวนวัน เสนอใหม่ หัวหน้าอนุมัติ งวด 2 ส่งมอบช้า เห็นค่าปรับ เสนอลดค่าปรับและผู้บริหารอนุมัติ</td></tr>
+    <tr><td class="id">P-E14</td><td>พัสดุ</td><td>P7 → P4 → P2</td><td>ตรวจรับและจ่ายงวด 2 เลื่อนถึงสิ้นประกัน คืนหลักประกัน ปิดสัญญา เห็นแฟ้มขั้น 12 รายการในแผน “ปิด” และวงเงินเหลือคืนบรรทัด</td></tr>
+    <tr><td class="id">P-E15</td><td>พัสดุ → ผู้บริหาร</td><td>P4 → P3</td><td>(ทางเลือก) แฟ้มที่สองไม่มีผู้ยื่น ล้มแล้วเริ่มใหม่ (รอบเดิมอยู่ในประวัติ) แล้วยกเลิกใบขอ เห็นวงเงินจองคืนและรายการกลับเป็น “ในแผน”</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 12 ============================== -->
+<section class="ch" id="s12">
+<h2><span class="num">12</span>สิทธิ์สร้าง แก้ไข และลบตามบทบาท</h2>
+<div class="tbl"><table>
+  <thead><tr><th>ข้อมูล</th><th>หน่วยงาน (div divhead)</th><th>แผน</th><th>พัสดุ</th><th>หัวหน้าพัสดุ</th><th>ผู้บริหาร</th><th>การเงิน</th><th>ผู้ตรวจสอบ</th></tr></thead>
+  <tbody>
+    <tr><td>รายการในแผน ฉบับของแผน</td><td>อ่าน</td><td>อ่าน</td><td>สร้าง แก้ ลบร่าง ยกเลิก ส่ง ถอน เผยแพร่</td><td>เหมือนพัสดุ</td><td>อนุมัติ ไม่อนุมัติ</td><td>—</td><td>อ่าน</td></tr>
+    <tr><td>ใบขอซื้อขอจ้าง</td><td>สร้าง แก้ ลบร่าง ถอน (หน่วยตน)</td><td>อ่าน</td><td>ขอแทนหน่วย (D-PC-03) อ่าน</td><td>ยกเลิกที่อนุมัติ</td><td>อนุมัติ ส่งคืน ไม่อนุมัติ ยกเลิก</td><td>—</td><td>อ่าน</td></tr>
+    <tr><td>แฟ้ม ขั้น 3–8 (วิธี ราคากลาง TOR คณะกรรมการ เกณฑ์ ประกาศ ข้อเสนอ ผลพิจารณา)</td><td>อ่านของหน่วยตน</td><td>อ่าน</td><td>สร้าง แก้ ลบแถว ล้ม ยกเลิก</td><td>อนุมัติวิธี ถอนผลพิจารณา ตัดสินอุทธรณ์</td><td>อ่าน</td><td>—</td><td>อ่าน</td></tr>
+    <tr><td>การเปิดเผย คะแนน</td><td colspan="7">กรรมการในคำสั่งทำของตนเอง (ทุกบทบาท ยกเว้นพัสดุผู้รับผิดชอบแฟ้ม) พัสดุบันทึกแทนจากแบบฟอร์มได้</td></tr>
+    <tr><td>สัญญา งวด หลักประกัน หนังสือ</td><td>อ่านของหน่วยตน</td><td>อ่าน</td><td>สร้าง แก้ร่าง ลบร่าง ลงนาม ปิด บอกเลิก</td><td>เหมือนพัสดุ</td><td>อ่าน</td><td>อ่าน</td><td>อ่าน</td></tr>
+    <tr><td>ตรวจรับ</td><td colspan="7">กรรมการตรวจรับในสัญญาลงนามและถอนของตนเอง หัวหน้าพัสดุหรือผู้บริหารแก้ความเห็นแย้ง</td></tr>
+    <tr><td>แก้ไขสัญญา ลดค่าปรับ</td><td>—</td><td>—</td><td>เสนอ แก้ ถอน</td><td>อนุมัติภายในขั้นอำนาจ</td><td>อนุมัติเกินขั้นอำนาจ ลดค่าปรับ</td><td>—</td><td>อ่าน</td></tr>
+    <tr><td>ใบแจ้งหนี้ ส่งเบิก</td><td>—</td><td>—</td><td>สร้าง แก้ ส่งคืน</td><td>ปล่อยงวดที่ระงับ</td><td>ปล่อยงวด อนุมัติใบสำคัญ</td><td>สร้าง แก้ ส่งคืน ทำใบสำคัญ</td><td>อ่าน</td></tr>
+  </tbody>
+</table></div>
+<p class="small">ทุกจุดอนุมัติตรวจแบ่งแยกหน้าที่ (PC-P3) ผู้ดูแลระบบไม่มีสิทธิ์ทำงานในวงจรนี้ (เปิดปิดกฎ SoD ใน M10 ได้เหมือนเดิม)</p>
+</section>
+
+<!-- ============================== 13 ============================== -->
+<section class="ch" id="s13">
+<h2><span class="num">13</span>ลำดับการสร้างต้นแบบ</h2>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รอบ</th><th>สิ่งที่สร้าง</th><th>ข้อกำหนด</th></tr></thead>
+  <tbody>
+    <tr><td class="id">PC1</td><td>ไฟล์ใหม่ <span class="mono">84-proc-crud.js</span> ปีจัดซื้อเป็นบริบทและเลขเอกสารตามปี ฟิลด์ชนิด <span class="mono">rows</span> ใน <span class="mono">76-crud.js</span> P2 รายการในแผนและฉบับของแผน P3 ใบขอ (ร่าง ถอน ส่งคืน ยกเลิก) ข้อมูลตั้งต้นใหม่</td><td>FR-PC-01–07, FL-PC-01–04, FL-PC-10, BUG-PC-07–08, บทที่ 10</td></tr>
+    <tr><td class="id">PC2</td><td>P4 รายการแฟ้ม + ลิ้นชัก ตารางแก้ได้ในขั้น 3–7 รอบใหม่สะอาด แบ่งแยกหน้าที่ ฟอร์มอุทธรณ์ ปุ่มจำลองประกาศ ข้อเสนอ อุทธรณ์</td><td>FR-PC-08–20, SIM-PC-01–04, SIM-PC-07, BUG-PC-03–04, BUG-PC-09</td></tr>
+    <tr><td class="id">PC3</td><td>P7 รายการสัญญา + ลิ้นชัก สัญญาร่างและลงนาม ตารางงวด ตรวจรับ แก้ไขสัญญา หลักประกัน ค่าปรับ ใบแจ้งหนี้ ปิดสัญญา ด่านตรวจและสถานะเบิกจ่าย</td><td>FR-PC-21–34, FL-PC-05–09, FL-PC-11, SIM-PC-05–06, SIM-PC-08, BUG-PC-01–02, BUG-PC-05–06</td></tr>
+    <tr><td class="id">PC4</td><td>สคริปต์สาธิต P-E01 ถึง P-E15 ในคู่มือในแอป (<span class="mono">DEMO</span> part “proc-e2e”) และการทดสอบ sweep ที่เดินครบวงจรด้วยปุ่มเดียวกับหน้าจอ ปรับเอกสารออกแบบ Procurement</td><td>บทที่ 11</td></tr>
+  </tbody>
+</table></div>
+<p class="small">แต่ละรอบ: สร้าง ทดสอบ (sweep เปิดทุกลิ้นชัก ฟอร์มสร้าง ฟอร์มแก้ และปุ่มตามสถานะ สำหรับ proc prochead div divhead exec fin audit) ตรวจสคริปต์ด้วย <span class="mono">new Function</span> หลัง build ปรับ HANDOFF เผยแพร่ต้นแบบ และถามก่อน commit</p>
+</section>
+
+<!-- ============================== 14 ============================== -->
+<section class="ch" id="s14">
+<h2><span class="num">14</span>ความเสี่ยงและประเด็นที่ต้องตัดสินใจ</h2>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ประเด็น</th><th>ข้อเสนอ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">D-PC-01</td><td>แฟ้ม 12 ขั้นและสัญญาที่เปิดอยู่จะย้ายเข้าลิ้นชักหรือไม่</td><td>ตกลงแล้ว: คงหน้าเต็ม ลิ้นชักใช้ดูสรุปและเปลี่ยนสถานะ (UI-PC1 UI-PC2)</td></tr>
+    <tr><td class="id">D-PC-02</td><td>เพิ่มสถานะ “ร่าง” ให้ใบขอและสัญญาหรือไม่</td><td>เพิ่ม เพื่อให้ลบได้ตาม R-C-01 และแก้งวดก่อนลงนาม สัญญาในข้อมูลตั้งต้นเป็น “มีผล” ทั้งหมด</td></tr>
+    <tr><td class="id">D-PC-03</td><td>ใครขอซื้อขอจ้างได้ (ตอนนี้เฉพาะ div ของหน่วยตน)</td><td>div และ divhead ของหน่วยตน พัสดุขอแทนหน่วยได้พร้อมบันทึกว่า “ขอแทน” และข้อมูลตั้งต้นมีรายการของหน่วยผู้สาธิต</td></tr>
+    <tr><td class="id">D-PC-04</td><td>แผนจัดซื้อปี 2571 (ปีที่ Budget กำลังจัดทำ)</td><td>P2 เลือกปีได้ ปี 2571 มีเฉพาะรายการร่างจาก FL-PC-02 ขอซื้อได้เมื่อปีนั้นมีบรรทัดจัดสรร (หลัง พ.ร.บ. ใน Budget)</td></tr>
+    <tr><td class="id">D-PC-05</td><td>รอบเดิมของแฟ้มเมื่อล้มแล้วเริ่มใหม่</td><td>เก็บใน <span class="mono">c.rounds[]</span> อ่านอย่างเดียวในแท็บประวัติของลิ้นชัก</td></tr>
+    <tr><td class="id">D-PC-06</td><td>งดหรือลดค่าปรับอยู่ในขอบเขตหรือไม่</td><td>อยู่ (สาธิตใน P-E13) ผู้บริหารอนุมัติ ถ้าตัดออกได้ ลดหนึ่งข้อจากรอบ PC3</td></tr>
+    <tr><td class="id">D-PC-07</td><td>ใครตัดสินอุทธรณ์ (โค้ดให้ผู้บริหารด้วย แต่แจ้งงานเฉพาะหัวหน้าพัสดุ)</td><td>หัวหน้าพัสดุตัดสิน ผู้บริหารอ่าน</td></tr>
+    <tr><td class="id">D-PC-08</td><td>ความเสี่ยง: เปลี่ยนด่านตรวจและสถานะสัญญากระทบ Fisko Finance (<span class="mono">vcMake</span>) Agent และงานใน P1</td><td>ทำในรอบ PC3 รอบเดียว sweep เพิ่มการเปิด Finance FN2 และ Agent จัดซื้อ</td></tr>
+    <tr><td class="id">D-PC-09</td><td>ความเสี่ยง: ข้อมูลตั้งต้นใหม่ (<span class="mono">DATA_V</span>) ล้างข้อมูลสาธิตที่ผู้ใช้ทำไว้ในเบราว์เซอร์</td><td>เพิ่ม <span class="mono">DATA_V</span> ครั้งเดียวในรอบ PC1 และบอกในบันทึกรอบ</td></tr>
+    <tr><td class="id">D-PC-10</td><td>ช่องว่างนอกขอบเขตที่พบ</td><td>เก็บเป็นงานรอบถัดไป: แม่แบบ TOR ใหม่และปฏิเสธฉบับร่าง (P5) ลบหรือยกเลิกเอกสาร (P6) ค่าตอบแทนกรรมการไม่ไปถึง Finance และถอนไม่ได้ (P8) การเงินเปิด P6 ไม่ได้แม้ทำงาน OCR ได้ โค้ดตารางเมนูเก่าใน <span class="mono">64-duties.js</span></td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<footer class="end">© 2026 Avalant. All rights reserved. · เอกสารฉบับร่างเพื่อการหารือ ไม่ใช่ความเห็นทางกฎหมาย · ตัวเลขในตัวอย่างเป็นข้อมูลสมมติ</footer>
+</div>
+</main>
+</div>
+
+<script>
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc ol a'));
+  var secs = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+  function onScroll() {
+    var y = window.scrollY + 120, cur = 0;
+    secs.forEach(function (s, i) { if (s && s.offsetTop <= y) cur = i; });
+    links.forEach(function (a, i) { a.classList.toggle('on', i === cur); });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+  var toc = document.getElementById('toc'), tg = document.getElementById('toc-toggle');
+  tg.addEventListener('click', function () { var o = toc.classList.toggle('open'); tg.setAttribute('aria-expanded', o); });
+  links.forEach(function (a) { a.addEventListener('click', function () { toc.classList.remove('open'); tg.setAttribute('aria-expanded', 'false'); }); });
+  document.getElementById('theme').addEventListener('click', function () {
+    var r = document.documentElement, cur = r.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    r.dataset.theme = cur === 'dark' ? 'light' : 'dark';
+  });
+})();
+</script>
+</body>
+</html>
