@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fisko Finance CRUD Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: sticky chapter index on the left, one reading column (~72ch prose, full-width tables and diagrams) on the right */
+:root {
+  --bg: #FFFFFF; --paper: #FFFFFF; --tint: #F4F5FA; --tint-2: #EEF0F7; --line: #DDDEE9;
+  --ink: #1C1D3F; --ink-2: #45465C; --muted: #7A7B92;
+  --navy: #1A1B50; --navy-2: #232366; --navy-ink: #C9CADF;
+  --accent: #1B9E29; --accent-2: #2AD03D; --accent-soft: #E4FBE7;
+  --warn: #A86A0C; --warn-soft: #FCF1DB; --bad: #B9381D; --bad-soft: #FBE3DA; --info: #3A3B9A; --info-soft: #E6E7F7;
+  --font: "IBM Plex Sans Thai", "Leelawadee UI", Tahoma, system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0F1029; --paper: #13153A; --tint: #1A1C44; --tint-2: #20224D; --line: #2D2F5E;
+  --ink: #ECEDF7; --ink-2: #C3C4D8; --muted: #8E90AE;
+  --navy: #0A0B22; --navy-2: #232366; --navy-ink: #B6B8D3;
+  --accent: #3DD552; --accent-2: #2AD03D; --accent-soft: #163A24;
+  --warn: #E7AA45; --warn-soft: #3A2C12; --bad: #F2805F; --bad-soft: #42201A; --info: #A9ABF5; --info-soft: #262862; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0F1029; --paper: #13153A; --tint: #1A1C44; --tint-2: #20224D; --line: #2D2F5E;
+  --ink: #ECEDF7; --ink-2: #C3C4D8; --muted: #8E90AE;
+  --navy: #0A0B22; --navy-2: #232366; --navy-ink: #B6B8D3;
+  --accent: #3DD552; --accent-2: #2AD03D; --accent-soft: #163A24;
+  --warn: #E7AA45; --warn-soft: #3A2C12; --bad: #F2805F; --bad-soft: #42201A; --info: #A9ABF5; --info-soft: #262862; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 20px; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.75 var(--font); }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
+.mono, code { font-family: var(--mono); font-size: .85em; }
+code { background: var(--tint-2); padding: 1px 5px; border-radius: 4px; }
+
+.layout { display: grid; grid-template-columns: 290px minmax(0, 1fr); }
+.toc { position: sticky; top: 0; height: 100vh; overflow: auto; background: var(--navy); color: var(--navy-ink); padding: 28px 18px 40px; font-size: 14px; }
+.toc .brand { color: #fff; font-weight: 700; font-size: 17px; line-height: 1.3; }
+.toc .brand small { display: block; color: var(--navy-ink); font-weight: 400; font-size: 12.5px; margin-top: 2px; }
+.toc ol { list-style: none; margin: 22px 0 0; padding: 0; counter-reset: c; }
+.toc li { margin: 1px 0; }
+.toc a { display: grid; grid-template-columns: 28px 1fr; gap: 6px; color: var(--navy-ink); text-decoration: none; padding: 6px 8px; border-radius: 7px; line-height: 1.4; }
+.toc a:hover { background: var(--navy-2); color: #fff; }
+.toc a.on { background: var(--navy-2); color: #fff; }
+.toc a .n { font-family: var(--mono); font-size: 11.5px; color: #8A8CB5; padding-top: 2px; }
+.toc a.on .n { color: var(--accent-2); }
+.toc .tools { margin-top: 22px; display: flex; gap: 8px; }
+.toc button { background: var(--navy-2); color: #fff; border: 1px solid #3A3B77; border-radius: 7px; padding: 6px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+
+main { min-width: 0; padding-block: 0 80px; padding-left: max(28px, env(safe-area-inset-left, 0px)); padding-right: max(28px, env(safe-area-inset-right, 0px)); }
+.doc { max-width: 1080px; margin: 0 auto; }
+.prose { max-width: 74ch; }
+
+.cover { padding: 64px 0 40px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
+.eyebrow { font-size: 12.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+.cover h1 { font-size: clamp(30px, 4.2vw, 46px); line-height: 1.2; margin: 10px 0 8px; text-wrap: balance; }
+.cover .th { font-size: 20px; color: var(--ink-2); margin: 0; }
+.meta { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; margin-top: 30px; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.meta div { padding: 12px 16px; border-right: 1px solid var(--line); }
+.meta div:last-child { border-right: 0; }
+.meta span { display: block; font-size: 12px; color: var(--muted); letter-spacing: .04em; }
+.meta b { font-weight: 600; font-size: 15px; }
+.notice { margin-top: 18px; background: var(--warn-soft); color: var(--ink); border-radius: 10px; padding: 12px 16px; font-size: 14.5px; }
+.notice b { color: var(--warn); }
+
+section.ch { padding-top: 56px; }
+h2 { font-size: 28px; line-height: 1.3; margin: 0 0 6px; display: flex; gap: 14px; align-items: baseline; text-wrap: balance; }
+h2 .num { font-family: var(--mono); font-size: 15px; color: var(--accent); font-weight: 600; }
+.lede { color: var(--ink-2); margin: 0 0 22px; max-width: 74ch; }
+h3 { font-size: 19px; margin: 34px 0 10px; line-height: 1.4; }
+h3 .num { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-right: 8px; font-weight: 500; }
+h4 { font-size: 16px; margin: 22px 0 6px; }
+p { margin: 0 0 14px; }
+ul, ol { margin: 0 0 14px; padding-left: 22px; }
+li { margin: 3px 0; }
+.small { font-size: 13.5px; color: var(--muted); }
+
+.tbl { overflow-x: auto; margin: 10px 0 18px; border: 1px solid var(--line); border-radius: 10px; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; line-height: 1.55; }
+th { background: var(--tint); text-align: left; font-size: 12.5px; letter-spacing: .03em; color: var(--ink-2); font-weight: 600; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: bottom; }
+td { padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+td.id, th.id { white-space: nowrap; font-family: var(--mono); font-size: 12.5px; color: var(--ink-2); }
+td.c, th.c { text-align: center; }
+td.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.tag { display: inline-block; border-radius: 99px; padding: 1px 9px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.t-must { background: var(--accent-soft); color: var(--accent); }
+.t-should { background: var(--info-soft); color: var(--info); }
+.t-could { background: var(--tint-2); color: var(--muted); }
+.t-new { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+.t-warn { background: var(--warn-soft); color: var(--warn); }
+.t-bad { background: var(--bad-soft); color: var(--bad); }
+
+.callout { border-radius: 10px; padding: 14px 18px; margin: 14px 0 18px; background: var(--tint); }
+.callout.dark { background: var(--navy); color: #fff; }
+.callout.dark b { color: var(--accent-2); }
+.callout b:first-child { display: block; margin-bottom: 2px; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 12px 0 20px; }
+.card { border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; background: var(--paper); }
+.card b { display: block; font-size: 15px; margin-bottom: 2px; }
+.card span { font-size: 13.5px; color: var(--ink-2); line-height: 1.6; display: block; }
+.card .k { font-family: var(--mono); font-size: 12px; color: var(--accent); margin-bottom: 4px; }
+
+/* layered architecture diagram */
+.arch { display: grid; grid-template-columns: minmax(0, 1fr) 210px; gap: 10px; margin: 14px 0 20px; }
+.layers { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.layer { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 10px; align-items: stretch; }
+.layer .lb { background: var(--navy-2); color: #fff; border-radius: 8px; padding: 10px 12px; font-weight: 600; font-size: 14px; line-height: 1.35; }
+.layer .lb small { display: block; color: var(--navy-ink); font-weight: 400; font-size: 12px; }
+.layer.top .lb { background: var(--accent); }
+.layer .chips { display: flex; flex-wrap: wrap; gap: 6px; align-content: center; background: var(--tint); border-radius: 8px; padding: 8px; }
+.chip { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; font-size: 13px; }
+.chip.g { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.gov { background: var(--navy); color: #fff; border-radius: 8px; padding: 12px 14px; font-size: 13px; }
+.gov b { color: var(--accent-2); display: block; margin-bottom: 6px; font-size: 14px; }
+.gov ul { padding-left: 16px; margin: 0; }
+.gov li { color: var(--navy-ink); }
+
+/* flow */
+.flow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 12px 0 20px; }
+.flow .st { background: var(--tint); border-radius: 8px; padding: 8px 12px; font-size: 13.5px; line-height: 1.4; }
+.flow .st b { display: block; font-family: var(--mono); font-size: 11.5px; color: var(--accent); }
+.flow .ar { color: var(--muted); }
+
+/* integration hub */
+.hub { display: grid; grid-template-columns: 1fr minmax(180px, 240px) 1fr; gap: 14px; align-items: center; margin: 14px 0 20px; }
+.hub .side { display: flex; flex-direction: column; gap: 8px; }
+.hub .ext { border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 13.5px; background: var(--paper); }
+.hub .ext b { display: block; font-size: 14px; }
+.hub .core { background: var(--navy); color: #fff; border-radius: 12px; padding: 18px; text-align: center; }
+.hub .core b { color: var(--accent-2); font-size: 18px; display: block; }
+.hub .core span { font-size: 12.5px; color: var(--navy-ink); display: block; margin-top: 6px; }
+
+.matrix td.c { font-family: var(--mono); font-size: 12.5px; font-weight: 600; }
+.mx-a { color: var(--accent); } .mx-r { color: var(--muted); } .mx-u { color: var(--info); }
+
+footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); }
+
+@media (max-width: 980px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .toc { position: static; height: auto; padding: 16px max(16px, env(safe-area-inset-right, 0px)) 16px max(16px, env(safe-area-inset-left, 0px)); }
+  .toc ol { display: none; }
+  .toc.open ol { display: block; }
+  main { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .meta { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .meta div:nth-child(2) { border-right: 0; }
+  .meta div:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+  .arch { grid-template-columns: minmax(0, 1fr); }
+  .layer { grid-template-columns: minmax(0, 1fr); }
+  .hub { grid-template-columns: minmax(0, 1fr); }
+}
+@media (min-width: 981px) { #toc-toggle { display: none; } }
+@media print {
+  .toc { display: none; }
+  .layout { display: block; }
+  main { padding: 0; }
+  section.ch { break-before: page; padding-top: 0; }
+  .tbl { overflow: visible; }
+  tr, .card, .callout { break-inside: avoid; }
+}
+</style>
+<style>pre.logic { background: var(--tint); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-family: var(--mono); font-size: 12.5px; line-height: 1.65; margin: 12px 0 18px; white-space: pre; }</style>
+<style>
+.wf { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin: 12px 0 20px; background: var(--paper); font-size: 13.5px; }
+.wf-top { background: var(--tint); padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.wf-body { display: grid; grid-template-columns: 200px minmax(0, 1fr) 220px; gap: 0; }
+.wf-steps { list-style: none; margin: 0; padding: 10px; border-right: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; }
+.wf-steps li { padding: 6px 8px; border-radius: 6px; color: var(--muted); }
+.wf-steps li::before { content: "○ "; }
+.wf-steps li.ok { color: var(--ink-2); } .wf-steps li.ok::before { content: "● "; color: var(--accent); }
+.wf-steps li.now { background: var(--tint-2); color: var(--ink); font-weight: 600; } .wf-steps li.now::before { content: "◐ "; color: var(--info); }
+.wf-main { padding: 14px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.wf-bars { display: flex; gap: 14px; align-items: flex-end; height: 110px; border-bottom: 1px solid var(--line); padding: 0 8px; }
+.wf-bars i { flex: 1; background: var(--accent); border-radius: 4px 4px 0 0; opacity: .85; }
+.wf-main span, .wf-side span { color: var(--ink-2); font-size: 13px; }
+.wf-side { padding: 14px; border-left: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; background: var(--tint); }
+@media (max-width: 760px) { .wf-body { grid-template-columns: minmax(0, 1fr); } .wf-steps, .wf-side { border: 0; } }
+</style>
+</head>
+<body>
+<div class="layout">
+<nav class="toc" id="toc" aria-label="สารบัญ">
+  <div class="brand">Fisko Finance<small>CRUD UI Design · v0.1</small></div>
+  <div class="tools"><button type="button" id="toc-toggle" aria-expanded="false">สารบัญ</button><button type="button" id="theme">ธีม</button></div>
+  <ol>
+    <li><a href="#s1"><span class="n">01</span>เป้าหมายและขอบเขต</a></li>
+    <li><a href="#s2"><span class="n">02</span>สิ่งที่มีแล้วและช่องว่าง</a></li>
+    <li><a href="#s3"><span class="n">03</span>หลักการ CRUD</a></li>
+    <li><a href="#s4"><span class="n">04</span>แบบผสม: ย้ายและปรับให้ตรง</a></li>
+    <li><a href="#s5"><span class="n">05</span>วงจรชีวิตและกฎการลบ</a></li>
+    <li><a href="#s6"><span class="n">06</span>CRUD รายหน้า</a></li>
+    <li><a href="#s7"><span class="n">07</span>การไหลของข้อมูลข้ามขั้น</a></li>
+    <li><a href="#s8"><span class="n">08</span>ขั้นที่จำลอง</a></li>
+    <li><a href="#s9"><span class="n">09</span>นาฬิกาและกฎแบ่งหน้าที่</a></li>
+    <li><a href="#s10"><span class="n">10</span>ปีงบประมาณและข้อผิดที่แก้</a></li>
+    <li><a href="#s11"><span class="n">11</span>สคริปต์สาธิต</a></li>
+    <li><a href="#s12"><span class="n">12</span>สิทธิ์ตามบทบาท</a></li>
+    <li><a href="#s13"><span class="n">13</span>ลำดับการสร้าง</a></li>
+    <li><a href="#s14"><span class="n">14</span>ความเสี่ยงและประเด็น</a></li>
+  </ol>
+</nav>
+
+<main>
+<div class="doc">
+
+<header class="cover">
+  <div class="eyebrow">Fisko Finance · CRUD UI Design</div>
+  <h1>Fisko Finance<br><span style="font-size:.55em;color:var(--accent)">ออกแบบหน้าจอสร้าง ดู แก้ไข และยกเลิกข้อมูลการเงิน โดยไม่แตะนาฬิกาตามระเบียบและกฎแบ่งหน้าที่</span></h1>
+  <p class="th">ต่อยอดจาก Fisko Finance Design v0.4 ผังหน้า F1 ถึง F11 (รอบ 43 และ 46) และส่วนประกอบร่วมของ Fisko Budget CRUD (รอบ 48 ถึง 53)</p>
+  <div class="meta">
+    <div><span>เวอร์ชัน</span><b>0.1 ร่างก่อนสร้าง</b></div>
+    <div><span>วันที่</span><b>19 ตุลาคม 2569</b></div>
+    <div><span>จัดทำโดย</span><b>Avalant</b></div>
+    <div><span>ต่อยอดจาก</span><b>Finance Design v0.4 · Budget CRUD v0.2</b></div>
+  </div>
+  <div class="callout" style="margin-top:14px"><b>สิ่งที่ตกลงกันแล้ว</b> (1) <b>แบบผสม</b>: ทะเบียนและข้อมูลที่วงจรสั้น (ผู้ใช้ GFMIS เล่มใบเสร็จ กรรมการเก็บรักษาเงิน ข้อทักท้วง กองทุน แผนการใช้จ่าย การถอนเงินคลัง สถานการณ์จำลอง งาน Agent รายการใบเสร็จ) ย้ายไปใช้ส่วนประกอบร่วม <span class="mono">76-crud.js</span> ส่วนลิ้นชักใบขอเบิก ลิ้นชักเงินยืม และรายการตรวจปิดงวดคงของเดิมแต่ปรับให้ทำงานเหมือนกัน · (2) <b>ใบขอเบิก</b>แก้ได้ทุกช่องขณะร่างหรือถูกส่งคืน ยกเลิกพร้อมเหตุผลได้จนถึง “พร้อมส่ง GFMIS” หลังจ่ายแล้วไม่แก้ ไม่ลบ ใช้การรับเงินคืนเป็นรายการใหม่ · (3) <b>ขั้น GFMIS และธนาคาร</b>เลือกรายการได้ทีละแถว มีฟอร์มบันทึกผลจริงและปุ่ม “จำลอง” ไฟล์และชุดจ่ายมีประวัติและเลิกทำได้จนกว่าจะผ่านรายการ · (4) รวมการแก้ข้อผิดที่พบในการตรวจ: วงเงินอำนาจอนุมัติ การผูกพันเกินวงเงิน ปีที่ฝังในโค้ด และรหัสกฎที่ไม่ตรงกัน</div>
+  <div class="notice"><b>สถานะเอกสาร:</b> เป็นร่างเพื่อตัดสินใจก่อนสร้าง ยังไม่มีโค้ดใหม่ ตัวเลขทั้งหมดเป็นข้อมูลสมมติ รหัสข้อกำหนดใช้ <b>FR-FC</b> ต่อจาก FR-FN ในเอกสารออกแบบ Fisko Finance · นาฬิกาตามระเบียบ (R-FN-04) และกฎแบ่งหน้าที่ SD-11 ถึง SD-16 คงไว้ทุกข้อ (บทที่ 9)</div>
+</header>
+
+<!-- ============================== 01 ============================== -->
+<section class="ch" id="s1">
+<h2><span class="num">01</span>เป้าหมายและขอบเขต</h2>
+<p class="lede">ผู้สาธิตต้องพาผู้ชมผ่านวงจรการเงินปี 2570 ได้ครบโดยไม่ต้องรีเซ็ตข้อมูล: ผูกพันวงเงิน ทำใบขอเบิก ส่ง GFMIS จ่าย หักภาษี ยืมและส่งใช้เงิน รับและนำส่งเงิน กระทบยอด และปิดงวด ทุกข้อมูลที่ผู้ใช้สร้างต้องแก้ได้เมื่อยังไม่มีผล และยกเลิกได้พร้อมเหตุผลเมื่อมีผลแล้ว โดยระเบียบการเบิกจ่ายเงินจากคลังยังเป็นตัวกำหนดว่าอะไรแก้ได้</p>
+<div class="cards">
+  <div class="card"><div class="k">G-F01</div><b>แก้ผิดได้โดยไม่ต้องเริ่มใหม่</b><span>ทุกเอกสารที่ยังไม่ออกไปนอกหน่วยงาน (ร่าง ส่งคืน ขอ) แก้ได้ในที่เดิม ไม่ต้องยกเลิกแล้วทำใหม่</span></div>
+  <div class="card"><div class="k">G-F02</div><b>ยกเลิกไม่ลบ</b><span>เอกสารการเงินที่มีเลขแล้วไม่หายจากระบบ ยกเลิกพร้อมเหตุผล เลขยังอยู่ และเปิดดูได้จากตัวกรอง “แสดงที่ยกเลิก”</span></div>
+  <div class="card"><div class="k">G-F03</div><b>หน้าตาเดียวกับ Fisko Budget</b><span>ผู้ใช้ที่ใช้ B7 เป็นแล้วใช้ F10 และ F11 ได้ทันที ลิ้นชักใบขอเบิกและเงินยืมมีกล่องเหตุผล แป้นพิมพ์ และประวัติแบบเดียวกัน</span></div>
+  <div class="card"><div class="k">G-F04</div><b>ระเบียบไม่อ่อนลง</b><span>การแก้ไขต้องผ่านกฎ R-FN และ SD เท่ากับการสร้าง การแก้หลังผ่านการตรวจทำให้ต้องตรวจและอนุมัติใหม่</span></div>
+</div>
+<h3><span class="num">1.1</span>อยู่ในขอบเขต</h3>
+<ul>
+  <li>หน้า F1 ถึง F11 ใน <span class="mono">66h-fin-pages.js</span> และ <span class="mono">66i-fin-nb.js</span> และข้อมูลใน <span class="mono">62-finance.js</span> และ <span class="mono">66b</span> ถึง <span class="mono">66i</span></li>
+  <li>หน้าเงินยืมของฉัน (ทุกบทบาทยืมได้ตาม D-FN-02) เฉพาะส่วนที่ผู้ยืมแก้หรือยกเลิกคำขอ</li>
+  <li>ส่วนเพิ่มเล็กน้อยใน <span class="mono">76-crud.js</span> ที่ Finance ต้องใช้ (บทที่ 4.3)</li>
+  <li>การแก้ข้อผิดที่พบในการตรวจ (บทที่ 10) และสคริปต์สาธิตใหม่ (บทที่ 11)</li>
+</ul>
+<h3><span class="num">1.2</span>นอกขอบเขต</h3>
+<ul>
+  <li>Fisko Procurement: สัญญาและงวดตรวจรับยังอ่านอย่างเดียวใน Finance (แก้ที่ Procurement) มีเซสชันออกแบบ CRUD ของ Procurement แยกต่างหาก</li>
+  <li>การเชื่อมต่อจริงกับ GFMIS ธนาคาร และ e-Payment ยังเป็นไฟล์จำลอง (D-FN-07)</li>
+  <li>การตั้งกฎการเงินใน M10 (<span class="mono">ADMIN.fcfg</span>) แก้ได้และมีประวัติอยู่แล้ว ไม่เปลี่ยนในเอกสารนี้</li>
+  <li>เงินเดือนและค่าจ้างประจำ (D-FN-03) และการบัญชีแยกประเภท (D-FN-01)</li>
+</ul>
+</section>
+
+<!-- ============================== 02 ============================== -->
+<section class="ch" id="s2">
+<h2><span class="num">02</span>สิ่งที่มีแล้วและช่องว่าง</h2>
+<p class="lede">ผลตรวจโค้ดต้นแบบ ณ รอบ 53: Finance สร้างข้อมูลได้เกือบทุกชนิดและเปลี่ยนสถานะได้ครบ แต่ <b>แก้ไขแทบไม่ได้เลย</b> การปฏิเสธหลายจุดไม่ต้องมีเหตุผล ขั้น GFMIS เป็นปุ่มทำทั้งชุด และทะเบียนบางชนิดมีแค่ในข้อมูลตั้งต้น</p>
+<div class="tbl"><table>
+  <thead><tr><th>หน้า</th><th>สร้าง</th><th>แก้ไข</th><th>ลบ / ยกเลิก</th><th>ช่องว่างหลัก</th></tr></thead>
+  <tbody>
+    <tr><td>F1 งานวันนี้</td><td>—</td><td>—</td><td>—</td><td>อ่านอย่างเดียวตามแบบ นาฬิกากรองตามชนิดไม่ได้</td></tr>
+    <tr><td>F2 วงเงินผูกพัน</td><td>ผูกพันนอกการจัดซื้อ เลข PO คำขอกันเงิน</td><td>เฉพาะ “คืนวงเงินบางส่วน”</td><td>—</td><td>แก้ชื่อ ผู้รับ วงเงิน กำหนดจ่ายไม่ได้ เลข PO ที่บันทึกผิดแก้ไม่ได้ ถอนคำขอกันเงินไม่ได้ เลข <span class="mono">CF-2570</span> ฝังในโค้ด</td></tr>
+    <tr><td>F3 ใบขอเบิกและการจ่าย</td><td>จากงวดที่ตรวจรับ และใบขอเบิกประเภทอื่น</td><td>เฉพาะเช็กบ็อกซ์หลักฐาน</td><td>ผู้จัดทำยกเลิกได้ขณะร่างหรือส่งคืน</td><td>แก้ช่องใดไม่ได้แม้เป็นร่าง ใบที่ถูกส่งคืนส่งใหม่ได้แบบเดิมเท่านั้น ไม่อนุมัติวนกลับเป็นส่งคืน ไม่มีค้นหา ขั้น GFMIS e-Payment และตรวจประจำวันทำทั้งชุด วงเงินอำนาจ A2 A3 ไม่มีผล หลายใบรวมกันเกินวงเงินผูกพันได้</td></tr>
+    <tr><td>F4 เงินยืม</td><td>คำขอจากเงินยืมของฉัน</td><td>—</td><td>ผู้ยืมยกเลิกได้ขณะขอ</td><td>แก้คำขอไม่ได้ ยกเลิกหลังอนุมัติไม่ได้ จ่ายไม่ตรวจการแบ่งหน้าที่ ไม่มีค้นหาหรือกรองหน่วยงาน เลขสัญญา <span class="mono">/2570</span> ฝังในโค้ด</td></tr>
+    <tr><td>F5 รับเงินและนำส่ง</td><td>ใบเสร็จ การนำส่งตามกลุ่ม</td><td>ไม่ได้ (ข้อ 76 ถูกต้อง)</td><td>ยกเลิกใบเสร็จพร้อมเหตุผลก่อนนำส่ง</td><td>บันทึกเข้า GFMIS ทำทั้งชุด นำส่งเลือกรายการไม่ได้ เลขอ้างอิงธนาคารแก้ไม่ได้ ไม่มีค้นหาหรือรายละเอียด</td></tr>
+    <tr><td>F6 เงินคงเหลือประจำวัน</td><td>รายงานประจำวัน การตรวจนับ</td><td>—</td><td>—</td><td>นับใหม่ไม่ได้ ทำรายงานย้อนหลังวันที่ขาดไม่ได้</td></tr>
+    <tr><td>F7 กระทบยอด</td><td>นำเข้ารายการเดินบัญชี ปรับปรุงบัญชี ลงนาม นำเข้ารายงาน GFMIS</td><td>คำชี้แจงผลต่าง (ครั้งเดียว)</td><td>—</td><td>ทุกการนำเข้าย้อนไม่ได้ ปรับปรุงบัญชีกลับรายการไม่ได้ ลงนามแล้วเปิดใหม่ไม่ได้ จับคู่เองไม่ได้</td></tr>
+    <tr><td>F8 ปิดงวด</td><td>ปิดวัน ปิดเดือน ข้อทักท้วง คำตอบ</td><td>—</td><td>เปิดเดือนที่ปิดแล้ว (SD-16)</td><td>เปิดวันที่ปิดแล้วไม่ได้ ข้อทักท้วงและคำตอบแก้ไม่ได้ นับ 15 วันเป็นวันปฏิทิน รายการตรวจสิ้นปีข้อ 3 และ 4 ฝังค่า</td></tr>
+    <tr><td>F9 AI และ Analytics</td><td>เริ่มงาน Agent บันทึกสถานการณ์จำลอง</td><td>ผลการคัดกรองสัญญาณ</td><td>—</td><td>ไม่อนุมัติขั้นของ Agent ไม่ต้องมีเหตุผล หยุดงาน Agent ไม่ได้ สถานการณ์ที่บันทึกเปิด เปลี่ยนชื่อ ลบไม่ได้ (B10 ของ Budget ทำได้แล้ว)</td></tr>
+    <tr><td>F10 ทะเบียนและตั้งค่า</td><td>ผู้ใช้ GFMIS คำขอแก้บัญชีผู้ขาย คณะกรรมการ</td><td>คณะกรรมการ (เขียนทับ)</td><td>เพิกถอนผู้ใช้ GFMIS</td><td>เพิกถอนอ้างลำดับแถว ไม่มีเหตุผล แก้หน้าที่ไม่ได้ คำขอแก้บัญชีไม่อนุมัติหรือถอนไม่ได้ บัญชีเดิมถูกเขียนทับ ออกเล่มใบเสร็จใหม่ไม่ได้ (ใบเสร็จออกไม่ได้เมื่อขึ้นปีใหม่) ผู้บริหารเห็นแท็บว่าง</td></tr>
+    <tr><td>F11 เงินนอกงบประมาณ</td><td>บรรทัดแผน คำขอถอนเงิน</td><td>รายได้ที่คาด</td><td>—</td><td>กองทุนมีแค่ในข้อมูลตั้งต้น บรรทัดแผนแก้หรือลบไม่ได้ แผนที่อนุมัติแล้วปรับไม่ได้ ไม่อนุมัติการถอนไม่ต้องมีเหตุผลและไม่ตรวจการแบ่งหน้าที่</td></tr>
+  </tbody>
+</table></div>
+<div class="callout"><b>สิ่งที่ดีอยู่แล้วและต้องคงไว้</b>ใบเสร็จไม่แก้ไขตามข้อ 76 (ยกเลิกแล้วออกใหม่) · เปิดงวดที่ปิดแล้วต้องเป็นคนละคน (SD-16) · เปลี่ยนบัญชีผู้ขายต้องมีผู้ยืนยันคนที่สอง (SD-14) · ทุกขั้นของใบขอเบิกและเงินยืมมีบันทึกในตัวรายการ (<span class="mono">vLog</span> <span class="mono">advLog</span>) · นาฬิกาทุกตัวคำนวณสดจากข้อมูลและค่าตั้งใน M10 ไม่เก็บค่า</div>
+</section>
+
+<!-- ============================== 03 ============================== -->
+<section class="ch" id="s3">
+<h2><span class="num">03</span>หลักการ CRUD</h2>
+<p class="lede">ใช้หลัก C-P1 ถึง C-P8 ของ Fisko Budget ทั้งชุด และเพิ่มหลักเฉพาะงานการเงินอีกห้าข้อ</p>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>หลัก</th><th>ความหมายใน Finance</th></tr></thead>
+  <tbody>
+    <tr><td class="id">C-P1–P8</td><td>ตามเอกสาร Budget CRUD</td><td>สถานะกำหนดปุ่ม · ไม่ลบประวัติราชการ · ยอดคำนวณเสมอ · ทุกการเปลี่ยนมีร่องรอย · ตรวจก่อนบันทึก · สิทธิ์ตามบทบาท · เลิกทำ 10 วินาที · ปีงบประมาณเป็นบริบท</td></tr>
+    <tr><td class="id">FC-P1</td><td>ออกนอกหน่วยแล้วไม่แก้</td><td>เมื่อข้อมูลอยู่ในไฟล์ GFMIS ธนาคาร หรือใบเสร็จที่ออกให้ผู้ชำระแล้ว Fisko ไม่แก้ค่านั้น การแก้ผิดทำด้วยรายการใหม่ที่อ้างถึงรายการเดิม (รับเงินคืน ออก 50 ทวิ ใหม่ ใบเสร็จใหม่)</td></tr>
+    <tr><td class="id">FC-P2</td><td>แก้แล้วตรวจใหม่</td><td>แก้ใบขอเบิกหรือคำขอยืมที่ผ่านผู้ตรวจแล้ว ต้อง “ดึงกลับ” เป็นร่างก่อน ผู้ตรวจและผู้อนุมัติเดิมถูกล้าง กฎ SD-11 และ SD-12 ตรวจใหม่ทุกครั้ง</td></tr>
+    <tr><td class="id">FC-P3</td><td>นาฬิกาไม่ถูกรีเซ็ตด้วยการแก้</td><td>นาฬิกา R-FN-04 นับจากเหตุการณ์ต้นทาง (วันตรวจรับ วันรับเงิน วันกลับ) ไม่ใช่วันที่แก้ข้อมูล การยกเลิกแล้วทำใหม่จึงไม่ทำให้พ้นกำหนด</td></tr>
+    <tr><td class="id">FC-P4</td><td>ปฏิเสธต้องมีเหตุผลเสมอ</td><td>ส่งคืน ไม่อนุมัติ ยกเลิก เพิกถอน ถอน และกลับรายการ ใช้กล่องเหตุผลเดียวกัน อย่างน้อย 10 ตัวอักษร (เดิม Finance ใช้ 5 ในหลายจุด)</td></tr>
+    <tr><td class="id">FC-P5</td><td>ทุกกฎแบ่งหน้าที่ผ่าน <span class="mono">sodCheck</span></td><td>ไม่เขียนการตรวจผู้ทำซ้ำไว้ในหน้า (เช่น P-F05 และผู้อนุมัติแผนนอกงบประมาณ) เพื่อให้ถูกบันทึกใน “การกันการทำหน้าที่ซ้อน” และปิดเปิดตามค่าตั้งได้เหมือนกัน</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 04 ============================== -->
+<section class="ch" id="s4">
+<h2><span class="num">04</span>แบบผสม: ย้ายมาใช้ส่วนประกอบร่วม และปรับของเดิมให้ตรง</h2>
+<p class="lede">Finance มีลิ้นชักของตัวเองสองชนิด (ใบขอเบิกและเงินยืม) และแบบฟอร์มในแถวตาราง ทั้งสองใช้คลาส <span class="mono">.fn-drawer</span> เดียวกับลิ้นชักของ Budget อยู่แล้ว เลือกย้ายเฉพาะข้อมูลที่ย้ายแล้วโค้ดสั้นลง และปรับข้อมูลที่มีสถานะซับซ้อนให้ทำงานเหมือนกันโดยไม่เขียนใหม่</p>
+<h3><span class="num">4.1</span>แบ่งตามชนิดข้อมูล</h3>
+<div class="tbl"><table>
+  <thead><tr><th>วิธี</th><th>ข้อมูล</th><th>เหตุผล</th></tr></thead>
+  <tbody>
+    <tr><td><span class="tag t-must">ย้ายเต็ม</span><br><span class="mono">CRUD.def</span></td><td>ผู้ใช้ GFMIS · เล่มใบเสร็จ · การแต่งตั้งกรรมการเก็บรักษาเงิน · คำขอแก้บัญชีผู้ขาย · ข้อทักท้วง · กองทุน · แผนการใช้จ่ายและบรรทัด · คำขอถอนเงินคลัง · ผูกพันนอกการจัดซื้อ · คำขอกันเงิน · สถานการณ์จำลอง · งาน Agent · ไฟล์ GFMIS และชุดจ่าย</td><td>วงจรสั้น ปุ่มไม่กี่ปุ่ม ได้ค้นหา ตัวกรอง ประวัติ เลิกทำ และฟอร์มตรวจช่องฟรี Budget มีแบบให้ลอกแล้ว (<span class="mono">wiSc</span> <span class="mono">agRun</span>)</td></tr>
+    <tr><td><span class="tag t-should">ย้ายบางส่วน</span><br><span class="mono">crudList</span></td><td>ใบเสร็จรับเงิน · การนำส่งเงิน</td><td>ได้แถบค้นหาและลิ้นชักดูรายละเอียด แต่ “สร้าง” ต้องใช้ตรรกะเล่มและเลขที่เดิม และ “แก้ไข” ปิดไว้ตามข้อ 76</td></tr>
+    <tr><td><span class="tag t-could">คงเดิม ปรับให้ตรง</span></td><td>ลิ้นชักใบขอเบิก (<span class="mono">vcDetail</span>) · ลิ้นชักเงินยืม (<span class="mono">advDetail</span>) · รายงานเงินคงเหลือและการตรวจนับหลายคน · ตารางจับคู่ธนาคาร · รายการตรวจปิดวัน เดือน ปี · ขั้นของ Agent · พยากรณ์และตัวชี้วัด</td><td>สถานะมาก ผูกกับนาฬิกาและกฎหลายข้อ การเขียนใหม่เป็น <span class="mono">acts</span> เสี่ยงทำให้ sweep เดิม 8,000 กว่าข้อพัง ได้ประโยชน์เท่ากันจากการปรับพฤติกรรมให้ตรง</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">4.2</span>โครงหน้าจอตัวอย่าง: ใบขอเบิก (F3) หลังปรับ</h3>
+<div class="wf">
+  <div class="wf-top">F3 · ใบขอเบิกและการจ่าย · แท็บใบขอเบิก · <b>ค้นหาเลขที่หรือผู้รับ · ประเภท ▾ · ทางจ่าย ▾ · สถานะ ▾ · เดือน ▾ · □ แสดงที่ยกเลิก · + ใบขอเบิกอื่น</b></div>
+  <div class="wf-body">
+    <ol class="wf-steps"><li class="ok">VC-2570-031 · ค่าจ้างงวด 2 · รอส่ง GFMIS</li><li class="now">VC-2570-034 · ค่าไฟฟ้า ต.ค. · ส่งคืน</li><li>VC-2570-035 · ค่าเดินทาง · ร่าง</li><li>VC-2570-029 · ยกเลิก (ซ่อน)</li></ol>
+    <div class="wf-main"><b>ลิ้นชัก: VC-2570-034 (ส่งคืน · เหตุผล: “แนบใบแจ้งหนี้ผิดเดือน”)</b><span>แท็บ: รายละเอียด · หลักฐาน · กฎ · GFMIS และการจ่าย · ประวัติ</span><span>โหมดแก้ไข: ผูกพัน/บรรทัด · ผู้รับ (เลือกจากทะเบียนผู้ขาย) · เลขผู้เสียภาษี · ยอดก่อนหัก · VAT · กำหนดจ่าย · วิธีจ่ายและเหตุผล · คำอธิบาย</span><span>กฎตรวจสดใต้ฟอร์ม: R-FN-01 วงเงิน (รวมยอดที่จองแล้ว) · R-FN-02 ทางจ่าย · R-FN-03 ภาษี · R-FN-07 แผนนอกงบประมาณ</span></div>
+    <div class="wf-side"><b>ปุ่มตามสถานะ</b><span>ร่าง ส่งคืน: แก้ไข · ส่งตรวจ · ยกเลิก (เหตุผล)</span><span>รอตรวจ รออนุมัติ: ดึงกลับ (ผู้จัดทำ) · ส่งคืน · ไม่อนุมัติ (เหตุผล)</span><span>พร้อมส่ง: ยกเลิก (หัวหน้าการเงิน เหตุผล)</span><span>อยู่ในไฟล์ GFMIS: นำออกจากไฟล์</span><span>จ่ายแล้ว: บันทึกรับเงินคืน · ออก 50 ทวิ ใหม่</span></div>
+  </div>
+</div>
+
+<h3><span class="num">4.3</span>สิ่งที่เพิ่มใน 76-crud.js (ใช้ร่วมกับ Budget)</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>สิ่งที่เพิ่ม</th><th>เหตุผล</th></tr></thead>
+  <tbody>
+    <tr><td class="id">UI-F1</td><td>หลังบันทึกเรียก <span class="mono">renderShell()</span> ด้วย (หรือ hook <span class="mono">spec.after</span>)</td><td>ป้ายตัวเลขบนเมนูและนาฬิกาของ Finance อ่านจากข้อมูล ถ้าไม่วาดเปลือกใหม่ตัวเลขจะค้าง</td></tr>
+    <tr><td class="id">UI-F2</td><td>เรียงตามคอลัมน์ (<span class="mono">cols[].sort</span>) และจำการเรียงต่อรายการ</td><td>ทะเบียนเงินยืมและใบขอเบิกต้องเรียงตามวันครบกำหนดหรือยอดเงิน</td></tr>
+    <tr><td class="id">UI-F3</td><td>เลือกหลายแถว (<span class="mono">spec.pick</span>) และปุ่มทำกับที่เลือก</td><td>ใช้กับไฟล์ GFMIS ชุด e-Payment การบันทึกใบเสร็จเข้า GFMIS และการนำส่ง (บทที่ 8)</td></tr>
+    <tr><td class="id">UI-F4</td><td>ปิดลิ้นชักเมื่อเปลี่ยนแท็บย่อยของหน้า (<span class="mono">data-fsub</span>)</td><td>แท็บย่อยของ Finance ไม่เปลี่ยน hash ลิ้นชักจึงค้างข้ามแท็บได้</td></tr>
+    <tr><td class="id">UI-F5</td><td>ค่าเหตุผลขั้นต่ำกลาง 10 ตัวอักษร (<span class="mono">CR_WHY_MIN</span>)</td><td>FC-P4 ใช้ค่าเดียวทั้ง Budget และ Finance</td></tr>
+  </tbody>
+</table></div>
+<p class="small">หมายเหตุ: เซสชันออกแบบ CRUD ของ Procurement อาจเพิ่มส่วนประกอบใน <span class="mono">76-crud.js</span> เช่นกัน ต้องตกลงลำดับการแก้ไฟล์นี้ก่อนสร้าง (D-FC-06)</p>
+
+<h3><span class="num">4.4</span>ปรับลิ้นชักและแบบฟอร์มในแถวของ Finance ให้ตรงกับของร่วม</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ปัจจุบัน</th><th>หลังปรับ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">UI-F6</td><td>ใบขอเบิกใช้ช่องเหตุผลเดียว <span class="mono">#vc-why</span> ร่วมทุกปุ่ม ข้อผิดขึ้นเป็น toast</td><td>แต่ละปุ่มที่ต้องมีเหตุผลเปิดกล่องถามแบบ <span class="mono">.cr-ask</span>: ผลกระทบ (เช่น “คืนยอดจอง 48,150 บาทให้ผูกพัน CM-2570-004”) ช่องเหตุผล ยืนยันหรือกลับ ข้อผิดแสดงใต้ช่อง</td></tr>
+    <tr><td class="id">UI-F7</td><td>แบบฟอร์มในแถว (<span class="mono">rowForm</span>) ไม่ใช่ <span class="mono">&lt;form&gt;</span> กด Enter ไม่ส่ง Esc ไม่ปิด</td><td>ห่อด้วย <span class="mono">&lt;form&gt;</span> Enter ส่ง Esc ปิดและคืนโฟกัสไปที่ปุ่มเดิม ข้อผิดอยู่ในแถว ใช้กับ “คืนวงเงิน” “ชี้แจงผลต่าง” “ยกเลิกใบเสร็จ” ที่ยังเป็นแบบในแถว</td></tr>
+    <tr><td class="id">UI-F8</td><td>ลิ้นชักมี <span class="mono">aria-label="รายละเอียด"</span> ทั่วไป ปิดด้วยการคลิกปุ่มที่ฝังรหัส <span class="mono">#vc-close</span> <span class="mono">#adv-close</span></td><td>ใช้ <span class="mono">aria-labelledby</span> ชี้หัวลิ้นชัก ปุ่มปิดใช้ <span class="mono">data-fdclose</span> เดียว หน้าไหนมีลิ้นชักก็ปิดได้โดยไม่ต้องเพิ่มรหัส</td></tr>
+    <tr><td class="id">UI-F9</td><td>ประวัติเป็น <span class="mono">&lt;details&gt;</span> ท้ายลิ้นชัก</td><td>แท็บ “ประวัติ” แบบเดียวกับ UI-C6 รวม <span class="mono">v.log</span> <span class="mono">a.log</span> และ <span class="mono">S.audit</span> ของรายการนั้น พร้อมค่าเดิมและค่าใหม่ของการแก้ไข</td></tr>
+    <tr><td class="id">UI-F10</td><td>รายการใบขอเบิกและทะเบียนเงินยืมมีแค่ปุ่มกรองแบบแถบ</td><td>แถบเครื่องมือแบบ UI-C1 (ค้นหา ตัวกรองแบบเลือก แสดงที่ยกเลิก จำนวน ปุ่มเพิ่ม) แต่ใช้ลิ้นชักเดิมเมื่อเปิดแถว</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 05 ============================== -->
+<section class="ch" id="s5">
+<h2><span class="num">05</span>วงจรชีวิตและกฎการลบ</h2>
+<h3><span class="num">5.1</span>ใบขอเบิก (V0 ถึง V7)</h3>
+<div class="tbl"><table>
+  <thead><tr><th>สถานะ</th><th>แก้ไข</th><th>ยกเลิก / ถอน</th><th>จองวงเงิน</th><th>ใครทำต่อ</th></tr></thead>
+  <tbody>
+    <tr><td>ร่าง</td><td>ได้ทุกช่อง (ผู้จัดทำ)</td><td>ยกเลิกพร้อมเหตุผล (ผู้จัดทำ)</td><td>ไม่จอง</td><td>ผู้จัดทำส่งตรวจ</td></tr>
+    <tr><td>ส่งคืน</td><td>ได้ทุกช่อง (ผู้จัดทำ)</td><td>ยกเลิก (ผู้จัดทำ)</td><td>ไม่จอง</td><td>ผู้จัดทำแก้แล้วส่งตรวจใหม่</td></tr>
+    <tr><td>รอตรวจ · รออนุมัติ</td><td>ไม่ได้ ต้องดึงกลับก่อน (FC-P2)</td><td>ผู้จัดทำดึงกลับเป็นร่าง · ผู้ตรวจส่งคืน · ผู้อนุมัติส่งคืนหรือ <b>ไม่อนุมัติ</b></td><td>จอง</td><td>หัวหน้าการเงิน → ผู้มีอำนาจ</td></tr>
+    <tr><td>พร้อมส่ง GFMIS / พร้อมจ่ายจากบัญชีนอกงบ</td><td>ไม่ได้</td><td>หัวหน้าการเงินยกเลิกพร้อมเหตุผล (คืนยอดจอง)</td><td>จอง</td><td>การเงินใส่ไฟล์</td></tr>
+    <tr><td>อยู่ในไฟล์ GFMIS (ยังไม่ผ่านรายการ)</td><td>ไม่ได้</td><td>นำออกจากไฟล์ กลับเป็นพร้อมส่ง</td><td>จอง</td><td>การเงินบันทึกผล</td></tr>
+    <tr><td>ผ่านรายการ GFMIS · จ่ายแล้ว · กระทบยอดแล้ว</td><td>ไม่ได้</td><td>ไม่ได้ ใช้ “บันทึกรับเงินคืน” (FR-FC-14)</td><td>นับเป็นจ่าย</td><td>—</td></tr>
+    <tr><td>ไม่อนุมัติ · ยกเลิก</td><td>ไม่ได้</td><td>—</td><td>ไม่นับ ซ่อนโดยค่าเริ่มต้น</td><td>—</td></tr>
+  </tbody>
+</table></div>
+<h3><span class="num">5.2</span>ข้อมูลอื่น</h3>
+<div class="tbl"><table>
+  <thead><tr><th>ข้อมูล</th><th>แก้ได้เมื่อ</th><th>ลบได้เมื่อ</th><th>ยกเลิกหรือกลับรายการ</th></tr></thead>
+  <tbody>
+    <tr><td>ผูกพันนอกการจัดซื้อ</td><td>ยังไม่มีใบขอเบิกที่ไม่ยกเลิก (ยกเว้นกำหนดจ่ายแก้ได้เสมอ)</td><td>ไม่เคยมีใบขอเบิกหรือ PO</td><td>ยกเลิกยอดที่เหลือพร้อมเหตุผล (ใช้ “คืนวงเงิน” เต็มจำนวน)</td></tr>
+    <tr><td>เงินยืม</td><td>ขอ (ผู้ยืม) · ใบสำคัญส่งใช้ก่อนการเงินตรวจ</td><td>—</td><td>ยกเลิกเมื่อขอหรืออนุมัติแล้วยังไม่จ่าย</td></tr>
+    <tr><td>ใบเสร็จรับเงิน</td><td>ไม่ได้ (ข้อ 76)</td><td>—</td><td>ยกเลิกก่อนนำส่ง ฉบับที่ยกเลิกอยู่ในเล่ม</td></tr>
+    <tr><td>การนำส่ง</td><td>เลขอ้างอิงธนาคาร ก่อนบันทึกใน GFMIS</td><td>—</td><td>กลับรายการก่อนบันทึกใน GFMIS ใบเสร็จกลับเป็นค้างนำส่ง</td></tr>
+    <tr><td>การนำเข้า (รายการเดินบัญชี รายงาน GFMIS งบทดลอง ไฟล์ผลการจ่าย)</td><td>—</td><td>ลบการนำเข้าได้ก่อนลงนามกระทบยอดของงวดนั้น</td><td>นำเข้าใหม่แทนที่ฉบับเดิม เก็บฉบับเดิมไว้ในประวัติ</td></tr>
+    <tr><td>ทะเบียน (ผู้ใช้ GFMIS กรรมการ เล่มใบเสร็จ กองทุน)</td><td>ได้ มีประวัติ</td><td>ร่างที่ยังไม่มีผล</td><td>เพิกถอนหรือเลิกใช้ตามวันที่ ไม่ลบ</td></tr>
+  </tbody>
+</table></div>
+<h3><span class="num">5.3</span>กฎ</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>กฎ</th><th>ระดับ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">R-C-01–06</td><td>ใช้ตามเอกสาร Budget CRUD (ลบเฉพาะร่างที่ไม่มีการอ้างถึง เหตุผลบังคับ ข้อมูลลูกที่มีผล ปีที่ปิด เลขไม่นำกลับมาใช้ เลิกใช้ข้อมูลหลัก)</td><td><span class="tag t-bad">ห้าม</span></td></tr>
+    <tr><td class="id">R-FC-01</td><td>ข้อมูลที่ส่งออกนอกหน่วยแล้ว (ไฟล์ GFMIS ที่ผ่านรายการ ชุด e-Payment ที่ธนาคารยืนยัน ใบเสร็จ หนังสือรับรอง 50 ทวิ) แก้ค่าไม่ได้ แก้ผิดด้วยรายการใหม่ที่อ้างถึง</td><td><span class="tag t-bad">ห้าม</span></td></tr>
+    <tr><td class="id">R-FC-02</td><td>แก้หรือยกเลิกรายการในวัน เดือน ที่ปิดแล้วไม่ได้ ต้องเปิดงวดก่อนตาม SD-16</td><td><span class="tag t-bad">ห้าม</span></td></tr>
+    <tr><td class="id">R-FC-03</td><td>ยอดจองของผูกพันและบรรทัดแผนนอกงบประมาณ = ใบขอเบิกและเงินยืมที่ส่งตรวจแล้วแต่ยังไม่จ่ายและไม่ยกเลิก R-FN-01 และ R-FN-07 ตรวจ “คงเหลือ − ยอดจอง” ไม่ใช่คงเหลือหลังจ่ายเท่านั้น</td><td><span class="tag t-bad">ห้าม</span></td></tr>
+    <tr><td class="id">R-FC-04</td><td>ยกเลิกผูกพันหรือแผนที่มีใบขอเบิกค้างไม่ได้ จนกว่าใบขอเบิกจะจ่ายหรือยกเลิก</td><td><span class="tag t-bad">ห้าม</span></td></tr>
+    <tr><td class="id">R-FC-05</td><td>แก้ไขที่เปลี่ยนยอดเงิน ผู้รับ หรือบัญชีธนาคาร หลังผ่านผู้ตรวจ ต้องตรวจและอนุมัติใหม่ทั้งหมด (FC-P2)</td><td><span class="tag t-bad">ห้าม</span></td></tr>
+    <tr><td class="id">R-FC-06</td><td>เลขเอกสารการเงิน (VC RC RM AD CM CF WD NP GO) ใช้ปีของข้อมูลและไม่นำกลับมาใช้ แม้ลบร่าง ลำดับนับจากเลขสูงสุดของปีนั้น ไม่ใช่จำนวนรายการ</td><td><span class="tag t-bad">ห้าม</span></td></tr>
+    <tr><td class="id">R-FC-07</td><td>รับเงินคืนของใบขอเบิกที่จ่ายแล้วคืนวงเงินให้บรรทัดเฉพาะเมื่อนำส่งภายในปีที่เบิก (หรือภายในเวลากันเงิน) มิฉะนั้นเป็นรายได้แผ่นดิน ตาม R-FN-06</td><td><span class="tag t-warn">เตือน</span></td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 06 ============================== -->
+<section class="ch" id="s6">
+<h2><span class="num">06</span>CRUD รายหน้า</h2>
+<p class="lede">ทุกแถวเป็นข้อมูลหนึ่งชนิด ป้าย <span class="tag t-new">ใหม่</span> คือยังไม่มีในต้นแบบ <span class="tag t-should">เพิ่ม</span> คือมีบางส่วนและต้องเติม ไม่มีป้ายคือมีแล้ว คอลัมน์ “แบบ” บอกว่าย้าย (ย) ย้ายบางส่วน (ยบ) หรือคงเดิมและปรับ (ป)</p>
+
+<h3><span class="num">6.1</span>F1 งานวันนี้</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อมูล</th><th>สร้าง</th><th>แก้ไข</th><th>ลบ / ยกเลิก</th><th>แบบ</th><th>บทบาท</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-FC-01</td><td>งานของฉัน นาฬิกา วงเงินผูกพันตามชนิด</td><td colspan="3">อ่านอย่างเดียว <span class="tag t-should">เพิ่ม</span> ตัวกรองนาฬิกาตามชนิด (จ่าย เงินยืม รับเงิน ปิดงวด) และ “เฉพาะของฉัน” ทุกแถวเปิดลิ้นชักของรายการนั้นตรง</td><td>ป</td><td>ทุกบทบาทการเงิน</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.2</span>F2 วงเงินผูกพัน</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อมูล</th><th>สร้าง</th><th>แก้ไข</th><th>ลบ / ยกเลิก</th><th>แบบ</th><th>บทบาท</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-FC-02</td><td>ผูกพันนอกการจัดซื้อ (<span class="mono">S.fcommit</span>)</td><td>มีแล้ว ย้ายเข้าลิ้นชัก เพิ่มชื่อภาษาอังกฤษ</td><td><span class="tag t-new">ใหม่</span> ชื่อ ผู้รับ บรรทัด วงเงิน (ไม่ต่ำกว่าจ่ายแล้ว + จอง) ขณะยังไม่มีใบขอเบิก · กำหนดจ่ายแก้ได้เสมอพร้อมเหตุผล</td><td>คืนวงเงินบางส่วนมีแล้ว (ย้ายเป็นปุ่ม) <span class="tag t-new">ใหม่</span> ลบร่างที่ไม่มีใบขอเบิกและ PO · ยกเลิกยอดที่เหลือ (R-FC-04)</td><td>ย</td><td>การเงิน</td></tr>
+    <tr><td class="id">FR-FC-03</td><td>ข้อมูล PO ใน GFMIS</td><td>มีแล้ว</td><td><span class="tag t-new">ใหม่</span> แก้เลข PO ก่อนมีใบขอเบิกในไฟล์ GFMIS เลข 10 หลักไม่ซ้ำ พร้อมเหตุผล</td><td><span class="tag t-new">ใหม่</span> ล้างเลข PO ที่บันทึกผิด (ผูกพันกลับไป “ต้องมี PO”)</td><td>ป</td><td>การเงิน</td></tr>
+    <tr><td class="id">FR-FC-04</td><td>สัญญาจาก Procurement</td><td colspan="3">อ่านอย่างเดียว ลิ้นชักแสดงงวด การตรวจรับ ใบขอเบิกที่ผูก และลิงก์ “เปิดใน Procurement”</td><td>ป</td><td>ทุกบทบาทการเงิน</td></tr>
+    <tr><td class="id">FR-FC-05</td><td>คำขอกันเงินเหลื่อมปี (<span class="mono">S.carry.reqs</span>)</td><td>มีแล้ว <span class="tag t-should">เพิ่ม</span> เลขใช้ปีจากบริบท</td><td><span class="tag t-new">ใหม่</span> ยอดและเหตุผลขณะรอพิจารณา (ไม่ต่ำกว่า 100,000 บาท ตามข้อ 105)</td><td><span class="tag t-new">ใหม่</span> ถอนพร้อมเหตุผลขณะรอพิจารณา</td><td>ย</td><td>การเงิน (ขอ) กองแผนและผู้บริหาร (พิจารณาใน B7)</td></tr>
+    <tr><td class="id">FR-FC-06</td><td>สายงบถึงการจ่าย และงวดเลยกำหนด</td><td colspan="3">อ่านอย่างเดียว <span class="tag t-should">เพิ่ม</span> ตัวกรองหน่วยงานและงบรายจ่าย และคอลัมน์ “จอง” (R-FC-03)</td><td>ป</td><td>ทุกบทบาทการเงิน กองแผน</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.3</span>F3 ใบขอเบิกและการจ่าย</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อมูล</th><th>สร้าง</th><th>แก้ไข</th><th>ลบ / ยกเลิก</th><th>แบบ</th><th>บทบาท</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-FC-07</td><td>รายการใบขอเบิก</td><td colspan="3"><span class="tag t-should">เพิ่ม</span> แถบเครื่องมือ UI-F10: ค้นหาเลขที่และผู้รับ ตัวกรองประเภท ทางจ่าย สถานะ เดือน แหล่งเงิน เรียงตามกำหนดจ่ายหรือยอด แสดงที่ยกเลิกและไม่อนุมัติ</td><td>ป</td><td>ทุกบทบาทการเงิน ผู้ตรวจสอบ</td></tr>
+    <tr><td class="id">FR-FC-08</td><td>ใบขอเบิก: สร้าง</td><td>มีแล้ว (จากงวดที่ตรวจรับ และประเภทอื่น) <span class="tag t-should">เพิ่ม</span> ฟอร์มย้ายเข้าลิ้นชักโหมดสร้าง เลือกผู้รับจากทะเบียนผู้ขาย (SG-F03 ทำงานกับใบประเภทอื่นด้วย) และเลข VC ตาม R-FC-06</td><td colspan="2">—</td><td>ป</td><td>การเงิน</td></tr>
+    <tr><td class="id">FR-FC-09</td><td>ใบขอเบิก: แก้ไข</td><td>—</td><td><span class="tag t-new">ใหม่</span> ขณะร่างหรือส่งคืน: ผูกพันหรือบรรทัดหรือแผนนอกงบ ผู้รับ เลขผู้เสียภาษี ยอดก่อนหัก VAT ค่าปรับ หักอื่น กำหนดจ่าย วิธีจ่ายและเหตุผล คำอธิบาย หลักฐาน · กฎ R-FN-01 ถึง 03 และ 07 ตรวจสดขณะพิมพ์ · ใบจากงวดตรวจรับแก้ยอดไม่ได้ (มาจากสัญญา) แก้ได้เฉพาะค่าปรับ หัก และกำหนดจ่าย</td><td>—</td><td>ป</td><td>ผู้จัดทำ</td></tr>
+    <tr><td class="id">FR-FC-10</td><td>ใบขอเบิก: ดึงกลับ</td><td>—</td><td colspan="2"><span class="tag t-new">ใหม่</span> ผู้จัดทำดึงกลับจากรอตรวจหรือรออนุมัติเป็นร่างพร้อมเหตุผล ล้างผู้ตรวจและผู้อนุมัติ แจ้งผู้ที่รออยู่ (FC-P2) นาฬิกาเดินต่อจากเดิม (FC-P3)</td><td>ป</td><td>ผู้จัดทำ</td></tr>
+    <tr><td class="id">FR-FC-11</td><td>ใบขอเบิก: ยกเลิก</td><td>—</td><td>—</td><td>มีแล้วขณะร่างหรือส่งคืน <span class="tag t-new">ใหม่</span> หัวหน้าการเงินยกเลิกได้ถึง “พร้อมส่ง” ก่อนใส่ไฟล์ พร้อมเหตุผลและผลกระทบ (คืนยอดจอง ใบเติมเงินยืมกลับไปที่เงินยืม)</td><td>ป</td><td>ผู้จัดทำ หัวหน้าการเงิน</td></tr>
+    <tr><td class="id">FR-FC-12</td><td>ใบขอเบิก: ไม่อนุมัติ</td><td>—</td><td>—</td><td><span class="tag t-new">ใหม่</span> ผู้อนุมัติเลือก “ส่งคืนแก้ไข” หรือ “ไม่อนุมัติ” (สถานะสุดท้าย เหตุผลบังคับ ไม่นับในยอด) ใบที่ถูกส่งคืนครบ 3 ครั้งเตือนให้หัวหน้าการเงินดู</td><td>ป</td><td>ผู้มีอำนาจ</td></tr>
+    <tr><td class="id">FR-FC-13</td><td>ใบขอเบิก: อนุมัติตามวงเงินอำนาจ</td><td colspan="3"><span class="tag t-should">เพิ่ม</span> เลือกระดับอำนาจจากตาราง <span class="mono">fcfg().auth</span> ระดับต่ำสุดที่ครอบคลุมยอด (A3 หัวหน้าการเงิน ไม่เกิน 1 ล้าน → A2 ไม่เกิน 10 ล้าน → A1 ไม่จำกัด) ปุ่มอนุมัติแสดงเฉพาะผู้ที่อำนาจพอ ลิ้นชักแสดง “ต้องอนุมัติโดย A2 ขึ้นไป” (บทที่ 10)</td><td>ป</td><td>หัวหน้าการเงิน ผู้มีอำนาจ</td></tr>
+    <tr><td class="id">FR-FC-14</td><td>รับเงินคืนของใบที่จ่ายแล้ว</td><td><span class="tag t-new">ใหม่</span> ปุ่มในลิ้นชักใบที่จ่ายแล้ว สร้างใบเสร็จประเภท “เงินเบิกเกินส่งคืน” อ้างถึงใบขอเบิก พร้อมยอดและเหตุผล (จ่ายซ้ำ จ่ายเกิน ผู้ขายคืน)</td><td colspan="2">ใบขอเบิกเดิมไม่เปลี่ยน แสดงป้าย “มีเงินคืน” และยอดสุทธิหลังคืน · ใช้ R-FC-07 และนาฬิกานำส่ง 15 วันทำการ</td><td>ป</td><td>การเงิน</td></tr>
+    <tr><td class="id">FR-FC-15</td><td>ไฟล์ GFMIS (<span class="mono">S.gfOut</span>)</td><td><span class="tag t-new">ใหม่</span> เลือกใบที่พร้อมส่งเป็นรายแถว แล้ว “สร้างไฟล์” (UI-F3) ตรวจสิทธิ์ผู้บันทึก GFMIS ก่อน</td><td><span class="tag t-new">ใหม่</span> นำใบออกจากไฟล์ก่อนบันทึกผล</td><td><span class="tag t-new">ใหม่</span> ยกเลิกไฟล์ทั้งไฟล์ก่อนบันทึกผล ใบกลับเป็นพร้อมส่ง · รายการไฟล์และประวัติ</td><td>ย</td><td>การเงิน</td></tr>
+    <tr><td class="id">FR-FC-16</td><td>ผลจาก GFMIS (ผ่านรายการ และผลการจ่าย)</td><td colspan="3"><span class="tag t-new">ใหม่</span> ฟอร์มบันทึกผลรายแถวในไฟล์: เลขเอกสาร GFMIS วันที่ ผลการจ่าย (จ่ายแล้ว หรือไม่สำเร็จพร้อมสาเหตุ) ปุ่ม “จำลอง” เติมให้ตรวจก่อน (SIM-F01 SIM-F02) ใบที่จ่ายไม่สำเร็จกลับเป็นพร้อมส่งพร้อมเหตุผล</td><td>ป</td><td>การเงิน</td></tr>
+    <tr><td class="id">FR-FC-17</td><td>ชุดจ่ายจากบัญชีหน่วยงาน (<span class="mono">S.epay</span>)</td><td><span class="tag t-new">ใหม่</span> เลือกใบเป็นรายแถว (แทนจ่ายทั้งหมด) จ่ายเช็คหรือเงินสดรายใบมีแล้ว</td><td>—</td><td><span class="tag t-new">ใหม่</span> ยกเลิกชุดก่อนธนาคารยืนยัน · รายการชุดและผลยืนยัน (SIM-F03)</td><td>ย</td><td>การเงิน</td></tr>
+    <tr><td class="id">FR-FC-18</td><td>ตรวจการจ่ายประจำวัน (<span class="mono">S.payChecks</span>)</td><td colspan="3"><span class="tag t-should">เพิ่ม</span> ติ๊กรายใบ ตั้งข้อสังเกตรายใบพร้อมบันทึก (ส่งกลับให้การเงินชี้แจง) ลงนามวันได้เมื่อทุกใบติ๊กหรือมีข้อสังเกต ลงนามแล้วแก้ไม่ได้</td><td>ป</td><td>หัวหน้าการเงิน (ผู้ตรวจสอบอ่าน)</td></tr>
+    <tr><td class="id">FR-FC-19</td><td>หนังสือรับรอง 50 ทวิ</td><td>ออกอัตโนมัติเมื่อจ่าย (มีแล้ว)</td><td>บันทึกส่งแล้ว (มีแล้ว)</td><td><span class="tag t-new">ใหม่</span> ยกเลิกและออกใหม่พร้อมเหตุผล ฉบับเดิมเก็บไว้ เลขใหม่ต่อเล่ม</td><td>ป</td><td>การเงิน</td></tr>
+    <tr><td class="id">FR-FC-20</td><td>ภาษีและค่าปรับ</td><td colspan="3">อ่านอย่างเดียว ค่าปรับแก้ผ่านใบขอเบิก (FR-FC-09)</td><td>ป</td><td>ทุกบทบาทการเงิน</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.4</span>F4 เงินยืม และเงินยืมของฉัน</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อมูล</th><th>สร้าง</th><th>แก้ไข</th><th>ลบ / ยกเลิก</th><th>แบบ</th><th>บทบาท</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-FC-21</td><td>คำขอยืมเงิน</td><td>มีแล้ว (เงินยืมของฉัน) <span class="tag t-new">ใหม่</span> การเงินบันทึกแทนผู้ยืมได้จาก F4 (ผู้ยืมยังเป็นเจ้าของ) · เพิ่มลบแถวรายการค่าใช้จ่ายได้ไม่จำกัด 3 แถว</td><td><span class="tag t-new">ใหม่</span> ผู้ยืมแก้ทุกช่องขณะ “ขอ” · ตัวช่วยค่าเดินทาง (D-FN-05) คำนวณใหม่เมื่อแก้วัน</td><td>ยกเลิกขณะขอมีแล้ว <span class="tag t-new">ใหม่</span> ยกเลิกเมื่ออนุมัติแล้วยังไม่จ่าย (ผู้ยืมหรือการเงิน เหตุผล)</td><td>ป</td><td>ทุกคน (ผู้ยืม) การเงิน</td></tr>
+    <tr><td class="id">FR-FC-22</td><td>ทะเบียนคุมเงินยืม</td><td colspan="3"><span class="tag t-should">เพิ่ม</span> แถบเครื่องมือ: ค้นหาผู้ยืมและเลขที่ ตัวกรองหน่วยงาน ประเภท อายุหนี้ แหล่งเงิน เรียงตามวันครบกำหนด</td><td>ป</td><td>การเงิน หัวหน้าการเงิน ผู้ตรวจสอบ</td></tr>
+    <tr><td class="id">FR-FC-23</td><td>การจ่ายเงินยืม</td><td colspan="3"><span class="tag t-should">เพิ่ม</span> ตรวจ SD-12 ตอนจ่าย (ผู้ยืมจ่ายให้ตัวเองไม่ได้) และนาฬิกา “อนุมัติแล้วยังไม่จ่าย” เมื่อใกล้วันเริ่มเดินทาง เลขสัญญายืมใช้ปีของข้อมูล</td><td>ป</td><td>การเงิน</td></tr>
+    <tr><td class="id">FR-FC-24</td><td>ใบสำคัญส่งใช้</td><td>มีแล้ว</td><td><span class="tag t-new">ใหม่</span> ผู้ยืมดึงกลับมาแก้ได้ก่อนการเงินตรวจ · แก้หลังถูกทักท้วงมีแล้ว</td><td>—</td><td>ป</td><td>ผู้ยืม</td></tr>
+    <tr><td class="id">FR-FC-25</td><td>เรียกชดใช้และรายงาน</td><td colspan="3">มีแล้ว <span class="tag t-should">เพิ่ม</span> แก้วันครบกำหนดเรียกชดใช้ได้พร้อมเหตุผล (ไม่เกิน 30 วันตามข้อ 68) และยกเลิกการเรียกเมื่อผู้ยืมส่งใช้ครบ</td><td>ป</td><td>หัวหน้าการเงิน</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.5</span>F5 รับเงินและนำส่ง</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อมูล</th><th>สร้าง</th><th>แก้ไข</th><th>ลบ / ยกเลิก</th><th>แบบ</th><th>บทบาท</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-FC-26</td><td>ใบเสร็จรับเงิน (<span class="mono">S.receipts</span>)</td><td>มีแล้ว ย้ายเป็นลิ้นชักโหมดสร้าง ใช้เล่มและเลขที่ของผู้ถือเล่ม (ตรรกะ <span class="mono">rcIssue</span> เดิม)</td><td>ไม่ได้ (ข้อ 76) ลิ้นชักแสดงเหตุผลนี้แทนปุ่มแก้</td><td>ยกเลิกพร้อมเหตุผลก่อนนำส่งมีแล้ว (ย้ายเป็นปุ่ม) <span class="tag t-new">ใหม่</span> “ยกเลิกและออกใหม่” เติมฟอร์มจากฉบับเดิม</td><td>ยบ</td><td>การเงิน</td></tr>
+    <tr><td class="id">FR-FC-27</td><td>บันทึกรับเงินใน GFMIS</td><td colspan="3"><span class="tag t-should">เพิ่ม</span> เลือกใบเสร็จรายแถว (UI-F3) แทนบันทึกทั้งหมด เลขเอกสาร GFMIS ต่อใบ ปุ่มจำลองเติมให้ (SIM-F04)</td><td>ยบ</td><td>การเงิน</td></tr>
+    <tr><td class="id">FR-FC-28</td><td>การนำส่งเงิน (<span class="mono">S.remits</span>)</td><td><span class="tag t-should">เพิ่ม</span> เลือกใบเสร็จในกลุ่มที่จะนำส่ง (ค่าเริ่มต้นเลือกทั้งหมด)</td><td><span class="tag t-new">ใหม่</span> เลขอ้างอิงธนาคารและวันที่ ก่อนบันทึกใน GFMIS</td><td><span class="tag t-new">ใหม่</span> กลับรายการพร้อมเหตุผลก่อนบันทึกใน GFMIS ใบเสร็จกลับเป็นค้างนำส่ง นาฬิกาเดินต่อ (FC-P3)</td><td>ยบ</td><td>การเงิน</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.6</span>F6 เงินคงเหลือประจำวัน</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อมูล</th><th>สร้าง</th><th>แก้ไข</th><th>ลบ / ยกเลิก</th><th>แบบ</th><th>บทบาท</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-FC-29</td><td>รายงานเงินคงเหลือประจำวัน (<span class="mono">S.dailyCash</span>)</td><td>มีแล้ว <span class="tag t-new">ใหม่</span> ทำรายงานย้อนหลังของวันทำการที่ขาด พร้อมเหตุผล ติดป้าย “ทำย้อนหลัง”</td><td>ยอดในระบบคำนวณเสมอ</td><td><span class="tag t-new">ใหม่</span> หัวหน้าการเงินสั่งนับใหม่ก่อนผู้บริหารรับทราบ เหตุผลบังคับ การนับเดิมเก็บไว้ในประวัติ</td><td>ป</td><td>การเงิน หัวหน้าการเงิน</td></tr>
+    <tr><td class="id">FR-FC-30</td><td>การตรวจนับของกรรมการ</td><td>มีแล้ว (SD-13)</td><td><span class="tag t-new">ใหม่</span> กรรมการแก้ยอดนับของตนได้จนกว่าทุกคนนับครบ</td><td>—</td><td>ป</td><td>กรรมการและผู้แทน</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.7</span>F7 กระทบยอด</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อมูล</th><th>สร้าง</th><th>แก้ไข</th><th>ลบ / ยกเลิก</th><th>แบบ</th><th>บทบาท</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-FC-31</td><td>รายการเดินบัญชีธนาคาร (<span class="mono">S.bankStmts</span>)</td><td>นำเข้าตัวอย่างมีแล้ว <span class="tag t-should">เพิ่ม</span> ฟอร์มนำเข้าที่เลือกบัญชีและเดือน และปุ่มจำลอง (SIM-F05)</td><td>—</td><td><span class="tag t-new">ใหม่</span> ลบหรือนำเข้าใหม่ก่อนลงนาม ฉบับเดิมเก็บในประวัติ</td><td>ป</td><td>การเงิน</td></tr>
+    <tr><td class="id">FR-FC-32</td><td>ปรับปรุงบัญชีจากรายการธนาคาร (<span class="mono">S.bookAdj</span>)</td><td>มีแล้ว</td><td>—</td><td><span class="tag t-new">ใหม่</span> กลับรายการพร้อมเหตุผลก่อนลงนาม</td><td>ป</td><td>การเงิน หัวหน้าการเงิน</td></tr>
+    <tr><td class="id">FR-FC-33</td><td>งบพิสูจน์ยอดเงินฝาก (<span class="mono">S.bankRecs</span>)</td><td>ลงนามมีแล้ว (SD-15)</td><td>—</td><td><span class="tag t-new">ใหม่</span> เปิดใหม่โดยหัวหน้าการเงินคนละคนกับผู้ลงนาม พร้อมเหตุผล ขณะเดือนยังไม่ปิด (ถ้าปิดแล้วต้องเปิดเดือนก่อนตาม SD-16)</td><td>ป</td><td>หัวหน้าการเงิน</td></tr>
+    <tr><td class="id">FR-FC-34</td><td>รายงาน GFMIS (นำส่ง งบทดลอง)</td><td>นำเข้ามีแล้ว</td><td>—</td><td><span class="tag t-new">ใหม่</span> นำเข้าใหม่แทนที่ ฉบับเดิมในประวัติ (SIM-F06)</td><td>ป</td><td>การเงิน</td></tr>
+    <tr><td class="id">FR-FC-35</td><td>ไฟล์ผลการจ่าย (<span class="mono">S.gfmisFiles</span>)</td><td>มีแล้ว</td><td>คำชี้แจงผลต่าง <span class="tag t-new">ใหม่</span> แก้คำชี้แจงได้ก่อนปิดเดือน · จับคู่เองสำหรับแถว “ไม่พบใน Fisko”</td><td><span class="tag t-new">ใหม่</span> ยกเลิกการนำเข้าก่อนปิดเดือน ผลกระทบยอดของแถวกลับเป็นยังไม่ตรวจ</td><td>ป</td><td>การเงิน</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.8</span>F8 ปิดงวด</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อมูล</th><th>สร้าง</th><th>แก้ไข</th><th>ลบ / ยกเลิก</th><th>แบบ</th><th>บทบาท</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-FC-36</td><td>ปิดวัน (<span class="mono">S.dayCloses</span>)</td><td>มีแล้ว</td><td>—</td><td><span class="tag t-new">ใหม่</span> เปิดวันที่ปิดแล้ว ใช้กติกาเดียวกับ SD-16 (คนละคนกับผู้ปิด หรือผู้บริหาร เหตุผลบังคับ) เปิดได้เฉพาะวันในเดือนที่ยังไม่ปิด</td><td>ป</td><td>หัวหน้าการเงิน ผู้บริหาร</td></tr>
+    <tr><td class="id">FR-FC-37</td><td>ปิดเดือน (<span class="mono">S.periods</span>)</td><td colspan="3">มีแล้ว (ปิด เปิดใหม่ SD-16) <span class="tag t-should">เพิ่ม</span> ประวัติเป็นแท็บ UI-F9 และเหตุผลขั้นต่ำ 10 ตัวอักษร</td><td>ป</td><td>หัวหน้าการเงิน ผู้บริหาร</td></tr>
+    <tr><td class="id">FR-FC-38</td><td>รายการตรวจสิ้นปี</td><td colspan="3"><span class="tag t-should">เพิ่ม</span> ข้อ 3 และ 4 คำนวณจากข้อมูลจริง (คำขอกันเงินที่ยังไม่อนุมัติ เล่มใบเสร็จปีใหม่ที่ออกแล้ว) ไม่ฝังค่า</td><td>ป</td><td>หัวหน้าการเงิน</td></tr>
+    <tr><td class="id">FR-FC-39</td><td>ข้อทักท้วง สตง. (<span class="mono">S.auditQs</span>)</td><td>มีแล้ว ย้ายเข้าลิ้นชัก</td><td><span class="tag t-new">ใหม่</span> แก้เรื่องและวันรับแจ้งก่อนตอบ · คำตอบเป็นร่างแก้ได้ก่อนกด “ส่งคำชี้แจง” · กำหนด 15 วันนับตามข้อ 109 ที่ตั้งใน M10</td><td><span class="tag t-new">ใหม่</span> ลบข้อที่บันทึกผิดก่อนมีคำตอบ · ส่งคำชี้แจงแล้วแก้ไม่ได้ เพิ่ม “ชี้แจงเพิ่มเติม” ได้</td><td>ย</td><td>หัวหน้าการเงิน</td></tr>
+    <tr><td class="id">FR-FC-40</td><td>ยอดที่ส่งให้ Fisko Budget</td><td colspan="3">อ่านอย่างเดียว คำนวณจากใบที่จ่าย ใบที่ยกเลิกหรือมีเงินคืนเห็นผลทันที</td><td>ป</td><td>ทุกบทบาทการเงิน กองแผน</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.9</span>F9 AI และ Analytics</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อมูล</th><th>สร้าง</th><th>แก้ไข</th><th>ลบ / ยกเลิก</th><th>แบบ</th><th>บทบาท</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-FC-41</td><td>งาน Agent การเงิน (<span class="mono">S.fRuns</span>)</td><td>มีแล้ว</td><td>อนุมัติขั้นมีแล้ว <span class="tag t-should">เพิ่ม</span> ไม่อนุมัติขั้นต้องมีเหตุผล</td><td><span class="tag t-new">ใหม่</span> หยุดงานพร้อมเหตุผล (แบบ <span class="mono">agRun</span> ของ B11)</td><td>ย</td><td>ตาม <span class="mono">F_AG[].who</span></td></tr>
+    <tr><td class="id">FR-FC-42</td><td>สถานการณ์จำลอง (<span class="mono">S.fWhatifs</span>)</td><td>มีแล้ว</td><td><span class="tag t-new">ใหม่</span> เปิดกลับมาปรับค่า เปลี่ยนชื่อ</td><td><span class="tag t-new">ใหม่</span> ลบ (แบบ <span class="mono">wiSc</span> ของ B10)</td><td>ย</td><td>การเงิน ผู้บริหาร</td></tr>
+    <tr><td class="id">FR-FC-43</td><td>สัญญาณเตือน (<span class="mono">S.fSig</span>)</td><td>—</td><td>คัดกรองมีแล้ว <span class="tag t-should">เพิ่ม</span> “เป็นประเด็น” และ “เตือนผิด” ต้องมีเหตุผล</td><td><span class="tag t-new">ใหม่</span> เปิดใหม่พร้อมเหตุผล</td><td>ป</td><td>ผู้ตรวจสอบ หัวหน้าการเงิน การเงิน (ชี้แจง)</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.10</span>F10 ทะเบียนและตั้งค่า</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อมูล</th><th>สร้าง</th><th>แก้ไข</th><th>ลบ / ยกเลิก</th><th>แบบ</th><th>บทบาท</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-FC-44</td><td>ผู้มีสิทธิใช้ GFMIS (<span class="mono">S.gfUsers</span>)</td><td>มีแล้ว ย้ายเข้าลิ้นชัก</td><td><span class="tag t-new">ใหม่</span> หน้าที่ (บันทึก อนุมัติ นำส่ง) เลขคำสั่ง วันสิ้นสุด</td><td><span class="tag t-should">เพิ่ม</span> เพิกถอนอ้างรหัสผู้ใช้ (ไม่ใช่ลำดับแถว) พร้อมเหตุผล ไม่แสดงปุ่มกับรายการที่หมดอายุแล้ว · ลบร่างที่ยังไม่มีผล</td><td>ย</td><td>หัวหน้าการเงิน</td></tr>
+    <tr><td class="id">FR-FC-45</td><td>คำขอแก้บัญชีธนาคารผู้ขาย (<span class="mono">S.vendorChanges</span>)</td><td>มีแล้ว</td><td><span class="tag t-new">ใหม่</span> ผู้ขอแก้ได้ขณะรอยืนยัน</td><td><span class="tag t-new">ใหม่</span> ผู้ขอถอน หรือผู้ยืนยัน “ไม่ยืนยัน” พร้อมเหตุผล · ยืนยันแล้วบัญชีเดิมเก็บเป็นประวัติของผู้ขาย (ไม่เขียนทับ) SD-14 คงเดิม</td><td>ย</td><td>การเงิน หัวหน้าการเงิน</td></tr>
+    <tr><td class="id">FR-FC-46</td><td>การแต่งตั้งกรรมการเก็บรักษาเงิน (<span class="mono">S.cashCmte</span>)</td><td><span class="tag t-new">ใหม่</span> คำสั่งใหม่มีวันเริ่ม กรรมการอย่างน้อย 2 คน (ข้อ 86) และผู้แทน</td><td><span class="tag t-new">ใหม่</span> แก้คำสั่งที่ยังไม่เริ่มผล</td><td>คำสั่งเดิมสิ้นผลเมื่อคำสั่งใหม่เริ่ม เก็บเป็นประวัติ การตรวจนับย้อนหลังอ้างคำสั่งที่มีผลวันนั้น</td><td>ย</td><td>หัวหน้าการเงิน</td></tr>
+    <tr><td class="id">FR-FC-47</td><td>เล่มใบเสร็จ (<span class="mono">S.rbooks</span>)</td><td><span class="tag t-new">ใหม่</span> ออกเล่มใหม่: ปีงบประมาณ เลขเล่ม ช่วงเลข ผู้ถือ หน่วยงาน (ช่วงเลขไม่ซ้ำเล่มอื่น)</td><td><span class="tag t-new">ใหม่</span> โอนผู้ถือเล่มพร้อมเหตุผล</td><td><span class="tag t-new">ใหม่</span> รับคืนเล่ม · ยกเลิกเลขที่ยังไม่ใช้ท้ายเล่มพร้อมเหตุผล · รายงานประจำปีมีแล้ว</td><td>ย</td><td>หัวหน้าการเงิน</td></tr>
+  </tbody>
+</table></div>
+<p class="small">แท็บบัญชีธนาคารผู้ขายแสดงให้ผู้บริหารอ่าน (ปัจจุบันเห็นแท็บว่าง) · กฎการเงินและนาฬิกายังตั้งใน M10 ตามเดิม</p>
+
+<h3><span class="num">6.11</span>F11 เงินนอกงบประมาณ</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อมูล</th><th>สร้าง</th><th>แก้ไข</th><th>ลบ / ยกเลิก</th><th>แบบ</th><th>บทบาท</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-FC-48</td><td>กองทุน (<span class="mono">S.nbFunds</span>)</td><td><span class="tag t-new">ใหม่</span> ชื่อ ฐานอำนาจ ยอดยกมาบัญชีหน่วยงานและเงินฝากคลัง</td><td><span class="tag t-new">ใหม่</span> ชื่อและฐานอำนาจ · ยอดยกมาแก้ได้ก่อนมีรายการ</td><td><span class="tag t-new">ใหม่</span> ลบร่างที่ไม่มีรายการ · ปิดกองทุนเมื่อยอดทั้งสองเป็นศูนย์</td><td>ย</td><td>การเงิน (หัวหน้าการเงินยืนยัน)</td></tr>
+    <tr><td class="id">FR-FC-49</td><td>แผนการใช้จ่ายและบรรทัด (<span class="mono">S.nbPlans</span>)</td><td>มีแล้ว ย้ายเข้าลิ้นชัก มีแท็บบรรทัด</td><td><span class="tag t-new">ใหม่</span> แก้และลบบรรทัด รายได้ที่คาด ขณะร่างหรือส่งคืน · <b>ปรับแผน</b>ที่อนุมัติแล้วเป็นฉบับใหม่ (ฉบับเดิมยังมีผลจนฉบับใหม่อนุมัติ บรรทัดลดไม่ต่ำกว่ายอดที่ใช้แล้ว)</td><td><span class="tag t-new">ใหม่</span> ถอนขณะรออนุมัติ · ลบร่างที่ไม่เคยส่ง · ผู้อนุมัติตรวจผ่าน <span class="mono">sodCheck</span> (FC-P5)</td><td>ย</td><td>การเงิน (ทำ) ผู้บริหาร (อนุมัติ)</td></tr>
+    <tr><td class="id">FR-FC-50</td><td>คำขอถอนเงินฝากคลัง (<span class="mono">S.nbWd</span>)</td><td>มีแล้ว</td><td><span class="tag t-new">ใหม่</span> ยอดและเหตุผลขณะรออนุมัติ</td><td><span class="tag t-new">ใหม่</span> ถอนคำขอ · ไม่อนุมัติต้องมีเหตุผลและตรวจ SD-11 · ฝากคืนได้ทุกเวลา (ไม่ใช่เฉพาะเหลือน้อยกว่า 3 วัน)</td><td>ย</td><td>การเงิน ผู้บริหาร</td></tr>
+  </tbody>
+</table></div>
+
+<h3><span class="num">6.12</span>ข้อกำหนดร่วมทุกหน้า</h3>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อกำหนด</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FR-FC-51</td><td>ทุกข้อมูลการเงินมีแท็บประวัติ (UI-F9) และลิงก์ตรงเปิดลิ้นชักได้ เช่น <span class="mono">#finance?vc=VC-2570-034</span> <span class="mono">#finance?adv=AD-2570-007</span></td></tr>
+    <tr><td class="id">FR-FC-52</td><td>เลิกทำ 10 วินาที (UI-C8) ใช้กับสร้าง ยกเลิก ดึงกลับ นำออกจากไฟล์ ไม่ใช้กับขั้นที่ “ออกนอกหน่วย” (ผ่านรายการ GFMIS ธนาคารยืนยัน ลงนาม ปิดงวด) ซึ่งใช้การเปิดใหม่หรือกลับรายการแทน</td></tr>
+    <tr><td class="id">FR-FC-53</td><td>สถานะว่าง (UI-C7) บอกขั้นก่อนหน้า เช่น “ยังไม่มีงวดที่ตรวจรับ · ไปที่ Procurement” “ไม่มีเล่มใบเสร็จที่คุณถือ · ขอหัวหน้าการเงินออกเล่ม (F10)”</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 07 ============================== -->
+<section class="ch" id="s7">
+<h2><span class="num">07</span>การไหลของข้อมูลข้ามขั้น</h2>
+<p class="lede">การแก้หรือยกเลิกที่ต้นทางต้องเห็นผลที่ปลายทางทันที โดยไม่ต้องตั้งยอดเอง (C-P3)</p>
+<div class="flow">
+  <div class="st"><b>B7</b>บรรทัดจัดสรร</div><span class="ar">→</span>
+  <div class="st"><b>F2</b>ผูกพัน / สัญญา</div><span class="ar">→</span>
+  <div class="st"><b>F3</b>ใบขอเบิก (จอง)</div><span class="ar">→</span>
+  <div class="st"><b>F3</b>ไฟล์ GFMIS</div><span class="ar">→</span>
+  <div class="st"><b>F3</b>จ่ายแล้ว · 50 ทวิ</div><span class="ar">→</span>
+  <div class="st"><b>F7</b>กระทบยอด</div><span class="ar">→</span>
+  <div class="st"><b>F8</b>ปิดเดือน → B8</div>
+</div>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>จาก</th><th>ไป</th><th>สิ่งที่ต้องเกิด</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FL-F01</td><td>บรรทัดจัดสรร (B7)</td><td>ผูกพันและใบขอเบิก (F2 F3)</td><td>วงเงินคงเหลือของบรรทัด = จัดสรรหลังโอน − ผูกพัน − จอง − จ่าย แก้หรือยกเลิกผูกพันคืนวงเงินให้บรรทัดทันที</td></tr>
+    <tr><td class="id">FL-F02</td><td>ใบขอเบิก (F3)</td><td>ผูกพัน (F2)</td><td>ส่งตรวจแล้ว “จอง” ยอดในผูกพัน (R-FC-03) ยกเลิก ไม่อนุมัติ หรือดึงกลับคืนยอดจอง จ่ายแล้วย้ายจากจองเป็นจ่าย</td></tr>
+    <tr><td class="id">FL-F03</td><td>ใบขอเบิกที่จ่าย (F3)</td><td>ยอดเบิกจ่าย (F8 → B8)</td><td>ยอดส่งให้ Budget รวมเงินคืน (FR-FC-14) ที่คืนวงเงิน รายงานติดตามของ B8 เปลี่ยนตาม</td></tr>
+    <tr><td class="id">FL-F04</td><td>งวดตรวจรับ (Procurement)</td><td>ใบขอเบิก (F3)</td><td>ยกเลิกใบขอเบิกจากงวด ทำให้งวดกลับเป็น “ตรวจรับแล้ว รอขอเบิก” และนาฬิกา 5 วันทำการเดินต่อจากวันตรวจรับเดิม</td></tr>
+    <tr><td class="id">FL-F05</td><td>เงินยืม (F4)</td><td>ใบขอเบิกเติมเงิน (F3) และใบเสร็จเงินเหลือ (F5)</td><td>รับใบสำคัญแล้วสร้างใบเติมเงินร่างหรือใบเสร็จเงินเหลือ (มีแล้ว) ยกเลิกใบเติมเงินทำให้เงินยืมแสดง “ยังไม่ได้เบิกส่วนเกิน”</td></tr>
+    <tr><td class="id">FL-F06</td><td>ใบเสร็จ (F5)</td><td>นำส่ง (F5) และเงินคงเหลือ (F6)</td><td>ยกเลิกใบเสร็จหรือกลับรายการนำส่ง เปลี่ยนยอดในตู้ของวันนั้นและนาฬิกานำส่ง รายงานที่ลงนามแล้วไม่เปลี่ยน แต่ขึ้นเตือนให้สั่งนับใหม่</td></tr>
+    <tr><td class="id">FL-F07</td><td>ผลจ่ายและนำส่ง (F3 F5)</td><td>กระทบยอด (F7)</td><td>ลบหรือนำเข้ารายการเดินบัญชีใหม่ ทำให้การจับคู่คำนวณใหม่ ผลต่างและข้อปิดเดือนข้อ 1 ถึง 6 เปลี่ยนตาม</td></tr>
+    <tr><td class="id">FL-F08</td><td>แผนนอกงบประมาณ (F11)</td><td>ใบขอเบิกและเงินยืมจากกองทุน (F3 F4)</td><td>ปรับแผนเปลี่ยนวงเงินบรรทัดที่ R-FN-07 ใช้ตรวจ แท็บเงินนอกงบประมาณใน M06 เห็นทันที</td></tr>
+    <tr><td class="id">FL-F09</td><td>เล่มใบเสร็จ (F10)</td><td>ใบเสร็จ (F5) และสิ้นปี (F8)</td><td>ออกเล่มปี 2571 แล้วใบเสร็จวันที่ 1 ตุลาคมออกได้ และข้อ “เล่มใบเสร็จปีใหม่” ในรายการสิ้นปีผ่าน</td></tr>
+    <tr><td class="id">FL-F10</td><td>กันเงินเหลื่อมปี (F2 → B7)</td><td>บรรทัดปีถัดไป</td><td>ใช้ FL-09 ของ Budget ถอนคำขอก่อนอนุมัติไม่สร้างบรรทัด</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 08 ============================== -->
+<section class="ch" id="s8">
+<h2><span class="num">08</span>ขั้นที่จำลอง: เลือกรายการ บันทึกผลจริง และปุ่มจำลอง</h2>
+<p class="lede">ทุกขั้นที่ผลมาจาก GFMIS หรือธนาคาร: (1) เลือกรายการทีละแถว (2) สร้างไฟล์หรือชุด (3) บันทึกผลในฟอร์มแบบตาราง หนึ่งแถวต่อรายการ ปุ่ม “จำลอง” เติมค่าให้ตรวจก่อนบันทึก ไม่บันทึกเอง ผลจากการจำลองมีป้าย “จำลอง” ในประวัติ (แบบเดียวกับ SIM-01 ของ Budget)</p>
+<div class="wf">
+  <div class="wf-top">F3 · ส่ง GFMIS และจ่าย · <b>ไฟล์ GO-2570-0012 · 4 ใบ · รอผลผ่านรายการ</b></div>
+  <div class="wf-body">
+    <ol class="wf-steps"><li class="ok">เลือกใบที่พร้อมส่ง</li><li class="ok">สร้างไฟล์</li><li class="now">บันทึกผลผ่านรายการ</li><li>บันทึกผลการจ่าย</li><li>กระทบยอด (F7)</li></ol>
+    <div class="wf-main"><b>ผลผ่านรายการ (หนึ่งแถวต่อใบ)</b><span>VC-2570-031 · เลขเอกสาร GFMIS [3100004512] · วันที่ [21/10/2569] · ผ่าน ▾</span><span>VC-2570-033 · เลขเอกสาร [ ] · ไม่ผ่าน ▾ · สาเหตุ [รหัสผู้ขายไม่ตรง]</span><span>ใบที่ไม่ผ่านกลับเป็นพร้อมส่ง พร้อมสาเหตุในประวัติ</span></div>
+    <div class="wf-side"><b>ปุ่ม</b><span>จำลอง (เติมเลขเอกสาร ผ่านทุกใบ หรือไม่ผ่านหนึ่งใบเมื่อเลือก “มีข้อผิด”)</span><span>บันทึกผล</span><span>นำใบออกจากไฟล์</span><span>ยกเลิกไฟล์ (เหตุผล)</span></div>
+  </div>
+</div>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ขั้น</th><th>ฟอร์มบันทึกผล</th><th>ปุ่มจำลองเติมอะไร</th></tr></thead>
+  <tbody>
+    <tr><td class="id">SIM-F01</td><td>ผ่านรายการขอเบิกใน GFMIS</td><td>เลขเอกสาร วันที่ ผ่านหรือไม่ผ่านพร้อมสาเหตุ ต่อใบ</td><td>เลขเอกสารต่อเนื่อง ผ่านทุกใบ (ตัวเลือก “มีข้อผิด” ให้ใบหนึ่งไม่ผ่าน)</td></tr>
+    <tr><td class="id">SIM-F02</td><td>ผลการจ่ายจากกรมบัญชีกลาง</td><td>วันที่จ่าย เลขอ้างอิง จ่ายแล้วหรือไม่สำเร็จ ต่อใบ (ทางจ่ายตรง) หรือ “เงินเข้าบัญชีหน่วยงาน” (ทางผ่านส่วนราชการ)</td><td>จ่ายวันทำการถัดไปทุกใบ</td></tr>
+    <tr><td class="id">SIM-F03</td><td>ธนาคารยืนยันชุด e-Payment</td><td>ผลต่อรายการ สำเร็จหรือคืนเงิน (บัญชีปิด ชื่อไม่ตรง)</td><td>สำเร็จทุกรายการ</td></tr>
+    <tr><td class="id">SIM-F04</td><td>บันทึกรับเงินใน GFMIS</td><td>เลขเอกสารต่อใบเสร็จ</td><td>เลขต่อเนื่อง</td></tr>
+    <tr><td class="id">SIM-F05</td><td>รายการเดินบัญชีธนาคาร</td><td>นำเข้าไฟล์ หรือกรอกรายการ (วันที่ อ้างอิง ยอด)</td><td>สร้างจากรายการจ่ายและนำส่งของเดือน พร้อมค่าธรรมเนียมและดอกเบี้ยหนึ่งรายการที่ต้องปรับปรุง</td></tr>
+    <tr><td class="id">SIM-F06</td><td>รายงานนำส่งและงบทดลองจาก GFMIS</td><td>นำเข้าไฟล์</td><td>สร้างจากการนำส่งและการจ่ายที่บันทึกแล้ว</td></tr>
+    <tr><td class="id">SIM-F07</td><td>ไฟล์ผลการจ่าย (กระทบสามทาง)</td><td>นำเข้าไฟล์</td><td>มีแล้ว (<span class="mono">#gf-sample</span>) คงไว้ เพิ่มแถว “ไม่พบใน Fisko” หนึ่งแถวให้สาธิตการจับคู่เอง</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 09 ============================== -->
+<section class="ch" id="s9">
+<h2><span class="num">09</span>นาฬิกาตามระเบียบและกฎแบ่งหน้าที่ที่คงไว้</h2>
+<p class="lede">CRUD ใหม่ต้องไม่เปิดช่องให้หลบกฎเดิม ตารางนี้บอกว่าแต่ละกฎถูกตรวจซ้ำตรงไหนเมื่อมีการแก้ ยกเลิก หรือเปิดใหม่</p>
+<div class="tbl"><table>
+  <thead><tr><th class="id">กฎ</th><th>สาระ</th><th>การแก้ไขและยกเลิกที่ต้องตรวจซ้ำ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">R-FN-01</td><td>เบิกได้เฉพาะวัตถุประสงค์และภายในวงเงินคงเหลือ ปีใดเบิกปีนั้น เตือนขอเบิกก่อนกำหนดเกิน 10 วัน (ข้อ 17 18 22 23)</td><td>ทุกการแก้ใบขอเบิก (FR-FC-09) ใช้ยอดจองตาม R-FC-03 · แก้วงเงินผูกพัน (FR-FC-02)</td></tr>
+    <tr><td class="id">R-FN-02</td><td>ทางจ่าย: จ่ายตรงต้องมี PO ใน GFMIS ตั้งแต่ 5,000 บาท เช็คหรือเงินสดต้องมีเหตุผล (ข้อ 28 52)</td><td>แก้ยอด ผู้รับ หรือวิธีจ่าย · ล้างเลข PO (FR-FC-03) ไม่ได้เมื่อมีใบขอเบิกที่ใช้ PO นั้นอยู่ในไฟล์</td></tr>
+    <tr><td class="id">R-FN-03</td><td>ภาษีหัก ณ ที่จ่ายและยอดสุทธิ ภาษีเป็นรายได้แผ่นดินในคำขอเบิก (ข้อ 19)</td><td>คำนวณใหม่ทุกการแก้ · ยกเลิก 50 ทวิ แล้วออกใหม่ (FR-FC-19)</td></tr>
+    <tr><td class="id">R-FN-04</td><td>นาฬิกาตามระเบียบ: ขอเบิก 5 วันทำการ รายการประจำเดือนภายในวันที่ 15 ส่งใช้เงินยืม 15 หรือ 30 วัน แก้ทักท้วง 15 วัน เรียกชดใช้ 30 วัน บันทึกรับเงินภายในวัน นำส่งเช็ควันถัดไป รายได้เงินสด 3 วันทำการเมื่อเกิน 10,000 บาท ส่งคืน 15 วันทำการ ชี้แจง สตง. 15 วัน (ข้อ 28 31 65 68 81 99 101 109)</td><td>FC-P3: นาฬิกานับจากเหตุการณ์ต้นทาง ยกเลิกแล้วทำใหม่ ดึงกลับ หรือกลับรายการนำส่ง ไม่รีเซ็ต · รายการที่ยกเลิกออกจากนาฬิกา แต่ประวัติแสดงว่ายกเลิกตอนเลยกำหนดหรือไม่</td></tr>
+    <tr><td class="id">R-FN-05</td><td>เงินยืม: ไม่มีเงินยืมค้าง เฉพาะรายการที่ยืมได้ เดินทางไม่เกิน 90 วัน ข้ามปี หลักประกัน ภายในวงเงิน (ข้อ 58 ถึง 65)</td><td>ทุกการแก้คำขอยืม (FR-FC-21) และการบันทึกแทน · ยกเลิกเงินยืมที่อนุมัติแล้วคืนวงเงิน</td></tr>
+    <tr><td class="id">R-FN-06</td><td>นำส่งเงินตามกำหนด และรายการตรวจปิดเดือน 6 ข้อ (ข้อ 101) · บทที่ 7.6 ของ Finance Design ครอบทั้งสองเรื่อง</td><td>กลับรายการนำส่ง (FR-FC-28) · ลบการนำเข้า (FR-FC-31 34 35) ทำให้ข้อตรวจปิดเดือนคำนวณใหม่ · เงินคืน (FR-FC-14) ใช้กำหนดส่งคืน</td></tr>
+    <tr><td class="id">R-FN-07</td><td>จ่ายจากเงินนอกงบประมาณ: แผนที่อนุมัติ ไม่เกินบรรทัด เตือนเมื่อเงินในบัญชีไม่พอ เงินที่ถอนต้องจ่ายหรือฝากคืนใน 15 วันทำการ</td><td>ปรับแผน (FR-FC-49) ลดบรรทัดไม่ต่ำกว่ายอดใช้และจอง · ถอนหรือไม่อนุมัติคำขอถอน (FR-FC-50)</td></tr>
+    <tr><td class="id">SD-11</td><td>ผู้จัดทำหรือผู้ตรวจใบขอเบิก อนุมัติใบนั้นไม่ได้</td><td>ดึงกลับแล้วส่งใหม่ล้างผู้ตรวจและผู้อนุมัติ ตรวจใหม่ทั้งหมด · ผู้จัดทำที่แก้ใบหลังส่งคืนยังเป็นผู้จัดทำ · ใช้กับการไม่อนุมัติคำขอถอนเงินคลังด้วย</td></tr>
+    <tr><td class="id">SD-12</td><td>ผู้ยืมอนุมัติเงินยืมของตนและตรวจใบสำคัญของตนไม่ได้</td><td>เพิ่มการตรวจตอนจ่าย (FR-FC-23) และเมื่อการเงินบันทึกคำขอแทน ผู้บันทึกแทนอนุมัติคำขอนั้นไม่ได้</td></tr>
+    <tr><td class="id">SD-13</td><td>ผู้รับหรือจ่ายเงินของวันนั้น ตรวจนับเงินวันเดียวกันไม่ได้</td><td>นับใหม่และรายงานย้อนหลัง (FR-FC-29) ใช้รายชื่อผู้รับจ่ายของวันที่รายงาน รวมผู้จ่ายเงินยืมเป็นเงินสด (เดิมขาด) · คำสั่งกรรมการที่มีผลวันนั้น (FR-FC-46)</td></tr>
+    <tr><td class="id">SD-14</td><td>ผู้ขอแก้บัญชีผู้ขายยืนยันเองไม่ได้ และอนุมัติจ่ายให้ผู้ขายนั้นภายใน 30 วันหลังแก้ไม่ได้</td><td>แก้คำขอขณะรอยืนยันยังนับผู้ขอเดิม · ใบขอเบิกประเภทอื่นที่เลือกผู้ขายจากทะเบียน (FR-FC-08) ตรวจ 30 วันด้วย</td></tr>
+    <tr><td class="id">SD-15</td><td>ผู้บันทึกรับหรือจ่ายเงินของงวด จัดทำงบพิสูจน์ยอดงวดนั้นไม่ได้</td><td>เปิดงบพิสูจน์ใหม่ (FR-FC-33) แล้วลงนามใหม่ตรวจซ้ำ · ผู้จ่ายเงินยืมใช้ผู้จ่ายจริง แทน “ผู้ใช้การเงินคนแรก”</td></tr>
+    <tr><td class="id">SD-16</td><td>เปิดงวดที่ปิดแล้วต้องเป็นหัวหน้าการเงินคนละคนกับผู้ปิด หรือผู้บริหาร พร้อมเหตุผล</td><td>ขยายให้ใช้กับเปิดวันที่ปิด (FR-FC-36) และเปิดงบพิสูจน์ที่ลงนาม (FR-FC-33) · R-FC-02 ห้ามแก้ข้อมูลในงวดที่ปิดโดยไม่เปิดงวด</td></tr>
+  </tbody>
+</table></div>
+<div class="callout dark"><b>ไม่เปลี่ยน</b>ค่านาฬิกาและวงเงินทั้งหมดยังอ่านจาก <span class="mono">fcfg()</span> ที่ตั้งใน M10 รหัสกฎ R-FN และ SD คงเดิมทุกข้อ ข้อกำหนดใหม่ใช้รหัส FR-FC และ R-FC เท่านั้น</div>
+</section>
+
+<!-- ============================== 10 ============================== -->
+<section class="ch" id="s10">
+<h2><span class="num">10</span>ปีงบประมาณและข้อผิดที่แก้ในรอบเดียวกัน</h2>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ข้อผิดที่พบ</th><th>แก้อย่างไร</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FX-01</td><td>วงเงินอำนาจอนุมัติ: เงื่อนไข “ไม่จำกัด” ของ A1 ตรงทุกยอด A2 และ A3 จึงไม่มีผล และหัวหน้าการเงินอนุมัติไม่ได้เลย</td><td>เลือกระดับต่ำสุดที่ครอบคลุมยอด ตรวจบทบาทของระดับนั้น (A3 หัวหน้าการเงิน) แสดงระดับที่ใช้ในลิ้นชักและประวัติ (FR-FC-13)</td></tr>
+    <tr><td class="id">FX-02</td><td>ผูกพันเกินวงเงิน: คงเหลือของผูกพันลดเมื่อจ่ายเท่านั้น หลายใบที่รอตรวจรวมกันเกินได้</td><td>ยอดจองตาม R-FC-03 และคอลัมน์ “จอง” ใน F2 (FL-F02)</td></tr>
+    <tr><td class="id">FX-03</td><td>ปีที่ฝังในโค้ด: เลข <span class="mono">CF-2570-</span> สัญญายืม <span class="mono">สย.nnn/2570</span> รายการตรวจสิ้นปีข้อ 3 และ 4 ตั้งเป็นเตือนตายตัว</td><td>อ่านปีจาก <span class="mono">FAM_FY</span> และวันที่ของข้อมูลเหมือน C4 ของ Budget คำนวณข้อตรวจสิ้นปีจากข้อมูล (FR-FC-38)</td></tr>
+    <tr><td class="id">FX-04</td><td>เลขที่เอกสารนับจากจำนวนรายการ (<span class="mono">length + 1</span>) จะซ้ำเมื่อมีการลบร่าง</td><td>นับจากเลขสูงสุดของปีนั้น (R-FC-06)</td></tr>
+    <tr><td class="id">FX-05</td><td>P-F05 (ผู้จัดทำไม่ใช่ผู้ตรวจ) และผู้อนุมัติแผนนอกงบประมาณ ตรวจด้วยเงื่อนไขในหน้า ไม่ถูกบันทึกเป็นการกัน</td><td>ลงทะเบียนเป็นกฎใน <span class="mono">64-duties.js</span> ใช้รหัสเดิม P-F05 และใช้ <span class="mono">sodCheck</span> (FC-P5)</td></tr>
+    <tr><td class="id">FX-06</td><td>หมายเหตุในโค้ดเรียก R-FN-06 ว่าทั้ง “กำหนดนำส่ง” (66e) และ “รายการตรวจปิดเดือน” (66f) และ R-FN-04 ไม่มีที่อ้างในโค้ด</td><td>ไม่เปลี่ยนรหัส (ทั้งสองอยู่ในบทที่ 7.6) ปรับหมายเหตุให้ระบุ “R-FN-06 นำส่ง” และ “R-FN-06 ปิดเดือน” และอ้าง R-FN-04 ที่ <span class="mono">finClocks</span></td></tr>
+    <tr><td class="id">FX-07</td><td>โค้ดคำขอจ่ายเงินเดิม (<span class="mono">#py-form</span> <span class="mono">data-pyok</span> <span class="mono">data-pyno</span> ใน 62-finance.js) ไม่มีหน้าจอเรียกใช้แล้ว</td><td>ลบออก <span class="mono">S.payreqs</span> ยังใช้สำหรับกระทบสามทางตามเดิม</td></tr>
+    <tr><td class="id">FX-08</td><td>เพิกถอนผู้ใช้ GFMIS อ้างลำดับแถว ลำดับเปลี่ยนแล้วเพิกถอนผิดคน</td><td>อ้างรหัสผู้ใช้และเลขคำสั่ง (FR-FC-44)</td></tr>
+    <tr><td class="id">FX-09</td><td>ข้อทักท้วงนับ 15 วันด้วยวันปฏิทินโดยไม่อ้างค่าตั้ง</td><td>ใช้ค่าตั้งใน M10 ตามข้อ 109 (ตั้งต้นวันปฏิทินตามระเบียบ) ให้สอดคล้องกับนาฬิกาอื่น</td></tr>
+  </tbody>
+</table></div>
+<p class="small">วันที่สาธิตใช้ตัวเลื่อน “ณ เดือน” ของ Budget (D-C-03) ซึ่งเปลี่ยน <span class="mono">TODAY</span> ทั้งระบบ นาฬิกาของ Finance จึงเปลี่ยนตามโดยไม่ต้องทำเพิ่ม</p>
+</section>
+
+<!-- ============================== 11 ============================== -->
+<section class="ch" id="s11">
+<h2><span class="num">11</span>สคริปต์สาธิต</h2>
+<p class="lede">ประมาณ 35 นาที ต่อจากสคริปต์ E-01 ถึง E-16 ของ Budget (ใช้บรรทัดจัดสรรปี 2570) ทุกขั้นสร้างหรือเปลี่ยนข้อมูลจริง ปุ่ม “จำลอง” ใช้เฉพาะผลจาก GFMIS และธนาคาร</p>
+<div class="tbl"><table>
+  <thead><tr><th class="id">ขั้น</th><th>บทบาท</th><th>หน้า</th><th>ทำอะไร</th></tr></thead>
+  <tbody>
+    <tr><td class="id">E-F01</td><td>หัวหน้าการเงิน</td><td>F10</td><td>ออกเล่มใบเสร็จใหม่ให้เจ้าหน้าที่ แก้หน้าที่ผู้ใช้ GFMIS และแต่งตั้งกรรมการเก็บรักษาเงินชุดใหม่</td></tr>
+    <tr><td class="id">E-F02</td><td>การเงิน</td><td>F2</td><td>สร้างผูกพันค่าเช่า แก้วงเงินที่พิมพ์ผิด บันทึกเลข PO แล้วแก้เลขที่ผิด</td></tr>
+    <tr><td class="id">E-F03</td><td>การเงิน</td><td>F3</td><td>ทำใบขอเบิกจากงวดที่ตรวจรับ และใบค่าเช่าจากผูกพัน เห็นยอดจองใน F2 ลดคงเหลือทันที</td></tr>
+    <tr><td class="id">E-F04</td><td>หัวหน้าการเงิน → การเงิน</td><td>F3</td><td>ส่งคืนใบค่าเช่าพร้อมเหตุผล การเงินแก้ยอดและกำหนดจ่ายในลิ้นชัก ส่งตรวจใหม่</td></tr>
+    <tr><td class="id">E-F05</td><td>หัวหน้าการเงิน · ผู้มีอำนาจ</td><td>F3</td><td>หัวหน้าการเงินอนุมัติใบต่ำกว่า 1 ล้าน (A3) ใบงวดสัญญา 4.2 ล้านต้องรอ A2 · ลองอนุมัติใบที่ตนตรวจ ถูกกัน SD-11</td></tr>
+    <tr><td class="id">E-F06</td><td>การเงิน</td><td>F3</td><td>เลือกสองใบสร้างไฟล์ GFMIS นำใบหนึ่งออกจากไฟล์ กด “จำลอง” ผลผ่านรายการและผลการจ่าย บันทึก ออก 50 ทวิ</td></tr>
+    <tr><td class="id">E-F07</td><td>การเงิน</td><td>F3 → F5</td><td>ผู้ขายแจ้งว่าได้รับเกิน บันทึกรับเงินคืนจากใบที่จ่ายแล้ว ใบเสร็จ “เงินเบิกเกินส่งคืน” เกิดพร้อมนาฬิกา 15 วันทำการ</td></tr>
+    <tr><td class="id">E-F08</td><td>พนักงาน → ผู้บริหาร → การเงิน</td><td>เงินยืมของฉัน → F4</td><td>ขอยืมค่าเดินทาง แก้วันกลับ ตัวช่วยคำนวณใหม่ ผู้บริหารอนุมัติ การเงินจ่าย ผู้ยืมส่งใบสำคัญ ดึงกลับแก้ แล้วการเงินรับ</td></tr>
+    <tr><td class="id">E-F09</td><td>การเงิน</td><td>F5</td><td>ออกใบเสร็จสามใบ ยกเลิกและออกใหม่หนึ่งใบ เลือกบันทึกเข้า GFMIS นำส่งเงินสด กลับรายการเพราะเลขอ้างอิงผิด แล้วนำส่งใหม่</td></tr>
+    <tr><td class="id">E-F10</td><td>กรรมการ · หัวหน้าการเงิน</td><td>F6</td><td>ทำรายงานเงินคงเหลือ กรรมการนับไม่ตรง หัวหน้าการเงินสั่งนับใหม่ นับตรง ผู้บริหารรับทราบ</td></tr>
+    <tr><td class="id">E-F11</td><td>การเงิน · หัวหน้าการเงิน</td><td>F7</td><td>จำลองรายการเดินบัญชี ปรับปรุงค่าธรรมเนียม ลบและนำเข้าใหม่หนึ่งครั้ง ลงนามงบพิสูจน์ (SD-15 กันผู้บันทึก)</td></tr>
+    <tr><td class="id">E-F12</td><td>หัวหน้าการเงิน · ผู้บริหาร</td><td>F8</td><td>ปิดวันและปิดเดือน พบรายการต้องแก้ ผู้บริหารเปิดเดือนใหม่ (SD-16) แก้แล้วปิดอีกครั้ง บันทึกและตอบข้อทักท้วง</td></tr>
+    <tr><td class="id">E-F13</td><td>การเงิน → ผู้บริหาร</td><td>F11</td><td>สร้างกองทุนใหม่ ทำแผน แก้บรรทัด ส่ง อนุมัติ ปรับแผนเพิ่มบรรทัด ถอนเงินคลัง จ่ายจากกองทุน</td></tr>
+    <tr><td class="id">E-F14</td><td>ผู้ตรวจสอบ</td><td>F9 F1</td><td>หยุดงาน Agent พร้อมเหตุผล ตั้งสัญญาณเป็นประเด็น เปิดประวัติของใบขอเบิกเห็นทุกการแก้ ดึงกลับ และอนุมัติ</td></tr>
+    <tr><td class="id">E-F15</td><td>กองแผน</td><td>B8</td><td>เห็นยอดเบิกจ่ายและเงินคืนจาก E-F06 และ E-F07 ในรายงานติดตามปี 2570</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<!-- ============================== 12 ============================== -->
+<section class="ch" id="s12">
+<h2><span class="num">12</span>สิทธิ์สร้าง แก้ไข และยกเลิกตามบทบาท</h2>
+<div class="tbl"><table>
+  <thead><tr><th>ข้อมูล</th><th>การเงิน (fin)</th><th>หัวหน้าการเงิน (finhead)</th><th>ผู้มีอำนาจ (exec)</th><th>กองแผน</th><th>ผู้ตรวจสอบ</th><th>ทุกคน</th><th>ผู้ดูแลระบบ</th></tr></thead>
+  <tbody>
+    <tr><td>ผูกพัน PO กันเงิน</td><td>สร้าง แก้ ลบร่าง ยกเลิก ถอน</td><td>อ่าน</td><td>อนุมัติกันเงิน (B7)</td><td>พิจารณากันเงิน (B7)</td><td>อ่าน</td><td>—</td><td>—</td></tr>
+    <tr><td>ใบขอเบิก</td><td>สร้าง แก้ ดึงกลับ ยกเลิก (ของตน)</td><td>ตรวจ ส่งคืน ยกเลิกถึงพร้อมส่ง อนุมัติ A3</td><td>อนุมัติ A1 A2 ส่งคืน ไม่อนุมัติ</td><td>อ่าน</td><td>อ่าน</td><td>—</td><td>—</td></tr>
+    <tr><td>ไฟล์ GFMIS ชุดจ่าย ผล 50 ทวิ เงินคืน</td><td>สร้าง นำออก ยกเลิก บันทึกผล</td><td>ตรวจการจ่ายประจำวัน</td><td>—</td><td>—</td><td>อ่าน</td><td>—</td><td>—</td></tr>
+    <tr><td>เงินยืม</td><td>บันทึกแทน จ่าย รับ ทักท้วง ยกเลิกที่ยังไม่จ่าย</td><td>เรียกชดใช้ รายงาน</td><td>อนุมัติ ไม่อนุมัติ</td><td>—</td><td>อ่าน</td><td>ขอ แก้ ยกเลิก ส่งใบสำคัญ (ของตน)</td><td>—</td></tr>
+    <tr><td>ใบเสร็จ การนำส่ง</td><td>สร้าง ยกเลิก กลับรายการ</td><td>อ่าน</td><td>—</td><td>—</td><td>อ่าน</td><td>—</td><td>—</td></tr>
+    <tr><td>เงินคงเหลือประจำวัน</td><td>ทำรายงาน ย้อนหลัง</td><td>สั่งนับใหม่</td><td>รับทราบ</td><td>—</td><td>อ่าน</td><td>กรรมการ: นับ แก้ยอดนับของตน</td><td>—</td></tr>
+    <tr><td>กระทบยอด การนำเข้า</td><td>นำเข้า ลบ ปรับปรุง ชี้แจง</td><td>ลงนาม เปิดใหม่ (คนละคน)</td><td>—</td><td>—</td><td>อ่าน</td><td>—</td><td>—</td></tr>
+    <tr><td>ปิดวัน ปิดเดือน ข้อทักท้วง</td><td>อ่าน</td><td>ปิด เปิด (คนละคน) บันทึก ตอบ</td><td>เปิดงวด</td><td>—</td><td>อ่าน</td><td>—</td><td>—</td></tr>
+    <tr><td>Agent สถานการณ์ สัญญาณ</td><td>เริ่ม อนุมัติขั้น ชี้แจงสัญญาณ</td><td>เริ่ม อนุมัติขั้น หยุด คัดกรอง</td><td>สถานการณ์จำลอง</td><td>—</td><td>คัดกรอง เปิดใหม่ หยุดงาน</td><td>—</td><td>—</td></tr>
+    <tr><td>ทะเบียน F10</td><td>ขอแก้บัญชีผู้ขาย ถอน</td><td>ผู้ใช้ GFMIS กรรมการ เล่มใบเสร็จ ยืนยันบัญชีผู้ขาย</td><td>อ่าน</td><td>—</td><td>อ่าน</td><td>—</td><td>กฎการเงิน M10</td></tr>
+    <tr><td>เงินนอกงบประมาณ</td><td>กองทุน แผน ถอน ฝากคืน</td><td>ยืนยันกองทุนใหม่</td><td>อนุมัติแผนและการถอน</td><td>อ่าน (M06)</td><td>อ่าน</td><td>—</td><td>—</td></tr>
+  </tbody>
+</table></div>
+<p class="small">ทุกการอนุมัติแทนตามการมอบอำนาจ (<span class="mono">onBehalf</span>) ยังบันทึกผู้มอบและผู้รับมอบ และกฎแบ่งหน้าที่ตรวจทั้งสองคน (<span class="mono">sodActors</span>)</p>
+</section>
+
+<!-- ============================== 13 ============================== -->
+<section class="ch" id="s13">
+<h2><span class="num">13</span>ลำดับการสร้างต้นแบบ</h2>
+<p class="lede">หกรอบ (FC1 ถึง FC6) ใช้เลขรอบของต้นแบบที่ว่างถัดไปเมื่อเริ่มสร้าง ลำดับนี้ทำให้สาธิตวงจรจ่ายเงินได้ตั้งแต่จบรอบ FC3</p>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รอบ</th><th>สิ่งที่สร้าง</th><th>ข้อกำหนด</th></tr></thead>
+  <tbody>
+    <tr><td class="id">FC1</td><td>ส่วนเพิ่มใน 76-crud.js (วาดเปลือกใหม่ เรียง เลือกหลายแถว ปิดลิ้นชักเมื่อเปลี่ยนแท็บ เหตุผลขั้นต่ำกลาง) ปรับลิ้นชักและแบบฟอร์มในแถวของ Finance และย้ายทะเบียน F10 ทั้งสี่ชนิด</td><td>UI-F1–F10, FR-FC-44–47, FX-05, FX-08</td></tr>
+    <tr><td class="id">FC2</td><td>ใบขอเบิก: แถบค้นหา สร้างในลิ้นชัก แก้ไข ดึงกลับ ยกเลิก ไม่อนุมัติ วงเงินอำนาจ ยอดจอง และผู้รับจากทะเบียนผู้ขาย</td><td>FR-FC-07–13, R-FC-03, R-FC-05, FX-01, FX-02, FX-04</td></tr>
+    <tr><td class="id">FC3</td><td>ขั้น GFMIS และการจ่าย: เลือกรายการ ไฟล์และชุดจ่ายพร้อมประวัติ ฟอร์มผลและปุ่มจำลอง ตรวจการจ่ายรายใบ 50 ทวิ และรับเงินคืน</td><td>FR-FC-14–20, SIM-F01–03, FL-F02–F04</td></tr>
+    <tr><td class="id">FC4</td><td>ผูกพัน PO กันเงิน เงินยืม (แก้ ยกเลิก บันทึกแทน จ่ายตรวจ SD-12) และปีจากบริบท</td><td>FR-FC-02–06, FR-FC-21–25, FX-03, FL-F01, FL-F05</td></tr>
+    <tr><td class="id">FC5</td><td>รับเงินและนำส่ง เงินคงเหลือ กระทบยอด ปิดงวด และข้อทักท้วง</td><td>FR-FC-26–40, SIM-F04–07, FX-06, FX-09, FL-F06, FL-F07, FL-F09</td></tr>
+    <tr><td class="id">FC6</td><td>F11 เงินนอกงบประมาณ F9 (งาน Agent สถานการณ์ สัญญาณ) ลบโค้ดเดิมที่ไม่ใช้ สคริปต์สาธิต E-F01 ถึง E-F15 ในคู่มือในแอป และ sweep ที่เดินครบสคริปต์</td><td>FR-FC-41–43, FR-FC-48–53, FX-07, FL-F08, บทที่ 11</td></tr>
+  </tbody>
+</table></div>
+<p class="small">แต่ละรอบ: สร้าง ทดสอบ (sweep เพิ่มการสร้าง แก้ ยกเลิก ของทุกข้อมูล และกรณีที่กฎ SD ต้องกัน) ปรับเอกสารนี้และ HANDOFF.md เผยแพร่ต้นแบบ และถามก่อน commit · แต่ละรอบ stage เฉพาะไฟล์ของตน เพราะมีเซสชันอื่นแก้ <span class="mono">src/</span> พร้อมกัน</p>
+</section>
+
+<!-- ============================== 14 ============================== -->
+<section class="ch" id="s14">
+<h2><span class="num">14</span>ความเสี่ยงและประเด็นที่ต้องตัดสินใจ</h2>
+<div class="tbl"><table>
+  <thead><tr><th class="id">รหัส</th><th>ประเด็น</th><th>ข้อเสนอ</th></tr></thead>
+  <tbody>
+    <tr><td class="id">D-FC-01</td><td>ย้ายลิ้นชักใบขอเบิกและเงินยืมไปใช้ <span class="mono">CRUD.def</span> หรือไม่</td><td><b>ตัดสินแล้ว:</b> ไม่ย้าย ปรับให้ตรง (บทที่ 4.4) ทบทวนอีกครั้งหลัง FC6 ถ้าโค้ดยังซ้ำมาก</td></tr>
+    <tr><td class="id">D-FC-02</td><td>ใบขอเบิกที่จ่ายแล้วผิด จะยกเลิกหรือทำรายการใหม่</td><td><b>ตัดสินแล้ว:</b> ไม่ยกเลิก ใช้รับเงินคืน (FR-FC-14) และออก 50 ทวิ ใหม่ (FR-FC-19) ตาม FC-P1</td></tr>
+    <tr><td class="id">D-FC-03</td><td>ขั้นที่จำลองบันทึกทันทีหรือเติมฟอร์ม</td><td><b>ตัดสินแล้ว:</b> เติมฟอร์มให้ตรวจก่อนบันทึก และเลือกรายการได้ทีละแถว</td></tr>
+    <tr><td class="id">D-FC-04</td><td>เหตุผลขั้นต่ำ 5 หรือ 10 ตัวอักษร</td><td>10 ตัวอักษรทั้ง Budget และ Finance (FC-P4) sweep เดิมที่ใช้ข้อความสั้นต้องปรับ</td></tr>
+    <tr><td class="id">D-FC-05</td><td>ใบที่ผู้อนุมัติ “ไม่อนุมัติ” แล้วผู้จัดทำอยากเบิกใหม่</td><td>ทำใบใหม่ (หรือ “คัดลอกเป็นร่างใหม่”) เลขใหม่ ใบเดิมคงสถานะไม่อนุมัติ นาฬิกานับจากเหตุการณ์เดิม</td></tr>
+    <tr><td class="id">D-FC-06</td><td>ความเสี่ยง: เซสชัน CRUD ของ Procurement อาจแก้ <span class="mono">76-crud.js</span> พร้อมกัน</td><td>ตกลงลำดับก่อน FC1 ให้ส่วนเพิ่ม UI-F1 ถึง F5 เป็น commit เล็กแยกต่างหาก ที่ทั้งสองฝั่งใช้ได้</td></tr>
+    <tr><td class="id">D-FC-07</td><td>ความเสี่ยง: เลิกทำ 10 วินาทีใช้ภาพทั้ง <span class="mono">S</span> อาจคืนค่าที่ผู้อื่นเปลี่ยนในช่วงนั้น และย้อนนาฬิกา</td><td>รับได้ในต้นแบบ (ผู้ใช้คนเดียว) ไม่ใช้เลิกทำกับขั้นที่ออกนอกหน่วย (FR-FC-52)</td></tr>
+    <tr><td class="id">D-FC-08</td><td>ความเสี่ยง: ยอดจอง (R-FC-03) เปลี่ยนตัวเลขคงเหลือที่ Agent พยากรณ์และ B8 อ่าน</td><td>ใช้ฟังก์ชันกลางตัวเดียว (<span class="mono">fcLeft</span> และ <span class="mono">famHeadroom</span>) ไม่คำนวณซ้ำในหน้า sweep ครอบ Agent AG-18 และ AG-22</td></tr>
+    <tr><td class="id">D-FC-09</td><td>ความเสี่ยง: ขอบเขต 53 ข้อกำหนด 6 รอบ</td><td>FC1 ถึง FC3 ก่อน (วงจรจ่ายเงินครบ) FC4 ถึง FC6 ปรับลำดับได้</td></tr>
+  </tbody>
+</table></div>
+</section>
+
+<footer class="end">© 2026 Avalant. All rights reserved. · เอกสารฉบับร่างเพื่อการหารือ ไม่ใช่ความเห็นทางกฎหมาย · ตัวเลขในตัวอย่างเป็นข้อมูลสมมติ · กฎและนาฬิกาต้องผ่านการตรวจของฝ่ายกฎหมายและกองคลังก่อนใช้จริง (D-FN-09)</footer>
+</div>
+</main>
+</div>
+
+<script>
+(function () {
+  var links = Array.prototype.slice.call(document.querySelectorAll('.toc ol a'));
+  var secs = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+  function onScroll() {
+    var y = window.scrollY + 120, cur = 0;
+    secs.forEach(function (s, i) { if (s && s.offsetTop <= y) cur = i; });
+    links.forEach(function (a, i) { a.classList.toggle('on', i === cur); });
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+  var toc = document.getElementById('toc'), tg = document.getElementById('toc-toggle');
+  tg.addEventListener('click', function () { var o = toc.classList.toggle('open'); tg.setAttribute('aria-expanded', o); });
+  links.forEach(function (a) { a.addEventListener('click', function () { toc.classList.remove('open'); tg.setAttribute('aria-expanded', 'false'); }); });
+  document.getElementById('theme').addEventListener('click', function () {
+    var r = document.documentElement, cur = r.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    r.dataset.theme = cur === 'dark' ? 'light' : 'dark';
+  });
+})();
+</script>
+</body>
+</html>
