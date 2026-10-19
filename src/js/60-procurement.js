@@ -2,7 +2,7 @@
 // requisitions, contracts with acceptance phases, and e-GP status by file import (files only, per D-F05).
 // The official procurement steps stay in e-GP; Fisko prepares, checks and tracks.
 let PROC_TAB = "cases", PLAN_SPLIT = false, PLAN_REQ = null, CT_FROM = null, EGP_ROWS = null;
-const FAM_FY = 2570, PHASE_SIGNS = 2;
+const FAM_FY = CUR_FY, PHASE_SIGNS = 2;
 const famLines = () => (S.allocs[FAM_FY] || { lines: [] }).lines;
 const famLine = id => famLines().find(l => l.id === id) || { id, name: ["-", "-"], unit: "", amount: 0, type: "ope" };
 const famPlan = id => S.pplan.find(p => p.id === id) || { id, name: ["-", "-"], line: "", est: 0 };
@@ -71,7 +71,7 @@ PROC.plan = () => {
           <td><div class="row" style="flex-wrap:nowrap">${mine && p.status === "planned" ? `<button class="btn primary" type="button" data-preq="${p.id}">${L("ขอซื้อขอจ้าง", "Raise requisition")}</button>` : ""}${historyBtn(p.id, p.id)}</div></td></tr>
           ${PLAN_REQ === p.id ? `<tr class="cmt-row"><td colspan="8"><div class="row" style="align-items:flex-end">
             <div class="f" style="flex:0 1 150px"><label for="pr-amt">${L("วงเงิน (ล้านบาท)", "Amount (M baht)")}</label><input type="number" id="pr-amt" min="0.001" step="0.001" value="${(p.est / 1e6).toFixed(3)}"></div>
-            <div class="f" style="flex:1 1 240px"><label for="pr-why">${L("เหตุผลความจำเป็น", "Justification")}</label><input type="text" id="pr-why" value="${esc(L("จำเป็นต่อการดำเนินงานตามแผนปีงบประมาณ 2570", "Needed to deliver the FY2570 work plan"))}"></div>
+            <div class="f" style="flex:1 1 240px"><label for="pr-why">${L("เหตุผลความจำเป็น", "Justification")}</label><input type="text" id="pr-why" value="${esc(L(`จำเป็นต่อการดำเนินงานตามแผนปีงบประมาณ 2570`, `Needed to deliver the FY2570 work plan`))}"></div>
             ${PLAN_SPLIT || splitRisk(p, p.est).risk ? `<div class="f" style="flex:1 1 100%"><label for="pr-split">${L("คำชี้แจงการแตกซื้อ (R-02)", "Split-purchase explanation (R-02)")}</label><input type="text" id="pr-split" placeholder="${esc(L("มีรายการประเภทเดียวกันในหน่วยเดียวกันที่ขอซื้อภายใน " + S.pcfg.splitDays + " วัน และรวมกันเกินเพดานวิธีเฉพาะเจาะจง ระบุเหตุผลที่ต้องแยกซื้อ", "A request of the same kind in the same unit within " + S.pcfg.splitDays + " days brings the total past the specific-method ceiling. Say why they are bought separately"))}"></div>` : ""}
             <span class="sub">${L("วงเงินคงเหลือของรายการจัดสรร", "Room left on the line")} ${mb(famHeadroom(p.line))} ${L("ลบ.", "M")}</span>
             <button class="btn primary" type="button" id="pr-send">${L("ส่งขออนุมัติ", "Send for approval")}</button><button class="btn ghost" type="button" id="pr-cancel">${L("ยกเลิก", "Cancel")}</button></div></td></tr>` : ""}`; }).join("")}</tbody></table></div>
@@ -220,7 +220,7 @@ BIND.procurement = () => {
   if (sample) sample.onclick = () => {
     const pick = S.pplan.filter(p => p.status !== "contracted").slice(0, 2);
     EGP_ROWS = pick.map((p, i) => ({ plan: p.id, no: `EGP-70-${String(110 + i)}`, stage: i ? [["ประกาศเชิญชวน", "Invitation"], ["ประกาศผู้ชนะ", "Winner announced"]][0] : ["ประกาศผู้ชนะ", "Winner announced"], date: TODAY, ok: true }));
-    EGP_ROWS.push({ plan: "PP-2570-999", no: "EGP-70-199", stage: ["ประกาศเชิญชวน", "Invitation"], date: TODAY, ok: false });
+    EGP_ROWS.push({ plan: `PP-2570-999`, no: "EGP-70-199", stage: ["ประกาศเชิญชวน", "Invitation"], date: TODAY, ok: false });
     route();
   };
   const go_ = $("#egp-go");

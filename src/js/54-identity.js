@@ -51,7 +51,7 @@ BIND.delegation = () => {
     e.preventDefault();
     const start = $("#dg-start").value, end = $("#dg-end").value;
     if (end < start) { toast(L("วันสิ้นสุดต้องไม่ก่อนวันเริ่ม", "The end date can't be before the start date")); return; }
-    const why = $("#dg-why").value.trim(), id = `D-2570-${String(S.delegations.length + 1).padStart(3, "0")}`;
+    const why = $("#dg-why").value.trim(), id = `D-${CUR_FY}-${String(S.delegations.length + 1).padStart(3, "0")}`;
     const d = { id, from: me().id, to: $("#dg-to").value, scopes: [$("#dg-scope").value], start, end, status: "active", t: nowIso(), why: [why, why] };
     S.delegations.push(d);
     audit(["มอบอำนาจ", "Delegated authority"], `${id} → ${tx(userById(d.to).name)}`);

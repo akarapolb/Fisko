@@ -53,13 +53,13 @@ SUB.checks = () => {
 };
 
 SUB.form = () => {
-  const P = pkg(), progs = (S.structure[2571] || []).filter(n => n.lvl === "program");
+  const P = pkg(), progs = (S.structure[FORM_FY] || []).filter(n => n.lvl === "program");
   const byType = r => { const f = r.amount ? subAmt(r) / r.amount : 1, o = {}; BUDGET_TYPES.forEach(t => (o[t.id] = 0)); r.items.forEach(i => (o[i.type] += itemTotal(i) * f)); return o; };
   const sumT = rs => { const o = {}; BUDGET_TYPES.forEach(t => (o[t.id] = rs.reduce((s, r) => s + byType(r)[t.id], 0))); return o; };
   const cells = o => BUDGET_TYPES.map(t => `<td class="n">${o[t.id] ? mb(o[t.id]) : "—"}</td>`).join("") + `<td class="n"><b>${mb(Object.values(o).reduce((a, b) => a + b, 0))}</b></td>`;
   return `
   <section class="panel doc-form"><div class="body">
-    <div class="doc-head"><b>${L("แบบสรุปคำของบประมาณรายจ่ายประจำปีงบประมาณ พ.ศ. 2571", "Summary of FY2571 budget requests")}</b>
+    <div class="doc-head"><b>${L(`แบบสรุปคำของบประมาณรายจ่ายประจำปีงบประมาณ พ.ศ. ${FORM_FY}`, `Summary of FY${FORM_FY} budget requests`)}</b>
       <span>${esc(tx(S.org))}</span><span class="sub">${L("รูปแบบตัวอย่าง ปรับตามแบบฟอร์มที่สำนักงบประมาณกำหนดในปีนั้น · หน่วย ล้านบาท", "Sample layout, to be matched to the Budget Bureau's form for the year · million baht")}</span></div>
     <div class="tbl-wrap"><table class="doc-table"><thead><tr><th>${L("แผนงาน / กิจกรรม / รายการ", "Programme / activity / request")}</th>${BUDGET_TYPES.map(t => `<th class="n">${tx(t.name)}</th>`).join("")}<th class="n">${L("รวม", "Total")}</th></tr></thead>
       <tbody>${progs.map(p => { const rs = P.filter(r => (lineage(r.act)[0] || {}).id === p.id); if (!rs.length) return "";
@@ -97,7 +97,7 @@ SUB.status = () => {
   if (ed && sb.status === "result") action = `<button class="btn primary" type="button" id="sub-close" ${sb.revisions.some(v => !v.closed) ? "disabled" : ""}>${L("รับผลและส่งต่อการจัดสรร (M06)", "Accept results and hand to allocation (M06)")}</button>
     ${sb.revisions.some(v => !v.closed) ? `<span class="sub">${L("ตอบคำขอปรับปรุงให้ครบก่อน", "Answer every revision request first")}</span>` : ""}`;
   return `
-  <section class="panel"><header><h2>${L("สถานะการส่งคำของบประมาณ ปี 2571", "FY2571 submission status")}</h2><span class="sp"></span><span class="sub">${L("กำหนดส่งตามปฏิทิน", "Calendar deadline")} ${fdate(cal("c6").date)}</span></header>
+  <section class="panel"><header><h2>${L(`สถานะการส่งคำของบประมาณ ปี ${FORM_FY}`, `FY${FORM_FY} submission status`)}</h2><span class="sp"></span><span class="sub">${L("กำหนดส่งตามปฏิทิน", "Calendar deadline")} ${fdate(cal("c6").date)}</span></header>
     <div class="body"><ol class="hsteps">${SUB_STEPS.map(([k, n], i) => `<li class="${i < idx ? "done" : i === idx ? "now" : ""}"><span class="dot"></span>${tx(n)}</li>`).join("")}</ol>
       <div class="row" style="margin-top:16px">${action || (ed ? "" : `<span class="sub">${L("กองแผนงานเป็นผู้ดำเนินการ", "Planning Division takes these actions")}</span>`)}</div></div></section>
   ${batch ? `<section class="panel"><header><h2>${L("ชุดข้อมูลที่ส่ง", "Package sent")} <span class="mono">${batch.id}</span></h2><span class="sp"></span><span class="sub">${fdate(batch.t, true)} · ${esc(userName(batch.by))} · ${tx(batch.method)}</span></header>
@@ -125,14 +125,14 @@ BIND.submission = () => {
   $$("[data-req]").forEach(a => (a.onclick = e => { e.preventDefault(); openReq(a.dataset.req); }));
   $$("[data-exp]").forEach(b => (b.onclick = () => {
     const k = b.dataset.exp, n = sb.exports.length + 1;
-    const file = k === "xlsx" ? `FY2571_requests_summary_${n}.xlsx` : k === "pdf" ? `FY2571_request_form_${n}.pdf` : `FY2571_budget_exchange_${n}.xml`;
+    const file = k === "xlsx" ? `FY${FORM_FY}_requests_summary_${n}.xlsx` : k === "pdf" ? `FY${FORM_FY}_request_form_${n}.pdf` : `FY${FORM_FY}_budget_exchange_${n}.xml`;
     sb.exports.push({ t: nowIso(), by: me().id, kind: k, file, count: pkg().length });
     audit(["ส่งออกไฟล์คำของบประมาณ", "Exported a request file"], file); commit(); route();
     toast(L(`สร้างไฟล์ ${file} แล้ว (จำลอง)`, `Created ${file} (simulated)`));
   }));
   const send = $("#sub-send");
   if (send) send.onclick = () => {
-    const P = pkg(), id = `SUB-2571-${String(sb.batches.length + 1).padStart(2, "0")}`;
+    const P = pkg(), id = `SUB-${FORM_FY}-${String(sb.batches.length + 1).padStart(2, "0")}`;
     const ch = S.integrations.find(i => i.id === "IF-01");
     sb.batches.push({ id, t: nowIso(), by: me().id, count: P.length, amount: P.reduce((s, r) => s + subAmt(r), 0), method: ch && ch.status === "ok" ? ["ส่งผ่านช่องทาง IF-01", "Sent through IF-01"] : ["ส่งเป็นไฟล์ตามรูปแบบที่กำหนด", "Sent as a file in the prescribed format"] });
     P.forEach(r => (r.sub = id));

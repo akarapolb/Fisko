@@ -301,15 +301,15 @@ function seedBudgetB1(s) {
   const story = s.requests.find(r => r.id === s.story);
   if (story) { story.risks = []; delete story.qplan; delete story.ready; }
   // review rows now come from the requests; replace the three stand-alone sample projects
-  const map = { "REQ-2571-021": "REQ-2571-006", "REQ-2571-022": "REQ-2571-009", "REQ-2571-023": "REQ-2571-003" };
+  const map = { [`REQ-${FORM_FY}-021`]: `REQ-${FORM_FY}-006`, [`REQ-${FORM_FY}-022`]: `REQ-${FORM_FY}-009`, [`REQ-${FORM_FY}-023`]: `REQ-${FORM_FY}-003` };
   (s.meetings || []).forEach(m => { if (!m.items) return; Object.keys(m.items).forEach(k => { if (map[k] && s.requests.some(r => r.id === map[k])) { m.items[map[k]] = m.items[k]; delete m.items[k]; } }); });
-  const saved = { "REQ-2571-006": [45, 45], "REQ-2571-003": [13.5, 13.5], "REQ-2571-002": [17.2, 17] };
+  const saved = { [`REQ-${FORM_FY}-006`]: [45, 45], [`REQ-${FORM_FY}-003`]: [13.5, 13.5], [`REQ-${FORM_FY}-002`]: [17.2, 17] };
   s.review = s.requests.filter(r => ["plan", "committee", "exec", "approved"].includes(r.status)).map(r => { const r0 = Math.round(reqAmount(r) / 1e5) / 10, sv = saved[r.id]; return { id: r.id, unit: r.unit, name: r.name, r0, r1: sv ? sv[0] : r0, r2: sv ? sv[1] : r0 }; });
   const nm = id => { const r = s.requests.find(x => x.id === id); return r ? r.name : [id, id]; };
   s.log = [
-    { t: "2026-10-15T16:20", role: "exec", text: [`รอบ 3 · ${nm("REQ-2571-002")[0]} ปรับจาก 17.2 เป็น 17 ล้านบาท`, `Round 3 · ${nm("REQ-2571-002")[1]} changed from 17.2 to 17 million baht`], why: ["ปัดตามราคากลางปีล่าสุด", "Rounded to the latest reference prices"] },
-    { t: "2026-10-13T10:05", role: "plan", text: [`รอบ 2 · ${nm("REQ-2571-003")[0]} ปรับจาก 15 เป็น 13.5 ล้านบาท`, `Round 2 · ${nm("REQ-2571-003")[1]} changed from 15 to 13.5 million baht`], why: ["ลดค่าที่ปรึกษาให้ตรงขอบเขตงาน", "Cut consultancy to match the scope"] },
-    { t: "2026-10-13T09:40", role: "plan", text: [`รอบ 2 · ${nm("REQ-2571-006")[0]} ปรับจาก 50 เป็น 45 ล้านบาท`, `Round 2 · ${nm("REQ-2571-006")[1]} changed from 50 to 45 million baht`], why: ["แบ่งดำเนินการเป็น 2 ระยะ", "Split into two phases"] },
+    { t: "2026-10-15T16:20", role: "exec", text: [`รอบ 3 · ${nm(`REQ-${FORM_FY}-002`)[0]} ปรับจาก 17.2 เป็น 17 ล้านบาท`, `Round 3 · ${nm(`REQ-${FORM_FY}-002`)[1]} changed from 17.2 to 17 million baht`], why: ["ปัดตามราคากลางปีล่าสุด", "Rounded to the latest reference prices"] },
+    { t: "2026-10-13T10:05", role: "plan", text: [`รอบ 2 · ${nm(`REQ-${FORM_FY}-003`)[0]} ปรับจาก 15 เป็น 13.5 ล้านบาท`, `Round 2 · ${nm(`REQ-${FORM_FY}-003`)[1]} changed from 15 to 13.5 million baht`], why: ["ลดค่าที่ปรึกษาให้ตรงขอบเขตงาน", "Cut consultancy to match the scope"] },
+    { t: "2026-10-13T09:40", role: "plan", text: [`รอบ 2 · ${nm(`REQ-${FORM_FY}-006`)[0]} ปรับจาก 50 เป็น 45 ล้านบาท`, `Round 2 · ${nm(`REQ-${FORM_FY}-006`)[1]} changed from 50 to 45 million baht`], why: ["แบ่งดำเนินการเป็น 2 ระยะ", "Split into two phases"] },
   ];
   // M03: unit totals from the requests; ceilings at 95% of each unit's request
   const by = {};

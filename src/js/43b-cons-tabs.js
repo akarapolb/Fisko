@@ -77,13 +77,13 @@ CONS_BIND.ceilings = () => {
 
 // ---- by programme ----
 CONS_PANELS.programme = () => {
-  const progs = (S.structure[2571] || []).filter(n => n.lvl === "program");
+  const progs = (S.structure[FORM_FY] || []).filter(n => n.lvl === "program");
   const rows = progs.map(p => { const rq = S.requests.filter(r => (lineage(r.act)[0] || {}).id === p.id); return { p, rq, amt: rq.reduce((s, r) => s + r.amount, 0), prev: rq.reduce((s, r) => s + (r.prev || 0), 0) }; });
   const none = S.requests.filter(r => !lineage(r.act).length);
   const tot = rows.reduce((s, x) => s + x.amt, 0) + none.reduce((s, r) => s + r.amount, 0);
   return `
   <section class="panel"><header><h2>${L("คำขอรายโครงการตามแผนงาน", "Project requests by programme")}</h2><span class="sp"></span><span class="sub">${L("คลิกแผนงานเพื่อดูคำขอ · ล้านบาท", "Click a programme to see its requests · million baht")}</span></header>
-    <div class="tbl-wrap"><table><thead><tr><th>${L("แผนงาน", "Programme")}</th><th class="n">${L("คำขอ", "Requests")}</th><th class="n">${L("ปี 2570", "FY2570")}</th><th class="n">${L("ปี 2571", "FY2571")}</th><th class="n">${L("เปลี่ยนแปลง", "Change")}</th><th class="n">${L("สัดส่วน", "Share")}</th></tr></thead>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("แผนงาน", "Programme")}</th><th class="n">${L("คำขอ", "Requests")}</th><th class="n">${L(`ปี 2570`, `FY2570`)}</th><th class="n">${L(`ปี ${FORM_FY}`, `FY${FORM_FY}`)}</th><th class="n">${L("เปลี่ยนแปลง", "Change")}</th><th class="n">${L("สัดส่วน", "Share")}</th></tr></thead>
       <tbody>${rows.map(x => { const open = OPEN_PROG.has(x.p.id), ch = x.prev ? (x.amt / x.prev - 1) * 100 : null;
         return `<tr class="prog-row ${open ? "open" : ""}" data-prog="${x.p.id}" tabindex="0" aria-expanded="${open}"><td><b>${x.p.code}</b> ${esc(tx(x.p.name))}</td><td class="n">${x.rq.length}</td><td class="n">${mb(x.prev)}</td><td class="n"><b>${mb(x.amt)}</b></td>
           <td class="n">${ch == null ? "—" : `${ch >= 0 ? "+" : ""}${fmt(ch, 1)}%`}</td><td class="n">${fmt(tot ? x.amt / tot * 100 : 0, 1)}%</td></tr>

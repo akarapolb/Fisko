@@ -7,7 +7,7 @@ const editable = r => ROLE === "div" && r.unit === me().unit && (r.status === "d
 const itemTotal = it => (Number(it.qty) || 0) * (Number(it.price) || 0);
 
 function lineage(actId) {
-  const st = S.structure[2571] || [], out = [];
+  const st = S.structure[FORM_FY] || [], out = [];
   let n = st.find(x => x.id === actId);
   while (n) { out.unshift(n); n = st.find(x => x.id === n.parent); }
   return out;
@@ -60,7 +60,7 @@ VIEWS.requests = () => {
   const list = unitRole() ? S.requests.filter(r => r.unit === me().unit) : S.requests;
   const tot = list.reduce((s, r) => s + r.amount, 0), c2 = cal("c2");
   return `
-  <div class="head"><div><div class="eyebrow">M02 · Budget Preparation</div><h1>${L("คำของบประมาณ ปี 2571", "FY2571 budget requests")}</h1>
+  <div class="head"><div><div class="eyebrow">M02 · Budget Preparation</div><h1>${L(`คำของบประมาณ ปี ${FORM_FY}`, `FY${FORM_FY} budget requests`)}</h1>
     <p>${L("กำหนดส่งกองแผนงาน", "Due to Planning")} ${fdate(c2.date)} · ${L("เหลือ", "")} ${daysUntil(c2.date)} ${L("วัน", "days left")}${unitRole() ? ` · ${unitName(me().unit)}` : ""}</p></div>
     <div class="sp"></div>${ROLE === "div" ? `<button class="btn primary" type="button" id="new-req">+ ${L("สร้างคำขอใหม่", "New request")}</button>` : ""}</div>
   ${unitRole() ? ceilingBanner() + hearingBanner() : ""}
@@ -92,7 +92,7 @@ BIND.requests = () => {
   body.onkeydown = e => { if (e.key === "Enter") body.onclick(e); };
   const nb = $("#new-req");
   if (nb) nb.onclick = () => {
-    const n = S.requests.length + 30, id = `REQ-2571-${String(n).padStart(3, "0")}`;
+    const n = S.requests.length + 30, id = `REQ-${FORM_FY}-${String(n).padStart(3, "0")}`;
     S.requests.unshift({ id, unit: me().unit, act: "", prev: 0, status: "draft", updated: TODAY, name: [L("คำขอใหม่", "New request"), L("คำขอใหม่", "New request")], kpi: "", reason: "", docs: [], items: [{ type: "ope", name: "", qty: 1, unitName: L("งาน", "job"), price: 0 }], amount: 0, versions: [], comments: [] });
     snapshot(S.requests[0], ["สร้างคำขอ", "Created the request"], true);
     audit(["สร้างคำขอใหม่", "Created a request"], id); commit(); openReq(id);
@@ -103,15 +103,15 @@ BIND.requests = () => {
 function curReq() { return S.requests.find(r => r.id === CUR_REQ) || S.requests.find(r => r.id === S.story); }
 VIEWS.request = () => {
   const r = curReq(), ed = editable(r), lin = lineage(r.act), ds = ed ? "" : "disabled";
-  const acts = (S.structure[2571] || []).filter(x => x.lvl === "activity");
+  const acts = (S.structure[FORM_FY] || []).filter(x => x.lvl === "activity");
   return `
   <div class="head"><div><div class="eyebrow">M02 · Budget Preparation · <span class="mono">${r.id}</span></div>
     ${ed ? `<input type="text" id="rname" value="${esc(tx(r.name))}" aria-label="${L("ชื่อโครงการ", "Project name")}" style="font-size:22px;font-weight:700;width:min(640px,100%)">` : `<h1>${esc(tx(r.name))}</h1>`}
-    <div class="row" style="margin-top:8px">${pill(r.status)}<span class="sub">${unitName(r.unit)}${r.multi ? " · " + L("คำขอผูกพันต่อเนื่อง 2 ปี (2571–2572)", "2-year commitment (2571–2572)") : ""}</span></div></div>
+    <div class="row" style="margin-top:8px">${pill(r.status)}<span class="sub">${unitName(r.unit)}${r.multi ? " · " + L(`คำขอผูกพันต่อเนื่อง 2 ปี (${FORM_FY}–${FORM_FY + 1})`, `2-year commitment (${FORM_FY}–${FORM_FY + 1})`) : ""}</span></div></div>
     <div class="sp"></div><div class="row"><button class="btn" type="button" onclick="go('requests')">${L("กลับรายการ", "Back to list")}</button>${historyBtn(r.id, r.id)}${reviewButtons(r)}
       ${ed ? `<button class="btn" type="button" id="save">${L("บันทึกร่าง", "Save draft")}</button><button class="btn primary" type="button" id="submit">${L("ส่งให้กองแผนงาน", "Send to Planning")}</button>` : ""}</div></div>
   ${ed ? "" : `<div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("โหมดดูอย่างเดียว", "View only")}</b><p>${ROLE !== "div" ? L("แก้ไขได้เฉพาะผู้จัดทำคำขอของหน่วยงาน", "Only the requesting unit can edit") : L("คำขอนี้ส่งแล้วหรือไม่ใช่ของหน่วยงานคุณ", "This request is submitted or belongs to another unit")}</p></div></div>`}
-  <div class="hier" aria-label="${L("โครงสร้างงบประมาณ", "Budget structure")}"><span>${fyLabel(2571)}</span><em>›</em><span>${esc(tx(S.org))}</span>${lin.map(n => `<em>›</em><span>${esc(tx(n.name))}</span>`).join("")}</div>
+  <div class="hier" aria-label="${L("โครงสร้างงบประมาณ", "Budget structure")}"><span>${fyLabel(FORM_FY)}</span><em>›</em><span>${esc(tx(S.org))}</span>${lin.map(n => `<em>›</em><span>${esc(tx(n.name))}</span>`).join("")}</div>
   ${reqTabsBar(r)}
   <div class="grid-form">
     <div style="display:flex;flex-direction:column;gap:18px;min-width:0">

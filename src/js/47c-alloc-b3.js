@@ -18,10 +18,10 @@ function planFromQ(r, amount) {
   ALLOC.appropriation = () => {
     let html = bv();
     const P = S.parl, done = P && P.stage >= PARL_STEPS.length;
-    if (ALLOC_FY === CUR_FY && !S.allocs[2571]) if (done) html = html.replace(L("สร้างร่างการจัดสรรปี 2571 จากผลพิจารณา", "Create the FY2571 draft from the results"), L("สร้างบรรทัดจัดสรรปี 2571 ตาม พ.ร.บ.", "Create FY2571 lines from the appropriation act"));
-    if (ALLOC_FY === 2571 && S.allocs[2571]) {
-      const A = S.allocs[2571], linked = A.lines.filter(l => l.req).length;
-      html = `<div class="alert"><div class="ic">i</div><div><b>${A.fromAct ? L("บรรทัดจัดสรรสร้างจาก พ.ร.บ. งบประมาณรายจ่ายประจำปี 2571", "Lines created from the FY2571 appropriation act") : L("ร่างการจัดสรรจากผลพิจารณาของสำนักงบประมาณ", "Draft allocation from the Budget Bureau result")}</b><p>${linked}/${A.lines.length} ${L("บรรทัดผูกกับคำขอ · แผนรายเดือนมาจากแผนรายไตรมาสของคำขอ", "lines linked to a request · monthly plans come from the request's quarterly plan")}${A.fromAct ? "" : ` · ${L("เมื่อ พ.ร.บ. มีผลใช้บังคับ ปรับวงเงินตามกฎหมายได้ที่ปุ่มด้านล่าง", "once the act is in force, update to the law's amounts with the button below")}`}</p>
+    if (ALLOC_FY === CUR_FY && !S.allocs[FORM_FY]) if (done) html = html.replace(L(`สร้างร่างการจัดสรรปี ${FORM_FY} จากผลพิจารณา`, `Create the FY${FORM_FY} draft from the results`), L(`สร้างบรรทัดจัดสรรปี ${FORM_FY} ตาม พ.ร.บ.`, `Create FY${FORM_FY} lines from the appropriation act`));
+    if (ALLOC_FY === FORM_FY && S.allocs[FORM_FY]) {
+      const A = S.allocs[FORM_FY], linked = A.lines.filter(l => l.req).length;
+      html = `<div class="alert"><div class="ic">i</div><div><b>${A.fromAct ? L(`บรรทัดจัดสรรสร้างจาก พ.ร.บ. งบประมาณรายจ่ายประจำปี ${FORM_FY}`, `Lines created from the FY${FORM_FY} appropriation act`) : L("ร่างการจัดสรรจากผลพิจารณาของสำนักงบประมาณ", "Draft allocation from the Budget Bureau result")}</b><p>${linked}/${A.lines.length} ${L("บรรทัดผูกกับคำขอ · แผนรายเดือนมาจากแผนรายไตรมาสของคำขอ", "lines linked to a request · monthly plans come from the request's quarterly plan")}${A.fromAct ? "" : ` · ${L("เมื่อ พ.ร.บ. มีผลใช้บังคับ ปรับวงเงินตามกฎหมายได้ที่ปุ่มด้านล่าง", "once the act is in force, update to the law's amounts with the button below")}`}</p>
         ${!A.fromAct && done && (canAlloc() || ROLE === "plan") ? `<div class="row" style="margin-top:8px"><button class="btn primary" type="button" id="act-sync">${L("ปรับวงเงินตาม พ.ร.บ.", "Update to the act's amounts")}</button></div>` : ""}</div></div>` + html;
     }
     return html;
@@ -29,7 +29,7 @@ function planFromQ(r, amount) {
   const bb = BIND.allocation;
   BIND.allocation = () => {
     bb();
-    const mk = $("#mk-2571");
+    const mk = $(`#mk-${FORM_FY}`);
     if (mk) mk.onclick = () => {
       const rs = S.requests.filter(r => actAmount(r) != null), done = S.parl && S.parl.stage >= PARL_STEPS.length;
       if (!rs.length) { toast(L("ยังไม่มีผลพิจารณา", "No results yet")); return; }
@@ -39,18 +39,18 @@ function planFromQ(r, amount) {
         return { id: "N" + (i + 1), req: r.id, unit: r.unit, name: r.name, type, amount, act: r.act, plan: planFromQ(r, amount) };
       });
       const byType = {}; BUDGET_TYPES.forEach(t => (byType[t.id] = sumv(lines.filter(l => l.type === t.id).map(l => l.amount))));
-      S.allocs[2571] = { fy: 2571, draft: !done, fromAct: done, act: done ? ["พ.ร.บ. งบประมาณรายจ่ายประจำปีงบประมาณ พ.ศ. 2571", "FY2571 Appropriation Act"] : ["ร่างการจัดสรรปี 2571 จากผลพิจารณาของสำนักงบประมาณ", "FY2571 draft allocation from the Budget Bureau result"], date: TODAY, total: sumv(lines.map(l => l.amount)), byType, lines, transfers: [], releases: [] };
+      S.allocs[FORM_FY] = { fy: FORM_FY, draft: !done, fromAct: done, act: done ? [`พ.ร.บ. งบประมาณรายจ่ายประจำปีงบประมาณ พ.ศ. ${FORM_FY}`, `FY${FORM_FY} Appropriation Act`] : [`ร่างการจัดสรรปี ${FORM_FY} จากผลพิจารณาของสำนักงบประมาณ`, `FY${FORM_FY} draft allocation from the Budget Bureau result`], date: TODAY, total: sumv(lines.map(l => l.amount)), byType, lines, transfers: [], releases: [] };
       rs.forEach(r => (r.inAct = done));
-      ALLOC_FY = 2571;
-      audit([done ? "สร้างบรรทัดจัดสรรปี 2571 ตาม พ.ร.บ." : "สร้างร่างการจัดสรรปี 2571 จากผลพิจารณา", done ? "Created FY2571 lines from the act" : "Created the FY2571 draft allocation from the result"], `${lines.length} ${L("รายการ", "lines")}`); commit(); route();
-      toast(done ? L("สร้างบรรทัดจัดสรรตาม พ.ร.บ. แล้ว", "Lines created from the act") : L("สร้างร่างการจัดสรรปี 2571 แล้ว", "FY2571 draft allocation created"));
+      ALLOC_FY = FORM_FY;
+      audit([done ? `สร้างบรรทัดจัดสรรปี ${FORM_FY} ตาม พ.ร.บ.` : `สร้างร่างการจัดสรรปี ${FORM_FY} จากผลพิจารณา`, done ? `Created FY${FORM_FY} lines from the act` : `Created the FY${FORM_FY} draft allocation from the result`], `${lines.length} ${L("รายการ", "lines")}`); commit(); route();
+      toast(done ? L("สร้างบรรทัดจัดสรรตาม พ.ร.บ. แล้ว", "Lines created from the act") : L(`สร้างร่างการจัดสรรปี ${FORM_FY} แล้ว`, `FY${FORM_FY} draft allocation created`));
     };
     const as = $("#act-sync");
     if (as) as.onclick = () => {
-      const A = S.allocs[2571]; let n = 0;
+      const A = S.allocs[FORM_FY]; let n = 0;
       A.lines.forEach(l => { const r = l.req && S.requests.find(x => x.id === l.req); if (!r) return; const amt = actAmount(r); if (amt != null && amt !== l.amount) { l.amount = amt; l.plan = planFromQ(r, amt); n++; } r.inAct = true; });
       BUDGET_TYPES.forEach(t => (A.byType[t.id] = sumv(A.lines.filter(l => l.type === t.id).map(l => l.amount))));
-      A.total = sumv(A.lines.map(l => l.amount)); A.fromAct = true; A.draft = false; A.act = ["พ.ร.บ. งบประมาณรายจ่ายประจำปีงบประมาณ พ.ศ. 2571", "FY2571 Appropriation Act"];
+      A.total = sumv(A.lines.map(l => l.amount)); A.fromAct = true; A.draft = false; A.act = [`พ.ร.บ. งบประมาณรายจ่ายประจำปีงบประมาณ พ.ศ. ${FORM_FY}`, `FY${FORM_FY} Appropriation Act`];
       audit(["ปรับวงเงินจัดสรรตาม พ.ร.บ.", "Updated allocations to the act"], `${n}`); commit(); route(); toast(L(`ปรับตาม พ.ร.บ. แล้ว ${n} บรรทัด`, `Updated ${n} lines to the act`));
     };
   };
