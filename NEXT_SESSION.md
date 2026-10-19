@@ -150,3 +150,7 @@ B8 and B9 read FY2570 (`80-live-year.js`, `HANDOFF.md` section 51); the demo dat
 ## Round 52 (Budget CRUD round C5)
 
 Strategy and master data are on the list + drawer (`81-master-crud.js`, `HANDOFF.md` section 52); master data is retired, not deleted, once used. `DATA_V = 38`. Next: C6 (B10/B11 records, the end-to-end demo script E-01 to E-16 in the in-app guide, a sweep that walks the whole cycle).
+
+## Round 53 (Budget CRUD round C6, design complete)
+
+The Budget CRUD design is fully built (rounds C1 to C6, `76-crud.js` to `82-intel-crud.js`, `HANDOFF.md` sections 48 to 53). The demo guide holds the end-to-end script E-01 to E-16 and the sweep walks it. Still open from before: FR-FN-33 and Excel/PDF exports, a demo step for F11, a full demo rehearsal (now with the E-script), then Fisko Assets or the real-AI plan. Ideas noticed during C1 to C6: the formulation year (2571) and the parliament timetable are still fixed values; Fisko Procurement and Finance could adopt the shared list + drawer.

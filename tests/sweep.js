@@ -82,7 +82,8 @@
           sbBatch: ["submission", () => (SUB_TAB = "status")], sbRev: ["submission", () => (SUB_TAB = "status")], plCut: ["submission", () => (SUB_TAB = "parliament")], plApp: ["submission", () => (SUB_TAB = "parliament")],
           stNode: ["strategy", () => (STRAT_TAB = "map")], stKpi: ["strategy", () => (STRAT_TAB = "kpis")], stIdea: ["strategy", () => (STRAT_TAB = "bank")], stRev: ["strategy", () => (STRAT_TAB = "revise")], pfOut: ["performance", () => (PERF_TAB = "kpis")],
           adUnit: ["admin", () => (ADMIN_TAB = "master")], adPrice: ["admin", () => (ADMIN_TAB = "master")], adFy: ["admin", () => (ADMIN_TAB = "fiscal")], adCal: ["admin", () => (ADMIN_TAB = "fiscal")], adNode: ["admin", () => (ADMIN_TAB = "structure")],
-          adCm: ["admin", () => (ADMIN_TAB = "bmaster")], adMp: ["admin", () => (ADMIN_TAB = "bmaster")], adCs: ["admin", () => (ADMIN_TAB = "bmaster")] };
+          adCm: ["admin", () => (ADMIN_TAB = "bmaster")], adMp: ["admin", () => (ADMIN_TAB = "bmaster")], adCs: ["admin", () => (ADMIN_TAB = "bmaster")],
+          wiSc: ["insight", () => (INTEL_TAB = "whatif")], anDone: ["insight", () => (INTEL_TAB = "anoms")], agRun: ["assistant", () => (INTEL_TAB = "bagents")] };
         for (const [k, [page, set]] of Object.entries(where)) {
           if (!allowed(page) || (page === "admin" && !ADMIN_TABS.some(x => x.roles.includes(ROLE) && (set(), x.id === ADMIN_TAB)))) continue;
           const sp = CRUD.defs[k], open = (id, mode, t) => safe(`${org}/${role}/${k}/${id || "new"}/${mode}${t ? "/" + t : ""}`, () => { set(); crOpen(k, id, mode); if (t) CR_OPEN.tab = t; go2(page); chk(`${org}/${role}/${k}/${id || "new"}/${mode}${t || ""}`); if (!document.querySelector(".cr-drawer") && !(page === "strategy" && STRAT_TAB !== want)) errs.push(`${org}/${role}/${k}/${id}: no drawer`); });
@@ -104,6 +105,51 @@
         if (S.dash.fy !== CUR_FY || !S.dash.live) errs.push(`${org}/m${mi + 1}: dashboard is not the live year`);
       }
       if (typeof REAL_TODAY !== "undefined") { S.asOf = null; TODAY = REAL_TODAY; MON_TAB = "live"; PERF_TAB = "kpis"; }
+      // Round C6: the end-to-end demo (design chapter 11, E-01 to E-16) driven through the same actions the screens use
+      if (o.suites.includes("render") && typeof CRUD !== "undefined" && CRUD.defs.wiSc && o.roles.includes("plan")) safe(`${org}/E2E walk`, () => {
+        const D = CRUD.defs, why = "เหตุผลสำหรับการทดสอบ", as = r => { ROLE = r; LANG = o.langs[0]; renderShell(); };
+        const act = (k, r, id, w) => { const a = (D[k].acts(r) || []).find(x => x && x.id === id); if (!a) { errs.push(`${org}/E2E: ${k} ${D[k].id(r)} has no action ${id} for ${ROLE}`); return false; } a.run(r, w || why); return true; };
+        const see = (page, label) => { go2(page); chk(`${org}/E2E/${label}`); };
+        // E-01 the administrator opens the next fiscal year
+        as("admin"); const fy = D.adFy.create.run({}); if (!S.structure[fy.fy] || !S.structure[fy.fy].length) errs.push(`${org}/E2E: FY${fy.fy} has no structure`); ADMIN_TAB = "fiscal"; see("admin", "E-01");
+        // E-02 Planning adds a goal and a KPI
+        as("plan"); const g = D.stNode.create.run({ kind: "goal", parent: S.strategy.items[0].id, th: "เป้าประสงค์ทดสอบ" });
+        const k = D.stKpi.create.run({ goal: g.id, th: "ตัวชี้วัดทดสอบ", unit: "ครั้ง", owner: me().unit, base: 0, t0: 1, t1: 2, t2: 3, t3: 4, t4: 5, formula: "" }); STRAT_TAB = "kpis"; see("strategy", "E-02");
+        // E-03 a unit proposes an idea; Planning scores and accepts it
+        as("div"); const idea = D.stIdea.create.run({ name: "แนวคิดทดสอบ", kpi: k.id, est: 2, years: 1 });
+        as("plan"); D.stIdea.edit.run(idea, { s0: "4", s1: "4", s2: "4", s3: "4", s4: "4", note: "" }); act("stIdea", idea, "acc"); if (idea.status !== "accepted") errs.push(`${org}/E2E: idea not accepted`); STRAT_TAB = "bank"; see("strategy", "E-03");
+        // E-04 Planning reissues the ceilings
+        act("csCeil", S.cons, S.cons.issued ? "reissue" : "issue"); CONS_TAB = "ceilings"; see("consolidation", "E-04");
+        // E-05 a unit withdraws a sent request and sends it again through its director
+        const sent = S.requests.find(r => ["unit", "plan"].includes(r.status) && r.unit === (as("div"), me().unit));
+        if (sent) { act("rqReq", sent, "wd"); if (sent.status !== "draft") errs.push(`${org}/E2E: withdraw left ${sent.status}`); sent.status = "plan"; }
+        see("requests", "E-05");
+        // E-06 Planning, then the executive, send the reviewed requests on from the rounds page
+        as("plan"); REV_TAB = "rounds"; see("review", "E-06 plan"); const fw = document.getElementById("rv-fwd"); if (fw) fw.click();
+        as("exec"); go2("review"); const fe = document.getElementById("rv-fwd"); if (fe) fe.click(); chk(`${org}/E2E/E-06 exec`);
+        // E-07 a meeting is scheduled (if none) and its resolutions recorded
+        as("plan"); if (!meetScheduled()) D.rvMeet.create.run({ no: tx(meetNo()), date: addDays(TODAY, 1), time: "09:30", place: "ห้องประชุม", note: "" });
+        REV_TAB = "meetings"; see("review", "E-07"); const ms = document.getElementById("m-save"); if (ms) ms.click(); chk(`${org}/E2E/E-07 held`);
+        if (!S.requests.some(r => r.status === "approved" && r.decided != null)) errs.push(`${org}/E2E: no approved request with a decided amount`);
+        // E-11 Finance adds and confirms a line, then asks for a release that the Budget Bureau approves
+        as("fin"); ALLOC_FY = CUR_FY; ALLOC_TAB = "allocate"; const A = S.allocs[CUR_FY], before = allocated();
+        const line = D.alLine.create.run({ unit: A.lines[0].unit, name: "บรรทัดทดสอบ", type: "ope", act: A.lines[0].act, amount: Math.min(1e6, Math.max(1e5, typeRoom("ope"))), newProj: false, extended: false });
+        act("alLine", line, "confirm"); if (allocated() <= before) errs.push(`${org}/E2E: confirming a line didn't raise the allocation`); see("allocation", "E-11 line");
+        const rel = D.alRel.create.run({ q: String(CUR_Q), type: "ope", amount: 1e5, note: "" }); act("alRel", rel, "ok"); ALLOC_TAB = "releases"; see("allocation", "E-11 release");
+        // E-12 a transfer is requested, withdrawn, requested again and approved
+        const L2 = A.lines.filter(l => !l.cancelled && l.amount > 2e5 && bal(l).avail - pendingOut(l.id) > 2e5), tf = { from: L2[0].id, to: L2[1].id, amount: 1e5, reason: "eff", why: "ทดสอบ" };
+        act("alTr", D.alTr.create.run(tf), "wd"); const tr = D.alTr.create.run(tf); as(TR_TYPE[trTy(tr)][1] === "fin" ? "fin" : "exec"); act("alTr", tr, "ok"); if (tr.status === "bb") { as("plan"); act("alTr", tr, "bbok"); }
+        if (tr.status !== "approved") errs.push(`${org}/E2E: transfer ended ${tr.status}`); ALLOC_TAB = "transfers"; see("allocation", "E-12");
+        // E-13 / E-14 the clock moves to March; monitoring, progress and quarterly reports read it
+        S.asOf = FY_MONTH_ENDS()[5]; TODAY = S.asOf; simDisb(5); as("div"); MON_TAB = "progress"; see("dashboard", "E-13"); PERF_TAB = "quarter"; see("performance", "E-14");
+        // E-15 September: a carry-over request is filed and approved
+        S.asOf = FY_MONTH_ENDS()[11]; TODAY = S.asOf; simDisb(11); as("fin"); ALLOC_TAB = "carry";
+        const cl = A.lines.find(l => !l.cancelled && (l.type === "inv" || l.type === "ope") && l.amount > 2e5);
+        const cf = D.alCf.create.run({ line: cl.id, amount: 1e5, po: "PO-TEST-1", poDate: TODAY, vendor: "" }); as("exec"); act("alCf", cf, "ok"); if (cf.status !== "approved") errs.push(`${org}/E2E: carry-over ended ${cf.status}`); see("allocation", "E-15");
+        // E-16 a recommendation becomes next year's idea
+        as("plan"); const rc = (S.recs || [])[0]; if (rc) { rc.status = "doing"; PERF_TAB = "recs"; see("performance", "E-16"); const b = document.querySelector(`[data-recidea="${rc.id}"]`); if (b) b.click(); if (!rc.idea) errs.push(`${org}/E2E: the recommendation didn't become an idea`); }
+        S.asOf = null; TODAY = REAL_TODAY; ALLOC_FY = CUR_FY; crClose();
+      });
       // Round C3 walk: a batch through the Budget Bureau, the bill through parliament, the act into allocation; every drawer on the way
       if (o.suites.includes("render") && typeof CRUD !== "undefined" && CRUD.defs.sbBatch && o.roles.includes("plan")) safe(`${org}/C3 walk`, () => {
         ROLE = "plan"; LANG = o.langs[0]; renderShell(); S.submission.minister = { no: "TEST", date: TODAY, by: me().id };
