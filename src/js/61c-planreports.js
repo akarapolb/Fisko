@@ -10,7 +10,9 @@ const catName = id => { const c = (S.pcat || []).find(x => x.id === id); return 
 const snap = p => ({ id: p.id, name: p.name, est: p.est, month: p.month, method: p.method, cat: p.cat || null, line: p.line });
 const planApproved = () => (S.planDoc.versions.filter(v => v.status === "approved").sort((a, b) => b.v - a.v)[0]) || null;
 const planPublished = () => (S.planDoc.versions.filter(v => v.status === "approved" && v.published).sort((a, b) => b.v - a.v)[0]) || null;
-const inPublishedPlan = p => { const v = planPublished(); return !!v && v.items.some(x => x.id === p.id); };
+// Items still in the plan (a cancelled item shows as removed in the next version).
+const planLive = () => S.pplan.filter(p => !p.cancelled);
+const inPublishedPlan = p => { const v = planPublished(); return !p.cancelled && !!v && v.items.some(x => x.id === p.id); };
 function planDiff(base, cur) {
   const B = new Map((base ? base.items : []).map(x => [x.id, x])), C = new Map(cur.map(x => [x.id, x]));
   const added = cur.filter(x => !B.has(x.id)), removed = [...B.values()].filter(x => !C.has(x.id));
@@ -19,7 +21,7 @@ function planDiff(base, cur) {
 }
 const planTag = p => (inPublishedPlan(p) ? "" : ` ${tag(L("ยังไม่อยู่ในแผนที่ประกาศ", "Not in the published plan"), "p-warn")}`);
 function planPanel() {
-  const A = planApproved(), Pb = planPublished(), cur = S.pplan.map(snap), d = planDiff(A, cur), pend = S.planDoc.versions.find(v => v.status === "submitted"), pr = isProcRole();
+  const A = planApproved(), Pb = planPublished(), cur = planLive().map(snap), d = planDiff(A, cur), pend = S.planDoc.versions.find(v => v.status === "submitted"), pr = isProcRole();
   const row = (x, t, cls) => `<li><span class="mono">${x.id}</span> ${esc(tx(x.name))} ${tag(t, cls)}</li>`;
   return `<section class="panel"><header><h2>${L("ฉบับแผนจัดซื้อและการประกาศ", "Plan versions and publication")}</h2><span class="sp"></span><span class="sub">FR-PR-03 · FR-PR-37</span></header>
     <div class="body" style="display:flex;flex-direction:column;gap:10px">
@@ -59,7 +61,7 @@ function demandPanel() {
 function bindPlan2() {
   const done = m => { commit(); renderShell(); route(); if (m) toast(m); };
   const sb = $("#pv-sub"); if (sb) sb.onclick = () => { const why = $("#pv-why").value.trim(); if (why.length < 5) { toast(L("ระบุเหตุผลที่ปรับแผน", "Say why the plan changes")); return; }
-    const v = Math.max(...S.planDoc.versions.map(x => x.v)) + 1; S.planDoc.versions.push({ v, t: nowIso(), by: me().id, why, status: "submitted", items: S.pplan.map(snap), appr: null, published: null });
+    const v = Math.max(...S.planDoc.versions.map(x => x.v)) + 1; S.planDoc.versions.push({ v, t: nowIso(), by: me().id, why, status: "submitted", items: planLive().map(snap), appr: null, published: null });
     audit(["เสนอแผนจัดซื้อฉบับใหม่", "Proposed a new procurement plan version"], `v${v}`); notify(["exec"], [`แผนจัดซื้อฉบับ v${v} รออนุมัติ`, `Procurement plan v${v} needs approval`], "prc-plan"); done(L("ส่งผู้บริหารแล้ว", "Sent to the executive")); };
   const dec = ok => { const v = S.planDoc.versions.find(x => x.status === "submitted"); v.status = ok ? "approved" : "rejected"; v.appr = { by: me().id, t: nowIso() };
     audit([ok ? "อนุมัติแผนจัดซื้อ" : "ไม่อนุมัติแผนจัดซื้อ", ok ? "Approved the procurement plan" : "Rejected the procurement plan"], `v${v.v}`); notify(["proc", "prochead"], [`แผนจัดซื้อ v${v.v} ${ok ? "อนุมัติแล้ว ประกาศใน e-GP ได้" : "ไม่ได้รับอนุมัติ"}`, `Plan v${v.v} ${ok ? "approved; publish it in e-GP" : "was rejected"}`], "prc-plan"); done(); };
@@ -202,6 +204,6 @@ function seedPlanReports(s, K) {
   s.pcat = [C("C01", "ครุภัณฑ์คอมพิวเตอร์และอุปกรณ์", "Computers and equipment", "goods"), C("C02", "บริการและระบบสารสนเทศ", "Services and information systems", "service"), C("C03", "ฝึกอบรมและพัฒนาบุคลากร", "Training", "service"),
     C("C04", "ก่อสร้างและปรับปรุงอาคาร", "Building works", "construction"), C("C05", "งานโยธา ถนน และเขื่อน", "Civil works", "construction"), C("C06", "ยานพาหนะ", "Vehicles", "goods"), C("C07", "วัสดุสำนักงาน", "Office supplies", "goods"), C("C08", "ที่ปรึกษาและออกแบบ", "Consulting and design", "consult")];
   s.pplan.forEach(p => (p.cat = guessCat(p.kind, p.name)));
-  s.planDoc = { fy: FAM_FY, versions: [{ v: 1, t: "2026-09-25T10:00", by: K.PO, why: `แผนจัดซื้อจัดจ้างประจำปีงบประมาณ 2570`, status: "approved", items: s.pplan.map(snap), appr: { by: K.EX, t: "2026-09-30T15:00" }, published: { date: "2026-10-01", ref: "EGP-PLAN-70-0001", by: K.PO } }] };
+  s.planDoc = { fy: FAM_FY, versions: [{ v: 1, t: "2026-07-10T10:00", by: K.PO, why: `แผนจัดซื้อจัดจ้างประจำปีงบประมาณ ${FAM_FY}`, status: "approved", items: s.pplan.map(snap), appr: { by: K.EX, t: "2026-07-15T15:00" }, published: { date: "2026-07-20", ref: `EGP-PLAN-${FAM_FY % 100}-0001`, by: K.PO } }] };
   s.monthly = [];
 }

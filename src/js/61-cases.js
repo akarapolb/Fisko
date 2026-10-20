@@ -73,7 +73,7 @@ const evalKey = c => (c.method === "selective" ? "buy" : "eval");
 // Split-purchase check (R-02): several small requisitions of the same kind in one unit that together pass the limit.
 function splitRisk(p, amount) {
   const T = S.pcfg.specificMax, since = addDays(TODAY, -S.pcfg.splitDays), unit = famLine(p.line).unit;
-  const peers = S.reqn.filter(r => !["rejected", "cancelled"].includes(r.status) && r.plan !== p.id && r.t.slice(0, 10) >= since && famPlan(r.plan).kind === p.kind && famLine(famPlan(r.plan).line).unit === unit);
+  const peers = S.reqn.filter(r => !["rejected", "cancelled", "draft"].includes(r.status) && r.plan !== p.id && r.t.slice(0, 10) >= since && famPlan(r.plan).kind === p.kind && famLine(famPlan(r.plan).line).unit === unit);
   const total = sumv(peers.map(r => r.amount)) + amount;
   return { risk: amount <= T && peers.filter(r => r.amount <= T).length >= 1 && total > T, peers, total, T, days: S.pcfg.splitDays };
 }
@@ -146,7 +146,7 @@ function caseOnDecide(p, r, ok) {
 }
 function caseOnContract(cs, con) { cs.contract = con.id; cs.state = 9; famPlan(cs.plan).status = "contracted"; caseLog(cs, "contract", `${con.id} · ${mb(con.amount)}`); }
 function caseNew(p) {
-  const c = { id: `PC-2570-` + String(S.cases.length + 1).padStart(3, "0"), plan: p.id, reqn: null, line: p.line, kind: p.kind, state: 1, method: null, methodWhy: null, special: null, methodApproval: null, committees: {}, ref: null, tor: null, egp: null, quotes: [], award: null, appeal: null, appealElapsed: false, closeElapsed: false, contract: null, cancelled: null };
+  const c = { id: nextId("PC", S.cases), plan: p.id, reqn: null, line: p.line, kind: p.kind, state: 1, method: null, methodWhy: null, special: null, methodApproval: null, committees: {}, ref: null, tor: null, egp: null, quotes: [], award: null, appeal: null, appealElapsed: false, closeElapsed: false, contract: null, cancelled: null };
   S.cases.push(c); caseLog(c, "created", p.id); return c;
 }
 function guessKind(line, name) { return line.type === "inv" ? (/ปรับปรุง|ก่อสร้าง|อาคาร|ซ่อม|เขื่อน|ตลิ่ง|ถนน|renovat|construct|building|repair|embank/i.test(name.join(" ")) ? "construction" : "goods") : "service"; }

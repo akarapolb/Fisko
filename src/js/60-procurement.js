@@ -9,7 +9,7 @@ const famPlan = id => S.pplan.find(p => p.id === id) || { id, name: ["-", "-"], 
 const famReq = id => S.reqn.find(r => r.id === id);
 const famCon = id => S.contracts.find(c => c.id === id);
 const famCommitted = lineId => sumv(S.contracts.filter(c => c.line === lineId).map(c => c.amount));
-const famReserved = lineId => sumv(S.reqn.filter(r => r.status === "approved" && famPlan(r.plan).line === lineId).map(r => r.amount));
+const famReserved = lineId => sumv(S.reqn.filter(r => (r.status === "approved" || r.status === "pending") && famPlan(r.plan).line === lineId).map(r => r.amount));
 // Non-procurement commitments kept by Fisko Finance (round FN1): utilities, rent, service agreements, travel orders.
 // Advances drawn from the budget count as spending of the line (clause 62): the amount lent until cleared, then what was spent (round FN3).
 const famAdv = lineId => sumv((S.advances || []).filter(a => a.line === lineId && a.source === "budget" && ["approved", "paid", "clearing", "objected", "cleared"].includes(a.state)).map(a => (a.state === "cleared" ? Math.min(a.clearing.spent, a.approvedAmt || a.amount) : a.approvedAmt || a.amount)));
@@ -21,8 +21,8 @@ const phaseAccepted = ph => ph.signs.length >= PHASE_SIGNS;
 const phaseSigners = c => c.phases.flatMap(ph => ph.signs.map(s => s.by));
 const famPeople = () => S.users.filter(u => u.active && u.role !== "admin" && u.role !== "proc" && u.role !== "prochead");
 const PMETHOD = { specific: ["เฉพาะเจาะจง", "Specific selection"], ebid: ["ประกวดราคาอิเล็กทรอนิกส์", "E-bidding"] };
-const PLAN_ST = { planned: [["อยู่ในแผน", "Planned"], "p-mute"], requisitioned: [["ขอซื้อแล้ว", "Requisitioned"], "p-info"], contracted: [["ทำสัญญาแล้ว", "Contracted"], "p-ok"] };
-const REQ_ST = { pending: [["รออนุมัติ", "Pending"], "p-warn"], approved: [["อนุมัติแล้ว", "Approved"], "p-ok"], rejected: [["ไม่อนุมัติ", "Rejected"], "p-bad"], contracted: [["ทำสัญญาแล้ว", "Contracted"], "p-mute"] };
+const PLAN_ST = { planned: [["อยู่ในแผน", "Planned"], "p-mute"], requisitioned: [["ขอซื้อแล้ว", "Requisitioned"], "p-info"], contracted: [["ทำสัญญาแล้ว", "Contracted"], "p-ok"], closed: [["ปิด", "Closed"], "p-mute"], cancelled: [["ยกเลิก", "Cancelled"], "p-mute"] };
+const REQ_ST = { draft: [["ร่าง", "Draft"], "p-mute"], returned: [["ส่งคืนแก้ไข", "Returned"], "p-warn"], pending: [["รออนุมัติ", "Pending"], "p-warn"], approved: [["อนุมัติแล้ว", "Approved"], "p-ok"], rejected: [["ไม่อนุมัติ", "Rejected"], "p-bad"], contracted: [["ทำสัญญาแล้ว", "Contracted"], "p-mute"] };
 const stTag = (m, k) => tag(tx(m[k][0]), m[k][1]);
 // Authority for spend approvals: the executive, or a delegate. Returns who holds the authority and which delegation is used.
 function famAuth() {
@@ -31,7 +31,8 @@ function famAuth() {
   return { holder: d ? d.from : me().id, via: d ? d.id : null };
 }
 const canSpend = () => acting("exec", "spend");
-const nextId = (prefix, list) => `${prefix}-${FAM_FY}-${String(Math.max(0, ...list.map(x => Number(x.id.split("-")[2]) || 0)) + 1).padStart(3, "0")}`;
+// Numbers are never reused (R-C-05): ids of deleted drafts stay in S.delIds.
+const nextId = (prefix, list, fy = FAM_FY) => `${prefix}-${fy}-${String(Math.max(0, ...[...list.map(x => x.id), ...(S.delIds || [])].filter(x => x.startsWith(`${prefix}-${fy}-`)).map(x => Number(x.split("-")[2]) || 0)) + 1).padStart(3, "0")}`;
 // A phase is waiting for Finance when it is accepted and has neither a live payment nor a live voucher (round FN2).
 const famAcceptedUnpaid = () => S.contracts.flatMap(c => c.phases.filter(ph => phaseAccepted(ph) && !S.payreqs.some(p => p.contract === c.id && p.phase === ph.n && p.status !== "rejected")
   && !(S.vouchers || []).some(v => v.contract === c.id && v.phase === ph.n && v.state !== "cancelled")).map(ph => ({ c, ph })));
@@ -42,7 +43,7 @@ function famTasks(R) {
     S.reqn.filter(r => r.status === "pending").forEach(r => R(`${L("อนุมัติขอซื้อขอจ้าง", "Approve a requisition")} ${r.id}`, `${mb(r.amount)} ${L("ลบ.", "M")} · ${tx(famPlan(r.plan).name)}`, TODAY, "prc-reqn", "p-warn"));
     S.payreqs.filter(p => p.status === "pending").forEach(p => R(`${L("อนุมัติเบิกจ่าย", "Approve a payment")} ${p.id}`, `${mb(p.amount)} ${L("ลบ.", "M")} · ${p.contract}`, TODAY, "fnc-pay", "p-warn"));
   }
-  if (ROLE === "div") S.pplan.filter(p => p.status === "planned" && famLine(p.line).unit === me().unit).forEach(p => R(`${L("ขอซื้อขอจ้างตามแผน", "Raise a requisition")} ${p.id}`, tx(p.name), p.month, "prc-plan", "p-info"));
+  if (ROLE === "div" || ROLE === "divhead") S.pplan.filter(p => ppCanRaise(p) && famLine(p.line).unit === me().unit).forEach(p => R(`${L("ขอซื้อขอจ้างตามแผน", "Raise a requisition")} ${p.id}`, tx(p.name), p.month, "prc-plan", "p-info"));
   if (ROLE === "fin") {
     famAcceptedUnpaid().forEach(x => R(`${L("ขออนุมัติเบิกจ่าย", "Request a payment")} ${x.c.id} ${tx(x.ph.name)}`, `${mb(x.ph.amount)} ${L("ลบ.", "M")}`, TODAY, "fnc-pay", "p-info"));
     S.payreqs.filter(p => p.recon && p.recon.state === "diff").forEach(p => R(`${L("ชี้แจงผลต่างจากไฟล์ GFMIS", "Explain a GFMIS file difference")} ${p.id}`, "", TODAY, "fnc-recon:payfile", "p-warn"));
@@ -71,7 +72,7 @@ PROC.plan = () => {
           <td><div class="row" style="flex-wrap:nowrap">${mine && p.status === "planned" ? `<button class="btn primary" type="button" data-preq="${p.id}">${L("ขอซื้อขอจ้าง", "Raise requisition")}</button>` : ""}${historyBtn(p.id, p.id)}</div></td></tr>
           ${PLAN_REQ === p.id ? `<tr class="cmt-row"><td colspan="8"><div class="row" style="align-items:flex-end">
             <div class="f" style="flex:0 1 150px"><label for="pr-amt">${L("วงเงิน (ล้านบาท)", "Amount (M baht)")}</label><input type="number" id="pr-amt" min="0.001" step="0.001" value="${(p.est / 1e6).toFixed(3)}"></div>
-            <div class="f" style="flex:1 1 240px"><label for="pr-why">${L("เหตุผลความจำเป็น", "Justification")}</label><input type="text" id="pr-why" value="${esc(L(`จำเป็นต่อการดำเนินงานตามแผนปีงบประมาณ 2570`, `Needed to deliver the FY2570 work plan`))}"></div>
+            <div class="f" style="flex:1 1 240px"><label for="pr-why">${L("เหตุผลความจำเป็น", "Justification")}</label><input type="text" id="pr-why" value="${esc(L(`จำเป็นต่อการดำเนินงานตามแผนปีงบประมาณ ${FAM_FY}`, `Needed to deliver the FY${FAM_FY} work plan`))}"></div>
             ${PLAN_SPLIT || splitRisk(p, p.est).risk ? `<div class="f" style="flex:1 1 100%"><label for="pr-split">${L("คำชี้แจงการแตกซื้อ (R-02)", "Split-purchase explanation (R-02)")}</label><input type="text" id="pr-split" placeholder="${esc(L("มีรายการประเภทเดียวกันในหน่วยเดียวกันที่ขอซื้อภายใน " + S.pcfg.splitDays + " วัน และรวมกันเกินเพดานวิธีเฉพาะเจาะจง ระบุเหตุผลที่ต้องแยกซื้อ", "A request of the same kind in the same unit within " + S.pcfg.splitDays + " days brings the total past the specific-method ceiling. Say why they are bought separately"))}"></div>` : ""}
             <span class="sub">${L("วงเงินคงเหลือของรายการจัดสรร", "Room left on the line")} ${mb(famHeadroom(p.line))} ${L("ลบ.", "M")}</span>
             <button class="btn primary" type="button" id="pr-send">${L("ส่งขออนุมัติ", "Send for approval")}</button><button class="btn ghost" type="button" id="pr-cancel">${L("ยกเลิก", "Cancel")}</button></div></td></tr>` : ""}`; }).join("")}</tbody></table></div>
@@ -180,7 +181,7 @@ BIND.procurement = () => {
     if (!ok) p.status = "planned";
     caseOnDecide(p, rq, ok);
     audit(ok ? ["อนุมัติขอซื้อขอจ้าง", "Approved a requisition"] : ["ไม่อนุมัติขอซื้อขอจ้าง", "Rejected a requisition"], `${rq.id} ${p.id}${onBehalf("exec", "spend")}`);
-    notify(ok ? ["proc", "div"] : ["div"], ok ? [`ใบขอซื้อ ${rq.id} อนุมัติแล้ว จัดทำสัญญาได้`, `Requisition ${rq.id} is approved; a contract can be created`] : [`ใบขอซื้อ ${rq.id} ไม่ได้รับอนุมัติ`, `Requisition ${rq.id} was not approved`], "prc-reqn");
+    notify(ok ? ["proc", "div"] : ["div"], ok ? [`ใบขอซื้อ ${rq.id} อนุมัติแล้ว แฟ้มไปขั้นเลือกวิธีจัดหา`, `Requisition ${rq.id} is approved; the case moves to choosing the method`] : [`ใบขอซื้อ ${rq.id} ไม่ได้รับอนุมัติ`, `Requisition ${rq.id} was not approved`], "prc-reqn");
     commit(); renderShell(); route(); toast(ok ? L("อนุมัติแล้ว", "Approved") : L("ไม่อนุมัติ", "Rejected"));
   };
   $$("[data-rqok]").forEach(b => (b.onclick = () => decide(b.dataset.rqok, true)));

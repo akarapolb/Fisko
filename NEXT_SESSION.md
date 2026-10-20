@@ -158,3 +158,7 @@ The Budget CRUD design is fully built (rounds C1 to C6, `76-crud.js` to `82-inte
 ## Round 54 (Budget CRUD follow-ups)
 
 Years come from `CUR_FY` and `FORM_FY`; request basics edit in the drawer; M10 users, approval route and rules are lists (`83-admin-crud.js`, `HANDOFF.md` section 54). Budget types stay fixed by design. Open: Fisko Procurement and Fisko Finance on the shared list + drawer (each needs its own design pass), FR-FN-33 and exports, a demo step for F11, a full rehearsal with the E-script, then Fisko Assets or the real-AI plan.
+
+## Round 55 (Procurement CRUD round PC1)
+
+The Procurement CRUD design (`Fisko_Procurement_CRUD_Design.html`, core lifecycle only) is approved. Round PC1 moved P2 plan items and versions and P3 requisitions onto the shared list + drawer (`84-proc-crud.js`, `HANDOFF.md` section 55). Next: PC2 (P4 case files: list + drawer, editable rows in steps 3 to 7, clean reruns, duty separation, appeal form, Simulate for e-GP, bids and appeals), PC3 (P7 contracts: drafts and signing, phase schedule, acceptance fixes, changes, guarantees, penalties, invoices, closing), PC4 (demo script P-E01 to P-E15 and the sweep walk).

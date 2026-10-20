@@ -94,6 +94,49 @@
         }
         crClose(); CONS_TAB = "overview"; REV_TAB = "queue"; await tick();
       }
+      // Procurement CRUD round PC1: a walk from a new plan item to an approved and cancelled requisition, then every
+      // plan item, plan version and requisition drawer (both plan years) for the procurement roles
+      if (o.suites.includes("render") && typeof CRUD !== "undefined" && CRUD.defs.pcReq) {
+        safe(`${org}/PC1 walk`, () => {
+          const D = CRUD.defs, why = "เหตุผลสำหรับการทดสอบ", as = r => { ROLE = r; LANG = o.langs[0]; renderShell(); };
+          const act = (k, r, id, w) => { const a = (D[k].acts(r) || []).find(x => x && x.id === id); if (!a) { errs.push(`${org}/PC1: no ${k} action ${id} for ${ROLE}`); return; } a.run(r, w || why); };
+          as("proc"); PP_FY = FAM_FY;
+          const div = S.users.find(u => u.role === "div" && u.primary), line = famLines().find(l => l.unit === div.unit && (l.type === "inv" || l.type === "ope"));
+          if (!line) { errs.push(`${org}/PC1: no allocation line for the division`); return; }
+          const base = { line: line.id, month: addDays(TODAY, 30), cat: S.pcat[0].id, method: "specific" };
+          const p = D.ppItem.create.run(Object.assign({ name: "ทดสอบ PC1", est: 200000 }, base));
+          D.ppItem.edit.run(p, Object.assign({ name: "ทดสอบ PC1 แก้", est: 250000 }, base));
+          const junk = D.ppItem.create.run(Object.assign({ name: "รายการผิด", est: 100000 }, base)); act("ppItem", junk, "del");
+          if (S.pplan.includes(junk) || S.cases.some(c => c.plan === junk.id)) errs.push(`${org}/PC1: draft item not deleted`);
+          if (D.ppItem.create.run(Object.assign({ name: "x", est: 1000 }, base)).id === junk.id) errs.push(`${org}/PC1: a deleted number was reused`);
+          S.pplan = S.pplan.filter(x => x.name[0] !== "x");
+          const v = D.pvVer.create.run({ why }); as("exec"); act("pvVer", v, "ok"); as("proc"); act("pvVer", v, "pub", "EGP-TEST-0001");
+          if (!inPublishedPlan(p)) errs.push(`${org}/PC1: the item is not in the published plan`);
+          as("div"); const r = D.pcReq.create.run({ plan: p.id, amount: 250000, need: p.month, why, splitWhy: "ทดสอบคำชี้แจงการแบ่งซื้อ" });
+          act("pcReq", r, "send"); act("pcReq", r, "wd"); act("pcReq", r, "send");
+          as("exec"); act("pcReq", r, "ret"); as("div"); D.pcReq.edit.run(r, { amount: 240000, need: r.need, why, splitWhy: r.splitWhy }); act("pcReq", r, "send");
+          as("exec"); act("pcReq", r, "ok");
+          if (r.status !== "approved" || caseState(caseByPlan(p.id)) !== 3) errs.push(`${org}/PC1: approval left ${r.status} at step ${caseState(caseByPlan(p.id))}`);
+          for (const [k, x, pg] of [["ppItem", p, "plan:plan"], ["pcReq", r, "reqn"]]) safe(`${org}/PC1/${k}`, () => { procSet(pg); crOpen(k, D[k].id(x)); go2("procurement"); chk(`${org}/PC1/${k}`); });
+          act("pcReq", r, "cancel");
+          if (p.status !== "planned" || !caseByPlan(p.id).cancelled) errs.push(`${org}/PC1: cancelling the requisition did not free the plan item`);
+          as("proc"); act("ppItem", p, "cancel");
+          if (inPublishedPlan(p) || !planDiff(planApproved(), planLive().map(snap)).removed.some(x => x.id === p.id)) errs.push(`${org}/PC1: a cancelled item still counts in the plan`);
+          procSet("plan:demand"); go2("procurement"); const b = document.querySelector("#view [data-ppnext]"); if (b) b.click();
+          PP_FY = FORM_FY; procSet("plan:plan"); go2("procurement"); chk(`${org}/PC1/next year`); PP_FY = FAM_FY; crClose();
+        });
+        for (const role of ["proc", "prochead", "div", "divhead", "plan", "exec", "audit"].filter(r => o.roles.includes(r))) {
+          ROLE = role; LANG = o.langs[0]; safe("shell", renderShell);
+          for (const [k, pg, fys] of [["ppItem", "plan:plan", [FAM_FY, FORM_FY]], ["pvVer", "plan:plan", [FAM_FY]], ["pcReq", "reqn", [FAM_FY]]]) for (const fy of fys) {
+            if (!prSees(prPage(pg.split(":")[0]))) continue;
+            PP_FY = fy; const sp = CRUD.defs[k];
+            const open = (id, mode, t) => safe(`${org}/${role}/${k}/${fy}/${id || "new"}/${mode}${t ? "/" + t : ""}`, () => { procSet(pg); crOpen(k, id, mode); if (t) CR_OPEN.tab = t; go2("procurement"); chk(`${org}/${role}/${k}/${id || "new"}/${mode}${t || ""}`); if (!document.querySelector(".cr-drawer")) errs.push(`${org}/${role}/${k}/${id}: no drawer`); });
+            for (const r of sp.list() || []) { const id = sp.id(r); open(id, "view"); open(id, "view", "hist"); if (sp.edit && sp.edit.can(r)) open(id, "edit"); }
+            if (sp.create && sp.create.can()) open("", "edit");
+          }
+          PP_FY = FAM_FY; crClose(); await tick();
+        }
+      }
       // Round C4: every B8 and B9 tab with the demo date moved to March and to September (simulated GFMIS imports)
       if (o.suites.includes("render") && typeof simDisb === "function" && S.y2569) for (const mi of [5, 11]) {
         S.asOf = FY_MONTH_ENDS()[mi]; TODAY = S.asOf; simDisb(mi);
