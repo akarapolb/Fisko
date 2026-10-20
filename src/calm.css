@@ -263,6 +263,8 @@ ul.plain { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-di
 .cr-tbl tr.click:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .cr-tbl tr.cr-gone td { opacity: .55; }
 .cr-tbl tr.cr-on td { background: var(--surface-2); }
+.cr-sort { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: inherit; }
+.cr-sort span { color: var(--muted); font-size: .85em; }
 .cr-empty { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .cr-drawer { width: min(620px, 100vw); display: flex; flex-direction: column; gap: 12px; }
 .cr-head { display: flex; align-items: flex-start; gap: 10px; }

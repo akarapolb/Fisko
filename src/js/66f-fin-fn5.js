@@ -53,19 +53,7 @@ SOD_STEPS.push([["บันทึกรับหรือจ่ายเงิ�
 // ---------- F7 reconciliation and the GFMIS user register ----------
 const BK_MONTHS = ["2026-09", "2026-10"];
 {
-  FS.gfUsers = () => {
-    const head = ROLE === "finhead", G = S.gfUsers || [];
-    return `
-    <section class="panel"><header><h2>${L("ผู้มีสิทธิใช้งาน GFMIS", "People assigned to GFMIS")}</h2><span class="sp"></span><span class="sub">${L("หัวหน้าหน่วยงานมอบหมายเป็นลายลักษณ์อักษร (ข้อ 10–12)", "Assigned in writing by the head of the agency (clauses 10–12)")}</span></header>
-      <div class="tbl-wrap"><table><thead><tr><th>${L("ผู้ใช้", "User")}</th><th>${L("หน้าที่", "Duties")}</th><th>${L("คำสั่ง", "Order")}</th><th>${L("ถึง", "Until")}</th>${head ? "<th></th>" : ""}</tr></thead>
-        <tbody>${G.map((g, i) => `<tr><td>${esc(userName(g.user))} <span class="sub">${tx(ROLES[(S.users.find(u => u.id === g.user) || {}).role] || ["", ""])}</span></td><td class="sub">${g.duties.map(d => tx(GF_DUTY[d])).join(", ")}</td><td class="mono">${esc(g.order)}</td><td>${g.until >= TODAY ? `<span class="sub">${fdate(g.until)}</span>` : tag(L("หมดอายุ", "Expired"), "p-bad")}</td>${head ? `<td><button class="btn ghost" type="button" data-gfdel="${i}">${L("เพิกถอน", "Revoke")}</button></td>` : ""}</tr>`).join("") || `<tr><td colspan="5" class="sub">—</td></tr>`}</tbody></table></div>
-      ${head ? `<div class="body"><form class="inline-form" id="gfu-form">
-        <div class="f" style="flex:1 1 200px"><label for="gu-user">${L("ผู้ใช้", "User")}</label><select id="gu-user">${S.users.filter(u => u.active && ["fin", "finhead", "exec"].includes(u.role)).map(u => `<option value="${u.id}">${esc(userName(u.id))}</option>`).join("")}</select></div>
-        <div class="f" style="flex:2 1 260px"><label>${L("หน้าที่", "Duties")}</label><div>${Object.keys(GF_DUTY).map(d => `<label style="margin-right:10px"><input type="checkbox" name="gud" value="${d}"> ${tx(GF_DUTY[d])}</label>`).join("")}</div></div>
-        <div class="f" style="flex:0 1 160px"><label for="gu-order">${L("เลขที่คำสั่ง", "Order no.")}</label><input type="text" id="gu-order" required></div>
-        <div class="f" style="flex:0 1 160px"><label for="gu-until">${L("ถึงวันที่", "Until")}</label><input type="date" id="gu-until" value="${FY_END}" required></div>
-        <button class="btn" type="submit">${L("บันทึกการมอบหมาย", "Save the assignment")}</button></form></div>` : ""}</section>`;
-  };
+  // FS.gfUsers (the GFMIS assignment register) is a shared list in 84-fin-crud.js (FR-FC-44).
   // One month picker for every reconciliation tab, and an account picker where it applies.
   FS.bkMonth = () => `<div class="fn-filter"><span class="sub">${L("เดือน", "Month")}</span>${segBar(BK_MONTHS.map(k => [k, monthLabel(k)]), BK_MONTH || curMonth(), "bkm")}</div>`;
   FS.bkPicker = () => `<div class="fn-filter"><span class="sub">${L("เดือน", "Month")}</span>${segBar(BK_MONTHS.map(k => [k, monthLabel(k)]), BK_MONTH || curMonth(), "bkm")}<span class="sub">${L("บัญชี", "Account")}</span>${segBar(Object.keys(BK_A).map(k => [k, tx(BK_A[k])]), BK_ACCT, "bka")}</div>`;
@@ -193,11 +181,6 @@ FS.budgetFeed = () => {
       const m = BK_MONTH || curMonth(), acct = BK_ACCT;
       $$("[data-bkm]").forEach(b => (b.onclick = () => { BK_MONTH = b.dataset.bkm; route(); }));
       $$("[data-bka]").forEach(b => (b.onclick = () => { BK_ACCT = b.dataset.bka; route(); }));
-      const gu = $("#gfu-form");
-      if (gu) gu.onsubmit = e => { e.preventDefault(); const ds = $$('input[name="gud"]:checked').map(x => x.value); if (!ds.length) { toast(L("เลือกหน้าที่อย่างน้อยหนึ่งข้อ", "Pick at least one duty")); return; }
-        const g = { user: $("#gu-user").value, duties: ds, order: $("#gu-order").value.trim(), until: $("#gu-until").value }; (S.gfUsers = S.gfUsers || []).push(g);
-        audit(["มอบหมายผู้ใช้งาน GFMIS", "Assigned a GFMIS user"], `${userName(g.user)} · ${ds.join(",")} · ${g.order}`); done(L("บันทึกการมอบหมายแล้ว", "Assignment saved")); };
-      $$("[data-gfdel]").forEach(b => (b.onclick = () => { const g = S.gfUsers[Number(b.dataset.gfdel)]; g.until = addDays(TODAY, -1); audit(["เพิกถอนการมอบหมาย GFMIS", "Revoked a GFMIS assignment"], userName(g.user)); done(L("เพิกถอนแล้ว", "Revoked")); }));
       const bi = $("#bk-imp");
       if (bi) bi.onclick = () => {
         const book = bookLines(acct, m), lines = book.slice(0, Math.max(0, book.length - 1)).map(l => Object.assign({}, l));

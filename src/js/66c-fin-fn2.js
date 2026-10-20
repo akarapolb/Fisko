@@ -90,9 +90,11 @@ const vcCanApprove = () => canSpend();
 const vcIsMaker = v => v.maker === me().id;
 
 // ---------- duty rules SD-11 and SD-14 ----------
-SOD_RULES.push(["SD-11", ["ผู้จัดทำหรือผู้ตรวจใบขอเบิก อนุมัติใบนั้นไม่ได้", "Whoever prepared or checked a voucher can't approve it"]],
+SOD_RULES.push(["P-F05", ["ผู้จัดทำใบขอเบิก ตรวจหลักฐานใบนั้นเองไม่ได้ ต้องเป็นคนที่สอง", "Whoever prepared a voucher can't check its evidence; a second person must"]],
+  ["SD-11", ["ผู้จัดทำหรือผู้ตรวจใบขอเบิก อนุมัติใบนั้นไม่ได้", "Whoever prepared or checked a voucher can't approve it"]],
   ["SD-14", ["ผู้ขอแก้บัญชีธนาคารของผู้ขาย ยืนยันการแก้นั้นไม่ได้", "Whoever asked for a supplier bank-account change can't confirm it"]]);
-SOD_STEPS.push([["จัดทำหรือตรวจใบขอเบิก", "Prepare or check a voucher"], ["อนุมัติจ่าย", "Approve the payment"], "SD-11"],
+SOD_STEPS.push([["จัดทำใบขอเบิก", "Prepare a voucher"], ["ตรวจหลักฐาน", "Check the evidence"], "P-F05"],
+  [["จัดทำหรือตรวจใบขอเบิก", "Prepare or check a voucher"], ["อนุมัติจ่าย", "Approve the payment"], "SD-11"],
   [["ขอแก้บัญชีธนาคารผู้ขาย", "Ask to change a supplier's bank account"], ["ยืนยันการแก้", "Confirm the change"], "SD-14"]);
 
 // ---------- views ----------
@@ -220,22 +222,7 @@ FS.dayCheck = () => {
 // ---------- supplier bank-account changes (FR-FN-17) ----------
 const BANKS = ["ธนาคารกรุงไทย", "ธนาคารออมสิน", "ธนาคารเพื่อการเกษตรและสหกรณ์การเกษตร", "ธนาคารกรุงเทพ", "ธนาคารกสิกรไทย"];
 const maskAcct = a => (a ? `xxx-x-x${String(a).slice(-4, -1)}-${String(a).slice(-1)}` : "—");
-FS.vendors = () => vendorPanel();
-function vendorPanel() {
-  if (!isFinRole() && ROLE !== "audit") return "";
-  const C = S.vendorChanges || [], maker = ROLE === "fin";
-  return `<section class="panel"><header><h2>${L("ข้อมูลหลักผู้ขาย: บัญชีธนาคาร", "Supplier master data: bank accounts")}</h2><span class="sp"></span><span class="sub">${L("ส่งให้กรมบัญชีกลางสร้างข้อมูลหลักผู้ขาย (ข้อ 20 (2)) · ผู้ขอยืนยันเองไม่ได้ (SD-14)", "Sent to the Comptroller General's vendor master (clause 20 (2)) · the requester can't confirm (SD-14)")}</span></header>
-    <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("ผู้ขาย", "Supplier")}</th><th>${L("บัญชีใหม่", "New account")}</th><th>${L("ผู้ขอ", "Requested by")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
-      <tbody>${C.map(ch => { const vd = (S.vendors || []).find(x => x.id === ch.vendor) || { name: ch.vendor }; return `<tr><td class="mono">${ch.id}</td><td>${esc(tx(vd.name))}</td><td class="sub">${esc(ch.bank)} · <span class="mono">${maskAcct(ch.acct)}</span></td><td>${esc(userName(ch.by))}<div class="sub">${fdate(ch.t, true)}</div></td>
-        <td>${ch.status === "pending" ? tag(L("รอยืนยัน", "Waiting to confirm"), "p-warn") : tag(L("ยืนยันแล้ว ส่งกรมบัญชีกลาง", "Confirmed · sent to the Comptroller General"), "p-ok")}${ch.done ? `<div class="sub">${esc(userName(ch.done.by))} · ${fdate(ch.done.t, true)}</div>` : ""}</td>
-        <td>${ch.status === "pending" && isFinRole() ? `<button class="btn primary" type="button" data-vdok="${ch.id}">${L("ยืนยัน", "Confirm")}</button>` : ""}</td></tr>`; }).join("") || `<tr><td colspan="6" class="sub">${L("ยังไม่มีคำขอ", "No requests yet")}</td></tr>`}</tbody></table></div>
-    ${maker ? `<div class="body"><form class="inline-form" id="vd-chg">
-      <div class="f" style="flex:2 1 220px"><label for="vc-vendor">${L("ผู้ขาย", "Supplier")}</label><select id="vc-vendor">${(S.vendors || []).map(x => `<option value="${x.id}">${esc(tx(x.name))}</option>`).join("")}</select></div>
-      <div class="f" style="flex:1 1 200px"><label for="vc-bank">${L("ธนาคาร", "Bank")}</label><select id="vc-bank">${BANKS.map(b => `<option>${b}</option>`).join("")}</select></div>
-      <div class="f" style="flex:0 1 160px"><label for="vc-acct">${L("เลขที่บัญชี (10 หลัก)", "Account no. (10 digits)")}</label><input type="text" id="vc-acct" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" required></div>
-      <div class="f" style="flex:1 1 100%"><label><input type="checkbox" id="vc-book" required> ${L("แนบสำเนาหน้าสมุดบัญชีและหนังสือแจ้งจากผู้ขายแล้ว", "Bank book page and the supplier's letter are attached")}</label></div>
-      <button class="btn" type="submit">${L("ส่งคำขอแก้บัญชี", "Request the change")}</button></form></div>` : ""}</section>`;
-}
+// The register itself is a shared list (84-fin-crud.js, Finance CRUD FR-FC-45).
 
 // ---------- actions ----------
 function vcMake(cid, n) {
@@ -263,7 +250,7 @@ function vcAct(v, a) {
     return done(L("ส่งตรวจแล้ว", "Sent for checking"), ["finhead"], [`ใบขอเบิก ${v.id} รอตรวจหลักฐาน`, `Voucher ${v.id} is waiting for an evidence check`]);
   }
   if (a === "checked") {
-    if (v.maker === me().id) { toast(L("ผู้จัดทำตรวจใบของตนเองไม่ได้ ต้องเป็นคนที่สอง (P-F05)", "The maker can't check their own voucher; a second person must (P-F05)")); return; }
+    if (!sodCheck("P-F05", [me().id], [v.maker], v.id)) return;
     if (!vReady(v)) { toast(L("หลักฐานหรือกฎยังไม่ครบ", "Evidence or rules are not complete")); return; }
     v.state = "approve"; v.checker = me().id; vLog(v, ["ตรวจผ่าน ส่งอนุมัติ", "Checked and sent for approval"]); audit(["ตรวจใบขอเบิกผ่าน", "Checked a voucher"], v.id);
     return done(L("ส่งให้ผู้มีอำนาจอนุมัติแล้ว", "Sent to the approver"), ["exec"], [`ใบขอเบิก ${v.id} ${fmt(vCalc(v).net, 2)} บาท รออนุมัติจ่าย`, `Voucher ${v.id} (${fmt(vCalc(v).net, 2)} baht) is waiting for approval`]);
@@ -365,22 +352,6 @@ function vPaid(v, ref) {
       (S.payChecks = S.payChecks || []).unshift({ t: nowIso(), by: me().id, ids: rows.map(v => v.id) });
       audit(["ตรวจการจ่ายประจำวันกับหลักฐาน", "Checked the day's payments against evidence"], `${rows.length}`); commit(); renderShell(); route(); toast(L("ลงนามตรวจการจ่ายประจำวันแล้ว", "Daily payment check signed"));
     };
-    const vc = $("#vd-chg");
-    if (vc) vc.onsubmit = e => {
-      e.preventDefault();
-      const acct = $("#vc-acct").value.trim(); if (!/^\d{10}$/.test(acct)) { toast(L("เลขที่บัญชีต้องเป็นตัวเลข 10 หลัก", "The account number must be 10 digits")); return; }
-      const ch = { id: `VB-${FAM_FY}-${String((S.vendorChanges || []).length + 1).padStart(2, "0")}`, vendor: $("#vc-vendor").value, bank: $("#vc-bank").value, acct, by: me().id, t: nowIso(), status: "pending", done: null };
-      (S.vendorChanges = S.vendorChanges || []).push(ch);
-      audit(["ขอแก้บัญชีธนาคารผู้ขาย", "Asked to change a supplier bank account"], `${ch.id} · ${ch.vendor}`); notify(["finhead"], [`คำขอแก้บัญชีธนาคารผู้ขาย ${ch.id} รอยืนยัน`, `Supplier bank change ${ch.id} is waiting to be confirmed`], "fnc-reg:vendors");
-      commit(); renderShell(); route(); toast(L("ส่งคำขอแล้ว · คนที่สองต้องยืนยัน", "Requested · a second person must confirm"));
-    };
-    $$("[data-vdok]").forEach(b => (b.onclick = () => {
-      const ch = (S.vendorChanges || []).find(x => x.id === b.dataset.vdok);
-      if (!sodCheck("SD-14", [me().id], [ch.by], ch.id)) return;
-      const vd = (S.vendors || []).find(x => x.id === ch.vendor); if (vd) vd.bank = { bank: ch.bank, acct: ch.acct, t: nowIso() };
-      ch.status = "confirmed"; ch.done = { by: me().id, t: nowIso() };
-      audit(["ยืนยันการแก้บัญชีธนาคารผู้ขาย", "Confirmed a supplier bank change"], ch.id); commit(); renderShell(); route(); toast(L("ยืนยันแล้ว · ส่งข้อมูลให้กรมบัญชีกลาง", "Confirmed · sent to the Comptroller General"));
-    }));
   });
 }
 
@@ -449,5 +420,5 @@ function seedFinanceFN2(s) {
   s.gfOut = [{ id: `GO-2570-01`, t: "2026-10-09T09:00", by: FN, rows: [`VC-2570-002`, `VC-2570-003`, `VC-2570-001`], state: "posted", posted: "2026-10-15T14:00" }];
   s.epay = []; s.payChecks = [{ t: "2026-10-16T16:30", by: FH, ids: [`VC-2570-001`] }];
   s.vendorChanges = [];
-  ["SD-11", "SD-14"].forEach(id => { if (!s.sod.rules.some(r => r.id === id)) s.sod.rules.push({ id, on: true }); });
+  ["P-F05", "SD-11", "SD-14"].forEach(id => { if (!s.sod.rules.some(r => r.id === id)) s.sod.rules.push({ id, on: true }); });
 }

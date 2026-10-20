@@ -20,6 +20,9 @@ function rcClass(r) {
   return r.date <= (r.fyEnd || FY_END) ? "over" : "old";
 }
 const rcBook = r => (S.rbooks || []).find(b => b.id === r.book) || { no: "—" };
+// Numbers used in a book (older books carry a count) and the last usable number (a voided tail is not usable).
+const rbUsed = b => (S.receipts || []).filter(r => r.book === b.id).length || b.used || 0;
+const rbCap = b => (b.void ? b.void.from - 1 : b.to);
 const rcNo = r => `${rcBook(r).no} · ${String(r.n).padStart(3, "0")}`;
 const rcRemit = r => (r.remit ? (S.remits || []).find(m => m.id === r.remit) : null);
 // Money in the safe on a date: cash and cheques received by then and not remitted by then.
@@ -38,7 +41,13 @@ function rcDue(r) {
 }
 const rcDueSrc = r => (r.method === "cheque" ? "ข้อ 101 (1)" : ["over", "old"].includes(rcClass(r)) ? "ข้อ 101 (4)" : rcClass(r) === "revenue" ? (r.method === "epay" ? "ข้อ 101 (3)" : "ข้อ 101 (2)") : "ข้อ 101 (5)");
 const rcOpen = () => (S.receipts || []).filter(r => rcLive(r) && !r.remit);
-const cashC = () => S.cashCmte || { order: "", members: [], subs: [] };
+// Cash committee appointments are dated orders (Finance CRUD FR-FC-46); the latest order started by a date applies.
+// Older saved data has one S.cashCmte object, which becomes the first order.
+function cashOrders() {
+  if (!S.cashOrders) { const c = S.cashCmte || { order: "", members: [], subs: [] }; S.cashOrders = c.members.length ? [{ id: "CO-01", order: c.order, members: c.members, subs: c.subs || [], from: `${CUR_FY - 545}-10-01`, by: null, t: null }] : []; }
+  return S.cashOrders;
+}
+const cashC = d => cashOrders().filter(o => !o.cancelled && o.from <= (d || TODAY)).sort((a, b) => (a.from + a.id < b.from + b.id ? 1 : -1))[0] || { order: "", members: [], subs: [] };
 const isCounter = () => cashC().members.includes(me().id) || cashC().subs.includes(me().id);
 const dcOf = d => (S.dailyCash || []).find(x => x.date === d);
 // System figures for a day's report: money in the safe at the end of the day, by type.
@@ -100,14 +109,7 @@ FS.remit = () => {
         || `<tr><td colspan="5" class="sub">${L("ไม่มีเงินรอนำส่ง", "Nothing waiting to be remitted")}</td></tr>`}</tbody></table></div>
     ${(S.remits || []).length ? `<div class="body"><b style="font-weight:600">${L("ประวัติการนำส่ง", "Remittances")}</b>${(S.remits || []).slice().reverse().map(m => `<div class="sub" style="margin:2px 0"><span class="mono">${m.id}</span> · ${fdate(m.t, true)} · ${tx(REV_T[m.cls])} · ${fmt(m.amount, 2)} ${L("บาท", "baht")} · ${m.rows.length} ${L("ใบ", "receipts")} · ${L("อ้างอิง", "ref")} <span class="mono">${esc(m.ref)}</span> · ${esc(userName(m.by))}</div>`).join("")}</div>` : ""}</section>`;
 };
-FS.rbooks = () => {
-  const maker = ROLE === "fin", books = S.rbooks || [], rep = (S.rbookReports || []).find(x => x.fy === FAM_FY - 1);
-  return `
-    <section class="panel"><header><h2>${L("ทะเบียนคุมใบเสร็จรับเงิน", "Receipt-book register")}</h2><span class="sp"></span><span class="sub">${L("ข้อ 71–75", "Clauses 71–75")}</span></header>
-      <div class="tbl-wrap"><table><thead><tr><th>${L("เล่ม", "Book")}</th><th>${L("ผู้รับเล่ม", "Held by")}</th><th>${L("ใช้แล้ว", "Used")}</th><th>${L("สถานะ", "Status")}</th></tr></thead>
-        <tbody>${books.map(b => { const used = b.fy === FAM_FY ? (S.receipts || []).filter(r => r.book === b.id).length : b.used || 0; return `<tr><td class="mono">${b.no}</td><td>${b.holder ? esc(userName(b.holder)) : esc(unitName(b.unit))}<div class="sub">${fdate(b.issued)}</div></td><td class="sub">${used ? `1–${used}` : "—"} / ${b.to}</td><td>${b.returned ? tag(L("ส่งคืนแล้ว", "Returned"), "p-mute") : b.fy < FAM_FY ? tag(L("ปีเก่า ยังไม่คืน", "Old year, not returned"), "p-warn") : tag(L("ใช้งาน", "In use"), "p-ok")}</td></tr>`; }).join("")}</tbody></table></div>
-      <div class="body">${rep ? `<p class="sub">${dotI("ok")}${L(`ส่งรายงานใบเสร็จปี ${FAM_FY - 1} แล้ว`, `FY${FAM_FY - 1} receipt report sent`)} ${fdate(rep.t, true)} · ${esc(userName(rep.by))}</p>` : `<p>${dotI(clockDot(`${FAM_FY - 544}-10-31`))}${L(`รายงานใบเสร็จที่ได้รับและใช้ไปของปี ${FAM_FY - 1} ภายใน`, `Report FY${FAM_FY - 1} receipt books by`)} ${clockTxt(`${FAM_FY - 544}-10-31`)} (${L("ข้อ 74", "cl. 74")})</p>${maker ? `<button class="btn" type="button" id="rb-report">${L("ส่งรายงานใบเสร็จประจำปี", "Send the yearly receipt report")}</button>` : ""}`}</div></section>`;
-};
+// FS.rbooks (the receipt-book register) is a shared list in 84-fin-crud.js (FR-FC-47).
 FS.wht = () => {
   const V = (S.vouchers || []).filter(v => v.state === "paid"), wht = V.filter(v => vCalc(v).wht > 0), pen = V.filter(v => (v.penalty || 0) > 0);
   return `
@@ -119,7 +121,7 @@ FS.wht = () => {
 
 // ---------- F6 daily cash report ----------
 function dcPanel(d, where) {
-  const r = dcOf(d), sys = r ? r.sys : dcSys(d), C = cashC(), mine = isCounter(), c = r && r.counts[me().id];
+  const r = dcOf(d), sys = r ? r.sys : dcSys(d), C = cashC(d), mine = isCounter(), c = r && r.counts[me().id];
   const st = !r ? null : r.status === "signed" ? tag(L("ลงนามครบ เก็บในตู้นิรภัยแล้ว", "Signed by all · in the safe"), "p-ok") : r.status === "diff" ? tag(L("ยอดนับไม่ตรง รายงานหัวหน้าส่วนราชการแล้ว", "Count differs · reported to the head"), "p-bad") : tag(L("รอกรรมการตรวจนับ", "Waiting for the committee"), "p-warn");
   return `<section class="panel"><header><h2>${L("รายงานเงินคงเหลือประจำวัน", "Daily cash report")} ${fdate(d)}</h2><span class="sp"></span>${st || ""}</header>
     <div class="body">
@@ -140,19 +142,7 @@ function dcPanel(d, where) {
     </div></section>`;
 }
 FS.cashToday = () => dcPanel(TODAY, "fin");
-FS.cashCmte = () => {
-  const C = cashC(), admin = ROLE === "finhead";
-  const people = S.users.filter(u => u.active && !["admin", "audit"].includes(u.role));
-  return `
-    <section class="panel"><header><h2>${L("กรรมการเก็บรักษาเงิน", "Cash committee")}</h2><span class="sp"></span><span class="sub">${esc(C.order)} · ${L("อย่างน้อย 2 คน (ข้อ 86)", "at least 2 (cl. 86)")}</span></header>
-      <div class="body">${C.members.map(u => `<div>${dotI("ok")}${esc(userName(u))} <span class="sub">${tx(ROLES[(S.users.find(x => x.id === u) || {}).role] || ["", ""])}</span></div>`).join("")}
-        ${C.subs.length ? `<div class="sub" style="margin-top:6px">${L("ผู้ทำหน้าที่แทน (ข้อ 88)", "Substitutes (cl. 88)")}: ${C.subs.map(userName).map(esc).join(", ")}</div>` : ""}
-        <p class="sub" style="margin:6px 0 0">${L("ต้องเป็นข้าราชการระดับปฏิบัติการหรือปฏิบัติงานขึ้นไป ระบบยังไม่ตรวจระดับตำแหน่ง ใช้คำสั่งแต่งตั้งเป็นหลัก · ผู้รับหรือจ่ายเงินของวันนั้นตรวจนับไม่ได้ (SD-13)", "Members must be civil servants at practitioner level or above; the system doesn't check rank yet, the appointment order governs · whoever received or paid money that day can't count (SD-13)")}</p>
-        ${admin ? `<form class="inline-form" id="cm-form" style="margin-top:8px"><div class="f" style="flex:1 1 100%"><label>${L("แต่งตั้งใหม่", "New appointment")}</label></div>
-          ${people.map(u => `<label style="margin-right:10px"><input type="checkbox" name="cm" value="${u.id}" ${C.members.includes(u.id) ? "checked" : ""}> ${esc(userName(u))}</label>`).join("")}
-          <div class="f" style="flex:1 1 200px"><label for="cm-order">${L("เลขที่คำสั่ง", "Order no.")}</label><input type="text" id="cm-order" value="${esc(C.order)}" required></div>
-          <button class="btn" type="submit">${L("บันทึกคำสั่ง", "Save the order")}</button></form>` : ""}</div></section>`;
-};
+// FS.cashCmte (dated appointment orders) is a shared list in 84-fin-crud.js (FR-FC-46).
 FS.cashHist = () => {
   const D = (S.dailyCash || []).slice().reverse();
   return `
@@ -168,10 +158,9 @@ VIEWS.cashcount = () => `
 
 // ---------- actions ----------
 function rcIssue(o) {
-  const b = (S.rbooks || []).find(x => x.holder === me().id && !x.returned && x.fy === FAM_FY);
-  if (!b) { toast(L("ไม่มีเล่มใบเสร็จที่ใช้ได้", "No receipt book available")); return null; }
-  const n = (S.receipts || []).filter(r => r.book === b.id).length + 1;
-  if (n > b.to) { toast(L("เล่มเต็มแล้ว ขอเล่มใหม่", "The book is full; get a new one")); return null; }
+  const mine = (S.rbooks || []).filter(x => x.holder === me().id && !x.returned && x.fy === FAM_FY), b = mine.find(x => rbUsed(x) < rbCap(x));
+  if (!b) { toast(mine.length ? L("เล่มเต็มแล้ว ขอเล่มใหม่จากหัวหน้าการเงิน (F10)", "The book is full; ask the finance head for a new one (F10)") : L("ไม่มีเล่มใบเสร็จที่ใช้ได้ ขอหัวหน้าการเงินออกเล่ม (F10)", "No receipt book available; ask the finance head to issue one (F10)")); return null; }
+  const n = rbUsed(b) + 1;
   const r = Object.assign({ id: `RC-${FAM_FY}-${String((S.receipts || []).length + 1).padStart(4, "0")}`, book: b.id, n, date: TODAY, t: nowIso(), by: me().id, recorded: null, remit: null, cancelled: null }, o);
   (S.receipts = S.receipts || []).push(r);
   audit(["ออกใบเสร็จรับเงิน", "Issued a receipt"], `${rcNo(r)} · ${fmt(r.amount, 2)}`);
@@ -249,14 +238,6 @@ const bindCash = () => {
     done(L("ลงนามแล้ว · รอกรรมการคนอื่น", "Signed · waiting for the other members"));
   };
   const ak = $("#dc-ack"); if (ak) ak.onclick = () => { const r = dcOf(TODAY); r.ack = { by: me().id, t: nowIso() }; audit(["รับทราบรายงานเงินคงเหลือประจำวัน", "Acknowledged the daily cash report"], TODAY); done(L("รับทราบแล้ว", "Acknowledged")); };
-  const cf = $("#cm-form");
-  if (cf) cf.onsubmit = e => {
-    e.preventDefault();
-    const ms = $$('input[name="cm"]:checked').map(x => x.value);
-    if (ms.length < 2) { toast(L("ต้องมีกรรมการอย่างน้อย 2 คน (ข้อ 86)", "At least 2 members are needed (clause 86)")); return; }
-    S.cashCmte = Object.assign({}, cashC(), { members: ms, order: $("#cm-order").value.trim() });
-    audit(["แต่งตั้งกรรมการเก็บรักษาเงิน", "Appointed the cash committee"], `${S.cashCmte.order} · ${ms.map(userName).join(", ")}`); done(L("บันทึกคำสั่งแล้ว", "Order saved"));
-  };
 };
 {
   FIN_BINDS.push(bindRecv, bindCash);

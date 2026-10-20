@@ -94,6 +94,74 @@
         }
         crClose(); CONS_TAB = "overview"; REV_TAB = "queue"; await tick();
       }
+      // Finance CRUD round FC1: the F10 registers on the shared list (every record, its history, edit and new forms), then a walk
+      if (o.suites.includes("render") && typeof CRUD !== "undefined" && CRUD.defs.fnGfu) {
+        const where = { fnGfu: "reg:gfusers", fnVend: "reg:vendors", fnCmte: "reg:committee", fnBook: "reg:books" };
+        for (const role of ["fin", "finhead", "exec", "audit"].filter(r => o.roles.includes(r))) {
+          ROLE = role; LANG = o.langs[0]; safe("shell", renderShell);
+          for (const [k, tab] of Object.entries(where)) {
+            const sp = CRUD.defs[k], open = (id, mode, t) => safe(`${org}/${role}/${k}/${id || "new"}/${mode}${t ? "/" + t : ""}`, () => { finSet(tab); crOpen(k, id, mode); if (t) CR_OPEN.tab = t; go2("finance"); chk(`${org}/${role}/${k}/${id || "new"}/${mode}${t || ""}`); if (!document.querySelector(".cr-drawer")) errs.push(`${org}/${role}/${k}/${id}: no drawer`); });
+            for (const r of (sp.list() || [])) { const id = sp.id(r); open(id, "view"); open(id, "view", "hist"); if (sp.edit && sp.edit.can(r)) open(id, "edit"); }
+            if (sp.create && sp.create.can()) open("", "edit");
+          }
+          crClose(); await tick();
+        }
+        if (o.roles.includes("fin") && o.roles.includes("finhead")) { const keep = JSON.stringify(S); safe(`${org}/FC1 walk`, () => {
+          const D = CRUD.defs, why = "เหตุผลสำหรับการทดสอบ", as = r => { ROLE = r; LANG = o.langs[0]; renderShell(); }, E = m => errs.push(`${org}/FC1: ${m}`);
+          const act = (k, r, id, w) => { const a = (D[k].acts(r) || []).find(x => x && x.id === id); if (!a) { E(`no action ${k}/${id} for ${ROLE}`); return null; } return a.run(r, w || why); };
+          const has = (k, r, id) => (D[k].acts(r) || []).some(x => x && x.id === id);
+          const show = (k, r, tab) => { finSet(tab); crOpen(k, D[k].id(r)); go2("finance"); chk(`${org}/FC1/${k}/${D[k].id(r)}`); crClose(); };
+          const fnId = S.users.find(u => u.role === "fin" && u.primary).id, fhId = S.users.find(u => u.role === "finhead" && u.primary).id;
+          // GFMIS assignment: the check, create, edit, revoke by id
+          as("finhead");
+          if (!D.fnGfu.check({ user: fnId, order: "x", until: FY_END }).length) E("gfu check let no duty through");
+          const g = D.fnGfu.create.run({ user: fnId, d_record: true, d_approve: false, d_remit: true, order: "คำสั่งทดสอบ 9/2570", until: FY_END });
+          D.fnGfu.edit.run(g, { d_record: true, d_approve: true, d_remit: false, order: g.order, until: FY_END }, why);
+          if (g.duties.join() !== "record,approve") E(`gfu edit gave ${g.duties}`);
+          act("fnGfu", g, "rev"); if (gfuSt(g) !== "off" || has("fnGfu", g, "rev")) E("gfu revoke");
+          show("fnGfu", g, "reg:gfusers");
+          // supplier bank change: the requester can't confirm or refuse (SD-14), someone else can
+          as("fin");
+          const vd = (S.vendors || [])[0];
+          if (vd) {
+            if (!D.fnVend.check({ acct: "123", book: false }).length) E("vendor check let a short account through");
+            const c1 = D.fnVend.create.run({ vendor: vd.id, bank: BANKS[1], acct: "1234567890", book: true });
+            D.fnVend.edit.run(c1, { bank: BANKS[2], acct: "1234567891" }, why); if (c1.acct !== "1234567891") E("vendor edit");
+            if (has("fnVend", c1, "ok") || has("fnVend", c1, "no") || !has("fnVend", c1, "wd")) E("requester sees confirm or refuse");
+            as("finhead"); act("fnVend", c1, "no"); if (c1.status !== "rejected") E("vendor refuse");
+            as("fin"); const c2 = D.fnVend.create.run({ vendor: vd.id, bank: BANKS[0], acct: "2222222222", book: true });
+            as("finhead"); const before = (vd.bankHist || []).length, hadBank = !!vd.bank; act("fnVend", c2, "ok");
+            if (c2.status !== "confirmed" || vd.bank.acct !== "2222222222" || (hadBank && (vd.bankHist || []).length !== before + 1)) E("vendor confirm");
+            as("fin"); const c3 = D.fnVend.create.run({ vendor: vd.id, bank: BANKS[0], acct: "3333333333", book: true }); act("fnVend", c3, "wd"); if (c3.status !== "withdrawn") E("vendor withdraw");
+            show("fnVend", c2, "reg:vendors");
+          }
+          // cash committee: a later order, edited and cancelled; one from today takes over
+          as("finhead");
+          const ppl = coPeople().slice(0, 3), pv = (ms, ss) => Object.fromEntries(coPeople().map(u => ["p_" + u.id, ms.includes(u) ? "m" : ss.includes(u) ? "s" : ""]));
+          if (!D.fnCmte.check(Object.assign({ order: "x", from: TODAY }, pv([ppl[0]], []))).length) E("committee check let one member through");
+          const o1 = D.fnCmte.create.run(Object.assign({ order: "คำสั่งทดสอบ 20/2570", from: addDays(TODAY, 5) }, pv([ppl[0], ppl[1]], [ppl[2]])));
+          if (coSt(o1) !== "next" || !D.fnCmte.edit.can(o1)) E("committee later order");
+          D.fnCmte.edit.run(o1, Object.assign({ order: o1.order, from: addDays(TODAY, 6) }, pv([ppl[0], ppl[2]], [])));
+          act("fnCmte", o1, "off"); if (coSt(o1) !== "off") E("committee cancel");
+          const o2 = D.fnCmte.create.run(Object.assign({ order: "คำสั่งทดสอบ 21/2570", from: TODAY }, pv([ppl[1], ppl[2]], [])));
+          if (cashC().id !== o2.id) E("committee order from today is not in force");
+          show("fnCmte", o2, "reg:committee");
+          // receipt books: issue next year's and this year's, hand over, void the old tail, receipts go to the new book
+          const b1 = D.fnBook.create.run({ fy: String(FAM_FY + 1), to: 50, holder: fnId });
+          if (b1.no !== `${maxNo(S.rbooks.filter(x => x.fy === FAM_FY + 1 && x !== b1).map(x => x.no), /^(\d+)\//) + 1}/${FAM_FY + 1}`) E(`book number ${b1.no}`);
+          D.fnBook.edit.run(b1, { holder: fhId }, why); if (b1.holder !== fhId) E("book hand-over");
+          act("fnBook", b1, "ret"); if (rbSt(b1) !== "ret") E("book return");
+          const cur = S.rbooks.find(x => x.holder === fnId && !x.returned && x.fy === FAM_FY), b2 = D.fnBook.create.run({ fy: String(FAM_FY), to: 20, holder: fnId });
+          if (cur) { act("fnBook", cur, "void"); if (rbCap(cur) !== rbUsed(cur)) E("book void"); }
+          as("fin"); const rc = rcIssue({ kind: "revenue", payer: ["ทดสอบ", "Test"], desc: ["ทดสอบ", "Test"], amount: 100, method: "cash" });
+          if (!rc || rc.book !== b2.id || rc.n !== 1) E(`receipt went to ${rc && rc.book}/${rc && rc.n}`);
+          as("finhead"); show("fnBook", b2, "reg:books");
+          // P-F05 is a duty rule now: blocked and logged
+          if (sodCheck("P-F05", [fnId], [fnId], "TEST") || S.sod.blocks[0].rule !== "P-F05") E("P-F05 not logged as a duty block");
+          // the tabs of F10 after all of it, for each role
+          for (const r of ["fin", "finhead", "exec", "audit"]) { as(r); for (const t of Object.values(where)) { finSet(t); go2("finance"); chk(`${org}/FC1/${r}/${t}`); } }
+        }); S = JSON.parse(keep); crClose(); ROLE = "fin"; await tick(); }
+      }
       // Round C4: every B8 and B9 tab with the demo date moved to March and to September (simulated GFMIS imports)
       if (o.suites.includes("render") && typeof simDisb === "function" && S.y2569) for (const mi of [5, 11]) {
         S.asOf = FY_MONTH_ENDS()[mi]; TODAY = S.asOf; simDisb(mi);

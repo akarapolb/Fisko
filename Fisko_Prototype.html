@@ -1242,6 +1242,8 @@ ul.plain { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-di
 .cr-tbl tr.click:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .cr-tbl tr.cr-gone td { opacity: .55; }
 .cr-tbl tr.cr-on td { background: var(--surface-2); }
+.cr-sort { background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: inherit; }
+.cr-sort span { color: var(--muted); font-size: .85em; }
 .cr-empty { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .cr-drawer { width: min(620px, 100vw); display: flex; flex-direction: column; gap: 12px; }
 .cr-head { display: flex; align-items: flex-start; gap: 10px; }
@@ -1471,7 +1473,7 @@ const fyLabel = fy => L(`ปีงบประมาณ พ.ศ. ${fy}`, `FY${fy
 
 // ---------- organizations and state ----------
 const SEEDS = {}; // id -> { name: [th, en], seed: () => state }, registered by data files
-const DATA_V = 38; // bump when the seed shape changes so saved demo state is reseeded
+const DATA_V = 39; // bump when the seed shape changes so saved demo state is reseeded
 let ORG = "sample";
 let S = null;
 const key = () => "fisko-v1-" + ORG;
@@ -2055,6 +2057,7 @@ function buildOrg(cfg) {
   seedFinanceNB(s);
   if (typeof seedLiveYear === "function") seedLiveYear(s);
   if (typeof seedMasterData === "function") seedMasterData(s);
+  if (typeof seedFinCrud === "function") seedFinCrud(s);
   s.audit.unshift(
     { t: "2026-10-15T10:00", user: EX, role: "exec", action: ["อนุมัติเบิกจ่าย", "Approved a payment"], target: `PY-2570-001 CT-2570-001` },
     { t: "2026-10-14T15:00", user: FN, role: "fin", action: ["ขออนุมัติเบิกจ่าย", "Requested a payment approval"], target: `PY-2570-001 CT-2570-001` },
@@ -11152,9 +11155,11 @@ const vcCanApprove = () => canSpend();
 const vcIsMaker = v => v.maker === me().id;
 
 // ---------- duty rules SD-11 and SD-14 ----------
-SOD_RULES.push(["SD-11", ["ผู้จัดทำหรือผู้ตรวจใบขอเบิก อนุมัติใบนั้นไม่ได้", "Whoever prepared or checked a voucher can't approve it"]],
+SOD_RULES.push(["P-F05", ["ผู้จัดทำใบขอเบิก ตรวจหลักฐานใบนั้นเองไม่ได้ ต้องเป็นคนที่สอง", "Whoever prepared a voucher can't check its evidence; a second person must"]],
+  ["SD-11", ["ผู้จัดทำหรือผู้ตรวจใบขอเบิก อนุมัติใบนั้นไม่ได้", "Whoever prepared or checked a voucher can't approve it"]],
   ["SD-14", ["ผู้ขอแก้บัญชีธนาคารของผู้ขาย ยืนยันการแก้นั้นไม่ได้", "Whoever asked for a supplier bank-account change can't confirm it"]]);
-SOD_STEPS.push([["จัดทำหรือตรวจใบขอเบิก", "Prepare or check a voucher"], ["อนุมัติจ่าย", "Approve the payment"], "SD-11"],
+SOD_STEPS.push([["จัดทำใบขอเบิก", "Prepare a voucher"], ["ตรวจหลักฐาน", "Check the evidence"], "P-F05"],
+  [["จัดทำหรือตรวจใบขอเบิก", "Prepare or check a voucher"], ["อนุมัติจ่าย", "Approve the payment"], "SD-11"],
   [["ขอแก้บัญชีธนาคารผู้ขาย", "Ask to change a supplier's bank account"], ["ยืนยันการแก้", "Confirm the change"], "SD-14"]);
 
 // ---------- views ----------
@@ -11282,22 +11287,7 @@ FS.dayCheck = () => {
 // ---------- supplier bank-account changes (FR-FN-17) ----------
 const BANKS = ["ธนาคารกรุงไทย", "ธนาคารออมสิน", "ธนาคารเพื่อการเกษตรและสหกรณ์การเกษตร", "ธนาคารกรุงเทพ", "ธนาคารกสิกรไทย"];
 const maskAcct = a => (a ? `xxx-x-x${String(a).slice(-4, -1)}-${String(a).slice(-1)}` : "—");
-FS.vendors = () => vendorPanel();
-function vendorPanel() {
-  if (!isFinRole() && ROLE !== "audit") return "";
-  const C = S.vendorChanges || [], maker = ROLE === "fin";
-  return `<section class="panel"><header><h2>${L("ข้อมูลหลักผู้ขาย: บัญชีธนาคาร", "Supplier master data: bank accounts")}</h2><span class="sp"></span><span class="sub">${L("ส่งให้กรมบัญชีกลางสร้างข้อมูลหลักผู้ขาย (ข้อ 20 (2)) · ผู้ขอยืนยันเองไม่ได้ (SD-14)", "Sent to the Comptroller General's vendor master (clause 20 (2)) · the requester can't confirm (SD-14)")}</span></header>
-    <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("ผู้ขาย", "Supplier")}</th><th>${L("บัญชีใหม่", "New account")}</th><th>${L("ผู้ขอ", "Requested by")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
-      <tbody>${C.map(ch => { const vd = (S.vendors || []).find(x => x.id === ch.vendor) || { name: ch.vendor }; return `<tr><td class="mono">${ch.id}</td><td>${esc(tx(vd.name))}</td><td class="sub">${esc(ch.bank)} · <span class="mono">${maskAcct(ch.acct)}</span></td><td>${esc(userName(ch.by))}<div class="sub">${fdate(ch.t, true)}</div></td>
-        <td>${ch.status === "pending" ? tag(L("รอยืนยัน", "Waiting to confirm"), "p-warn") : tag(L("ยืนยันแล้ว ส่งกรมบัญชีกลาง", "Confirmed · sent to the Comptroller General"), "p-ok")}${ch.done ? `<div class="sub">${esc(userName(ch.done.by))} · ${fdate(ch.done.t, true)}</div>` : ""}</td>
-        <td>${ch.status === "pending" && isFinRole() ? `<button class="btn primary" type="button" data-vdok="${ch.id}">${L("ยืนยัน", "Confirm")}</button>` : ""}</td></tr>`; }).join("") || `<tr><td colspan="6" class="sub">${L("ยังไม่มีคำขอ", "No requests yet")}</td></tr>`}</tbody></table></div>
-    ${maker ? `<div class="body"><form class="inline-form" id="vd-chg">
-      <div class="f" style="flex:2 1 220px"><label for="vc-vendor">${L("ผู้ขาย", "Supplier")}</label><select id="vc-vendor">${(S.vendors || []).map(x => `<option value="${x.id}">${esc(tx(x.name))}</option>`).join("")}</select></div>
-      <div class="f" style="flex:1 1 200px"><label for="vc-bank">${L("ธนาคาร", "Bank")}</label><select id="vc-bank">${BANKS.map(b => `<option>${b}</option>`).join("")}</select></div>
-      <div class="f" style="flex:0 1 160px"><label for="vc-acct">${L("เลขที่บัญชี (10 หลัก)", "Account no. (10 digits)")}</label><input type="text" id="vc-acct" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" required></div>
-      <div class="f" style="flex:1 1 100%"><label><input type="checkbox" id="vc-book" required> ${L("แนบสำเนาหน้าสมุดบัญชีและหนังสือแจ้งจากผู้ขายแล้ว", "Bank book page and the supplier's letter are attached")}</label></div>
-      <button class="btn" type="submit">${L("ส่งคำขอแก้บัญชี", "Request the change")}</button></form></div>` : ""}</section>`;
-}
+// The register itself is a shared list (84-fin-crud.js, Finance CRUD FR-FC-45).
 
 // ---------- actions ----------
 function vcMake(cid, n) {
@@ -11325,7 +11315,7 @@ function vcAct(v, a) {
     return done(L("ส่งตรวจแล้ว", "Sent for checking"), ["finhead"], [`ใบขอเบิก ${v.id} รอตรวจหลักฐาน`, `Voucher ${v.id} is waiting for an evidence check`]);
   }
   if (a === "checked") {
-    if (v.maker === me().id) { toast(L("ผู้จัดทำตรวจใบของตนเองไม่ได้ ต้องเป็นคนที่สอง (P-F05)", "The maker can't check their own voucher; a second person must (P-F05)")); return; }
+    if (!sodCheck("P-F05", [me().id], [v.maker], v.id)) return;
     if (!vReady(v)) { toast(L("หลักฐานหรือกฎยังไม่ครบ", "Evidence or rules are not complete")); return; }
     v.state = "approve"; v.checker = me().id; vLog(v, ["ตรวจผ่าน ส่งอนุมัติ", "Checked and sent for approval"]); audit(["ตรวจใบขอเบิกผ่าน", "Checked a voucher"], v.id);
     return done(L("ส่งให้ผู้มีอำนาจอนุมัติแล้ว", "Sent to the approver"), ["exec"], [`ใบขอเบิก ${v.id} ${fmt(vCalc(v).net, 2)} บาท รออนุมัติจ่าย`, `Voucher ${v.id} (${fmt(vCalc(v).net, 2)} baht) is waiting for approval`]);
@@ -11427,22 +11417,6 @@ function vPaid(v, ref) {
       (S.payChecks = S.payChecks || []).unshift({ t: nowIso(), by: me().id, ids: rows.map(v => v.id) });
       audit(["ตรวจการจ่ายประจำวันกับหลักฐาน", "Checked the day's payments against evidence"], `${rows.length}`); commit(); renderShell(); route(); toast(L("ลงนามตรวจการจ่ายประจำวันแล้ว", "Daily payment check signed"));
     };
-    const vc = $("#vd-chg");
-    if (vc) vc.onsubmit = e => {
-      e.preventDefault();
-      const acct = $("#vc-acct").value.trim(); if (!/^\d{10}$/.test(acct)) { toast(L("เลขที่บัญชีต้องเป็นตัวเลข 10 หลัก", "The account number must be 10 digits")); return; }
-      const ch = { id: `VB-${FAM_FY}-${String((S.vendorChanges || []).length + 1).padStart(2, "0")}`, vendor: $("#vc-vendor").value, bank: $("#vc-bank").value, acct, by: me().id, t: nowIso(), status: "pending", done: null };
-      (S.vendorChanges = S.vendorChanges || []).push(ch);
-      audit(["ขอแก้บัญชีธนาคารผู้ขาย", "Asked to change a supplier bank account"], `${ch.id} · ${ch.vendor}`); notify(["finhead"], [`คำขอแก้บัญชีธนาคารผู้ขาย ${ch.id} รอยืนยัน`, `Supplier bank change ${ch.id} is waiting to be confirmed`], "fnc-reg:vendors");
-      commit(); renderShell(); route(); toast(L("ส่งคำขอแล้ว · คนที่สองต้องยืนยัน", "Requested · a second person must confirm"));
-    };
-    $$("[data-vdok]").forEach(b => (b.onclick = () => {
-      const ch = (S.vendorChanges || []).find(x => x.id === b.dataset.vdok);
-      if (!sodCheck("SD-14", [me().id], [ch.by], ch.id)) return;
-      const vd = (S.vendors || []).find(x => x.id === ch.vendor); if (vd) vd.bank = { bank: ch.bank, acct: ch.acct, t: nowIso() };
-      ch.status = "confirmed"; ch.done = { by: me().id, t: nowIso() };
-      audit(["ยืนยันการแก้บัญชีธนาคารผู้ขาย", "Confirmed a supplier bank change"], ch.id); commit(); renderShell(); route(); toast(L("ยืนยันแล้ว · ส่งข้อมูลให้กรมบัญชีกลาง", "Confirmed · sent to the Comptroller General"));
-    }));
   });
 }
 
@@ -11511,7 +11485,7 @@ function seedFinanceFN2(s) {
   s.gfOut = [{ id: `GO-2570-01`, t: "2026-10-09T09:00", by: FN, rows: [`VC-2570-002`, `VC-2570-003`, `VC-2570-001`], state: "posted", posted: "2026-10-15T14:00" }];
   s.epay = []; s.payChecks = [{ t: "2026-10-16T16:30", by: FH, ids: [`VC-2570-001`] }];
   s.vendorChanges = [];
-  ["SD-11", "SD-14"].forEach(id => { if (!s.sod.rules.some(r => r.id === id)) s.sod.rules.push({ id, on: true }); });
+  ["P-F05", "SD-11", "SD-14"].forEach(id => { if (!s.sod.rules.some(r => r.id === id)) s.sod.rules.push({ id, on: true }); });
 }
 
 /* ---- 66d-fin-fn3.js ---- */
@@ -11866,6 +11840,9 @@ function rcClass(r) {
   return r.date <= (r.fyEnd || FY_END) ? "over" : "old";
 }
 const rcBook = r => (S.rbooks || []).find(b => b.id === r.book) || { no: "—" };
+// Numbers used in a book (older books carry a count) and the last usable number (a voided tail is not usable).
+const rbUsed = b => (S.receipts || []).filter(r => r.book === b.id).length || b.used || 0;
+const rbCap = b => (b.void ? b.void.from - 1 : b.to);
 const rcNo = r => `${rcBook(r).no} · ${String(r.n).padStart(3, "0")}`;
 const rcRemit = r => (r.remit ? (S.remits || []).find(m => m.id === r.remit) : null);
 // Money in the safe on a date: cash and cheques received by then and not remitted by then.
@@ -11884,7 +11861,13 @@ function rcDue(r) {
 }
 const rcDueSrc = r => (r.method === "cheque" ? "ข้อ 101 (1)" : ["over", "old"].includes(rcClass(r)) ? "ข้อ 101 (4)" : rcClass(r) === "revenue" ? (r.method === "epay" ? "ข้อ 101 (3)" : "ข้อ 101 (2)") : "ข้อ 101 (5)");
 const rcOpen = () => (S.receipts || []).filter(r => rcLive(r) && !r.remit);
-const cashC = () => S.cashCmte || { order: "", members: [], subs: [] };
+// Cash committee appointments are dated orders (Finance CRUD FR-FC-46); the latest order started by a date applies.
+// Older saved data has one S.cashCmte object, which becomes the first order.
+function cashOrders() {
+  if (!S.cashOrders) { const c = S.cashCmte || { order: "", members: [], subs: [] }; S.cashOrders = c.members.length ? [{ id: "CO-01", order: c.order, members: c.members, subs: c.subs || [], from: `${CUR_FY - 545}-10-01`, by: null, t: null }] : []; }
+  return S.cashOrders;
+}
+const cashC = d => cashOrders().filter(o => !o.cancelled && o.from <= (d || TODAY)).sort((a, b) => (a.from + a.id < b.from + b.id ? 1 : -1))[0] || { order: "", members: [], subs: [] };
 const isCounter = () => cashC().members.includes(me().id) || cashC().subs.includes(me().id);
 const dcOf = d => (S.dailyCash || []).find(x => x.date === d);
 // System figures for a day's report: money in the safe at the end of the day, by type.
@@ -11946,14 +11929,7 @@ FS.remit = () => {
         || `<tr><td colspan="5" class="sub">${L("ไม่มีเงินรอนำส่ง", "Nothing waiting to be remitted")}</td></tr>`}</tbody></table></div>
     ${(S.remits || []).length ? `<div class="body"><b style="font-weight:600">${L("ประวัติการนำส่ง", "Remittances")}</b>${(S.remits || []).slice().reverse().map(m => `<div class="sub" style="margin:2px 0"><span class="mono">${m.id}</span> · ${fdate(m.t, true)} · ${tx(REV_T[m.cls])} · ${fmt(m.amount, 2)} ${L("บาท", "baht")} · ${m.rows.length} ${L("ใบ", "receipts")} · ${L("อ้างอิง", "ref")} <span class="mono">${esc(m.ref)}</span> · ${esc(userName(m.by))}</div>`).join("")}</div>` : ""}</section>`;
 };
-FS.rbooks = () => {
-  const maker = ROLE === "fin", books = S.rbooks || [], rep = (S.rbookReports || []).find(x => x.fy === FAM_FY - 1);
-  return `
-    <section class="panel"><header><h2>${L("ทะเบียนคุมใบเสร็จรับเงิน", "Receipt-book register")}</h2><span class="sp"></span><span class="sub">${L("ข้อ 71–75", "Clauses 71–75")}</span></header>
-      <div class="tbl-wrap"><table><thead><tr><th>${L("เล่ม", "Book")}</th><th>${L("ผู้รับเล่ม", "Held by")}</th><th>${L("ใช้แล้ว", "Used")}</th><th>${L("สถานะ", "Status")}</th></tr></thead>
-        <tbody>${books.map(b => { const used = b.fy === FAM_FY ? (S.receipts || []).filter(r => r.book === b.id).length : b.used || 0; return `<tr><td class="mono">${b.no}</td><td>${b.holder ? esc(userName(b.holder)) : esc(unitName(b.unit))}<div class="sub">${fdate(b.issued)}</div></td><td class="sub">${used ? `1–${used}` : "—"} / ${b.to}</td><td>${b.returned ? tag(L("ส่งคืนแล้ว", "Returned"), "p-mute") : b.fy < FAM_FY ? tag(L("ปีเก่า ยังไม่คืน", "Old year, not returned"), "p-warn") : tag(L("ใช้งาน", "In use"), "p-ok")}</td></tr>`; }).join("")}</tbody></table></div>
-      <div class="body">${rep ? `<p class="sub">${dotI("ok")}${L(`ส่งรายงานใบเสร็จปี ${FAM_FY - 1} แล้ว`, `FY${FAM_FY - 1} receipt report sent`)} ${fdate(rep.t, true)} · ${esc(userName(rep.by))}</p>` : `<p>${dotI(clockDot(`${FAM_FY - 544}-10-31`))}${L(`รายงานใบเสร็จที่ได้รับและใช้ไปของปี ${FAM_FY - 1} ภายใน`, `Report FY${FAM_FY - 1} receipt books by`)} ${clockTxt(`${FAM_FY - 544}-10-31`)} (${L("ข้อ 74", "cl. 74")})</p>${maker ? `<button class="btn" type="button" id="rb-report">${L("ส่งรายงานใบเสร็จประจำปี", "Send the yearly receipt report")}</button>` : ""}`}</div></section>`;
-};
+// FS.rbooks (the receipt-book register) is a shared list in 84-fin-crud.js (FR-FC-47).
 FS.wht = () => {
   const V = (S.vouchers || []).filter(v => v.state === "paid"), wht = V.filter(v => vCalc(v).wht > 0), pen = V.filter(v => (v.penalty || 0) > 0);
   return `
@@ -11965,7 +11941,7 @@ FS.wht = () => {
 
 // ---------- F6 daily cash report ----------
 function dcPanel(d, where) {
-  const r = dcOf(d), sys = r ? r.sys : dcSys(d), C = cashC(), mine = isCounter(), c = r && r.counts[me().id];
+  const r = dcOf(d), sys = r ? r.sys : dcSys(d), C = cashC(d), mine = isCounter(), c = r && r.counts[me().id];
   const st = !r ? null : r.status === "signed" ? tag(L("ลงนามครบ เก็บในตู้นิรภัยแล้ว", "Signed by all · in the safe"), "p-ok") : r.status === "diff" ? tag(L("ยอดนับไม่ตรง รายงานหัวหน้าส่วนราชการแล้ว", "Count differs · reported to the head"), "p-bad") : tag(L("รอกรรมการตรวจนับ", "Waiting for the committee"), "p-warn");
   return `<section class="panel"><header><h2>${L("รายงานเงินคงเหลือประจำวัน", "Daily cash report")} ${fdate(d)}</h2><span class="sp"></span>${st || ""}</header>
     <div class="body">
@@ -11986,19 +11962,7 @@ function dcPanel(d, where) {
     </div></section>`;
 }
 FS.cashToday = () => dcPanel(TODAY, "fin");
-FS.cashCmte = () => {
-  const C = cashC(), admin = ROLE === "finhead";
-  const people = S.users.filter(u => u.active && !["admin", "audit"].includes(u.role));
-  return `
-    <section class="panel"><header><h2>${L("กรรมการเก็บรักษาเงิน", "Cash committee")}</h2><span class="sp"></span><span class="sub">${esc(C.order)} · ${L("อย่างน้อย 2 คน (ข้อ 86)", "at least 2 (cl. 86)")}</span></header>
-      <div class="body">${C.members.map(u => `<div>${dotI("ok")}${esc(userName(u))} <span class="sub">${tx(ROLES[(S.users.find(x => x.id === u) || {}).role] || ["", ""])}</span></div>`).join("")}
-        ${C.subs.length ? `<div class="sub" style="margin-top:6px">${L("ผู้ทำหน้าที่แทน (ข้อ 88)", "Substitutes (cl. 88)")}: ${C.subs.map(userName).map(esc).join(", ")}</div>` : ""}
-        <p class="sub" style="margin:6px 0 0">${L("ต้องเป็นข้าราชการระดับปฏิบัติการหรือปฏิบัติงานขึ้นไป ระบบยังไม่ตรวจระดับตำแหน่ง ใช้คำสั่งแต่งตั้งเป็นหลัก · ผู้รับหรือจ่ายเงินของวันนั้นตรวจนับไม่ได้ (SD-13)", "Members must be civil servants at practitioner level or above; the system doesn't check rank yet, the appointment order governs · whoever received or paid money that day can't count (SD-13)")}</p>
-        ${admin ? `<form class="inline-form" id="cm-form" style="margin-top:8px"><div class="f" style="flex:1 1 100%"><label>${L("แต่งตั้งใหม่", "New appointment")}</label></div>
-          ${people.map(u => `<label style="margin-right:10px"><input type="checkbox" name="cm" value="${u.id}" ${C.members.includes(u.id) ? "checked" : ""}> ${esc(userName(u))}</label>`).join("")}
-          <div class="f" style="flex:1 1 200px"><label for="cm-order">${L("เลขที่คำสั่ง", "Order no.")}</label><input type="text" id="cm-order" value="${esc(C.order)}" required></div>
-          <button class="btn" type="submit">${L("บันทึกคำสั่ง", "Save the order")}</button></form>` : ""}</div></section>`;
-};
+// FS.cashCmte (dated appointment orders) is a shared list in 84-fin-crud.js (FR-FC-46).
 FS.cashHist = () => {
   const D = (S.dailyCash || []).slice().reverse();
   return `
@@ -12014,10 +11978,9 @@ VIEWS.cashcount = () => `
 
 // ---------- actions ----------
 function rcIssue(o) {
-  const b = (S.rbooks || []).find(x => x.holder === me().id && !x.returned && x.fy === FAM_FY);
-  if (!b) { toast(L("ไม่มีเล่มใบเสร็จที่ใช้ได้", "No receipt book available")); return null; }
-  const n = (S.receipts || []).filter(r => r.book === b.id).length + 1;
-  if (n > b.to) { toast(L("เล่มเต็มแล้ว ขอเล่มใหม่", "The book is full; get a new one")); return null; }
+  const mine = (S.rbooks || []).filter(x => x.holder === me().id && !x.returned && x.fy === FAM_FY), b = mine.find(x => rbUsed(x) < rbCap(x));
+  if (!b) { toast(mine.length ? L("เล่มเต็มแล้ว ขอเล่มใหม่จากหัวหน้าการเงิน (F10)", "The book is full; ask the finance head for a new one (F10)") : L("ไม่มีเล่มใบเสร็จที่ใช้ได้ ขอหัวหน้าการเงินออกเล่ม (F10)", "No receipt book available; ask the finance head to issue one (F10)")); return null; }
+  const n = rbUsed(b) + 1;
   const r = Object.assign({ id: `RC-${FAM_FY}-${String((S.receipts || []).length + 1).padStart(4, "0")}`, book: b.id, n, date: TODAY, t: nowIso(), by: me().id, recorded: null, remit: null, cancelled: null }, o);
   (S.receipts = S.receipts || []).push(r);
   audit(["ออกใบเสร็จรับเงิน", "Issued a receipt"], `${rcNo(r)} · ${fmt(r.amount, 2)}`);
@@ -12095,14 +12058,6 @@ const bindCash = () => {
     done(L("ลงนามแล้ว · รอกรรมการคนอื่น", "Signed · waiting for the other members"));
   };
   const ak = $("#dc-ack"); if (ak) ak.onclick = () => { const r = dcOf(TODAY); r.ack = { by: me().id, t: nowIso() }; audit(["รับทราบรายงานเงินคงเหลือประจำวัน", "Acknowledged the daily cash report"], TODAY); done(L("รับทราบแล้ว", "Acknowledged")); };
-  const cf = $("#cm-form");
-  if (cf) cf.onsubmit = e => {
-    e.preventDefault();
-    const ms = $$('input[name="cm"]:checked').map(x => x.value);
-    if (ms.length < 2) { toast(L("ต้องมีกรรมการอย่างน้อย 2 คน (ข้อ 86)", "At least 2 members are needed (clause 86)")); return; }
-    S.cashCmte = Object.assign({}, cashC(), { members: ms, order: $("#cm-order").value.trim() });
-    audit(["แต่งตั้งกรรมการเก็บรักษาเงิน", "Appointed the cash committee"], `${S.cashCmte.order} · ${ms.map(userName).join(", ")}`); done(L("บันทึกคำสั่งแล้ว", "Order saved"));
-  };
 };
 {
   FIN_BINDS.push(bindRecv, bindCash);
@@ -12227,19 +12182,7 @@ SOD_STEPS.push([["บันทึกรับหรือจ่ายเงิ�
 // ---------- F7 reconciliation and the GFMIS user register ----------
 const BK_MONTHS = ["2026-09", "2026-10"];
 {
-  FS.gfUsers = () => {
-    const head = ROLE === "finhead", G = S.gfUsers || [];
-    return `
-    <section class="panel"><header><h2>${L("ผู้มีสิทธิใช้งาน GFMIS", "People assigned to GFMIS")}</h2><span class="sp"></span><span class="sub">${L("หัวหน้าหน่วยงานมอบหมายเป็นลายลักษณ์อักษร (ข้อ 10–12)", "Assigned in writing by the head of the agency (clauses 10–12)")}</span></header>
-      <div class="tbl-wrap"><table><thead><tr><th>${L("ผู้ใช้", "User")}</th><th>${L("หน้าที่", "Duties")}</th><th>${L("คำสั่ง", "Order")}</th><th>${L("ถึง", "Until")}</th>${head ? "<th></th>" : ""}</tr></thead>
-        <tbody>${G.map((g, i) => `<tr><td>${esc(userName(g.user))} <span class="sub">${tx(ROLES[(S.users.find(u => u.id === g.user) || {}).role] || ["", ""])}</span></td><td class="sub">${g.duties.map(d => tx(GF_DUTY[d])).join(", ")}</td><td class="mono">${esc(g.order)}</td><td>${g.until >= TODAY ? `<span class="sub">${fdate(g.until)}</span>` : tag(L("หมดอายุ", "Expired"), "p-bad")}</td>${head ? `<td><button class="btn ghost" type="button" data-gfdel="${i}">${L("เพิกถอน", "Revoke")}</button></td>` : ""}</tr>`).join("") || `<tr><td colspan="5" class="sub">—</td></tr>`}</tbody></table></div>
-      ${head ? `<div class="body"><form class="inline-form" id="gfu-form">
-        <div class="f" style="flex:1 1 200px"><label for="gu-user">${L("ผู้ใช้", "User")}</label><select id="gu-user">${S.users.filter(u => u.active && ["fin", "finhead", "exec"].includes(u.role)).map(u => `<option value="${u.id}">${esc(userName(u.id))}</option>`).join("")}</select></div>
-        <div class="f" style="flex:2 1 260px"><label>${L("หน้าที่", "Duties")}</label><div>${Object.keys(GF_DUTY).map(d => `<label style="margin-right:10px"><input type="checkbox" name="gud" value="${d}"> ${tx(GF_DUTY[d])}</label>`).join("")}</div></div>
-        <div class="f" style="flex:0 1 160px"><label for="gu-order">${L("เลขที่คำสั่ง", "Order no.")}</label><input type="text" id="gu-order" required></div>
-        <div class="f" style="flex:0 1 160px"><label for="gu-until">${L("ถึงวันที่", "Until")}</label><input type="date" id="gu-until" value="${FY_END}" required></div>
-        <button class="btn" type="submit">${L("บันทึกการมอบหมาย", "Save the assignment")}</button></form></div>` : ""}</section>`;
-  };
+  // FS.gfUsers (the GFMIS assignment register) is a shared list in 84-fin-crud.js (FR-FC-44).
   // One month picker for every reconciliation tab, and an account picker where it applies.
   FS.bkMonth = () => `<div class="fn-filter"><span class="sub">${L("เดือน", "Month")}</span>${segBar(BK_MONTHS.map(k => [k, monthLabel(k)]), BK_MONTH || curMonth(), "bkm")}</div>`;
   FS.bkPicker = () => `<div class="fn-filter"><span class="sub">${L("เดือน", "Month")}</span>${segBar(BK_MONTHS.map(k => [k, monthLabel(k)]), BK_MONTH || curMonth(), "bkm")}<span class="sub">${L("บัญชี", "Account")}</span>${segBar(Object.keys(BK_A).map(k => [k, tx(BK_A[k])]), BK_ACCT, "bka")}</div>`;
@@ -12367,11 +12310,6 @@ FS.budgetFeed = () => {
       const m = BK_MONTH || curMonth(), acct = BK_ACCT;
       $$("[data-bkm]").forEach(b => (b.onclick = () => { BK_MONTH = b.dataset.bkm; route(); }));
       $$("[data-bka]").forEach(b => (b.onclick = () => { BK_ACCT = b.dataset.bka; route(); }));
-      const gu = $("#gfu-form");
-      if (gu) gu.onsubmit = e => { e.preventDefault(); const ds = $$('input[name="gud"]:checked').map(x => x.value); if (!ds.length) { toast(L("เลือกหน้าที่อย่างน้อยหนึ่งข้อ", "Pick at least one duty")); return; }
-        const g = { user: $("#gu-user").value, duties: ds, order: $("#gu-order").value.trim(), until: $("#gu-until").value }; (S.gfUsers = S.gfUsers || []).push(g);
-        audit(["มอบหมายผู้ใช้งาน GFMIS", "Assigned a GFMIS user"], `${userName(g.user)} · ${ds.join(",")} · ${g.order}`); done(L("บันทึกการมอบหมายแล้ว", "Assignment saved")); };
-      $$("[data-gfdel]").forEach(b => (b.onclick = () => { const g = S.gfUsers[Number(b.dataset.gfdel)]; g.until = addDays(TODAY, -1); audit(["เพิกถอนการมอบหมาย GFMIS", "Revoked a GFMIS assignment"], userName(g.user)); done(L("เพิกถอนแล้ว", "Revoked")); }));
       const bi = $("#bk-imp");
       if (bi) bi.onclick = () => {
         const book = bookLines(acct, m), lines = book.slice(0, Math.max(0, book.length - 1)).map(l => Object.assign({}, l));
@@ -12895,6 +12833,7 @@ function finSet(v, keep) {
   const [id, t] = String(v).split(":"), p = finPage(id);
   if (!p) return (FIN_TAB = "home");
   FIN_TAB = id;
+  if (typeof crClose === "function") crClose(); // a shared-list drawer never stays open on another page or tab
   const sub = t || (keep ? null : finTabs(p)[0].id);
   if (sub) p.set ? p.set(sub) : (FIN_ST[id] = sub);
   return FIN_TAB;
@@ -12930,20 +12869,27 @@ VIEWS.finance = () => {
   ${(p.top || []).map(finBlock).join("")}
   ${T.length > 1 ? `<div class="tabs fn-tabs" role="tablist" aria-label="${esc(tx(p.label))}">${T.map(t => `<button class="tab ${t.id === cur ? "on" : ""}" type="button" role="tab" aria-selected="${t.id === cur}" data-fsub="${t.id}">${tx(t.label)}${finTabBadge(p.id, t.id)}</button>`).join("")}</div>` : ""}
   ${body.trim() ? body : `<section class="panel"><div class="body sub">${L("ไม่มีรายการสำหรับบทบาทนี้", "Nothing here for this role")}</div></section>`}
-  ${dr.trim() ? `<div class="fn-scrim" data-fdclose></div><aside class="fn-drawer" role="dialog" aria-modal="true" aria-label="${L("รายละเอียด", "Details")}">${dr}</aside>` : ""}`;
+  ${dr.trim() ? `<div class="fn-scrim" data-fdclose></div><aside class="fn-drawer" role="dialog" aria-modal="true" aria-labelledby="fn-dr-title">${dr}</aside>` : ""}`;
 };
 BIND.finance = () => {
   FIN_BINDS.forEach(f => f());
-  $$("[data-fsub]").forEach(b => (b.onclick = () => { const p = finPage(FIN_TAB); p.set ? p.set(b.dataset.fsub) : (FIN_ST[p.id] = b.dataset.fsub); route(); }));
+  $$("[data-fsub]").forEach(b => (b.onclick = () => { const p = finPage(FIN_TAB); p.set ? p.set(b.dataset.fsub) : (FIN_ST[p.id] = b.dataset.fsub); if (typeof crClose === "function") crClose(); route(); }));
   $$("[data-jump]").forEach(b => (b.onclick = () => jump(b.dataset.jump)));
   $$("[data-frow]").forEach(b => (b.onclick = () => { FIN_ROW = b.dataset.frow && FIN_ROW !== b.dataset.frow ? b.dataset.frow : null; route(); const f = FIN_ROW && $(".fn-rowform input"); if (f) f.focus(); }));
-  // The scrim and Escape close the side panel through its own close button, so each page keeps its close logic.
-  const shut = () => { const c = $(".fn-drawer #vc-close, .fn-drawer #adv-close"); if (c) c.click(); };
-  $$("[data-fdclose]").forEach(b => (b.onclick = shut));
-  const dr = $(".fn-drawer");
-  if (dr) { const h = dr.querySelector("h2"); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } }
+  // The scrim and Escape close the side panel through its own close button (any button whose id ends in -close),
+  // so each page keeps its close logic. Drawers of the shared list (.cr-drawer) close themselves.
+  $$("[data-fdclose]").forEach(b => (b.onclick = finShut));
+  const dr = $(".fn-drawer:not(.cr-drawer)");
+  if (dr) { const h = dr.querySelector("h2"); if (h) { h.id = "fn-dr-title"; h.tabIndex = -1; h.focus({ preventScroll: true }); } }
 };
-document.addEventListener("keydown", e => { if (e.key === "Escape" && CUR === "finance" && $(".fn-drawer")) { const c = $(".fn-drawer #vc-close, .fn-drawer #adv-close"); if (c) c.click(); } });
+const finShut = () => { const c = $('.fn-drawer:not(.cr-drawer) [id$="-close"]'); if (c) c.click(); };
+document.addEventListener("keydown", e => {
+  // A form row under a table row (rowForm): Enter runs its first action, Escape closes it and returns to its button.
+  const row = e.target.closest && e.target.closest(".fn-rowform"), fr = row && row.querySelector("[data-frow]") ? row : null; // Finance rows only (Procurement has its own)
+  if (fr && e.key === "Escape") { e.stopPropagation(); const k = FIN_ROW; FIN_ROW = null; route(); const b = k && $(`[data-frow="${CSS.escape(k)}"]`); if (b) b.focus(); return; }
+  if (fr && e.key === "Enter" && e.target.tagName === "INPUT") { e.preventDefault(); const go = fr.querySelector("button:not([data-frow])"); if (go) go.click(); return; }
+  if (e.key === "Escape" && CUR === "finance" && $(".fn-drawer:not(.cr-drawer)")) finShut();
+});
 
 // Counts on the tabs inside a page: work waiting for this role.
 function finTabBadge(pid, tid) {
@@ -15721,7 +15667,7 @@ BIND.btoday = () => $$("[data-bjump]").forEach(b => (b.onclick = () => jump(b.da
 // spec: {
 //   noun: [th, en], list: () => records, id: r => id, title: r => text, sub: r => text,
 //   st: { key: [[th, en], pillClass] }, status: r => key, gone: r => true when cancelled/withdrawn (hidden by default),
-//   cols: [{ h: label, c: r => html, n: true for numbers }], search: r => text,
+//   cols: [{ h: label, c: r => html, n: true for numbers, sort: r => value (the header sorts the list) }], search: r => text,
 //   filters: [{ id, label, opts: () => [[value, label]], get: r => value }],
 //   fields: (r | null, vals) => [{ id, label, type: text|money|number|select|date|textarea|check|info, opts, req, min, max, lock, hint, wide }],
 //   check: (vals, r | null) => [{ f: fieldId | null, m: message }],
@@ -15736,6 +15682,7 @@ const CRUD = { defs: {}, def(key, spec) { this.defs[key] = spec; return spec; } 
 let CR_OPEN = null;
 const CR_F = {}; // per list: { q, show, filters }
 let CR_UNDO = null; // { snap, label, timer }
+const CR_WHY_MIN = 10; // one minimum reason length for Budget and Finance (Finance CRUD design FC-P4)
 
 const crSpec = k => CRUD.defs[k];
 const crRec = (k, id) => (crSpec(k).list() || []).find(r => String(crSpec(k).id(r)) === String(id));
@@ -15747,12 +15694,14 @@ function crClose() { CR_OPEN = null; }
 
 // ---------- list ----------
 function crudList(key, opts = {}) {
-  const sp = crSpec(key), F = (CR_F[key] = CR_F[key] || { q: "", show: false, f: {} });
+  const sp = crSpec(key), F = (CR_F[key] = CR_F[key] || { q: "", show: false, f: {}, sort: null });
   let rows = (sp.list() || []).slice();
   const goneN = sp.gone ? rows.filter(sp.gone).length : 0;
   if (sp.gone && !F.show) rows = rows.filter(r => !sp.gone(r));
   (sp.filters || []).forEach(f => { const v = F.f[f.id]; if (v) rows = rows.filter(r => String(f.get(r)) === v); });
   if (F.q && sp.search) { const q = F.q.toLowerCase(); rows = rows.filter(r => sp.search(r).toLowerCase().includes(q)); }
+  const sc = F.sort && sp.cols[F.sort.i];
+  if (sc && sc.sort) rows.sort((a, b) => { const x = sc.sort(a), y = sc.sort(b); return (x < y ? -1 : x > y ? 1 : 0) * F.sort.d; });
   const canNew = sp.create && sp.create.can();
   const bar = `<div class="cr-bar">
     ${sp.search ? `<input type="search" class="cr-q" id="crq-${key}" data-crq="${key}" value="${esc(F.q)}" placeholder="${L("ค้นหา", "Search")}" aria-label="${L("ค้นหา", "Search")} ${esc(tx(sp.noun))}">` : ""}
@@ -15760,7 +15709,8 @@ function crudList(key, opts = {}) {
     ${goneN ? `<label class="field-inline" for="crs-${key}"><input type="checkbox" id="crs-${key}" data-crs="${key}" ${F.show ? "checked" : ""}> ${L("แสดงที่ยกเลิก", "Show cancelled")} (${goneN})</label>` : ""}
     <span class="sp"></span><span class="sub">${rows.length} ${L("รายการ", "records")}</span>
     ${canNew ? `<button class="btn primary" type="button" data-crnew="${key}">+ ${tx(sp.create.label)}</button>` : ""}</div>`;
-  const table = rows.length ? `<div class="tbl-wrap"><table class="cr-tbl"><thead><tr>${sp.cols.map(c => `<th${c.n ? ` class="n"` : ""}>${tx(c.h)}</th>`).join("")}${sp.st ? `<th>${L("สถานะ", "Status")}</th>` : ""}</tr></thead>
+  const table = rows.length ? `<div class="tbl-wrap"><table class="cr-tbl"><thead><tr>${sp.cols.map((c, i) => { const on = F.sort && F.sort.i === i;
+      return `<th${c.n ? ` class="n"` : ""}${c.sort ? ` aria-sort="${on ? (F.sort.d > 0 ? "ascending" : "descending") : "none"}"` : ""}>${c.sort ? `<button class="cr-sort" type="button" data-crsort="${key}|${i}">${tx(c.h)}<span aria-hidden="true">${on ? (F.sort.d > 0 ? " ▲" : " ▼") : " ↕"}</span></button>` : tx(c.h)}</th>`; }).join("")}${sp.st ? `<th>${L("สถานะ", "Status")}</th>` : ""}</tr></thead>
     <tbody>${rows.map(r => { const id = sp.id(r), on = CR_OPEN && CR_OPEN.key === key && String(CR_OPEN.id) === String(id);
       return `<tr class="click ${sp.gone && sp.gone(r) ? "cr-gone" : ""} ${on ? "cr-on" : ""}" data-cropen="${key}|${esc(id)}" tabindex="0" aria-label="${L("เปิด", "Open")} ${esc(id)}">${sp.cols.map(c => `<td${c.n ? ` class="n"` : ""}>${c.c(r)}</td>`).join("")}${sp.st ? `<td>${crPill(sp, r)}</td>` : ""}</tr>`; }).join("")}</tbody>
     ${opts.foot ? `<tfoot>${opts.foot}</tfoot>` : ""}</table></div>`
@@ -15792,7 +15742,7 @@ function crActBar(sp, r) {
   if (o.ask) {
     const a = acts.find(x => x.id === o.ask);
     if (a) return `<form class="cr-ask" id="cr-ask"><b>${a.label}</b>${a.impact ? `<div class="sub">${a.impact()}</div>` : ""}${a.confirm ? `<div>${a.confirm}</div>` : ""}
-      ${a.why ? `<label for="cr-why">${a.whyLabel || L("เหตุผล (อย่างน้อย 10 ตัวอักษร)", "Reason (at least 10 characters)")}</label><textarea id="cr-why" rows="2" required minlength="${a.whyMin || 10}"></textarea>${o.err ? `<div class="cr-err">${esc(o.err)}</div>` : ""}` : ""}
+      ${a.why ? `<label for="cr-why">${a.whyLabel || L("เหตุผล (อย่างน้อย 10 ตัวอักษร)", "Reason (at least 10 characters)")}</label><textarea id="cr-why" rows="2" required minlength="${a.whyMin || CR_WHY_MIN}"></textarea>${o.err ? `<div class="cr-err">${esc(o.err)}</div>` : ""}` : ""}
       <div class="row"><button class="btn ${a.kind === "danger" ? "danger" : "primary"}" type="submit">${L("ยืนยัน", "Confirm")}</button><button class="btn ghost" type="button" data-crask="">${L("ยกเลิก", "Back")}</button></div></form>`;
   }
   if (!acts.length && !canEd) return "";
@@ -15851,15 +15801,17 @@ function crUndoOffer(snap, label) {
   $("#cr-undo-btn").onclick = () => {
     if (!CR_UNDO) return;
     S = JSON.parse(CR_UNDO.snap); clearTimeout(CR_UNDO.timer);
-    audit(["เลิกทำการเปลี่ยนแปลง", "Undid a change"], CR_UNDO.label); CR_UNDO = null; el.hidden = true; commit(); route(); toast(L("เลิกทำแล้ว", "Undone"));
+    audit(["เลิกทำการเปลี่ยนแปลง", "Undid a change"], CR_UNDO.label); CR_UNDO = null; el.hidden = true; commit(); renderShell(); route(); toast(L("เลิกทำแล้ว", "Undone"));
   };
 }
 
 // ---------- events (one set for every page) ----------
-function crDone(msg, snap) { commit(); route(); if (snap) crUndoOffer(snap, msg); else if (msg) toast(msg); const t = $("#cr-title"); if (t) t.focus(); }
+// renderShell redraws the menu badges and the Finance clocks that read the records just changed.
+function crDone(msg, snap) { commit(); renderShell(); route(); if (snap) crUndoOffer(snap, msg); else if (msg) toast(msg); const t = $("#cr-title"); if (t) t.focus(); }
 document.addEventListener("click", e => {
-  const t = e.target.closest("[data-cropen],[data-crnew],[data-crclose],[data-crtab],[data-credit],[data-crcancel],[data-crask]");
+  const t = e.target.closest("[data-crsort],[data-cropen],[data-crnew],[data-crclose],[data-crtab],[data-credit],[data-crcancel],[data-crask]");
   if (!t || !$("#view").contains(t)) return;
+  if (t.dataset.crsort) { const [k, i] = t.dataset.crsort.split("|"), F = CR_F[k], n = Number(i); F.sort = F.sort && F.sort.i === n ? (F.sort.d > 0 ? { i: n, d: -1 } : null) : { i: n, d: 1 }; route(); const b = $(`[data-crsort="${k}|${i}"]`); if (b) b.focus(); return; }
   if (t.dataset.cropen) { const [k, id] = t.dataset.cropen.split("|"); crOpen(k, id); route(); $("#cr-title") && $("#cr-title").focus(); return; }
   if (t.dataset.crnew) { crOpen(t.dataset.crnew, "", "edit"); route(); const f = $("#cr-form input, #cr-form select"); if (f) f.focus(); return; }
   if (t.hasAttribute("data-crclose")) { if (CR_OPEN && CR_OPEN.mode === "edit" && CR_OPEN.dirty && !CR_OPEN.leave) { CR_OPEN.leave = true; CR_OPEN.draft = crRead(crSpec(CR_OPEN.key), CR_OPEN.id ? crRec(CR_OPEN.key, CR_OPEN.id) : null); CR_OPEN.err = [{ f: null, m: L("ยังไม่ได้บันทึกการแก้ไข กดปิดอีกครั้งเพื่อทิ้ง หรือกดบันทึก", "Your changes aren't saved. Close again to discard them, or save.") }]; route(); return; } crClose(); route(); return; }
@@ -15884,7 +15836,7 @@ document.addEventListener("submit", e => {
     e.preventDefault();
     const sp = crSpec(CR_OPEN.key), r = crRec(CR_OPEN.key, CR_OPEN.id), a = (sp.acts(r) || []).find(x => x && x.id === CR_OPEN.ask), w = $("#cr-why"), why = w ? w.value.trim() : "";
     if (!a) return;
-    if (a.why && why.length < (a.whyMin || 10)) { CR_OPEN.err = a.whyMin ? L("กรอกข้อความก่อนยืนยัน", "Fill this in before confirming") : L("ใส่เหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters"); route(); const x = $("#cr-why"); if (x) { x.value = why; x.focus(); } return; }
+    if (a.why && why.length < (a.whyMin || CR_WHY_MIN)) { CR_OPEN.err = a.whyMin ? L("กรอกข้อความก่อนยืนยัน", "Fill this in before confirming") : L("ใส่เหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters"); route(); const x = $("#cr-why"); if (x) { x.value = why; x.focus(); } return; }
     return crRun(sp, r, a, why);
   }
   if (e.target.id !== "cr-form") return;
@@ -15893,7 +15845,7 @@ document.addEventListener("submit", e => {
   const F = sp.fields(r, vals), errs = [];
   F.forEach(f => { if (f.req && !f.lock && f.type !== "info" && f.type !== "check" && (vals[f.id] === "" || vals[f.id] == null)) errs.push({ f: f.id, m: L("ต้องกรอก", "Required") });
     if (f.type === "money" && vals[f.id] !== "" && vals[f.id] != null && !f.lock) { if (f.min != null && vals[f.id] < f.min) errs.push({ f: f.id, m: `${L("ไม่น้อยกว่า", "At least")} ${mb(f.min)} ${L("ลบ.", "M")}` }); if (f.max != null && vals[f.id] > f.max) errs.push({ f: f.id, m: `${L("ไม่เกิน", "At most")} ${mb(f.max)} ${L("ลบ.", "M")}` }); } });
-  if (r && sp.edit && sp.edit.why && sp.edit.why(r) && (vals._why || "").length < 10) errs.push({ f: "_why", m: L("ใส่เหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters") });
+  if (r && sp.edit && sp.edit.why && sp.edit.why(r) && (vals._why || "").length < CR_WHY_MIN) errs.push({ f: "_why", m: L("ใส่เหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters") });
   if (!errs.length && sp.check) errs.push(...sp.check(vals, r));
   if (errs.length) { CR_OPEN.draft = vals; CR_OPEN.err = errs; route(); const b = $('#cr-form [aria-invalid="true"]') || $(".cr-errsum"); if (b) b.focus && b.focus(); return; }
   const snap = crSnap();
@@ -17504,6 +17456,192 @@ CRUD.def("adRule", {
   ADMIN.workflow = () => { const h = aw(), i = h.indexOf("</section>") + "</section>".length; return crudList("adWf", { head: `<h2>${L("สายอนุมัติคำของบประมาณ", "Budget request approval route")}</h2><span class="sp"></span><span class="sub">${L("ใช้กับคำขอที่ส่งใหม่", "Applies to requests sent from now on")}</span>` }) + h.slice(i); };
   ADMIN.rules = () => crudList("adRule", { head: `<h2>${L(`กฎทางธุรกิจปี ${FORM_FY}`, `FY${FORM_FY} business rules`)}</h2><span class="sp"></span><span class="sub">${L("ใช้ตรวจความครบถ้วนของคำขอทันทีที่บันทึก", "Used by the request checks as soon as they're saved")}</span>` });
   BIND_ADMIN.users = () => {}; BIND_ADMIN.workflow = () => {}; BIND_ADMIN.rules = () => {};
+}
+
+/* ---- 84-fin-crud.js ---- */
+// Finance CRUD round FC1 (Fisko_Finance_CRUD_Design.html, chapter 6.10): the four F10 registers move onto the shared
+// list + drawer (76-crud.js). GFMIS assignments (FR-FC-44), supplier bank-account changes (FR-FC-45, SD-14), cash
+// committee orders as dated records (FR-FC-46, SD-13 reads the order in force that day) and receipt books
+// (FR-FC-47). Every reason uses the shared minimum (CR_WHY_MIN); nothing is deleted, records are revoked, withdrawn,
+// cancelled or returned and stay in the list behind "Show cancelled".
+const pad2 = n => String(n).padStart(2, "0");
+const finHead = () => ROLE === "finhead";
+
+// ---------- GFMIS assignments (FR-FC-44, clauses 10–12) ----------
+const GFU_ST = { on: [["มีผล", "In force"], "p-ok"], exp: [["หมดอายุ", "Expired"], "p-mute"], off: [["เพิกถอนแล้ว", "Revoked"], "p-mute"] };
+// Older saved data has no ids; revoking used to go by row position, which picks the wrong person once rows move.
+function gfuList() { const G = (S.gfUsers = S.gfUsers || []); G.forEach(g => { if (!g.id) g.id = `GU-${pad2(maxNo(G.map(x => x.id || ""), /^GU-(\d+)/) + 1)}`; }); return G; }
+const gfuSt = g => (g.revoked ? "off" : g.until >= TODAY ? "on" : "exp");
+const gfuPeople = () => S.users.filter(u => u.active !== false && ["fin", "finhead", "exec"].includes(u.role));
+const gfuDuties = g => g.duties.map(d => tx(GF_DUTY[d])).join(", ");
+CRUD.def("fnGfu", {
+  noun: ["การมอบหมายใน GFMIS", "GFMIS assignment"], st: GFU_ST, list: gfuList, id: g => g.id, title: g => userName(g.user), sub: g => `${esc(g.order)} · ${gfuDuties(g)}`,
+  status: gfuSt, gone: g => !!g.revoked, search: g => `${g.id} ${userName(g.user)} ${g.order}`,
+  filters: [{ id: "st", label: ["สถานะ", "Status"], opts: () => [["on", L("มีผล", "In force")], ["exp", L("หมดอายุ", "Expired")]], get: gfuSt }],
+  cols: [{ h: ["ผู้ใช้", "User"], sort: g => userName(g.user), c: g => `${esc(userName(g.user))} <span class="sub">${tx(ROLES[(S.users.find(u => u.id === g.user) || {}).role] || ["", ""])}</span>` },
+    { h: ["หน้าที่", "Duties"], c: g => `<span class="sub">${gfuDuties(g)}</span>` }, { h: ["คำสั่ง", "Order"], c: g => `<span class="mono">${esc(g.order)}</span>` },
+    { h: ["ถึง", "Until"], sort: g => g.until, c: g => `<span class="sub">${fdate(g.until)}</span>` }],
+  fields: g => [
+    { id: "user", label: ["ผู้ใช้", "User"], type: "select", req: true, value: g ? g.user : "", lock: !!g, show: g && esc(userName(g.user)), blank: L("— เลือกผู้ใช้ —", "— choose a user —"), opts: gfuPeople().map(u => [u.id, `${userName(u.id)} · ${tx(ROLES[u.role])}`]) },
+    ...Object.keys(GF_DUTY).map(d => ({ id: "d_" + d, label: GF_DUTY[d], type: "check", value: g ? g.duties.includes(d) : d === "record" })),
+    { id: "order", label: ["เลขที่คำสั่งมอบหมาย", "Assignment order no."], req: true, value: g ? g.order : "" },
+    { id: "until", label: ["มีผลถึงวันที่", "In force until"], type: "date", req: true, value: g ? g.until : FY_END },
+  ],
+  check: v => [!Object.keys(GF_DUTY).some(d => v["d_" + d]) && { f: null, m: L("เลือกหน้าที่อย่างน้อยหนึ่งข้อ", "Pick at least one duty") },
+    v.until && v.until < TODAY && { f: "until", m: L("วันสิ้นสุดต้องไม่ก่อนวันนี้ ใช้ “เพิกถอน” เพื่อยุติการมอบหมาย", "The end date can't be before today; use Revoke to end an assignment") }].filter(Boolean),
+  create: { can: finHead, label: ["มอบหมายผู้ใช้", "Assign a user"], run: v => {
+    const G = gfuList(), g = { id: `GU-${pad2(maxNo(G.map(x => x.id), /^GU-(\d+)/) + 1)}`, user: v.user, duties: Object.keys(GF_DUTY).filter(d => v["d_" + d]), order: v.order, until: v.until, by: me().id, t: nowIso() };
+    G.push(g); audit(["มอบหมายผู้ใช้งาน GFMIS", "Assigned a GFMIS user"], `${g.id} · ${userName(g.user)} · ${g.duties.join(",")} · ${g.order}`); return g; } },
+  edit: { can: g => finHead() && !g.revoked, why: () => true, run: (g, v, why) => {
+    const old = `${g.duties.join(",")}/${g.order}/${g.until}`; g.duties = Object.keys(GF_DUTY).filter(d => v["d_" + d]); g.order = v.order; g.until = v.until;
+    audit(["แก้ไขการมอบหมาย GFMIS", "Changed a GFMIS assignment"], `${g.id} · ${userName(g.user)} · ${old} → ${g.duties.join(",")}/${g.order}/${g.until} · ${why}`); } },
+  acts: g => (finHead() && gfuSt(g) === "on" ? [{ id: "rev", label: L("เพิกถอน", "Revoke"), kind: "danger", why: true,
+    impact: () => L(`${userName(g.user)} ใช้ GFMIS ตามหน้าที่นี้ไม่ได้ตั้งแต่วันนี้ งานที่ต้องใช้หน้าที่นี้จะถูกกันจนกว่าจะมอบหมายใหม่`, `${userName(g.user)} can't use GFMIS for these duties from today; work that needs them is blocked until someone is assigned`),
+    run: (_, why) => { g.until = addDays(TODAY, -1); g.revoked = { t: nowIso(), by: me().id, why }; audit(["เพิกถอนการมอบหมาย GFMIS", "Revoked a GFMIS assignment"], `${g.id} · ${userName(g.user)} · ${why}`); return L("เพิกถอนแล้ว", "Revoked"); } }] : []),
+  view: g => kv([[L("ผู้ใช้", "User"), esc(userName(g.user))], [L("หน้าที่", "Duties"), gfuDuties(g)], [L("คำสั่ง", "Order"), `<span class="mono">${esc(g.order)}</span>`], [L("มีผลถึง", "In force until"), fdate(g.until)],
+    g.by && [L("บันทึกโดย", "Recorded by"), `${esc(userName(g.by))} · ${fdate(g.t, true)}`], g.revoked && [L("เพิกถอน", "Revoked"), `${esc(userName(g.revoked.by))} · ${fdate(g.revoked.t, true)} · ${esc(g.revoked.why)}`]])
+    + `<p class="sub">${L("ระบบกันการบันทึกขอเบิก รับเงิน และนำส่งใน GFMIS ของผู้ที่ไม่มีคำสั่งรองรับ (ข้อ 12)", "Recording, receiving and remitting in GFMIS are blocked for anyone without an order (clause 12)")}</p>`,
+  hist: g => g.id,
+});
+FS.gfUsers = () => crudList("fnGfu", { head: `<h2>${L("ผู้มีสิทธิใช้งาน GFMIS", "People assigned to GFMIS")}</h2><span class="sp"></span><span class="sub">${L("หัวหน้าหน่วยงานมอบหมายเป็นลายลักษณ์อักษร (ข้อ 10–12)", "Assigned in writing by the head of the agency (clauses 10–12)")}</span>`, empty: L("ยังไม่มีผู้ได้รับมอบหมาย", "No one is assigned yet") });
+
+// ---------- supplier bank-account changes (FR-FC-45, clause 20 (2), SD-14) ----------
+const VB_ST = { pending: [["รอยืนยัน", "Waiting to confirm"], "p-warn"], confirmed: [["ยืนยันแล้ว ส่งกรมบัญชีกลาง", "Confirmed · sent to the Comptroller General"], "p-ok"], rejected: [["ไม่ยืนยัน", "Not confirmed"], "p-mute"], withdrawn: [["ถอนแล้ว", "Withdrawn"], "p-mute"] };
+const vbVendor = ch => (S.vendors || []).find(x => x.id === ch.vendor) || { name: [ch.vendor, ch.vendor] };
+const vbAcct = b => (b && b.acct ? `${esc(b.bank)} · <span class="mono">${maskAcct(b.acct)}</span>` : "—");
+CRUD.def("fnVend", {
+  noun: ["คำขอแก้บัญชีธนาคารผู้ขาย", "Supplier bank change"], st: VB_ST, list: () => (S.vendorChanges = S.vendorChanges || []), id: ch => ch.id, title: ch => tx(vbVendor(ch).name), sub: ch => vbAcct(ch),
+  status: ch => ch.status, gone: ch => ch.status === "rejected" || ch.status === "withdrawn", search: ch => `${ch.id} ${vbVendor(ch).name.join(" ")} ${userName(ch.by)}`,
+  filters: [{ id: "st", label: ["สถานะ", "Status"], opts: () => [["pending", L("รอยืนยัน", "Waiting")], ["confirmed", L("ยืนยันแล้ว", "Confirmed")]], get: ch => ch.status }],
+  cols: [{ h: ["เลขที่", "No."], sort: ch => ch.id, c: ch => `<span class="mono">${ch.id}</span>` }, { h: ["ผู้ขาย", "Supplier"], sort: ch => tx(vbVendor(ch).name), c: ch => esc(tx(vbVendor(ch).name)) },
+    { h: ["บัญชีใหม่", "New account"], c: ch => `<span class="sub">${vbAcct(ch)}</span>` }, { h: ["ผู้ขอ", "Requested by"], sort: ch => ch.t, c: ch => `${esc(userName(ch.by))}<div class="sub">${fdate(ch.t, true)}</div>` }],
+  fields: ch => [
+    { id: "vendor", label: ["ผู้ขาย", "Supplier"], type: "select", req: true, value: ch ? ch.vendor : "", lock: !!ch, show: ch && esc(tx(vbVendor(ch).name)), blank: L("— เลือกผู้ขาย —", "— choose a supplier —"), opts: (S.vendors || []).map(x => [x.id, tx(x.name)]) },
+    { id: "bank", label: ["ธนาคาร", "Bank"], type: "select", req: true, value: ch ? ch.bank : BANKS[0], opts: BANKS.map(b => [b, b]) },
+    { id: "acct", label: ["เลขที่บัญชี (10 หลัก)", "Account no. (10 digits)"], req: true, value: ch ? ch.acct : "" },
+    { id: "book", label: ["แนบสำเนาหน้าสมุดบัญชีและหนังสือแจ้งจากผู้ขายแล้ว", "Bank book page and the supplier's letter are attached"], type: "check", wide: true, value: !!ch },
+  ],
+  check: v => [!/^\d{10}$/.test(v.acct || "") && { f: "acct", m: L("เลขที่บัญชีต้องเป็นตัวเลข 10 หลัก", "The account number must be 10 digits") },
+    !v.book && { f: "book", m: L("ต้องแนบหลักฐานจากผู้ขายก่อนส่งคำขอ", "Attach the supplier's evidence before sending") }].filter(Boolean),
+  create: { can: () => ROLE === "fin", label: ["ขอแก้บัญชีผู้ขาย", "Request a bank change"], run: v => {
+    const C = S.vendorChanges = S.vendorChanges || [], ch = { id: `VB-${FAM_FY}-${pad2(maxNo(C.map(x => x.id), new RegExp(`^VB-${FAM_FY}-(\\d+)`)) + 1)}`, vendor: v.vendor, bank: v.bank, acct: v.acct, by: me().id, t: nowIso(), status: "pending", done: null };
+    C.push(ch); audit(["ขอแก้บัญชีธนาคารผู้ขาย", "Asked to change a supplier bank account"], `${ch.id} · ${ch.vendor}`);
+    notify(["finhead"], [`คำขอแก้บัญชีธนาคารผู้ขาย ${ch.id} รอยืนยัน`, `Supplier bank change ${ch.id} is waiting to be confirmed`], "fnc-reg:vendors"); return ch; } },
+  edit: { can: ch => ch.status === "pending" && ch.by === me().id, why: () => true, run: (ch, v, why) => {
+    const old = `${ch.bank} ${maskAcct(ch.acct)}`; ch.bank = v.bank; ch.acct = v.acct; audit(["แก้คำขอแก้บัญชีธนาคารผู้ขาย", "Changed a supplier bank-change request"], `${ch.id} · ${old} → ${ch.bank} ${maskAcct(ch.acct)} · ${why}`); } },
+  acts: ch => {
+    if (ch.status !== "pending" || !isFinRole()) return [];
+    const mine = ch.by === me().id;
+    return [!mine && { id: "ok", label: L("ยืนยัน", "Confirm"), kind: "primary", undo: false, confirm: L("ส่งบัญชีใหม่ให้กรมบัญชีกลางสร้างข้อมูลหลักผู้ขาย บัญชีเดิมเก็บไว้ในประวัติของผู้ขาย", "The new account goes to the Comptroller General's vendor master; the old one stays in the supplier's history"),
+        impact: () => L("การจ่ายครั้งแรกให้ผู้ขายรายนี้ภายใน 30 วันจะถูกเตือน (SG-F03)", "The first payment to this supplier within 30 days is flagged (SG-F03)"),
+        run: () => { if (!sodCheck("SD-14", [me().id], [ch.by], ch.id)) return null;
+          const vd = (S.vendors || []).find(x => x.id === ch.vendor);
+          if (vd) { if (vd.bank) (vd.bankHist = vd.bankHist || []).push(Object.assign({}, vd.bank, { until: nowIso(), by: ch.id })); vd.bank = { bank: ch.bank, acct: ch.acct, t: nowIso() }; }
+          ch.status = "confirmed"; ch.done = { by: me().id, t: nowIso() };
+          audit(["ยืนยันการแก้บัญชีธนาคารผู้ขาย", "Confirmed a supplier bank change"], ch.id); notify(["fin"], [`ยืนยันการแก้บัญชีผู้ขาย ${ch.id} แล้ว`, `Supplier bank change ${ch.id} confirmed`], "fnc-reg:vendors");
+          return L("ยืนยันแล้ว · ส่งข้อมูลให้กรมบัญชีกลาง", "Confirmed · sent to the Comptroller General"); } },
+      !mine && { id: "no", label: L("ไม่ยืนยัน", "Don't confirm"), kind: "danger", why: true, impact: () => L("ผู้ขายยังใช้บัญชีเดิม ผู้ขอได้รับแจ้งพร้อมเหตุผล", "The supplier keeps the current account; the requester is told why"),
+        run: (_, why) => { if (!sodCheck("SD-14", [me().id], [ch.by], ch.id)) return null; ch.status = "rejected"; ch.done = { by: me().id, t: nowIso(), why };
+          audit(["ไม่ยืนยันการแก้บัญชีธนาคารผู้ขาย", "Refused a supplier bank change"], `${ch.id} · ${why}`); notify(["fin"], [`คำขอแก้บัญชีผู้ขาย ${ch.id} ไม่ได้รับการยืนยัน: ${why}`, `Supplier bank change ${ch.id} was not confirmed: ${why}`], "fnc-reg:vendors"); return L("บันทึกแล้ว", "Recorded"); } },
+      mine && { id: "wd", label: L("ถอนคำขอ", "Withdraw"), kind: "danger", why: true, run: (_, why) => { ch.status = "withdrawn"; ch.done = { by: me().id, t: nowIso(), why }; audit(["ถอนคำขอแก้บัญชีธนาคารผู้ขาย", "Withdrew a supplier bank change"], `${ch.id} · ${why}`); return L("ถอนแล้ว", "Withdrawn"); } }];
+  },
+  view: ch => { const vd = vbVendor(ch);
+    return kv([[L("ผู้ขาย", "Supplier"), esc(tx(vd.name))], [L("บัญชีปัจจุบันของผู้ขาย", "Supplier's current account"), vbAcct(vd.bank)], [L("บัญชีที่ขอ", "Requested account"), vbAcct(ch)],
+      [L("ผู้ขอ", "Requested by"), `${esc(userName(ch.by))} · ${fdate(ch.t, true)}`], ch.done && [ch.status === "confirmed" ? L("ยืนยันโดย", "Confirmed by") : ch.status === "withdrawn" ? L("ถอนโดย", "Withdrawn by") : L("ไม่ยืนยันโดย", "Refused by"), `${esc(userName(ch.done.by))} · ${fdate(ch.done.t, true)}${ch.done.why ? ` · ${esc(ch.done.why)}` : ""}`],
+      (vd.bankHist || []).length && [L("บัญชีก่อนหน้า", "Earlier accounts"), vd.bankHist.map(b => `${vbAcct(b)} <span class="sub">${L("ถึง", "until")} ${fdate(b.until, true)}</span>`).join("<br>")]])
+      + `<p class="sub">${L("ผู้ขอยืนยันหรือปฏิเสธคำขอของตนเองไม่ได้ (SD-14)", "The requester can't confirm or refuse their own request (SD-14)")}</p>`; },
+  hist: ch => ch.id,
+});
+FS.vendors = () => crudList("fnVend", { head: `<h2>${L("ข้อมูลหลักผู้ขาย: บัญชีธนาคาร", "Supplier master data: bank accounts")}</h2><span class="sp"></span><span class="sub">${L("ส่งให้กรมบัญชีกลางสร้างข้อมูลหลักผู้ขาย (ข้อ 20 (2)) · ผู้ขอยืนยันเองไม่ได้ (SD-14)", "Sent to the Comptroller General's vendor master (clause 20 (2)) · the requester can't confirm (SD-14)")}</span>`, empty: L("ยังไม่มีคำขอ", "No requests yet") });
+
+// ---------- cash committee orders (FR-FC-46, clauses 86–88) ----------
+const CO_ST = { cur: [["มีผล", "In force"], "p-ok"], next: [["รอเริ่มผล", "Starts later"], "p-info"], old: [["สิ้นผล", "Ended"], "p-mute"], off: [["ยกเลิก", "Cancelled"], "p-mute"] };
+const coSt = o => (o.cancelled ? "off" : o.from > TODAY ? "next" : cashC().id === o.id ? "cur" : "old");
+const coPeople = () => S.users.filter(u => u.active !== false && !["admin", "audit"].includes(u.role));
+const coNames = ids => ids.map(userName).map(esc).join(", ") || "—";
+CRUD.def("fnCmte", {
+  noun: ["คำสั่งแต่งตั้งกรรมการเก็บรักษาเงิน", "Cash committee order"], st: CO_ST, list: cashOrders, id: o => o.id, title: o => o.order, sub: o => `${L("มีผลตั้งแต่", "From")} ${fdate(o.from)}`,
+  status: coSt, gone: o => !!o.cancelled, search: o => `${o.id} ${o.order} ${o.members.concat(o.subs).map(userName).join(" ")}`,
+  cols: [{ h: ["คำสั่ง", "Order"], c: o => `<span class="mono">${esc(o.order)}</span>` }, { h: ["มีผลตั้งแต่", "From"], sort: o => o.from, c: o => `<span class="sub">${fdate(o.from)}</span>` },
+    { h: ["กรรมการ", "Members"], c: o => coNames(o.members) }, { h: ["ผู้ทำหน้าที่แทน", "Substitutes"], c: o => `<span class="sub">${coNames(o.subs)}</span>` }],
+  fields: o => [
+    { id: "order", label: ["เลขที่คำสั่ง", "Order no."], req: true, value: o ? o.order : "" },
+    { id: "from", label: ["มีผลตั้งแต่", "In force from"], type: "date", req: true, value: o ? o.from : TODAY },
+    { id: "_who", label: ["หน้าที่ในคำสั่ง", "Role in the order"], type: "info", wide: true, html: `<span class="sub">${L("อย่างน้อย 2 คน (ข้อ 86) · ผู้ทำหน้าที่แทนตรวจนับเมื่อกรรมการไม่อยู่ (ข้อ 88)", "At least 2 members (cl. 86) · substitutes count when a member is away (cl. 88)")}</span>` },
+    ...coPeople().map(u => ({ id: "p_" + u.id, label: [userName(u.id), userName(u.id)], type: "select", value: o ? (o.members.includes(u.id) ? "m" : o.subs.includes(u.id) ? "s" : "") : "",
+      opts: [["", "—"], ["m", L("กรรมการ", "Member")], ["s", L("ผู้ทำหน้าที่แทน", "Substitute")]] })),
+  ],
+  check: (v, o) => { const ms = coPeople().filter(u => v["p_" + u.id] === "m");
+    return [ms.length < 2 && { f: null, m: L("ต้องมีกรรมการอย่างน้อย 2 คน (ข้อ 86)", "At least 2 members are needed (clause 86)") },
+      v.from && v.from < TODAY && { f: "from", m: L("คำสั่งใหม่มีผลย้อนหลังไม่ได้ การตรวจนับที่ผ่านมาอ้างคำสั่งที่มีผลวันนั้น", "A new order can't start in the past; earlier counts keep the order in force on their day") },
+      cashOrders().some(x => x !== o && !x.cancelled && x.order === v.order) && { f: "order", m: L("เลขที่คำสั่งนี้มีอยู่แล้ว", "This order number is already used") }].filter(Boolean); },
+  create: { can: finHead, label: ["แต่งตั้งใหม่", "New appointment"], run: v => {
+    const O = cashOrders(), o = { id: `CO-${pad2(maxNo(O.map(x => x.id), /^CO-(\d+)/) + 1)}`, order: v.order, from: v.from, members: coPeople().filter(u => v["p_" + u.id] === "m").map(u => u.id), subs: coPeople().filter(u => v["p_" + u.id] === "s").map(u => u.id), by: me().id, t: nowIso() };
+    O.push(o); audit(["แต่งตั้งกรรมการเก็บรักษาเงิน", "Appointed the cash committee"], `${o.id} · ${o.order} · ${o.members.map(userName).join(", ")}`);
+    notify(o.members.concat(o.subs).map(id => (S.users.find(u => u.id === id) || {}).role).filter(Boolean), [`คุณได้รับแต่งตั้งในคำสั่ง ${o.order} มีผล ${fdate(o.from)}`, `You are named in order ${o.order} from ${fdate(o.from)}`], "fnc-reg:committee"); return o; } },
+  edit: { can: o => finHead() && !o.cancelled && o.from > TODAY, run: (o, v) => {
+    o.order = v.order; o.from = v.from; o.members = coPeople().filter(u => v["p_" + u.id] === "m").map(u => u.id); o.subs = coPeople().filter(u => v["p_" + u.id] === "s").map(u => u.id);
+    audit(["แก้ไขคำสั่งแต่งตั้งกรรมการเก็บรักษาเงิน", "Changed a cash committee order"], `${o.id} · ${o.order} · ${o.members.map(userName).join(", ")}`); } },
+  acts: o => (finHead() && !o.cancelled && o.from > TODAY ? [{ id: "off", label: L("ยกเลิกคำสั่ง", "Cancel the order"), kind: "danger", why: true, impact: () => L("คำสั่งที่มีผลอยู่ใช้ต่อไป", "The order in force stays in force"),
+    run: (_, why) => { o.cancelled = { t: nowIso(), by: me().id, why }; audit(["ยกเลิกคำสั่งแต่งตั้งกรรมการเก็บรักษาเงิน", "Cancelled a cash committee order"], `${o.id} · ${o.order} · ${why}`); return L("ยกเลิกแล้ว", "Cancelled"); } }] : []),
+  view: o => { const nx = cashOrders().filter(x => !x.cancelled && x.from > o.from).sort((a, b) => (a.from < b.from ? -1 : 1))[0];
+    return kv([[L("คำสั่ง", "Order"), `<span class="mono">${esc(o.order)}</span>`], [L("มีผล", "In force"), `${fdate(o.from)}${nx ? ` – ${fdate(addDays(nx.from, -1))}` : ` ${L("เป็นต้นไป", "onwards")}`}`],
+      [L("กรรมการ", "Members"), coNames(o.members)], [L("ผู้ทำหน้าที่แทน", "Substitutes"), coNames(o.subs)], o.by && [L("บันทึกโดย", "Recorded by"), `${esc(userName(o.by))} · ${fdate(o.t, true)}`],
+      o.cancelled && [L("ยกเลิก", "Cancelled"), `${esc(userName(o.cancelled.by))} · ${esc(o.cancelled.why)}`]])
+      + `<p class="sub">${L("ต้องเป็นข้าราชการระดับปฏิบัติการหรือปฏิบัติงานขึ้นไป ระบบยังไม่ตรวจระดับตำแหน่ง ใช้คำสั่งแต่งตั้งเป็นหลัก · ผู้รับหรือจ่ายเงินของวันนั้นตรวจนับไม่ได้ (SD-13)", "Members must be civil servants at practitioner level or above; the system doesn't check rank yet, the appointment order governs · whoever received or paid money that day can't count (SD-13)")}</p>`; },
+  hist: o => o.id,
+});
+FS.cashCmte = () => crudList("fnCmte", { head: `<h2>${L("กรรมการเก็บรักษาเงิน", "Cash committee")}</h2><span class="sp"></span><span class="sub">${L("คำสั่งที่มีผล", "In force")}: ${esc(cashC().order || "—")} · ${L("อย่างน้อย 2 คน (ข้อ 86)", "at least 2 (cl. 86)")}</span>` });
+
+// ---------- receipt books (FR-FC-47, clauses 71–75) ----------
+const RB_ST = { use: [["ใช้งาน", "In use"], "p-ok"], full: [["ใช้ครบแล้ว", "Used up"], "p-mute"], old: [["ปีเก่า ยังไม่คืน", "Old year, not returned"], "p-warn"], ret: [["ส่งคืนแล้ว", "Returned"], "p-mute"] };
+const rbSt = b => (b.returned ? "ret" : b.fy < FAM_FY ? "old" : rbUsed(b) >= rbCap(b) ? "full" : "use");
+const rbHolders = () => S.users.filter(u => u.active !== false && ["fin", "finhead"].includes(u.role));
+const rbWho = b => (b.holder ? esc(userName(b.holder)) : esc(unitName(b.unit)));
+CRUD.def("fnBook", {
+  noun: ["เล่มใบเสร็จรับเงิน", "Receipt book"], st: RB_ST, list: () => (S.rbooks = S.rbooks || []), id: b => b.id, title: b => `${L("เล่มที่", "Book")} ${b.no}`, sub: b => rbWho(b),
+  status: rbSt, gone: b => !!b.returned, search: b => `${b.id} ${b.no} ${b.holder ? userName(b.holder) : ""}`,
+  filters: [{ id: "fy", label: ["ปีงบประมาณ", "Fiscal year"], opts: () => [...new Set((S.rbooks || []).map(b => b.fy))].sort().map(y => [String(y), String(y)]), get: b => b.fy }],
+  cols: [{ h: ["เล่ม", "Book"], sort: b => b.fy * 1000 + Number(String(b.no).split("/")[0]), c: b => `<span class="mono">${b.no}</span>` }, { h: ["ผู้รับเล่ม", "Held by"], c: b => `${rbWho(b)}<div class="sub">${fdate(b.issued)}</div>` },
+    { h: ["ใช้แล้ว", "Used"], c: b => `<span class="sub">${rbUsed(b) ? `1–${rbUsed(b)}` : "—"} / ${b.to}${b.void ? ` · ${L("ยกเลิก", "voided")} ${b.void.from}–${b.void.to}` : ""}</span>` }],
+  fields: (b, v) => b ? [
+    { id: "_no", label: ["เล่ม", "Book"], type: "info", html: `<span class="mono">${b.no}</span> · ${L("เลขที่", "numbers")} ${b.from}–${b.to}` },
+    { id: "holder", label: ["ผู้รับเล่ม", "Held by"], type: "select", req: true, value: b.holder || "", opts: rbHolders().map(u => [u.id, userName(u.id)]), hint: L("โอนเล่มให้ผู้อื่นต้องระบุเหตุผล ใบเสร็จที่ออกแล้วยังเป็นของผู้ออก", "Handing the book to someone else needs a reason; receipts already issued stay with whoever issued them") },
+  ] : [
+    { id: "fy", label: ["ปีงบประมาณ", "Fiscal year"], type: "select", req: true, value: String(FAM_FY), opts: [FAM_FY, FAM_FY + 1].map(y => [String(y), String(y)]), hint: L("ออกเล่มของปีถัดไปได้ก่อน 1 ตุลาคม", "Next year's books can be issued before 1 October") },
+    { id: "to", label: ["จำนวนฉบับในเล่ม", "Receipts in the book"], type: "number", req: true, min: 1, max: 500, value: 100 },
+    { id: "holder", label: ["ผู้รับเล่ม", "Held by"], type: "select", req: true, blank: L("— เลือกผู้รับเล่ม —", "— choose who holds it —"), value: "", opts: rbHolders().map(u => [u.id, userName(u.id)]) },
+  ],
+  check: (v, b) => [!b && !(v.to >= 1 && v.to <= 500) && { f: "to", m: L("1 ถึง 500 ฉบับ", "1 to 500 receipts") }].filter(Boolean),
+  create: { can: finHead, label: ["ออกเล่มใหม่", "Issue a book"], run: v => {
+    const B = S.rbooks = S.rbooks || [], fy = Number(v.fy), seq = maxNo(B.filter(x => x.fy === fy).map(x => x.no), /^(\d+)\//) + 1;
+    const b = { id: `BK-${fy}-${pad2(seq)}`, no: `${seq}/${fy}`, fy, from: 1, to: v.to, holder: v.holder, issued: TODAY, returned: null, by: me().id };
+    B.push(b); audit(["ออกเล่มใบเสร็จรับเงิน", "Issued a receipt book"], `${b.id} · ${b.no} · ${userName(b.holder)}`);
+    notify(["fin"], [`ได้รับเล่มใบเสร็จ ${b.no}`, `Receipt book ${b.no} issued to you`], "fnc-reg:books"); return b; } },
+  edit: { can: b => finHead() && !b.returned, why: () => true, run: (b, v, why) => {
+    const old = b.holder ? userName(b.holder) : unitName(b.unit); b.holder = v.holder; b.unit = null; audit(["โอนเล่มใบเสร็จรับเงิน", "Handed over a receipt book"], `${b.id} · ${old} → ${userName(b.holder)} · ${why}`); } },
+  acts: b => { if (!finHead() || b.returned) return [];
+    const used = rbUsed(b);
+    return [!b.void && used < b.to && { id: "void", label: L("ยกเลิกเลขที่ยังไม่ใช้", "Void the unused numbers"), kind: "danger", why: true,
+        impact: () => L(`เลขที่ ${used + 1}–${b.to} ใช้ไม่ได้อีก (คงอยู่ในทะเบียนพร้อมเหตุผล) ผู้ถือเล่มต้องใช้เล่มอื่น`, `Numbers ${used + 1}–${b.to} can't be used any more (they stay in the register with the reason); the holder needs another book`),
+        run: (_, why) => { b.void = { from: used + 1, to: b.to, t: nowIso(), by: me().id, why }; audit(["ยกเลิกเลขที่ใบเสร็จที่ยังไม่ใช้", "Voided unused receipt numbers"], `${b.id} · ${used + 1}–${b.to} · ${why}`); return L("ยกเลิกแล้ว", "Voided"); } },
+      { id: "ret", label: L("รับคืนเล่ม", "Take the book back"), confirm: L(`รับคืนเล่ม ${b.no} ใช้แล้ว ${used} ฉบับ เล่มนี้ออกใบเสร็จไม่ได้อีก`, `Take back book ${b.no} with ${used} used; it can't issue receipts any more`),
+        run: () => { b.returned = TODAY; b.used = used; audit(["รับคืนเล่มใบเสร็จรับเงิน", "Took back a receipt book"], `${b.id} · ${used}`); return L("รับคืนแล้ว", "Taken back"); } }]; },
+  view: b => kv([[L("เล่ม", "Book"), `<span class="mono">${b.no}</span> · ${L("ปีงบประมาณ", "FY")} ${b.fy}`], [L("เลขที่", "Numbers"), `${b.from}–${b.to}`], [L("ผู้รับเล่ม", "Held by"), rbWho(b)], [L("ออกเมื่อ", "Issued"), fdate(b.issued)],
+    [L("ใช้แล้ว", "Used"), `${rbUsed(b)}`], b.void && [L("ยกเลิกเลขที่", "Voided numbers"), `${b.void.from}–${b.void.to} · ${esc(userName(b.void.by))} · ${esc(b.void.why)}`], b.returned && [L("รับคืน", "Returned"), fdate(b.returned)]]),
+  hist: b => b.id,
+});
+FS.rbooks = () => {
+  const maker = ROLE === "fin", rep = (S.rbookReports || []).find(x => x.fy === FAM_FY - 1), due = `${FAM_FY - 544}-10-31`;
+  return crudList("fnBook", { head: `<h2>${L("ทะเบียนคุมใบเสร็จรับเงิน", "Receipt-book register")}</h2><span class="sp"></span><span class="sub">${L("ข้อ 71–75", "Clauses 71–75")}</span>`,
+    after: `<div class="body">${rep ? `<p class="sub">${dotI("ok")}${L(`ส่งรายงานใบเสร็จปี ${FAM_FY - 1} แล้ว`, `FY${FAM_FY - 1} receipt report sent`)} ${fdate(rep.t, true)} · ${esc(userName(rep.by))}</p>` : `<p>${dotI(clockDot(due))}${L(`รายงานใบเสร็จที่ได้รับและใช้ไปของปี ${FAM_FY - 1} ภายใน`, `Report FY${FAM_FY - 1} receipt books by`)} ${clockTxt(due)} (${L("ข้อ 74", "cl. 74")})</p>${maker ? `<button class="btn" type="button" id="rb-report">${L("ส่งรายงานใบเสร็จประจำปี", "Send the yearly receipt report")}</button>` : ""}`}</div>` });
+};
+
+// ---------- seed: ids for older records, the P-F05 duty rule ----------
+function seedFinCrud(s) {
+  (s.gfUsers || []).forEach((g, i) => { g.id = g.id || `GU-${pad2(i + 1)}`; });
+  if (!s.cashOrders && s.cashCmte) s.cashOrders = [{ id: "CO-01", order: s.cashCmte.order, members: s.cashCmte.members, subs: s.cashCmte.subs || [], from: `${CUR_FY - 545}-10-01`, by: null, t: null }];
+  if (s.sod && !s.sod.rules.some(r => r.id === "P-F05")) s.sod.rules.push({ id: "P-F05", on: true });
 }
 
 /* ---- 99-boot.js ---- */
