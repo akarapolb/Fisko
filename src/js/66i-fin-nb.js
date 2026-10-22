@@ -50,8 +50,8 @@ function nbRule(v, add) {
 // Fund vouchers wait to be paid from the non-budget account once approved (no GFMIS request).
 {
   const base = vcAct;
-  vcAct = function (v, a) {
-    const r = base(v, a);
+  vcAct = function (v, a, why) {
+    const r = base(v, a, why);
     if (a === "approve" && v.fund && v.state === "ready") {
       v.state = "nbready"; v.funded = { t: nowIso(), nb: true };
       vLog(v, ["พร้อมจ่ายจากบัญชีเงินนอกงบประมาณ", "Ready to pay from the non-budget account"], v.fund);

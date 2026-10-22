@@ -61,17 +61,22 @@ SOD_STEPS.push([["ยืมเงิน", "Borrow"], ["อนุมัติห�
 
 // ---------- detail (shared by My advances and F4) ----------
 function advDetail(a, where) {
-  const mine = a.borrower === me().id, fin = isFinRole(), ch = advChecks(a), act = [], due = advDue(a);
-  if (where === "fin" && canSpend() && a.state === "request") act.push(`<button class="btn primary" type="button" data-adv="approve">${L("อนุมัติ", "Approve")}</button>`, `<button class="btn danger" type="button" data-adv="reject">${L("ไม่อนุมัติ", "Reject")}</button>`);
-  if (where === "fin" && ROLE === "fin" && a.state === "approved") act.push(`<button class="btn primary" type="button" data-adv="pay">${L("จ่ายเงินยืม (e-Payment)", "Pay the advance (e-Payment)")}</button>`);
-  if (where === "fin" && fin && a.state === "clearing") act.push(`<button class="btn primary" type="button" data-adv="accept">${L("ตรวจผ่าน รับใบสำคัญ", "Accept the clearing")}</button>`, `<button class="btn danger" type="button" data-adv="object">${L("ทักท้วง", "Object")}</button>`);
-  if (where === "fin" && ROLE === "finhead" && advOverdue(a) && !a.demand) act.push(`<button class="btn primary" type="button" data-adv="demand">${L("ออกหนังสือเรียกชดใช้ (ข้อ 68)", "Issue a demand (clause 68)")}</button>`);
-  if (where === "fin" && ROLE === "finhead" && a.demand && !a.reported && OPEN_ADV.includes(a.state) && daysUntil(a.demand.due) < 0) act.push(`<button class="btn danger" type="button" data-adv="report">${L("รายงานหัวหน้าส่วนราชการ", "Report to the head of the agency")}</button>`);
-  if (mine && a.state === "request") act.push(`<button class="btn ghost" type="button" data-adv="cancel">${L("ยกเลิกคำขอ", "Cancel the request")}</button>`);
-  const why = act.some(x => /data-adv="(reject|object|cancel|approve)"/.test(x));
+  const mine = a.borrower === me().id, fin = isFinRole(), ch = advChecks(a), due = advDue(a);
+  // [action, label, kind, opens the reason box] (Finance CRUD UI-F6): approving asks for the amount, with a reason when it is less.
+  const act = [];
+  if (where === "fin" && canSpend() && a.state === "request") act.push(["approve", L("อนุมัติ", "Approve"), "primary", true], ["reject", L("ไม่อนุมัติ", "Reject"), "danger", true]);
+  if (where === "fin" && ROLE === "fin" && a.state === "approved") act.push(["pay", L("จ่ายเงินยืม (e-Payment)", "Pay the advance (e-Payment)"), "primary", false]);
+  if (where === "fin" && fin && a.state === "clearing") act.push(["accept", L("ตรวจผ่าน รับใบสำคัญ", "Accept the clearing"), "primary", false], ["object", L("ทักท้วง", "Object"), "danger", true]);
+  if (where === "fin" && ROLE === "finhead" && advOverdue(a) && !a.demand) act.push(["demand", L("ออกหนังสือเรียกชดใช้ (ข้อ 68)", "Issue a demand (clause 68)"), "primary", false]);
+  if (where === "fin" && ROLE === "finhead" && a.demand && !a.reported && OPEN_ADV.includes(a.state) && daysUntil(a.demand.due) < 0) act.push(["report", L("รายงานหัวหน้าส่วนราชการ", "Report to the head of the agency"), "danger", false]);
+  if (mine && a.state === "request") act.push(["cancel", L("ยกเลิกคำขอ", "Cancel the request"), "ghost", true]);
+  const ask = FIN_ASK && FIN_ASK.key === "adv" && act.find(x => x[0] === FIN_ASK.act);
+  const askHtml = ask ? finAskForm("adv", ask[0], ask[1], ask[0] === "approve"
+      ? { need: false, whyLabel: L("เหตุผล (เมื่ออนุมัติน้อยกว่ายอดขอ ข้อ 59)", "Reason (when approving less than asked, clause 59)"), extra: `<label for="adv-amt">${L("ยอดอนุมัติ (บาท)", "Amount approved (baht)")}</label><input type="number" id="adv-amt" value="${a.amount}" min="1" max="${a.amount}" step="1" style="max-width:180px">` }
+      : { danger: ask[2] === "danger", impact: ask[0] === "object" ? L(`ผู้ยืมต้องแก้ภายใน ${fcfg().advFix} วัน`, `The borrower fixes it within ${fcfg().advFix} days`) : ask[0] === "cancel" ? L("คำขอนี้ยกเลิก ยังยื่นใหม่ได้", "This request is cancelled; you can ask again") : "" }) : "";
   const cl = a.clearing;
-  return `<section class="panel" id="adv-detail"><header><h2><span class="mono">${a.id}</span> · ${esc(tx(a.purpose))}</h2><span class="sp"></span>${advTag(a)}${historyBtn(a.id, a.id)}<button class="btn ghost" type="button" id="adv-close">${L("ปิด", "Close")}</button></header>
-    <div class="body">
+  return `<section class="panel" id="adv-detail"><header><h2><span class="mono">${a.id}</span> · ${esc(tx(a.purpose))}</h2><span class="sp"></span>${advTag(a)}<button class="btn ghost" type="button" id="adv-close">${L("ปิด", "Close")}</button></header>
+    <div class="body">${finDrTabs("adv", [["view", L("รายละเอียด", "Details"), `
       <div class="grid2" style="gap:16px">
         <div>
           <p style="margin:0 0 4px"><b style="font-weight:600">${esc(userName(a.borrower))}</b> <span class="sub">${unitName(a.unit)} · ${tx(ADV_T[a.type])}</span></p>
@@ -91,8 +96,8 @@ function advDetail(a, where) {
         </div>
       </div>
       ${["request", "approved"].includes(a.state) ? `<h3 style="margin:12px 0 6px;font-size:15px">${L("ตรวจก่อนอนุมัติ", "Checks before approval")}</h3>${ch.map(k => `<div style="margin:2px 0">${dotI(k.ok ? "ok" : "bad")}<span class="mono">${k.id}</span> ${esc(k.text)}</div>`).join("")}` : ""}
-      ${(a.log || []).length ? `<details style="margin-top:8px"><summary class="sub">${L("ประวัติ", "History")} (${a.log.length})</summary>${a.log.slice().reverse().map(l => `<div class="sub">${fdate(l.t, true)} · ${esc(userName(l.by))} · ${esc(tx(l.act))}${l.note ? ` · ${esc(l.note)}` : ""}</div>`).join("")}</details>` : ""}
-      ${act.length ? `<div class="row" style="margin-top:12px;flex-wrap:wrap">${act.join("")}${canSpend() && a.state === "request" && where === "fin" ? `<input type="number" id="adv-amt" value="${a.amount}" min="1" max="${a.amount}" step="1" style="width:120px" aria-label="${L("อนุมัติ (บาท)", "Approve (baht)")}">` : ""}${why ? `<input type="text" id="adv-why" placeholder="${L("เหตุผล", "Reason")}" style="min-width:220px;flex:1" aria-label="${L("เหตุผล", "Reason")}">` : ""}</div>` : ""}
+`], ["hist", `${L("ประวัติ", "History")} (${(a.log || []).length})`, finLogHtml(a.log, a.id)]])}
+      ${askHtml || (act.length ? `<div class="row cr-acts" style="margin-top:12px;flex-wrap:wrap">${act.map(([k, l, kind, w]) => (w ? finAskBtn("adv", k, l, kind) : `<button class="btn ${kind}" type="button" data-adv="${k}">${l}</button>`)).join("")}</div>` : "")}
       ${mine && ["paid", "objected"].includes(a.state) ? clearForm(a) : ""}
     </div></section>`;
 }
@@ -170,15 +175,17 @@ FS.advAge = () => {
 };
 
 // ---------- actions ----------
-function advAct(a, k) {
-  const why = ($("#adv-why") || { value: "" }).value.trim(), done = (msg, roles, text, link) => { if (roles) notify(roles, text, link || "fnc-adv"); commit(); renderShell(); route(); toast(msg); };
-  if (["reject", "object", "cancel"].includes(k) && why.length < 5) { toast(L("ระบุเหตุผลอย่างน้อย 5 ตัวอักษร", "Give a reason of at least 5 characters")); return; }
+FIN_ASK_RUN.adv = (k, why) => { const a = ADV_OPEN && advOf(ADV_OPEN); return a ? advAct(a, k, why) : undefined; };
+// Reason-needing actions return an error text for the reason box instead of acting.
+function advAct(a, k, why0) {
+  const why = String(why0 || "").trim(), done = (msg, roles, text, link) => { if (roles) notify(roles, text, link || "fnc-adv"); commit(); renderShell(); route(); toast(msg); };
+  if (["reject", "object", "cancel"].includes(k) && why.length < CR_WHY_MIN) return L(`ใส่เหตุผลอย่างน้อย ${CR_WHY_MIN} ตัวอักษร`, `Give a reason of at least ${CR_WHY_MIN} characters`);
   if (k === "approve") {
     if (!sodCheck("SD-12", sodActors("exec", "spend"), [a.borrower], a.id)) return;
     const bad = advChecks(a).filter(c => !c.ok); if (bad.length) { toast(`${L("ยังอนุมัติไม่ได้", "Can't approve yet")}: ${bad.map(c => c.id).join(", ")}`); return; }
     const amt = Math.round(Number(($("#adv-amt") || { value: a.amount }).value));
-    if (!(amt > 0) || amt > a.amount) { toast(L("ยอดอนุมัติต้องมากกว่าศูนย์และไม่เกินยอดขอ", "The approved amount must be above zero and within the request")); return; }
-    if (amt < a.amount && why.length < 5) { toast(L("อนุมัติน้อยกว่ายอดขอต้องระบุเหตุผล (ข้อ 59 เท่าที่จำเป็น)", "Approving less needs a reason (clause 59, only what is needed)")); return; }
+    if (!(amt > 0) || amt > a.amount) return L("ยอดอนุมัติต้องมากกว่าศูนย์และไม่เกินยอดขอ", "The approved amount must be above zero and within the request");
+    if (amt < a.amount && why.length < CR_WHY_MIN) return L(`อนุมัติน้อยกว่ายอดขอต้องระบุเหตุผลอย่างน้อย ${CR_WHY_MIN} ตัวอักษร (ข้อ 59 เท่าที่จำเป็น)`, `Approving less needs a reason of at least ${CR_WHY_MIN} characters (clause 59, only what is needed)`);
     const au = famAuth(); a.state = "approved"; a.approvedAmt = amt; a.approver = { by: me().id, holder: au.holder, via: au.via, t: nowIso() };
     advLog(a, ["อนุมัติเงินยืม", "Approved"], amt < a.amount ? `${fmt(amt)} · ${why}` : fmt(amt)); audit(["อนุมัติเงินยืม", "Approved an advance"], `${a.id} · ${fmt(amt)}${onBehalf("exec", "spend")}`);
     notify([S.users.find(u => u.id === a.borrower).role], [`เงินยืม ${a.id} อนุมัติแล้ว ${fmt(amt)} บาท`, `Advance ${a.id} approved: ${fmt(amt)} baht`], "advances");
@@ -221,8 +228,8 @@ function advAct(a, k) {
   }
 }
 function bindAdvShared() {
-  $$("[data-advopen]").forEach(b => (b.onclick = () => { ADV_OPEN = b.dataset.advopen; route(); }));
-  const cl = $("#adv-close"); if (cl) cl.onclick = () => { ADV_OPEN = null; route(); };
+  $$("[data-advopen]").forEach(b => (b.onclick = () => { ADV_OPEN = b.dataset.advopen; FIN_ASK = null; route(); }));
+  const cl = $("#adv-close"); if (cl) cl.onclick = () => { ADV_OPEN = null; FIN_ASK = null; route(); };
   const a = ADV_OPEN && advOf(ADV_OPEN);
   if (!a) return;
   $$("[data-adv]").forEach(b => (b.onclick = () => advAct(a, b.dataset.adv)));

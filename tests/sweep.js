@@ -162,6 +162,59 @@
           for (const r of ["fin", "finhead", "exec", "audit"]) { as(r); for (const t of Object.values(where)) { finSet(t); go2("finance"); chk(`${org}/FC1/${r}/${t}`); } }
         }); S = JSON.parse(keep); crClose(); ROLE = "fin"; await tick(); }
       }
+      // Finance CRUD round FC2: every voucher and advance drawer (details, history, each reason box, the edit form), the list tools, then a walk
+      if (o.suites.includes("render") && typeof vcSave === "function") {
+        for (const role of ["fin", "finhead", "exec", "audit"].filter(r => o.roles.includes(r))) {
+          ROLE = role; LANG = o.langs[0]; safe("shell", renderShell);
+          for (const v of S.vouchers || []) safe(`${org}/${role}/vc ${v.id}`, () => {
+            finSet("pay:vouchers"); VC_EDIT = null; VC_OPEN = v.id;
+            for (const t of ["view", "hist"]) { FIN_DTAB.vc = t; FIN_ASK = null; go2("finance"); chk(`${org}/${role}/vc ${v.id}/${t}`); if (!document.querySelector("#vc-detail")) errs.push(`${org}/${role}/vc ${v.id}: no drawer`); }
+            FIN_DTAB.vc = "view";
+            for (const [a, , , w] of vcActs(v)) if (w) { FIN_ASK = { key: "vc", act: a }; go2("finance"); chk(`${org}/${role}/vc ${v.id}/ask ${a}`); if (!document.querySelector("#fn-ask")) errs.push(`${org}/${role}/vc ${v.id}: no reason box for ${a}`); }
+            FIN_ASK = null;
+            if (vcActs(v).some(x => x[0] === "edit")) { VC_EDIT = v.id; go2("finance"); chk(`${org}/${role}/vc ${v.id}/edit`); if (!document.querySelector("#vc-form")) errs.push(`${org}/${role}/vc ${v.id}: no edit form`); VC_EDIT = null; }
+          });
+          if (role === "fin") safe(`${org}/fin/vc new`, () => { VC_OPEN = null; VC_EDIT = "new"; finSet("pay:vouchers"); go2("finance"); chk(`${org}/fin/vc new`); if (!document.querySelector("#vc-form")) errs.push(`${org}/fin: no new-voucher form`); VC_EDIT = null; });
+          safe(`${org}/${role}/vc list`, () => { finSet("pay:vouchers"); VC_OPEN = null; VC_F = "all"; Object.assign(VC_Q, { q: "VC", show: true, sort: { k: "net", d: -1 } }); go2("finance"); chk(`${org}/${role}/vc list`); Object.assign(VC_Q, { q: "", type: "", route: "", show: false, sort: null }); VC_F = "open"; });
+          for (const a of S.advances || []) safe(`${org}/${role}/adv ${a.id}`, () => { finSet("adv"); ADV_OPEN = a.id; for (const t of ["view", "hist"]) { FIN_DTAB.adv = t; go2("finance"); chk(`${org}/${role}/adv ${a.id}/${t}`); } FIN_DTAB.adv = "view";
+            for (const k of ["approve", "reject", "object", "cancel"]) { FIN_ASK = { key: "adv", act: k }; go2("finance"); chk(`${org}/${role}/adv ${a.id}/ask ${k}`); } FIN_ASK = null; });
+          ADV_OPEN = null; VC_OPEN = null; await tick();
+        }
+        if (["fin", "finhead", "exec"].every(r => o.roles.includes(r))) { const keep = JSON.stringify(S); safe(`${org}/FC2 walk`, () => {
+          const as = r => { ROLE = r; LANG = o.langs[0]; renderShell(); }, E = m => errs.push(`${org}/FC2: ${m}`);
+          if ((vcAuth(5e5, "finhead") || {}).id !== "A3" || vcAuth(2e6, "finhead") || (vcAuth(2e6, "exec") || {}).id !== "A2" || (vcAuth(2e7, "exec") || {}).id !== "A1") E("authority levels");
+          as("fin");
+          const line = famLines().find(l => (l.type === "ope" || l.type === "inv") && famHeadroom(l.id) > 200000);
+          if (!line) { E("no allocation line with room"); return; }
+          const m = { id: "CM-TEST-01", kind: "utility", name: ["ค่าไฟทดสอบ", "Test power"], vendor: ["การไฟฟ้าทดสอบ", "Test utility"], line: line.id, amount: 100000, released: 0, paid: 0, signed: TODAY, due: FY_END, by: me().id, t: nowIso(), log: [] };
+          (S.fcommit = S.fcommit || []).push(m);
+          const free = () => fcFree(finCommits().find(y => y.id === m.id));
+          const base = { type: "utility", commit: m.id, nb: "", line: "", desc: "ค่าไฟฟ้าทดสอบ", vendor: "", payee: "การไฟฟ้าทดสอบ", kind: "gov", tax: "", gross: 60000, vat: false, contrib: false, due: addDays(TODAY, 5), method: "epay", mwhy: "" };
+          if (!vcSave(Object.assign({}, base, { gross: 0 })).errs) E("save let a zero gross through");
+          if (!vcSave(Object.assign({}, base, { method: "cash", mwhy: "" })).errs) E("save let cash without a reason through");
+          const v1 = vcSave(base).v;
+          vcSave(Object.assign({}, base, { gross: 55000 }), v1); if (v1.gross !== 55000) E("edit gross");
+          v1.ev = { bill: true }; vcAct(v1, "submit"); if (v1.state !== "check") E(`submit gave ${v1.state}`);
+          const v2 = vcSave(Object.assign({}, base, { gross: 50000 })).v; v2.ev = { bill: true }; vcAct(v2, "submit");
+          if (v2.state !== "draft") E("a second voucher passed the commitment (R-FC-03)");
+          if (!vcAct(v1, "recall", "สั้น")) E("recall without a reason went through");
+          vcAct(v1, "recall", "แก้ยอดตามใบแจ้งหนี้ใหม่"); if (v1.state !== "draft" || v1.checker) E("recall");
+          vcAct(v1, "submit");
+          as("finhead"); vcAct(v1, "checked"); if (v1.state !== "approve" || v1.checker !== me().id) E("check");
+          vcAct(v1, "approve"); if (v1.state !== "approve") E("SD-11 let the checker approve");
+          as("exec"); vcAct(v1, "approve"); if (v1.state !== "ready" || !/^A2/.test(v1.approver.auth)) E(`approve gave ${v1.state} ${v1.approver && v1.approver.auth}`);
+          if (free() !== 45000) E(`free after approval ${free()}`);
+          as("finhead"); vcAct(v1, "hcancel", "ผู้ขายแจ้งยกเลิกบริการเดือนนี้"); if (v1.state !== "cancelled") E("finance-head cancel");
+          if (free() !== 100000) E(`cancel left ${free()} free`);
+          as("fin"); const v3 = vcSave(Object.assign({}, base, { gross: 10000 })).v; v3.ev = { bill: true };
+          for (let i = 0; i < 3; i++) { as("fin"); vcAct(v3, "submit"); as("finhead"); vcAct(v3, "return", "แนบหลักฐานไม่ครบถ้วน"); }
+          if (v3.returns !== 3 || v3.state !== "returned") E("returns");
+          as("fin"); vcAct(v3, "submit"); as("finhead"); vcAct(v3, "checked"); as("exec"); vcAct(v3, "reject", "ไม่มีงบสำหรับรายการนี้แล้ว"); if (v3.state !== "rejected") E("reject is not final");
+          as("fin"); finSet("pay:vouchers"); VC_F = "all"; VC_Q.show = true; VC_OPEN = v3.id; go2("finance"); chk(`${org}/FC2/list`);
+          FIN_DTAB.vc = "hist"; go2("finance"); chk(`${org}/FC2/hist`); FIN_DTAB.vc = "view";
+          const ad = (S.advances || []).find(a => a.state === "request"); if (ad) { as("exec"); if (!advAct(ad, "reject", "สั้น")) E("advance reject without a reason went through"); }
+        }); S = JSON.parse(keep); VC_OPEN = null; VC_EDIT = null; FIN_ASK = null; VC_F = "open"; VC_Q.show = false; ROLE = "fin"; await tick(); }
+      }
       // Round C4: every B8 and B9 tab with the demo date moved to March and to September (simulated GFMIS imports)
       if (o.suites.includes("render") && typeof simDisb === "function" && S.y2569) for (const mi of [5, 11]) {
         S.asOf = FY_MONTH_ENDS()[mi]; TODAY = S.asOf; simDisb(mi);

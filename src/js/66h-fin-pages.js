@@ -133,6 +133,8 @@ document.addEventListener("keydown", e => {
   const row = e.target.closest && e.target.closest(".fn-rowform"), fr = row && row.querySelector("[data-frow]") ? row : null; // Finance rows only (Procurement has its own)
   if (fr && e.key === "Escape") { e.stopPropagation(); const k = FIN_ROW; FIN_ROW = null; route(); const b = k && $(`[data-frow="${CSS.escape(k)}"]`); if (b) b.focus(); return; }
   if (fr && e.key === "Enter" && e.target.tagName === "INPUT") { e.preventDefault(); const go = fr.querySelector("button:not([data-frow])"); if (go) go.click(); return; }
+  if (e.key === "Enter" && e.target.tagName === "TR" && e.target.dataset.vcopen) { e.target.click(); return; } // voucher rows open like shared-list rows
+  if (e.key === "Escape" && FIN_ASK) { FIN_ASK = null; route(); return; } // a reason box closes before its drawer
   if (e.key === "Escape" && CUR === "finance" && $(".fn-drawer:not(.cr-drawer)")) finShut();
 });
 

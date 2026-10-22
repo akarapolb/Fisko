@@ -11,6 +11,46 @@ const reconState = p => (p.recon ? p.recon.state : "none");
 // so where a section shows is decided in one place. FIN_BINDS wire events after every Finance render; they look
 // elements up by selector, so they are safe on any page.
 const FS = {}, FIN_BINDS = [];
+// Finance drawers (vouchers, advances) keep their own markup but behave like the shared drawer (Finance CRUD UI-F6, F9):
+// an action that needs a reason opens one reason box (.cr-ask markup, CR_WHY_MIN), and a History tab lists the record's
+// steps. FIN_ASK_RUN[key](act, why) runs the action and returns an error to show in the box, or nothing.
+let FIN_ASK = null; // { key, act, err }
+const FIN_DTAB = {}, FIN_ASK_RUN = {};
+const finAskBtn = (key, act, label, kind) => `<button class="btn ${kind || ""}" type="button" data-fask="${key}|${act}">${label}</button>`;
+function finAskForm(key, act, label, o = {}) {
+  const need = o.need !== false, err = FIN_ASK && FIN_ASK.err;
+  return `<form class="cr-ask" id="fn-ask" data-fask-key="${key}" data-fask-act="${act}" data-need="${need ? 1 : 0}"><b>${label}</b>${o.impact ? `<div class="sub">${o.impact}</div>` : ""}${o.extra || ""}
+    <label for="fn-why">${o.whyLabel || (need ? L(`เหตุผล (อย่างน้อย ${CR_WHY_MIN} ตัวอักษร)`, `Reason (at least ${CR_WHY_MIN} characters)`) : L("หมายเหตุ (ถ้ามี)", "Note (optional)"))}</label><textarea id="fn-why" rows="2"${err ? ' aria-invalid="true" aria-describedby="fn-why-err"' : ""}>${esc((FIN_ASK && FIN_ASK.why) || "")}</textarea>
+    ${err ? `<div class="cr-err" id="fn-why-err" role="alert">${esc(err)}</div>` : ""}
+    <div class="row"><button class="btn ${o.danger ? "danger" : "primary"}" type="submit">${L("ยืนยัน", "Confirm")}</button><button class="btn ghost" type="button" data-fask="">${L("ย้อนกลับ", "Back")}</button></div></form>`;
+}
+// Tabs at the top of a Finance drawer: [[id, label, html]]; the current one is kept per drawer key.
+function finDrTabs(key, tabs) {
+  const cur = tabs.find(t => t[0] === FIN_DTAB[key]) || tabs[0];
+  return `<div class="tabs cr-tabs" role="tablist">${tabs.map(t => `<button class="tab ${t === cur ? "on" : ""}" type="button" role="tab" aria-selected="${t === cur}" data-fdtab="${key}|${t[0]}">${t[1]}</button>`).join("")}</div>${cur[2]}`;
+}
+// A record's own steps as a timeline, newest first; the History button opens every audit entry that names it.
+const finLogHtml = (log, id) => (log || []).length ? `<ol class="timeline">${log.slice().reverse().map(l => `<li class="done"><span class="dot"></span><div><b style="font-weight:600">${esc(tx(l.act))}</b><small>${esc(userName(l.by))}${l.role ? " · " + tx(ROLES[l.role]) : ""} · ${fdate(l.t, true)}</small>${l.note ? `<div class="sub">${esc(l.note)}</div>` : ""}</div></li>`).join("")}</ol><div style="margin-top:8px">${historyBtn(id, id)}</div>`
+  : `<span class="sub">${L("ยังไม่มีประวัติ", "No history yet")}</span>`;
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-fask],[data-fdtab]");
+  if (!t || !$("#view").contains(t)) return;
+  if (t.dataset.fdtab) { const [k, id] = t.dataset.fdtab.split("|"); FIN_DTAB[k] = id; FIN_ASK = null; route(); return; }
+  const v = t.dataset.fask; FIN_ASK = v ? { key: v.split("|")[0], act: v.split("|")[1], err: null } : null; route();
+  const w = $("#fn-why"); if (w) w.focus();
+});
+document.addEventListener("submit", e => {
+  if (e.target.id !== "fn-ask") return;
+  e.preventDefault();
+  const f = e.target, key = f.dataset.faskKey, act = f.dataset.faskAct, why = $("#fn-why").value.trim();
+  if (f.dataset.need === "1" && why.length < CR_WHY_MIN) { FIN_ASK = { key, act, why, err: L(`ใส่เหตุผลอย่างน้อย ${CR_WHY_MIN} ตัวอักษร`, `Give a reason of at least ${CR_WHY_MIN} characters`) }; route(); const w = $("#fn-why"); if (w) w.focus(); return; }
+  FIN_ASK = null; // the action re-renders the page itself; the box closes unless it hands back an error
+  const err = FIN_ASK_RUN[key] && FIN_ASK_RUN[key](act, why);
+  if (err) { FIN_ASK = { key, act, why, err }; route(); const w = $("#fn-why"); if (w) w.focus(); return; }
+  if ($("#fn-ask")) route();
+});
+window.addEventListener("hashchange", () => { FIN_ASK = null; });
+
 // A row action that needs input (release, cancel) opens one form row under its row: "<kind>:<id>".
 let FIN_ROW = null;
 const rowBtn = (key, label) => `<button class="btn ghost" type="button" data-frow="${esc(key)}" aria-expanded="${FIN_ROW === key}">${label}</button>`;
