@@ -188,7 +188,7 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
 <body>
 <div class="layout">
 <nav class="toc" id="toc" aria-label="สารบัญ">
-  <div class="brand">Fisko Procurement<small>CRUD UI Design · v0.2</small></div>
+  <div class="brand">Fisko Procurement<small>CRUD UI Design · v0.3</small></div>
   <div class="tools"><button type="button" id="toc-toggle" aria-expanded="false">สารบัญ</button><button type="button" id="theme">ธีม</button></div>
   <ol>
     <li><a href="#s1"><span class="n">01</span>เป้าหมายและขอบเขต</a></li>
@@ -216,7 +216,7 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
   <h1>Fisko Procurement<br><span style="font-size:.55em;color:var(--accent)">ออกแบบหน้าจอสร้าง ดู แก้ไข และยกเลิกข้อมูล เพื่อสาธิตวงจรจัดซื้อจัดจ้างครบตั้งแต่แผนจนจ่ายเงิน</span></h1>
   <p class="th">ต่อยอดจาก Fisko Procurement Design v0.4 (ผังเมนู P1 ถึง P13 รอบ 44) และส่วนประกอบร่วมของ Budget CRUD (รอบ 48 ถึง 53)</p>
   <div class="meta">
-    <div><span>เวอร์ชัน</span><b>0.2 สร้างแล้วรอบ PC1</b></div>
+    <div><span>เวอร์ชัน</span><b>0.3 สร้างแล้วรอบ PC1–PC2</b></div>
     <div><span>วันที่</span><b>19 ตุลาคม 2569</b></div>
     <div><span>จัดทำโดย</span><b>Avalant</b></div>
     <div><span>ต่อยอดจาก</span><b>Procurement Design v0.4 · Budget CRUD v0.2</b></div>
@@ -555,7 +555,7 @@ footer.end { margin-top: 64px; padding-top: 18px; border-top: 1px solid var(--li
     <tr><td class="id">PC4</td><td>สคริปต์สาธิต P-E01 ถึง P-E15 ในคู่มือในแอป (<span class="mono">DEMO</span> part “proc-e2e”) และการทดสอบ sweep ที่เดินครบวงจรด้วยปุ่มเดียวกับหน้าจอ ปรับเอกสารออกแบบ Procurement</td><td>บทที่ 11</td></tr>
   </tbody>
 </table></div>
-<p class="small"><b>สถานะ:</b> รอบ PC1 สร้างแล้ว (รอบ 55 ของต้นแบบ: <span class="mono">84-proc-crud.js</span>) · ข้อสังเกต: ร่างแผนปีถัดไปเก็บแยกใน <span class="mono">S.pplanNext</span> (ยังไม่มีรายการจัดสรรและแฟ้ม) แก้และลบได้เท่านั้น · ใบขอที่รอพิจารณาจองวงเงินด้วย · ปุ่มจำลองในกล่องยืนยันเป็นความสามารถใหม่ของ <span class="mono">76-crud.js</span> (<span class="mono">sim</span>)</p>
+<p class="small"><b>สถานะ:</b> รอบ PC2 สร้างแล้ว (รอบ 56: <span class="mono">85-case-crud.js</span>) · ข้อสังเกต: ปุ่มจำลองข้อเสนอบันทึกทันทีพร้อม “เลิกทำ” และแก้หรือลบได้ก่อนให้คะแนน · ยังไม่ทำ: แถวเกณฑ์กำหนดเอง (FR-PC-14) การแก้ประกาศ e-GP หลังประกาศ และการเปลี่ยนตัวกรรมการพร้อมเหตุผลหลังเริ่มแจ้งส่วนได้เสีย<br>รอบ PC1 สร้างแล้ว (รอบ 55 ของต้นแบบ: <span class="mono">84-proc-crud.js</span>) · ข้อสังเกต: ร่างแผนปีถัดไปเก็บแยกใน <span class="mono">S.pplanNext</span> (ยังไม่มีรายการจัดสรรและแฟ้ม) แก้และลบได้เท่านั้น · ใบขอที่รอพิจารณาจองวงเงินด้วย · ปุ่มจำลองในกล่องยืนยันเป็นความสามารถใหม่ของ <span class="mono">76-crud.js</span> (<span class="mono">sim</span>)</p>
 <p class="small">แต่ละรอบ: สร้าง ทดสอบ (sweep เปิดทุกลิ้นชัก ฟอร์มสร้าง ฟอร์มแก้ และปุ่มตามสถานะ สำหรับ proc prochead div divhead exec fin audit) ตรวจสคริปต์ด้วย <span class="mono">new Function</span> หลัง build ปรับ HANDOFF เผยแพร่ต้นแบบ และถามก่อน commit</p>
 </section>
 

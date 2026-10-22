@@ -137,6 +137,46 @@
           PP_FY = FAM_FY; crClose(); await tick();
         }
       }
+      // Procurement CRUD round PC2: bids added, corrected, deleted and simulated; a rerun that keeps them in the round
+      // history and starts clean; a cancelled case that forgets its method; then every case drawer and every row list
+      // (market research, bids, quotations, committees) inside every case for the procurement roles
+      if (o.suites.includes("render") && typeof CRUD !== "undefined" && CRUD.defs.pcCase) {
+        safe(`${org}/PC2 walk`, () => {
+          const D = CRUD.defs, why = "เหตุผลสำหรับการทดสอบ"; ROLE = "proc"; LANG = o.langs[0]; renderShell();
+          const act = (k, r, id) => { const a = (D[k].acts(r) || []).filter(Boolean).find(x => x.id === id); if (!a) { errs.push(`${org}/PC2: no ${k} action ${id}`); return; } a.run(r, why); };
+          const c = S.cases.find(x => caseState(x) === 5 && needsCompetition(x));
+          if (c) {
+            CASE_OPEN = c.id; c.egp.bidders = 2; setState(c, 6, "bidders", "2"); c.bids = []; c.scores = {};
+            const b1 = D.csBid.create.run({ vendor: csVendors()[0].name, other: "", price: 900000 });
+            D.csBid.create.run({ vendor: "", other: "บริษัท ทดสอบ จำกัด", price: 950000 });
+            D.csBid.edit.run(b1, { vendor: b1.name, other: "", price: 910000 });
+            act("csBid", c.bids[1], "del"); if (c.bids.length !== 1 || c.bids[0].price !== 910000) errs.push(`${org}/PC2: bid edit or delete failed`);
+            csBidSim(c); if (c.bids.length !== 2) errs.push(`${org}/PC2: simulated bids gave ${c.bids.length}`);
+            procSet("cases"); go2("procurement"); chk(`${org}/PC2/case ${c.id}`);
+            CASE_OPEN = null; act("pcCase", c, "fail");
+            const last = (c.rounds || [])[(c.rounds || []).length - 1];
+            if (caseState(c) !== 4 || c.bids.length || c.egp || !last || last.bids.length !== 2) errs.push(`${org}/PC2: the rerun did not start clean`);
+            crOpen("pcCase", c.id); CR_OPEN.tab = "rounds"; procSet("cases"); go2("procurement"); chk(`${org}/PC2/rounds`);
+          } else errs.push(`${org}/PC2: no competitive case at step 5`);
+          const d = S.cases.find(x => [2, 3].includes(caseState(x)));
+          if (d) { d.method = "specific"; act("pcCase", d, "cancel"); if (d.method || !d.cancelled || !(d.rounds || []).length) errs.push(`${org}/PC2: a cancelled case kept its method`); }
+          crClose(); CASE_OPEN = null;
+        });
+        for (const role of ["proc", "prochead", "div", "exec", "audit"].filter(r => o.roles.includes(r))) {
+          ROLE = role; LANG = o.langs[0]; safe("shell", renderShell);
+          if (!prSees(prPage("cases"))) continue;
+          const open = (k, id, mode, t, cid) => safe(`${org}/${role}/${k}/${cid || ""}/${id || "new"}/${mode}${t ? "/" + t : ""}`, () => {
+            CASE_OPEN = cid || null; procSet("cases"); crOpen(k, id, mode); if (t) CR_OPEN.tab = t; go2("procurement"); chk(`${org}/${role}/${k}/${cid || ""}/${id || "new"}/${mode}${t || ""}`);
+            if (document.querySelector(`[data-crlist="${k}"]`) && !document.querySelector(".cr-drawer")) errs.push(`${org}/${role}/${k}/${id}: no drawer`); });
+          for (const c of S.cases) {
+            open("pcCase", c.id, "view"); if ((c.rounds || []).length) open("pcCase", c.id, "view", "rounds");
+            for (const k of ["csMkt", "csBid", "csQuote", "csCm"]) { CASE_OPEN = c.id; const sp = CRUD.defs[k];
+              for (const r of sp.list()) { const id = sp.id(r); open(k, id, "view", null, c.id); CASE_OPEN = c.id; if (sp.edit && sp.edit.can(r)) open(k, id, "edit", null, c.id); CASE_OPEN = c.id; }
+              if (sp.create && sp.create.can()) open(k, "", "edit", null, c.id); }
+          }
+          CASE_OPEN = null; crClose(); await tick();
+        }
+      }
       // Round C4: every B8 and B9 tab with the demo date moved to March and to September (simulated GFMIS imports)
       if (o.suites.includes("render") && typeof simDisb === "function" && S.y2569) for (const mi of [5, 11]) {
         S.asOf = FY_MONTH_ENDS()[mi]; TODAY = S.asOf; simDisb(mi);

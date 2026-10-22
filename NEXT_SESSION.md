@@ -162,3 +162,7 @@ Years come from `CUR_FY` and `FORM_FY`; request basics edit in the drawer; M10 u
 ## Round 55 (Procurement CRUD round PC1)
 
 The Procurement CRUD design (`Fisko_Procurement_CRUD_Design.html`, core lifecycle only) is approved. Round PC1 moved P2 plan items and versions and P3 requisitions onto the shared list + drawer (`84-proc-crud.js`, `HANDOFF.md` section 55). Next: PC2 (P4 case files: list + drawer, editable rows in steps 3 to 7, clean reruns, duty separation, appeal form, Simulate for e-GP, bids and appeals), PC3 (P7 contracts: drafts and signing, phase schedule, acceptance fixes, changes, guarantees, penalties, invoices, closing), PC4 (demo script P-E01 to P-E15 and the sweep walk).
+
+## Round 56 (Procurement CRUD round PC2)
+
+P4 case files are a list + drawer with rerun, cancel and withdraw-award actions; inside a case, market research, bids, quotations and committees are editable lists; reruns and cancellations start clean and keep the old round (`85-case-crud.js`, `HANDOFF.md` section 56). Next: PC3 (P7 contracts: drafts and signing, phase schedule, acceptance fixes, changes, guarantees, penalties, invoices, closing), then PC4 (demo script P-E01 to P-E15 and the sweep walk).
