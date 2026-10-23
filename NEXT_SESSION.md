@@ -1,38 +1,38 @@
 # Fisko: handoff for the next session
 
-Written 18 October 2026, after round 35; updated after round 43 (Finance information architecture, branch `finance-ia`). This is the short version: where things stand, how to work, and what to do next. The full record of every round is in `HANDOFF.md`, sections 1 to 43.
+Written 23 October 2026, after round 54 on `main`, while two parallel branches (Procurement CRUD and Finance CRUD) are mid-way. This is the short version: where things stand, how to work, what to do next. The full record of every round is in `HANDOFF.md` (sections 1 to 54 on `main`; the two branches add their own sections).
 
 ## 1. Where things stand
 
-Fisko is a discussion prototype of a Thai government budgeting platform with three apps:
+Fisko is a discussion prototype of a Thai government budgeting platform with three apps on one data set: **Fisko Budget** (pages B1 to B11), **Fisko Procurement** (P1 to P13) and **Fisko Finance** (F1 to F11). They share My Workspace, M10 System Administration, the AI co-work chat and the demo guide.
 
-- **Fisko Budget:** pages B1 to B11 since round 47 (old module codes M01 to M09 shown beside them; M10 stays shared), built to its own design (`Fisko_Budget_Design.html` v0.3, build rounds B1 to B6).
-- **Fisko Procurement:** P1 to P18, built to its design (`Fisko_Procurement_Design.html` v0.2, rounds P0 to P4 and Q1 to Q6).
-- **Fisko Finance:** F1 to F10, built to its design (`Fisko_Finance_Design.html` v0.3, rounds FN1 to FN6) and reorganised around the work in round 43. The page layout is declared in one file, `src/js/66h-fin-pages.js` (see section 4).
+**Fisko Budget is complete.** It has its own design (`Fisko_Budget_Design.html` v0.3), its information architecture (round 47), and the **Budget CRUD design** (`Fisko_Budget_CRUD_Design.html` v0.2), fully built in rounds 48 to 54:
+- every record and every piece of master data can be created, viewed, edited, deleted while a draft, or cancelled, withdrawn or retired with a reason, with a 10-second Undo;
+- B8 and B9 run on FY2570 allocation lines, and an "as of month" picker moves the demo date;
+- the years being spent and formulated come from the date (`CUR_FY`, `FORM_FY`);
+- the in-app demo guide holds the end-to-end script **E-01 to E-16** (about 45 minutes), and the test sweep walks it.
 
-All three share My Workspace, M10 System Administration, the AI co-work chat (round 27) and one data set.
+**Procurement and Finance are being moved onto the same list + drawer pattern**, each in its own session and branch (section 6).
 
 | Item | Where |
 |---|---|
-| Repository | `D:\Claude\Fisko`, branch `main`, remote `https://github.com/akarapolb/Fisko.git` |
-| Last commit | `e969601` Round 35: demo guide, Budget design v0.2, test runner (working tree clean) |
-| Published prototype | https://claude.ai/artifact/STW3X8Ytx3VVLV7VHLXse9 (private, from round 43, published from a cloud session). Earlier: https://claude.ai/artifact/5pZpV5JDgdLNBdnwHtYFuy (private, from round 37). The old link https://claude.ai/artifact/K8TJFETX7GMftoZYb9zFZR (version 43) belongs to another organisation's account and can't be updated from this one. |
-| Published Budget design | https://claude.ai/artifact/EFs3q62eP5tVTZWMSFQkX9 (version 2, private) |
-| Published Finance design | https://claude.ai/artifact/G4Sx84KthvJWcLJMAWPKD1 (version 1, private; `Fisko_Finance_Design.html` v0.1, round 36) |
-| Data version | `DATA_V = 35` in `src/js/00-core.js` (bump it whenever the seed shape changes) |
+| Main checkout | `D:\Claude\Fisko-proc`, branch `main`, last commit `d7ea0ad` (round 54), in sync with `origin/main` |
+| Old checkout | `D:\Claude\Fisko` is still on the old `procurement-ia` branch with stray files; don't work there |
+| Remote | `https://github.com/akarapolb/Fisko.git` |
+| Published prototype (main) | https://claude.ai/artifact/STW3X8Ytx3VVLV7VHLXse9 (version 15, round 54, private) |
+| Budget CRUD design | https://claude.ai/artifact/3NigvMP1qa4DpvQrjN84Zz (version 8, private) |
+| Procurement CRUD design | https://claude.ai/artifact/H1Vc2G84m87vS9QrZRZSn5 (private) |
+| Procurement branch prototype | https://claude.ai/artifact/MuAxUNbvtXHCgbvutoTcVE (private) |
+| Finance branch prototype | https://claude.ai/artifact/8ZSzN2o5CVN6hj5Gh3MKyK (private; the Finance CRUD design link is in that branch's `HANDOFF.md`) |
+| Data version | `DATA_V = 38` on `main` (`src/js/00-core.js`; bump it whenever the seed shape changes) |
 
 ## 2. How the user likes to work
 
-- **Each round:** build, test, update `README.md` and `HANDOFF.md`, publish the prototype to the same URL, then **ask before committing**. Commit and push only when the user says so (they usually say "commit and push"). Use the wrap-up box with a "Commit and push" button.
-- **New products or big areas:** ask a few scoping questions, write a design document in Thai first (same layout and style as the Budget and Procurement designs), get approval, then build in rounds.
-- **Constraints:**
-  - All figures are fictional.
-  - Real-agency data (`*data-dpt*`) never goes into the published build.
-  - No Avalant product names in the product. "Avalant" may appear as the document author.
-  - AI and OCR are simulated (D-P09, D-P10). Agents never approve, award, sign, pay or change amounts; every write is a button a person presses.
-  - Stock and assets belong to a separate product, Fisko Assets (D-P11).
-- **Look and feel:** calm UI with one slate-navy accent (`#34498C`) and a light sidebar. Status colours appear only as small dots. Charts use the Fisko palette led by green (`--ch-1..6`).
-- **Language:** the user writes in English. The app and all design documents are bilingual (Thai first).
+- **Each round:** build, run the full sweep, check phone width and dark mode, update `README.md`, `HANDOFF.md` and `NEXT_SESSION.md`, publish the prototype to the same link, then **ask before committing**. Commit and push only when the user says so ("commit and push", "commit and continue"). Stage files by name; never `git add -A src` when another session shares the folder.
+- **New areas:** ask a few scoping questions (AskUserQuestion, recommended option first), write a design document in Thai first in the house layout, get approval, then build in rounds.
+- **The user is terse:** "go", "done?", "fix all". Answer "done?" with an honest status: what is built, committed, pushed, and what is left.
+- **Constraints:** all figures fictional; real-agency data (`*data-dpt*`) never in the published build; no Avalant product names in the product (Avalant may be the document author); AI, OCR, GFMIS, e-GP and the bank are simulated; agents never approve, sign, pay or change amounts; stock and assets belong to the future Fisko Assets.
+- **Look:** calm UI, one slate-navy accent, status as small dots, Fisko chart palette. Bilingual, Thai first. The user writes in English.
 
 ## 3. Build, run, test, publish
 
@@ -40,121 +40,75 @@ All three share My Workspace, M10 System Administration, the AI co-work chat (ro
 bash src/build.sh
 ```
 
-The build concatenates `src/head.html`, `styles.css`, `theme.css`, `calm.css`, `cowork.css`, `body.html` and `src/js/*.js` (in filename order) into `Fisko_Prototype.html` (standalone) and `fisko-prototype.html` (artifact).
+This concatenates `src/head.html`, the CSS files, `body.html` and `src/js/*.js` (filename order) into `Fisko_Prototype.html` (standalone) and `fisko-prototype.html` (artifact). Then parse-check it, because one bad edit silently breaks the whole page:
 
 ```bash
-python -m http.server 8787 --bind 127.0.0.1
+node -e "const h=require('fs').readFileSync('Fisko_Prototype.html','utf8');[...h.matchAll(/<script>([\s\S]*?)<\/script>/g)].forEach(x=>{try{new Function(x[1]);console.log('parse ok')}catch(e){console.log('PARSE ERROR',e.message)}})"
 ```
 
-- **Prototype:** `http://127.0.0.1:8787/Fisko_Prototype.html`. Add `?v=N` to dodge the browser cache. The passcode for every account is `246810`.
-- **Tests:** `http://127.0.0.1:8787/tests/run.html` has three buttons:
-  - **Full sweep:** about 6,000 checks in about 30 s, all passing at `e969601`.
-  - **Quick:** the sample organisation and five roles.
-  - **Demo walk:** all 39 steps.
+```bash
+python -m http.server 8788 --bind 127.0.0.1
+```
 
-  A check fails when page text contains undefined, NaN, [object, Infinity or Invalid; when code throws; or when a different page renders than the one asked for.
-- **Other checks after a round:**
-  - a phone-width look (375 px, `resize_window` preset mobile);
-  - dark mode (`colorScheme: dark`);
-  - a manual walk through the new flow;
-  - desktop screenshots at a custom width of 1366 to 1440 px (the pane is narrower than the 860 px breakpoint).
-- **Publish:** call the Artifact tool with `file_path` = `D:\Claude\Fisko\fisko-prototype.html` and `url` = the prototype link above. Rebuild first.
+- **Prototype:** `http://127.0.0.1:8788/Fisko_Prototype.html?v=N` (bump `N` to beat the cache). The passcode for every account is `246810`.
+- **Tests:** `http://127.0.0.1:8788/tests/run.html`. The test frame caches the prototype: set the frame's `src` to `../Fisko_Prototype.html?v=N` and wait for "Ready." before clicking **Full sweep**. On `main` the sweep runs about 11,600 checks in about 110 s, all passing. It covers every page and tab, every list drawer (view, tabs, edit, new) for every role, two demo months, the C3 submission-to-allocation walk, the E-01 to E-16 walk, chat, agents and every demo step.
+- **Publish:** Artifact tool, `file_path` = `D:\Claude\Fisko-proc\fisko-prototype.html`, `url` = the main prototype link. Branch sessions publish to their own links until merged.
 
-## 4. Gotchas worth remembering
+## 4. Gotchas
 
-- **Edit only `src/`.** The two HTML files at the root are build output.
-- **No shared module scope.** All JS files share one global scope, so name clashes are real (`DOC_T`, `FY_END` and `FY_MONTHS` already bit). Features extend each other by wrapping: reassign function declarations or `VIEWS`/`BIND`/`REQ_PANELS` entries, and keep the base call. A `const` cannot be wrapped; edit the source file instead.
-- **Load order is filename order.** Code that runs at load time can only use what earlier files define. `MATRIX` lives in `50-admin.js`, so later roles patch it inside a `renderShell` wrapper.
-- **Use the test hook for routing.** Browsers ignore `history.replaceState` and hash changes after a few hundred calls in 10 seconds. Ad-hoc test loops must set `window.FISKO_ROUTE = "#page"` and call `route()`, as `tests/sweep.js` does.
-- **Shell quoting.** Heredocs with Thai text or apostrophes break bash on this Windows machine. Write Python or JS patch scripts to the scratchpad and run them.
-- **Long browser scripts.** The Browser pane's `javascript_tool` times out at 45 s. Start long runs, then poll in a second call.
-- **Finance pages are declared, not wrapped.** Since round 43 a Finance round adds sections to `FS` and wiring to `FIN_BINDS`, then places the sections in `FIN_PAGES` (`66h-fin-pages.js`). Don't redefine `VIEWS.finance` or `BIND.finance`. Deep links are `fnc-<page>` or `fnc-<page>:<tab>`.
-- **Seeds.** Seed extensions are `seedBudgetB1`…`seedBudgetB6` and the `seed*` functions called from `06-seedhelp.js`. Bump `DATA_V` when they change, or saved demo state hides the change.
+- **Edit only `src/`.** The root HTML files are build output. Never hand-merge them: rebuild after a merge.
+- **One global scope.** Files extend each other by wrapping functions and `VIEWS` / `BIND` / panel objects; a `const` can't be wrapped. Check name clashes with `grep -nE "(const|let|function) name\b" src/js/*.js`.
+- **B-pages:** `75-budget-pages.js` wraps the Budget views. Later files wrap the result (`const v = VIEWS.x; VIEWS.x = () => f(v())`), never replace it, or the B-page tab bars disappear.
+- **Shared list + drawer (`76-crud.js`):** declare a record type with `CRUD.def(key, { list, id, title, st, status, gone, cols, filters, fields, check, create, edit, acts, view, tabs, hist })` and render it with `crudList(key, { head, after, empty })` (or `crHere(key)` for a drawer with no list). All clicks and submits are handled once on `document`. Actions with `why: true` ask for a reason; `undo: false` skips the Undo bar. Master data is retired (`retireAct`), never deleted once used.
+- **Years and dates:** `TODAY` is `let` (the demo date, `S.asOf`); `REAL_TODAY`, `CUR_FY` (being spent, 2570) and `FORM_FY` (being formulated, 2571) are in `00-core.js`. Use them, never a literal year. Seeds always run with the real date.
+- **Scripted edits:** a `//` comment inside a one-line function comments out the rest of the line; a template string can't be an object key (use `{ [FORM_FY]: … }`). Parse-check after every scripted change (`node -e "new Function(…)"` per file).
+- **Routing in tests:** set `window.FISKO_ROUTE = "#page"` and call `route()`; the browser ignores bursts of hash changes. The sweep's `tick` uses a MessageChannel because background tabs throttle `setTimeout(0)`.
+- **Shell:** heredocs with Thai text break bash here; write Python scripts to the scratchpad and run them (`PYTHONIOENCODING=utf-8` when printing Thai).
 
-## 5. Map of the newer code (rounds 26 to 35)
+## 5. Map of the newer code (rounds 43 to 54)
 
 | File | What it holds |
 |---|---|
-| `src/calm.css`, `src/cowork.css` | Calm theme, chart palette, B1 to B6 styles; AI co-work styles |
-| `68-cowork.js` | AI co-work chat (side panel, full page `#cowork`, agents, files, voice) |
-| `41d-req-b1.js`, `49b-budget-b1.js` | Request steps, rules BR-07..13, division director, data spine `syncBudget()`, waterfall |
-| `43d-cons-b2.js`, `45c-strategy-b2.js` | Five criteria, 3R, zero-based view, MTEF lock; national-plan links |
-| `42d-review-b3.js`, `46c-sub-b3.js`, `47c-alloc-b3.js` | Committee, quorum, minutes, cut impact; minister gate, pack, briefing; lines from the act |
-| `47d-alloc-b4.js` | Four-level balances, transfers by regulation (T1..T6), plan versions, savings, live M07 |
-| `48c-perf-b5.js` | Quarterly reports, cost per output, three-stage evaluation, recommendations, public page |
-| `69-budget-ai.js`, `69b-budget-settings.js` | Budget agents, forecast, what-ifs, KPI-B, signals; M10 "Budget AI and signals" settings |
-| `52-demo.js`, `Fisko_Demo_Script.html` | Demo guide, 39 steps (26 to 39 cover the Budget cycle in depth) |
-| `tests/run.html`, `tests/sweep.js` | Test runner and sweep |
+| `66h-fin-pages.js`, `74-proc-pages.js`, `75-budget-pages.js` | Page tables for Finance, Procurement and Budget (menus, tabs, codes) |
+| `66i-fin-nb.js` | Finance F11 non-budget money |
+| `76-crud.js` | Shared list + drawer, reasons, Undo, history tab |
+| `77-alloc-crud.js` | B7 allocation lines, transfers, releases, carry-over, appropriation |
+| `78-form-crud.js` | B3 requests, B4 ceiling and duplicates, B5 rounds, comments, meetings, hearings |
+| `79-sub-crud.js` | B6 batches, Budget Bureau results and revisions, parliament cuts and appeals |
+| `80-live-year.js` | B8/B9 on FY2570, as-of month, simulated GFMIS import, FY2569 history |
+| `81-master-crud.js` | B2 strategy, KPIs, ideas, revisions; B9 outputs; M10 master data, committee, master plans |
+| `82-intel-crud.js` | B10/B11 saved scenarios, anomaly reopen, agent cancel; demo script E-01 to E-16 |
+| `83-admin-crud.js` | Request basics in the drawer; M10 users, approval route, business rules |
+| `Fisko_Budget_CRUD_Design.html` | The Budget CRUD design (Thai) with its build status |
 
-Roles now: `div`, `divhead`, `plan`, `committee`, `exec`, `fin`, `audit`, `admin`, `proc`, `prochead`.
+## 6. Parallel work in progress (not on `main` yet)
 
-## 6. Open items
+| | Finance CRUD | Procurement CRUD |
+|---|---|---|
+| Session | "Finance CRUD design on list + drawer" | "Procurement CRUD design on list + drawer" |
+| Branch, worktree | `claude/charming-shirley-7b0006`, `D:\Claude\Fisko\.claude\worktrees\charming-shirley-7b0006` | `claude/brave-haslett-3b0854`, `D:\Claude\Fisko\.claude\worktrees\brave-haslett-3b0854` |
+| Committed and pushed | design `88cffc4`, FC1 `a17357e`, FC2 `80a5e3c` (vouchers) | design `5af03db`/`023cf87`, PC1 `3c63dcb`, PC2 `531ad63` (case files) |
+| Built, not committed | FC3: GFMIS files and e-Payment batches, result forms with Simulate, daily checks, 50 ทวิ reissue, refund receipts (sweep 12,281 checks) | PC3: contracts on the list + drawer, drafts, phase schedule, signing, fixes to acceptance, payment gate and closing (sweep 12,333 checks) |
+| Next | the user's go-ahead to commit FC3, then the next FC round | the user's go-ahead to commit PC3, then the next PC round |
 
-- **Procurement T1 to T4 are built (T4, round 40, is not committed or published).** See `HANDOFF.md` sections 37, 38, 39 and 40P. Only FR-PR-85 is left in design chapter 18. T2 to T4 follow design chapter 18. A parallel Finance FN1 build shares the working tree.
+**Merging both into `main`** (only when the user says so):
+1. Finish and commit the current rounds on both branches.
+2. Merge `refs/heads/claude/charming-shirley-7b0006` into `main` first.
+3. Then merge `refs/heads/claude/brave-haslett-3b0854`. Expect conflicts:
+   - `src/js/76-crud.js`: Finance added sorting and a refresh fix.
+   - `tests/sweep.js`.
+   - `HANDOFF.md`, `README.md` and `NEXT_SESSION.md`.
+   - The two Finance files Procurement's PC3 touched.
+   - Both branches also use the round numbers 55 and 56 (55F/56F for Finance).
+4. Rebuild, parse-check, run the full sweep, and publish to the main prototype link.
 
-**From the Budget design** (chapter 13.4 of v0.2):
+## 7. Open items and suggested next steps
 
-- Non-budget money (FR-B-18).
-- Real e-Budgeting, BBL and BB EvMIS file formats (D-B03).
-- A strategy-level risk register (FR-B-05).
-- Divisions proposing KPI changes (FR-B-06).
-- Central fund and supplementary requests (FR-B-34).
-- A five-level budget structure in M10.
-- Splitting steps 1 to 4 of the request form.
-- A way to flag exceptions to the 20% cap (BR-11).
-- Checking the Budget Administration Regulation (No. 2) of 2567 before real use.
+1. Keep the two CRUD branches going round by round, then merge them as above.
+2. **Finance leftovers:** FR-FN-33, Excel/PDF exports, a demo step for F11.
+3. **A full demo rehearsal** with the E-01 to E-16 script (in-app guide, filter "ครบวงจร").
+4. **Fisko Assets design** (D-P11): stock and assets, fed by Procurement acceptances.
+5. **Simulated to real AI:** a plan to swap the planner and answer writer for a real model, keeping the same tools, approvals and audit log.
+6. **Budget design leftovers** (chapter 13.4 of the Budget design): real e-Budgeting file formats, strategy-level risk register, divisions proposing KPI changes, central fund and supplementary requests, a five-level structure, BR-11 exception flags.
 
-**Not yet answered:** none. The user decided that menus a role can't use stay hidden rather than shown locked.
-
-## 7. Suggested next steps
-
-1. **Fisko Finance (recommended next).** Design v0.1 is done (round 36); FN1 to FN6 are all built (rounds 37 to 42: `66b` to `66g-fin-*.js`, `DATA_V = 35`, design v0.2). Left: answers to D-FN-01 to 09, FR-FN-33 and exports, and the six Finance demo steps in `Fisko_Demo_Script.html`. Decisions D-FN-01 to 09 run on the proposed defaults until the user answers.
-2. **Fisko Assets design (D-P11):** stock and assets, fed by Procurement acceptances.
-3. **From simulated to real AI:** a plan to swap the planner and answer writer for a real model, keeping the same tools, approvals and audit log.
-4. **Small polish:** BR-11 exception flags; splitting the request form's first steps; moving the forecast probabilities by unit or type history into data.
-
-Start the next session by reading this file, then `HANDOFF.md` sections 3, 4, 11 and 26 to 35, then run the quick sweep to confirm a clean start.
-
-## Round 44 (Procurement information architecture)
-
-Built on branch `procurement-ia` (worktree `..\Fisko-proc`). Procurement now has 13 pages in 5 groups declared in `src/js/74-proc-pages.js` (see `HANDOFF.md` section 44 and design chapter 19). Next for Procurement: the follow-ups listed at the end of section 44.
-
-## Round 45 (Procurement polish and Finance demo steps)
-
-`main` now carries rounds 43 to 45. The round-44 follow-ups are done (`HANDOFF.md` section 45). Still open: the Finance decisions D-FN-01 to D-FN-09, FR-FN-33 and exports, a full end-to-end rehearsal of the demo, then Fisko Assets or the real-AI plan.
-
-## Round 46 (Finance decisions and non-budget money)
-
-The Finance decisions D-FN-01 to D-FN-09 are answered (design v0.4, 13.2) and non-budget money is a full cycle on F11 (`66i-fin-nb.js`, `DATA_V = 36`). Still open: FR-FN-33 and exports, a demo step for F11, a full demo rehearsal, then Fisko Assets or the real-AI plan.
-
-## Round 47 (Budget information architecture)
-
-Fisko Budget now has 11 pages B1 to B11 in four groups, declared in `src/js/75-budget-pages.js` (see `HANDOFF.md` section 47 and Budget design chapter 15). All three apps now share one page-table pattern (`66h-fin-pages.js`, `74-proc-pages.js`, `75-budget-pages.js`). Still open: FR-FN-33 and exports, a demo step for F11, a full demo rehearsal, then Fisko Assets or the real-AI plan.
-
-## Round 48 (Budget CRUD round C1)
-
-The Budget CRUD design (`Fisko_Budget_CRUD_Design.html` v0.1) is approved; round C1 built the shared list + drawer (`76-crud.js`) and moved B7 Allocation onto it (`77-alloc-crud.js`, `HANDOFF.md` section 48). Next: round C2 (formulation FY2571), then C3 (submission and parliament with Simulate), C4 (B8 and B9 on FY2570), C5 (strategy and master data), C6 (B10/B11, the end-to-end demo script and sweep).
-
-## Round 49 (Budget CRUD round C2)
-
-Formulation FY2571 is on the list + drawer (`78-form-crud.js`, `HANDOFF.md` section 49). Next: C3 (submission and parliament with Simulate, act into allocation), C4 (B8 and B9 on FY2570), C5 (strategy and master data), C6 (B10/B11, end-to-end demo script and sweep).
-
-## Round 50 (Budget CRUD round C3)
-
-Submission batches, Budget Bureau results and revisions, parliament cuts and appeals are on the list + drawer (`79-sub-crud.js`, `HANDOFF.md` section 50). Next: C4 (B8 and B9 on FY2570), C5 (strategy and master data), C6 (B10/B11, end-to-end demo script and sweep).
-
-## Round 51 (Budget CRUD round C4)
-
-B8 and B9 read FY2570 (`80-live-year.js`, `HANDOFF.md` section 51); the demo date can be moved month by month (`S.asOf`, `TODAY` is now `let`). `DATA_V = 37`. Next: C5 (strategy tree and master data), C6 (B10/B11, end-to-end demo script and sweep).
-
-## Round 52 (Budget CRUD round C5)
-
-Strategy and master data are on the list + drawer (`81-master-crud.js`, `HANDOFF.md` section 52); master data is retired, not deleted, once used. `DATA_V = 38`. Next: C6 (B10/B11 records, the end-to-end demo script E-01 to E-16 in the in-app guide, a sweep that walks the whole cycle).
-
-## Round 53 (Budget CRUD round C6, design complete)
-
-The Budget CRUD design is fully built (rounds C1 to C6, `76-crud.js` to `82-intel-crud.js`, `HANDOFF.md` sections 48 to 53). The demo guide holds the end-to-end script E-01 to E-16 and the sweep walks it. Still open from before: FR-FN-33 and Excel/PDF exports, a demo step for F11, a full demo rehearsal (now with the E-script), then Fisko Assets or the real-AI plan. Ideas noticed during C1 to C6: the formulation year (2571) and the parliament timetable are still fixed values; Fisko Procurement and Finance could adopt the shared list + drawer.
-
-## Round 54 (Budget CRUD follow-ups)
-
-Years come from `CUR_FY` and `FORM_FY`; request basics edit in the drawer; M10 users, approval route and rules are lists (`83-admin-crud.js`, `HANDOFF.md` section 54). Budget types stay fixed by design. Open: Fisko Procurement and Fisko Finance on the shared list + drawer (each needs its own design pass), FR-FN-33 and exports, a demo step for F11, a full rehearsal with the E-script, then Fisko Assets or the real-AI plan.
+Start the next session by reading this file, then `HANDOFF.md` sections 47 to 54 (and the branch sections if merging), then run the full sweep on `main` to confirm a clean start.
