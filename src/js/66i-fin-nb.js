@@ -14,9 +14,9 @@ VST.nbready = [["พร้อมจ่ายจากบัญชีเงิน
 const NB_CAT = { ope: ["ใช้สอยและวัสดุ", "Operating"], inv: ["ครุภัณฑ์และสิ่งก่อสร้าง", "Assets and works"], train: ["พัฒนาบุคลากร", "Staff development"], other: ["อื่น ๆ", "Other"] };
 const NBP_ST = { draft: [["ร่าง", "Draft"], "p-mute"], submitted: [["รออนุมัติ", "Awaiting approval"], "p-warn"], approved: [["อนุมัติแล้ว", "Approved"], "p-ok"], returned: [["ส่งกลับแก้ไข", "Returned"], "p-bad"] };
 const NBW_ST = { pending: [["รออนุมัติ", "Awaiting approval"], "p-warn"], done: [["ถอนแล้ว", "Withdrawn"], "p-ok"], rejected: [["ไม่อนุมัติ", "Rejected"], "p-bad"], back: [["ฝากคืนแล้ว", "Deposited back"], "p-mute"] };
-const nbFunds = () => S.nbFunds || [];
+const nbFunds = () => (S.nbFunds || []).filter(f => !f.deleted);
 const nbFund = id => nbFunds().find(f => f.id === id);
-const nbPlan = (fid, fy = FAM_FY) => (S.nbPlans || []).find(p => p.fund === fid && p.fy === fy);
+const nbPlan = (fid, fy = FAM_FY) => (S.nbPlans || []).find(p => p.fund === fid && p.fy === fy && !p.deleted);
 const nbLineOf = (fid, lid) => { const p = nbPlan(fid); return p ? p.lines.find(l => l.id === lid) : null; };
 // Plan-line use: approved fund vouchers and advances that name the line.
 const NB_VC_USED = ["ready", "nbready", "posted", "paid"], NB_ADV_USED = ["approved", "paid", "clearing", "objected", "cleared"];
@@ -92,14 +92,7 @@ FS.nbKpis = () => {
     <div class="kpi"><span class="l">${L("แผนที่อนุมัติ / ใช้ไป", "Approved plans / used")}</span><span class="v">${fmt(sumv(P.flatMap(p => p.lines.map(l => l.amount))))}</span><span class="d sub">${L("ใช้ไป", "used")} ${fmt(sumv(P.map(p => nbUsed(p.fund))))}</span></div>
   </section>`;
 };
-FS.nbFunds = () => {
-  const F = nbFunds(), cur = nbFund(NB_FUND) || F[0];
-  return `<section class="panel"><header><h2>${L("กองทุนเงินนอกงบประมาณ", "Non-budget funds")}</h2><span class="sp"></span><span class="sub">${L("เก็บไว้ใช้จ่ายได้ตามกฎหมาย ไม่ต้องนำส่งคลัง (ข้อ 4)", "Kept and spent as the law allows, not remitted (clause 4)")}</span></header>
-    <div class="tbl-wrap"><table><thead><tr><th style="min-width:220px">${L("กองทุน", "Fund")}</th><th class="n">${L("รับเข้า", "In")}</th><th class="n">${L("จ่ายไป", "Out")}</th><th class="n">${L("ฝากคลัง", "Treasury")}</th><th class="n">${L("ในบัญชี", "Account")}</th><th class="n">${L("รวม", "Total")}</th><th>${L("แผนปีนี้", "This year's plan")}</th><th></th></tr></thead>
-      <tbody>${F.map(f => { const b = nbBal(f), p = nbPlan(f.id); return `<tr${cur && cur.id === f.id ? ' style="background:var(--tint)"' : ""}><td><span class="mono">${f.id}</span> <b style="font-weight:600">${esc(tx(f.name))}</b><div class="sub">${esc(tx(f.basis))}</div></td><td class="n">${fmt(b.income)}</td><td class="n">${fmt(b.spent)}</td><td class="n">${fmt(b.treasury)}</td><td class="n">${fmt(b.agency)}</td><td class="n"><b>${fmt(b.total)}</b></td>
-        <td>${p ? stTag(NBP_ST, p.status) : tag(L("ยังไม่มีแผน", "No plan"), "p-warn")}</td><td><button class="btn ghost" type="button" data-nbf="${f.id}">${L("รายการเคลื่อนไหว", "Movements")}</button></td></tr>`; }).join("") || `<tr><td colspan="8" class="sub">—</td></tr>`}</tbody></table></div></section>
-    ${cur ? nbStatement(cur) : ""}`;
-};
+// FS.nbFunds, FS.nbPlans and FS.nbWd are shared lists in 88-fin-nb-crud.js (Finance CRUD FR-FC-48 to 50).
 function nbStatement(f) {
   const rows = [];
   (S.receipts || []).filter(r => !r.cancelled && r.fund === f.id).forEach(r => { rows.push({ d: r.date, what: `${L("รับเงิน", "Received")} ${rcNo(r)} · ${tx(r.payer)}`, inA: r.amount }); if (r.remit) { const m = (S.remits || []).find(x => x.id === r.remit); rows.push({ d: m ? m.t.slice(0, 10) : r.date, what: `${L("ฝากคลัง", "Deposited at the treasury")} ${r.remit}`, inA: -r.amount, inT: r.amount }); } });
@@ -112,42 +105,6 @@ function nbStatement(f) {
     <div class="tbl-wrap"><table><thead><tr><th>${L("วันที่", "Date")}</th><th>${L("รายการ", "Item")}</th><th class="n">${L("บัญชีหน่วยงาน", "Agency account")}</th><th class="n">${L("ฝากคลัง", "Treasury")}</th></tr></thead>
       <tbody>${rows.map(r => { A += r.inA || 0; T += r.inT || 0; return `<tr><td class="sub">${fdate(r.d)}</td><td>${esc(r.what)}</td><td class="n">${r.inA ? (r.inA > 0 ? "+" : "") + fmt(r.inA) : ""}<div class="sub">${fmt(A)}</div></td><td class="n">${r.inT ? (r.inT > 0 ? "+" : "") + fmt(r.inT) : ""}<div class="sub">${fmt(T)}</div></td></tr>`; }).join("") || `<tr><td colspan="4" class="sub">${L("ยังไม่มีรายการในปีนี้", "No movements this year")}</td></tr>`}</tbody></table></div></section>`;
 }
-FS.nbPlans = () => {
-  const F = nbFunds(), cur = nbFund(NB_FUND) || F[0];
-  if (!cur) return `<section class="panel"><div class="body sub">—</div></section>`;
-  const p = nbPlan(cur.id), maker = ROLE === "fin", head = canSpend() && ROLE !== "fin" && ROLE !== "finhead", ed = maker && (!p || ["draft", "returned"].includes(p.status));
-  return `<div style="margin:0 0 12px">${segBar(F.map(f => [f.id, `${f.id} ${esc(tx(f.name))}`]), cur.id, "nbf")}</div>
-  <section class="panel"><header><h2>${L("แผนการใช้จ่ายเงินนอกงบประมาณ", "Non-budget spending plan")} ${fyLabel(FAM_FY)} · <span class="mono">${cur.id}</span></h2><span class="sp"></span>${p ? stTag(NBP_ST, p.status) : ""}</header>
-    ${p ? `<div class="tbl-wrap"><table><thead><tr><th style="min-width:220px">${L("รายการ", "Line")}</th><th>${L("หมวด", "Category")}</th><th class="n">${L("วงเงิน", "Planned")}</th><th class="n">${L("ใช้ไป", "Used")}</th><th class="n">${L("คงเหลือ", "Left")}</th><th style="width:140px"></th></tr></thead>
-      <tbody>${p.lines.map(l => { const u = nbUsed(cur.id, l.id); return `<tr><td><span class="mono sub">${l.id}</span> ${esc(tx(l.name))}</td><td class="sub">${tx(NB_CAT[l.cat])}</td><td class="n">${fmt(l.amount)}</td><td class="n">${fmt(u)}</td><td class="n">${fmt(l.amount - u)}</td><td><div class="bar"><i style="width:${l.amount ? Math.min(100, u / l.amount * 100) : 0}%"></i></div></td></tr>`; }).join("")}</tbody>
-      <tfoot><tr><td colspan="2">${L("รวม", "Total")} · ${L("คาดรายรับ", "income expected")} ${fmt(p.income)}</td><td class="n">${fmt(sumv(p.lines.map(l => l.amount)))}</td><td class="n">${fmt(nbUsed(cur.id))}</td><td class="n">${fmt(sumv(p.lines.map(l => l.amount)) - nbUsed(cur.id))}</td><td></td></tr></tfoot></table></div>` : `<div class="body sub">${L("ยังไม่มีแผนของปีนี้", "No plan for this year yet")}</div>`}
-    ${p && p.approved ? `<div class="body sub">${L("อนุมัติโดย", "Approved by")} ${esc(userName(p.approved.by))} · ${fdate(p.approved.t, true)}</div>` : ""}
-    ${p && p.note ? `<div class="body sub" style="color:var(--bad)">${L("เหตุผลที่ส่งกลับ", "Returned because")}: ${esc(p.note)}</div>` : ""}
-    <div class="body">
-      ${ed ? `<form class="inline-form" id="nbl-form"><div class="f" style="flex:2 1 240px"><label for="nbl-n">${L("รายการ", "Line")}</label><input type="text" id="nbl-n" required></div>
-        <div class="f" style="flex:0 1 180px"><label for="nbl-c">${L("หมวด", "Category")}</label><select id="nbl-c">${Object.keys(NB_CAT).map(k => `<option value="${k}">${tx(NB_CAT[k])}</option>`).join("")}</select></div>
-        <div class="f" style="flex:0 1 150px"><label for="nbl-a">${L("วงเงิน (บาท)", "Amount (baht)")}</label><input type="number" id="nbl-a" min="1" step="1" required></div>
-        <div class="f" style="flex:0 1 160px"><label for="nbl-i">${L("คาดรายรับทั้งปี (บาท)", "Income expected (baht)")}</label><input type="number" id="nbl-i" min="0" step="1" value="${p ? p.income : 0}"></div>
-        <button class="btn" type="submit">+ ${L("เพิ่มรายการ", "Add line")}</button></form>
-        ${p && p.lines.length ? `<button class="btn primary" type="button" id="nbp-sub" style="margin-top:8px">${L("เสนอหัวหน้าส่วนราชการอนุมัติ", "Send to the head of the agency")}</button>` : ""}` : ""}
-      ${head && p && p.status === "submitted" ? `<div class="row" style="flex-wrap:wrap"><button class="btn primary" type="button" id="nbp-ok">${L("อนุมัติแผน", "Approve the plan")}</button><input type="text" id="nbp-why" placeholder="${L("เหตุผลถ้าส่งกลับ", "Reason to return")}" style="min-width:220px;flex:1" aria-label="${L("เหตุผล", "Reason")}"><button class="btn danger" type="button" id="nbp-no">${L("ส่งกลับแก้ไข", "Return")}</button></div>` : ""}
-      <p class="sub" style="margin:8px 0 0">${L("จ่ายจากเงินนอกงบประมาณได้เฉพาะรายการในแผนที่อนุมัติแล้วและไม่เกินวงเงิน (R-FN-07) · กองแผนและผู้บริหารเห็นแผนนี้ใน Fisko Budget (M06)", "Non-budget money is spent only on lines of an approved plan, within the amount (R-FN-07) · Planning and executives see this plan in Fisko Budget (M06)")}</p>
-    </div></section>`;
-};
-FS.nbWd = () => {
-  const W = (S.nbWd || []).slice().reverse(), maker = ROLE === "fin", head = canSpend() && ROLE !== "fin" && ROLE !== "finhead", c = fcfg();
-  const F = nbFunds().filter(f => { const p = nbPlan(f.id); return p && p.status === "approved"; });
-  return `<section class="panel"><header><h2>${L("ถอนเงินฝากคลัง", "Withdrawals from the treasury deposit")}</h2><span class="sp"></span><span class="sub">${L("ถอนตามแผนที่อนุมัติ จ่ายหรือฝากคืนภายใน", "Against an approved plan; pay out or deposit back within")} ${c.refundDays} ${L("วันทำการ (ข้อ 101 (5))", "working days (clause 101 (5))")}</span></header>
-    <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("กองทุน / วัตถุประสงค์", "Fund / purpose")}</th><th class="n">${L("บาท", "Baht")}</th><th>${L("สถานะ", "Status")}</th><th>${L("ต้องจ่ายหรือฝากคืนภายใน", "Pay or deposit back by")}</th><th></th></tr></thead>
-      <tbody>${W.map(w => { const due = w.done ? addWorkdays(w.done.t.slice(0, 10), c.refundDays) : null, used = w.done ? nbWdUsed(w) : 0; return `<tr><td class="mono">${w.id}</td><td><span class="mono">${w.fund}</span> ${esc(tx(nbFund(w.fund).name))}<div class="sub">${esc(w.why)}</div></td><td class="n">${fmt(w.amount)}</td>
-        <td>${stTag(NBW_ST, w.status)}${w.done ? `<div class="sub mono">${esc(w.done.doc)}</div>` : ""}</td>
-        <td>${w.status === "done" ? (used >= w.amount ? `${dotI("ok")}<span class="sub">${L("จ่ายครบแล้ว", "All paid out")}</span>` : `${dotI(clockDot(due))}${clockTxt(due)}<div class="sub">${L("ยังไม่ได้จ่าย", "not paid yet")} ${fmt(w.amount - used)}</div>`) : "—"}</td>
-        <td><div class="row" style="flex-wrap:nowrap">${head && w.status === "pending" ? `<button class="btn primary" type="button" data-nbwok="${w.id}">${L("อนุมัติ", "Approve")}</button><button class="btn danger" type="button" data-nbwno="${w.id}">${L("ไม่อนุมัติ", "Reject")}</button>` : ""}${maker && w.status === "done" && used < w.amount && daysUntil(due) < 3 ? `<button class="btn" type="button" data-nbwback="${w.id}">${L("ฝากคืนส่วนที่ไม่ได้จ่าย", "Deposit back what wasn't paid")}</button>` : ""}</div></td></tr>`; }).join("") || `<tr><td colspan="6" class="sub">${L("ยังไม่มี", "None yet")}</td></tr>`}</tbody></table></div>
-    ${maker && F.length ? `<div class="body"><form class="inline-form" id="nbw-form"><div class="f" style="flex:1 1 220px"><label for="nbw-f">${L("กองทุน", "Fund")}</label><select id="nbw-f">${F.map(f => `<option value="${f.id}">${f.id} · ${esc(tx(f.name))} · ${L("ฝากคลัง", "treasury")} ${fmt(nbBal(f).treasury)}</option>`).join("")}</select></div>
-      <div class="f" style="flex:0 1 150px"><label for="nbw-a">${L("จำนวน (บาท)", "Amount (baht)")}</label><input type="number" id="nbw-a" min="1" step="1" required></div>
-      <div class="f" style="flex:2 1 240px"><label for="nbw-w">${L("ใช้จ่ายสำหรับ", "To pay for")}</label><input type="text" id="nbw-w" required></div>
-      <button class="btn primary" type="submit">${L("ขอถอนเงินฝากคลัง", "Ask to withdraw")}</button></form></div>` : maker ? `<div class="body sub">${L("ต้องมีแผนที่อนุมัติก่อนจึงขอถอนได้", "A plan must be approved before any withdrawal")}</div>` : ""}</section>`;
-};
 // How much of a withdrawal has been paid out since it was made (fund vouchers and advances paid after it).
 function nbWdUsed(w) {
   const t0 = w.done.t;
@@ -166,40 +123,6 @@ NAV_ICON.nb = "layers";
   const n = NAV.find(x => x.id === "finance");
   n.tabs = FIN_PAGES.map(p => [p.id, p.label, p.code, FIN_GROUPS[p.group], p.roles]);
 }
-FIN_BINDS.push(() => {
-  if (FIN_TAB !== "nb") return;
-  const done = msg => { commit(); renderShell(); route(); if (msg) toast(msg); };
-  $$("[data-nbf]").forEach(b => (b.onclick = () => { NB_FUND = b.dataset.nbf; route(); }));
-  const cur = () => nbFund(NB_FUND) || nbFunds()[0];
-  const lf = $("#nbl-form");
-  if (lf) lf.onsubmit = e => {
-    e.preventDefault();
-    const f = cur(); let p = nbPlan(f.id);
-    if (!p) { p = { id: `NP-${FAM_FY}-${String((S.nbPlans || []).length + 1).padStart(2, "0")}`, fund: f.id, fy: FAM_FY, income: 0, lines: [], status: "draft", by: me().id, t: nowIso(), log: [] }; (S.nbPlans = S.nbPlans || []).push(p); }
-    const nm = $("#nbl-n").value.trim(); p.lines.push({ id: `${f.id}-${p.lines.length + 1}`, name: [nm, nm], cat: $("#nbl-c").value, amount: Math.round(Number($("#nbl-a").value)) });
-    p.income = Math.round(Number($("#nbl-i").value) || 0);
-    audit(["เพิ่มรายการในแผนเงินนอกงบประมาณ", "Added a non-budget plan line"], `${p.id} · ${nm}`); done(L("เพิ่มแล้ว", "Added"));
-  };
-  const ps = $("#nbp-sub");
-  if (ps) ps.onclick = () => { const p = nbPlan(cur().id); p.status = "submitted"; p.note = ""; p.log.push({ t: nowIso(), by: me().id, act: "submit" }); audit(["เสนอแผนเงินนอกงบประมาณ", "Sent a non-budget plan for approval"], p.id); notify(["exec"], [`แผนการใช้จ่ายเงินนอกงบประมาณ ${p.id} รออนุมัติ`, `Non-budget spending plan ${p.id} is waiting for approval`], "fnc-nb:plans"); done(L("เสนอแล้ว", "Sent")); };
-  const ok = $("#nbp-ok");
-  if (ok) ok.onclick = () => { const p = nbPlan(cur().id); if (p.by === me().id) { toast(L("ผู้จัดทำอนุมัติแผนของตนเองไม่ได้", "The maker can't approve their own plan")); return; } p.status = "approved"; p.approved = { by: me().id, t: nowIso() }; p.log.push({ t: nowIso(), by: me().id, act: "approve" }); audit(["อนุมัติแผนเงินนอกงบประมาณ", "Approved a non-budget plan"], p.id); notify(["fin", "plan"], [`แผนเงินนอกงบประมาณ ${p.id} อนุมัติแล้ว`, `Non-budget plan ${p.id} is approved`], "fnc-nb:plans"); done(L("อนุมัติแล้ว", "Approved")); };
-  const no = $("#nbp-no");
-  if (no) no.onclick = () => { const p = nbPlan(cur().id), why = $("#nbp-why").value.trim(); if (why.length < 5) { toast(L("ระบุเหตุผลอย่างน้อย 5 ตัวอักษร", "Give a reason of at least 5 characters")); return; } p.status = "returned"; p.note = why; p.log.push({ t: nowIso(), by: me().id, act: "return", note: why }); audit(["ส่งกลับแผนเงินนอกงบประมาณ", "Returned a non-budget plan"], `${p.id} · ${why}`); notify(["fin"], [`แผน ${p.id} ถูกส่งกลับ: ${why}`, `Plan ${p.id} was returned: ${why}`], "fnc-nb:plans"); done(L("ส่งกลับแล้ว", "Returned")); };
-  const wf = $("#nbw-form");
-  if (wf) wf.onsubmit = e => {
-    e.preventDefault();
-    const f = nbFund($("#nbw-f").value), amt = Math.round(Number($("#nbw-a").value)), b = nbBal(f), p = nbPlan(f.id), left = sumv(p.lines.map(l => l.amount)) - nbUsed(f.id);
-    if (!(amt > 0) || amt > b.treasury) { toast(L(`ถอนได้ไม่เกินยอดฝากคลัง ${fmt(b.treasury)} บาท`, `At most the treasury balance, ${fmt(b.treasury)} baht`)); return; }
-    if (amt > left) { toast(L(`เกินวงเงินคงเหลือของแผน ${fmt(left)} บาท (R-FN-07)`, `More than the plan has left, ${fmt(left)} baht (R-FN-07)`)); return; }
-    const w = { id: `WD-${FAM_FY}-${String((S.nbWd || []).length + 1).padStart(2, "0")}`, fund: f.id, amount: amt, why: $("#nbw-w").value.trim(), status: "pending", by: me().id, t: nowIso(), done: null };
-    (S.nbWd = S.nbWd || []).push(w); audit(["ขอถอนเงินฝากคลัง (เงินนอกงบประมาณ)", "Asked to withdraw non-budget money from the treasury"], `${w.id} · ${fmt(amt)}`);
-    notify(["exec"], [`ขอถอนเงินฝากคลัง ${w.id} ${fmt(amt)} บาท รออนุมัติ`, `Treasury withdrawal ${w.id} (${fmt(amt)} baht) is waiting for approval`], "fnc-nb:wd"); done(L("ส่งขออนุมัติแล้ว", "Sent for approval"));
-  };
-  $$("[data-nbwok]").forEach(b => (b.onclick = () => { const w = S.nbWd.find(x => x.id === b.dataset.nbwok); if (!sodCheck("SD-11", sodActors("exec", "spend"), [w.by], w.id)) return; S.gfSeq = (S.gfSeq || 3600000400) + 1; w.status = "done"; w.approver = { by: me().id, t: nowIso() }; w.done = { t: nowIso(), doc: `GF-WD-${S.gfSeq}` }; audit(["อนุมัติถอนเงินฝากคลัง", "Approved a treasury withdrawal"], w.id); notify(["fin"], [`ถอนเงินฝากคลัง ${w.id} แล้ว จ่ายหรือฝากคืนภายใน ${fcfg().refundDays} วันทำการ`, `Withdrawal ${w.id} is done; pay out or deposit back within ${fcfg().refundDays} working days`], "fnc-nb:wd"); done(L("อนุมัติและถอนแล้ว (จำลอง)", "Approved and withdrawn (simulated)")); }));
-  $$("[data-nbwno]").forEach(b => (b.onclick = () => { const w = S.nbWd.find(x => x.id === b.dataset.nbwno); w.status = "rejected"; audit(["ไม่อนุมัติถอนเงินฝากคลัง", "Rejected a treasury withdrawal"], w.id); done(L("บันทึกแล้ว", "Saved")); }));
-  $$("[data-nbwback]").forEach(b => (b.onclick = () => { const w = S.nbWd.find(x => x.id === b.dataset.nbwback); w.backAmt = w.amount - nbWdUsed(w); w.status = "back"; audit(["ฝากคืนเงินที่ถอนแต่ไม่ได้จ่าย", "Deposited back unpaid withdrawn money"], `${w.id} · ${fmt(w.backAmt)}`); done(L("ฝากคืนแล้ว", "Deposited back")); }));
-});
 // Clocks and tasks: withdrawn money not paid out within 15 working days; plans and withdrawals waiting for the head.
 {
   const base = finClocks;

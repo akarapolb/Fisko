@@ -402,6 +402,59 @@
           finSet("close:audit"); crOpen("fnAq", q.id); go2("finance"); chk(`${org}/FC5/audit query`); crClose();
         }); S = JSON.parse(keep); crClose(); FIN_ROW = null; RC_DRAFT = null; BK_MONTH = null; ROLE = "fin"; await tick(); }
       }
+      // Finance CRUD round FC6: F11 funds, plans and withdrawals and F9 what-ifs on the shared list; F9 reason boxes; then a walk
+      if (o.suites.includes("render") && CRUD.defs && CRUD.defs.fnFund) {
+        const where = { fnFund: "nb:funds", fnPlan: "nb:plans", fnWd: "nb:wd", fnWi: "ai:wi" };
+        for (const role of ["fin", "finhead", "exec", "plan", "audit"].filter(r => o.roles.includes(r))) {
+          ROLE = role; LANG = o.langs[0]; safe("shell", renderShell);
+          for (const [k, tab] of Object.entries(where)) {
+            const sp = CRUD.defs[k], open = (id, mode, t, ask) => safe(`${org}/${role}/${k}/${id || "new"}/${mode}${t ? "/" + t : ""}${ask ? "/" + ask : ""}`, () => { finSet(tab); crOpen(k, id, mode); if (t) CR_OPEN.tab = t; if (ask) CR_OPEN.ask = ask; go2("finance"); chk(`${org}/${role}/${k}/${id || "new"}/${mode}${t || ""}${ask || ""}`); if (CUR === "finance" && FIN_TAB === tab.split(":")[0] && !document.querySelector(".cr-drawer")) errs.push(`${org}/${role}/${k}/${id}: no drawer`); });
+            if (!finSees(finPage(tab.split(":")[0]))) continue;
+            for (const r of sp.list() || []) { const id = sp.id(r); open(id, "view"); open(id, "view", "hist"); for (const [t] of sp.tabs ? sp.tabs(r) : []) open(id, "view", t); if (sp.edit && sp.edit.can(r)) open(id, "edit"); for (const a of sp.acts ? sp.acts(r) : []) if (a.why || a.num || a.confirm) open(id, "view", null, a.id); }
+            if (sp.create.can()) open("", "edit");
+          }
+          crClose();
+          if (finSees(finPage("ai"))) for (const [key, act] of [["frun", "no"], ["frun", "stop"]]) safe(`${org}/${role}/ask ${key} ${act}`, () => { FIN_ASK = { key, act }; finSet("ai:agents"); go2("finance"); chk(`${org}/${role}/ask ${key} ${act}`); });
+          const g = typeof fSignals === "function" ? fSignals()[0] : null;
+          if (g && finSees(finPage("ai"))) safe(`${org}/${role}/ask sig`, () => { FIN_ASK = { key: "sig", act: `issue~${g.key}` }; finSet("ai:kpi"); go2("finance"); chk(`${org}/${role}/ask sig`); });
+          FIN_ASK = null; await tick();
+        }
+        if (["fin", "finhead", "exec", "audit"].every(r => o.roles.includes(r))) { const keep = JSON.stringify(S); safe(`${org}/FC6 walk`, () => {
+          const as = r => { ROLE = r; LANG = o.langs[0]; renderShell(); }, E = m => errs.push(`${org}/FC6: ${m}`), D = CRUD.defs;
+          const act = (k, r, id, why) => { const a = (D[k].acts(r) || []).find(x => x && x.id === id); if (!a) { E(`no action ${k}/${id} for ${ROLE}`); return; } return a.run(r, why); };
+          // funds
+          as("fin"); const f0 = D.fnFund.create.run({ th: "กองทุนบันทึกผิด", en: "", basis: "ทดสอบ", openA: 0, openT: 0 }); act("fnFund", f0, "del", "บันทึกซ้ำกับกองทุนเดิม"); if (nbFunds().includes(f0)) E("delete a fund");
+          const f = D.fnFund.create.run({ th: "กองทุนทดสอบ", en: "Test fund", basis: "ระเบียบทดสอบ", openA: 5000, openT: 100000 });
+          D.fnFund.edit.run(f, { th: "กองทุนทดสอบ", en: "Test fund", basis: "ระเบียบทดสอบ", openA: 6000, openT: 100000 }); if (f.openA !== 6000) E("edit the opening balance before money moves");
+          // a plan: lines, submit, approve, then an amendment that leaves the approved plan in force
+          const p = D.fnPlan.create.run({ fund: f.id, income: 50000 });
+          D.fnPlan.edit.run(p, { income: 50000, n_new: "อบรมทดสอบ", c_new: "train", a_new: 40000 }); if (p.lines.length !== 1) E("plan line added");
+          const l1 = p.lines[0].id; D.fnPlan.edit.run(p, { income: 50000, ["n_" + l1]: "อบรมทดสอบ", ["c_" + l1]: "train", ["a_" + l1]: 45000, n_new: "วัสดุทดสอบ", c_new: "ope", a_new: 10000 }); if (p.lines.length !== 2 || p.lines[0].amount !== 45000) E("plan line edit");
+          act("fnPlan", p, "sub"); act("fnPlan", p, "wd", "แก้วงเงินก่อนเสนออีกครั้ง"); if (p.status !== "draft") E("withdraw a plan");
+          act("fnPlan", p, "sub"); as("exec"); act("fnPlan", p, "ok"); if (p.status !== "approved") E(`approve gave ${p.status}`);
+          as("fin"); act("fnPlan", p, "amend", "เพิ่มรายการอบรมรอบสอง");
+          D.fnPlan.edit.run(p, Object.assign({ income: 50000, n_new: "อบรมรอบสอง", c_new: "train", a_new: 20000 }, ...p.amend.lines.map(l => ({ ["n_" + l.id]: tx(l.name), ["c_" + l.id]: l.cat, ["a_" + l.id]: l.amount }))));
+          if (p.lines.length !== 2 || p.amend.lines.length !== 3 || p.status !== "approved") E("the approved plan did not stay in force during the amendment");
+          act("fnPlan", p, "sub"); as("exec"); act("fnPlan", p, "ok"); if (p.lines.length !== 3 || p.amend || (p.versions || []).length !== 1) E("amendment approval");
+          // withdrawals: edit, reject with a reason, approve, deposit back
+          as("fin"); if (!D.fnWd.check({ fund: f.id, amount: 1e9 }, null).length) E("a withdrawal above the treasury passed");
+          const w1 = D.fnWd.create.run({ fund: f.id, amount: 20000, why: "จ่ายค่าอบรม" }); D.fnWd.edit.run(w1, { amount: 25000, why: "จ่ายค่าอบรม" }); if (w1.amount !== 25000) E("edit a withdrawal");
+          as("exec"); act("fnWd", w1, "no", "ยังไม่ถึงกำหนดจ่าย"); if (w1.status !== "rejected") E("reject a withdrawal");
+          as("fin"); const w2 = D.fnWd.create.run({ fund: f.id, amount: 15000, why: "จ่ายค่าวัสดุ" }); as("exec"); act("fnWd", w2, "ok"); if (w2.status !== "done") E("approve a withdrawal");
+          as("fin"); act("fnWd", w2, "back"); if (w2.status !== "back" || w2.backAmt !== 15000) E("deposit back");
+          finSet("nb:plans"); crOpen("fnPlan", p.id); go2("finance"); chk(`${org}/FC6/plan`); crClose();
+          // what-ifs
+          const s = D.fnWi.create.run({ name: "ทดสอบเร่งจ่าย", lag: 3, slip: 0, target: 90, share: 80 }); D.fnWi.edit.run(s, { name: "ทดสอบเร่งจ่าย 2", lag: 2, slip: 0, target: 90, share: 80 }); if (s.w.lag !== 2) E("edit a what-if");
+          crOpen("fnWi", s.id); act("fnWi", s, "open"); if (!FWI || FWI.lag !== 2) E("open a what-if"); act("fnWi", s, "del"); if ((S.fWhatifs || []).includes(s)) E("delete a what-if"); FWI = null;
+          // agent run stopped with a reason; a signal confirmed, then reopened
+          const ag = Object.keys(F_AG).find(id => F_AG[id].who.includes("fin") && agentOn(id));
+          if (ag) { fStart(ag); const r = S.fRuns[S.fRuns.length - 1]; F_RUN_OPEN = r.id; if (["running", "waiting"].includes(r.status)) { FIN_ASK_RUN.frun("stop", "เริ่มงานผิดตัว"); if (r.status !== "stopped" || !r.stopped) E("stop a run"); } }
+          as("audit"); const g = fSignals()[0];
+          if (g) { FIN_ASK_RUN.sig(`issue~${g.key}`, "ยอดสูงผิดปกติจริง"); if (sigSt(g.key).status !== "issue") E("confirm a signal"); FIN_ASK_RUN.sig(`reopen~${g.key}`, "มีหลักฐานเพิ่ม"); if (sigSt(g.key).status !== "new") E("reopen a signal"); }
+          finSet("ai:kpi"); go2("finance"); chk(`${org}/FC6/signals`);
+          if (DEMO.filter(x => x.part === "fin").length !== 15) E("demo steps E-F01 to E-F15");
+        }); S = JSON.parse(keep); crClose(); FIN_ASK = null; FWI = null; ROLE = "fin"; await tick(); }
+      }
       // Round C4: every B8 and B9 tab with the demo date moved to March and to September (simulated GFMIS imports)
       if (o.suites.includes("render") && typeof simDisb === "function" && S.y2569) for (const mi of [5, 11]) {
         S.asOf = FY_MONTH_ENDS()[mi]; TODAY = S.asOf; simDisb(mi);

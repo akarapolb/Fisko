@@ -926,3 +926,43 @@ The round-44 follow-ups. No rule or data change; `DATA_V` stays 35. `main` was f
   - **Results:** the full sweep passes with 12,557 checks.
   - **Checked by hand:** an audit query drawer.
   - **Not checked by hand:** phone width, dark mode, and the English wording beyond the sweep.
+
+## 60F. Finance CRUD round FC6: non-budget money, F9 records, dead code, the Finance demo (round 60, Finance)
+
+- **New file `src/js/88-fin-nb-crud.js`. F11 moves to the shared list.**
+  - **Funds (`fnFund`, FR-FC-48):**
+    - Add a fund. Edit its name and basis at any time.
+    - Brought-forward balances can be changed only until money moves.
+    - Delete only a fund that was never used. Close one only when its balance is zero.
+    - The drawer's Movements tab shows the existing `nbStatement`.
+  - **Plans (`fnPlan`, FR-FC-49):**
+    - Start a plan for a fund that has none this year.
+    - Edit the income and lines while the plan is a draft or returned. Each line's amount can't go below what is used. Unused lines can be deleted, and a new line can be added in the same form.
+    - Send the plan for approval, or withdraw it while it waits. A draft that was never sent can be deleted.
+    - An approved plan is amended as a separate version (`p.amend`). The approved lines stay in force for R-FN-07 until the amendment is approved; the earlier versions are kept in `p.versions`.
+    - Approving or returning (with a reason) goes through `sodCheck` SD-11 (FC-P5), replacing the old ad-hoc maker check.
+  - **Withdrawals (`fnWd`, FR-FC-50):**
+    - A request can be edited or withdrawn while it is pending. Rejecting needs a reason and passes SD-11.
+    - Unspent money can be deposited back at any time, not only in the last days.
+  - `nbPlan` and `nbFunds` ignore deleted records. The old renderers and their handlers in 66i are gone.
+- **F9 (66g, and `fnWi` in 88):**
+  - **Agent runs (FR-FC-41):** rejecting an agent step needs a reason in the shared reason box. A run can be stopped with a reason (`r.stopped`).
+  - **What-ifs (FR-FC-42):** saved what-ifs are a shared list with ids `WI-nn`. "Save a scenario" starts from the current levers. A scenario can be opened back into the levers, renamed, have its levers changed, or deleted.
+  - **Signals (FR-FC-43):** "issue" and "false positive" need a reason. A decided signal can be reopened, and each decision is logged on the signal.
+- **Dead code (FX-07):** the round-11 payment-request form, `decide()`, the `data-pyok`/`data-pyno` handlers, `PAY_FORM` and `PAY_ST` are gone from 62. `S.payreqs` stays for three-way matching.
+- **Demo (chapter 11):** the in-app demo guide has a "Finance, E-F01 to E-F15" filter (82) with fifteen steps (`FE2E` in 88), running from the registers to the spending seen in Fisko Budget. The demo suite walks every step.
+- **Tests:**
+  - **Sweep coverage:** opens every fund, plan, withdrawal and saved what-if, and every one of its tabs and action boxes, for fin, finhead, exec, plan and audit. It also renders the F9 reason boxes.
+  - **Walk:**
+    - A fund is deleted; another is made and edited.
+    - A plan gets lines, is sent, withdrawn, sent again and approved. It is then amended, with the approved lines kept in force until the amendment is approved.
+    - A withdrawal is edited, rejected with a reason, approved and deposited back.
+    - A what-if is saved, edited, opened into the levers and deleted.
+    - An agent run is stopped. A signal is confirmed, then reopened.
+    - The demo has fifteen Finance steps.
+  - **Result:** the full sweep passes with 12,756 checks.
+  - **By hand:** a plan drawer.
+  - **Seen, not changed:** the F11 KPI tile wraps a large number at this width; it was like this before this round.
+- **Finance CRUD design complete:** rounds FC1 to FC6 are built.
+  - **Not built:** FR-FC-25 (demand date edits), FR-FC-34 (GFMIS report re-import), FR-FC-35 (payment-file undo and manual match), and the back-dated daily cash report.
+  - **Branch prototype:** https://claude.ai/artifact/8ZSzN2o5CVN6hj5Gh3MKyK (private).

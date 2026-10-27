@@ -85,8 +85,8 @@ let DEMO_F = "all"; // the filter starts on every step; "e2e" shows only E-01 to
 {
   const v = VIEWS.demo;
   VIEWS.demo = () => {
-    const h = v(), seg = `<div class="row" style="margin:0 0 14px;gap:10px;flex-wrap:wrap"><span class="sub">${L("แสดง", "Show")}</span>${segBar([["e2e", `${L("ครบวงจร E-01 ถึง E-16 (ประมาณ 45 นาที)", "End to end, E-01 to E-16 (about 45 min)")}`], ["all", L("ทุกขั้นตอน", "Every step")], ["old", L("เส้นเรื่องเดิม", "The original storyline")]], DEMO_F, "demof")}</div>`;
-    const keep = s => DEMO_F === "all" || (DEMO_F === "e2e" ? s.part === "e2e" : s.part !== "e2e");
+    const h = v(), seg = `<div class="row" style="margin:0 0 14px;gap:10px;flex-wrap:wrap"><span class="sub">${L("แสดง", "Show")}</span>${segBar([["e2e", `${L("ครบวงจร E-01 ถึง E-16 (ประมาณ 45 นาที)", "End to end, E-01 to E-16 (about 45 min)")}`], ["fin", L("การเงิน E-F01 ถึง E-F15 (ประมาณ 35 นาที)", "Finance, E-F01 to E-F15 (about 35 min)")], ["all", L("ทุกขั้นตอน", "Every step")], ["old", L("เส้นเรื่องเดิม", "The original storyline")]], DEMO_F, "demof")}</div>`;
+    const keep = s => DEMO_F === "all" || (DEMO_F === "e2e" || DEMO_F === "fin" ? s.part === DEMO_F : !["e2e", "fin"].includes(s.part));
     return h.replace('<ol class="demo">', `${seg}<ol class="demo">`).replace(/<li class="panel">([\s\S]*?)data-step="(\d+)"([\s\S]*?)<\/li>/g, (m, a, i, b) => (keep(DEMO[Number(i)]) ? m : ""));
   };
   const b = BIND.demo;

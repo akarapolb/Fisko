@@ -196,10 +196,11 @@ FAI.agents = () => {
       return `<section class="panel"><header>${chipIco("bot", "info")}<h2>${tx(g.name)}</h2><span class="sp"></span><span class="mono sub">${id}</span></header><div class="body" style="display:flex;flex-direction:column;gap:8px"><span>${tx(g.goal)}</span>
         <span class="sub">${g.plan.map(([t]) => tx(F_TOOL[t][1])).join(" → ")}</span>
         <div><button class="btn primary" type="button" data-fstart="${id}" ${on ? "" : "disabled"}>${on ? L("เริ่มงาน", "Start") : L("ปิดใน M09", "Off in M09")}</button></div></div></section>`; }).join("")}</div>
-    ${open ? `<section class="panel"><header>${chipIco("list", "info")}<h2>${open.id} · ${tx(F_AG[open.agent].name)}</h2><span class="sp"></span>${tag(open.status, open.status === "done" ? "p-ok" : open.status === "waiting" ? "p-warn" : open.status === "stopped" ? "p-bad" : "p-info")}${runs.length > 1 ? `<select data-fopen aria-label="${L("งานอื่น", "Other runs")}">${runs.map(r => `<option value="${r.id}" ${r.id === open.id ? "selected" : ""}>${r.id} · ${r.agent}</option>`).join("")}</select>` : ""}</header>
+    ${open ? `<section class="panel"><header>${chipIco("list", "info")}<h2>${open.id} · ${tx(F_AG[open.agent].name)}</h2><span class="sp"></span>${tag(open.status, open.status === "done" ? "p-ok" : open.status === "waiting" ? "p-warn" : open.status === "stopped" ? "p-bad" : "p-info")}${["running", "waiting"].includes(open.status) && F_AG[open.agent].who.includes(ROLE) ? finAskBtn("frun", "stop", L("หยุดงาน", "Stop the run"), "ghost") : ""}${runs.length > 1 ? `<select data-fopen aria-label="${L("งานอื่น", "Other runs")}">${runs.map(r => `<option value="${r.id}" ${r.id === open.id ? "selected" : ""}>${r.id} · ${r.agent}</option>`).join("")}</select>` : ""}</header>
       <div class="body"><ol class="agsteps">${open.steps.map((s, i) => `<li class="${i === open.ptr && open.status === "waiting" ? "now" : ""}"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span><span class="mono sub">${s.tool}</span> ${tx(F_TOOL[s.tool][1])} ${tag(F_TOOL[s.tool][0], "p-mute")}</span>${tag(ST[s.status][0], ST[s.status][1])}</div>
         ${s.out ? `<div class="sub">${s.out}</div>` : ""}${s.change ? `<div class="agchange"><b>${L("สิ่งที่จะเปลี่ยน", "What will change")}</b><div>${s.change}</div></div>` : ""}
-        ${s.status === "await" ? (F_AG[open.agent].who.includes(ROLE) ? `<div class="row" style="gap:6px;margin-top:6px"><button class="btn primary" type="button" data-fok="${open.id}">${L("อนุมัติขั้นนี้", "Approve this step")}</button><button class="btn" type="button" data-fno="${open.id}">${L("ไม่อนุมัติ", "Reject")}</button></div>` : `<div class="sub" style="margin-top:6px">${L("รอผู้รับผิดชอบขั้นนี้", "Waiting for the person who owns this step")}: ${F_AG[open.agent].who.map(r => tx(ROLES[r])).join(", ")}</div>`) : ""}</li>`).join("")}</ol></div></section>` : ""}`;
+        ${s.status === "await" ? (F_AG[open.agent].who.includes(ROLE) ? `<div class="row" style="gap:6px;margin-top:6px"><button class="btn primary" type="button" data-fok="${open.id}">${L("อนุมัติขั้นนี้", "Approve this step")}</button>${finAskBtn("frun", "no", L("ไม่อนุมัติ", "Reject"))}</div>` : `<div class="sub" style="margin-top:6px">${L("รอผู้รับผิดชอบขั้นนี้", "Waiting for the person who owns this step")}: ${F_AG[open.agent].who.map(r => tx(ROLES[r])).join(", ")}</div>`) : ""}</li>`).join("")}</ol>${open.stopped ? `<p class="sub">${dotI("bad")}${L("หยุดงาน", "Stopped")} · ${esc(userName(open.stopped.by))} · ${esc(open.stopped.why)}</p>` : ""}
+      ${FIN_ASK && FIN_ASK.key === "frun" ? finAskForm("frun", FIN_ASK.act, FIN_ASK.act === "no" ? L("ไม่อนุมัติขั้นนี้", "Reject this step") : L("หยุดงาน Agent", "Stop the agent run"), { danger: true, impact: FIN_ASK.act === "no" ? L("ขั้นนี้ไม่มีผล งานทำขั้นถัดไปต่อ", "This step has no effect; the run goes on to the next step") : L("ขั้นที่เหลือไม่ทำ สิ่งที่อนุมัติไปแล้วยังอยู่", "The remaining steps don't run; what was approved stays") }) : ""}</div></section>` : ""}`;
 };
 FAI.fc = () => {
   const f = fcMonths(), T = spendT(), c = fcCarry(), risk = fcAdvRisk(), load = fcLoad(), mx = Math.max(...f.rows.map(r => r.act + r.exp), 1);
@@ -231,7 +232,7 @@ function wiCalc(w) {
   return { end: f.end50, q2: f.rows[5].pct, carry: c.total, gap: sumv(gaps.map(x => x.gap)), top: gaps.slice(0, 3), late: r.filter(x => x.p >= 0.5).length, demands: Math.round(r.length * (1 - w.share / 100)) };
 }
 FAI.wi = () => {
-  const w = FWI || WI_DEF(), base = wiCalc(WI_DEF()), x = wiCalc(w), saved = S.fWhatifs || [];
+  const w = FWI || WI_DEF(), base = wiCalc(WI_DEF()), x = wiCalc(w);
   const row = (label, a, b, unit, better) => `<tr><td>${label}</td><td class="n">${a}${unit}</td><td class="n"><b>${b}</b>${unit}</td></tr>`;
   return `<div class="alert"><div class="ic">i</div><div><b>${L("จำลองเท่านั้น ข้อมูลจริงไม่เปลี่ยน", "Simulation only; real data never changes")}</b><p>${L("ปรับคันโยกแล้วเทียบกับฐาน บันทึกเป็นสถานการณ์เพื่อเทียบกันได้", "Move the levers and compare with the baseline; save a scenario to compare later")}</p></div></div>
     <section class="panel"><header><h2>${L("คันโยก", "Levers")}</h2></header><div class="body"><form class="inline-form" id="wi-form">
@@ -240,7 +241,7 @@ FAI.wi = () => {
       <div class="f" style="flex:1 1 200px"><label for="wi-target">W-FN-03 · ${L("เป้าเบิกจ่ายสิ้นปี (%)", "Year-end target (%)")}</label><input type="number" id="wi-target" min="50" max="100" value="${w.target}"></div>
       <div class="f" style="flex:1 1 200px"><label for="wi-share">W-FN-04 · ${L("ส่งใช้เงินยืมตรงเวลา (%)", "Advances cleared on time (%)")}</label><input type="number" id="wi-share" min="0" max="100" value="${w.share}"></div>
       <button class="btn primary" type="submit">${L("คำนวณ", "Work it out")}</button><button class="btn ghost" type="button" id="wi-reset">${L("กลับค่าฐาน", "Back to baseline")}</button></form></div></section>
-    <section class="panel"><header><h2>${L("ผลเทียบกับฐาน", "Result against the baseline")}</h2><span class="sp"></span><input type="text" id="wi-name" placeholder="${L("ชื่อสถานการณ์", "Scenario name")}" style="width:180px" aria-label="${L("ชื่อสถานการณ์", "Scenario name")}"><button class="btn" type="button" id="wi-save">${L("บันทึกสถานการณ์", "Save scenario")}</button></header>
+    <section class="panel"><header><h2>${L("ผลเทียบกับฐาน", "Result against the baseline")}</h2><span class="sp"></span></header>
       <div class="tbl-wrap"><table><thead><tr><th>${L("ผล", "Result")}</th><th class="n">${L("ฐาน", "Baseline")}</th><th class="n">${L("สถานการณ์นี้", "This scenario")}</th></tr></thead><tbody>
         ${row(L("เบิกจ่ายสะสมสิ้นไตรมาส 2", "Spent by end of Q2"), fmt(base.q2, 1), fmt(x.q2, 1), "%")}
         ${row(L("เบิกจ่ายสิ้นปี", "Spent by year end"), fmt(base.end, 1), fmt(x.end, 1), "%")}
@@ -250,8 +251,7 @@ FAI.wi = () => {
         ${row(L("หนังสือเรียกชดใช้ที่คาด", "Demands expected"), base.demands, x.demands, "")}
       </tbody></table></div>
       ${x.top.length ? `<div class="body sub">${L("รายการที่ขาดจากเป้ามากสุด", "Lines furthest from target")}: ${x.top.map(t => `${t.l.id} ${esc(tx(t.l.name))} ${mb(t.gap)}`).join(" · ")}</div>` : ""}</section>
-    ${saved.length ? `<section class="panel"><header><h2>${L("สถานการณ์ที่บันทึกไว้", "Saved scenarios")}</h2></header><div class="tbl-wrap"><table><thead><tr><th>${L("ชื่อ", "Name")}</th><th class="n">W1</th><th class="n">W2</th><th class="n">W3</th><th class="n">W4</th><th class="n">${L("สิ้นปี %", "Year end %")}</th><th class="n">${L("กันเงิน (ลบ.)", "Carry-over (M)")}</th></tr></thead>
-      <tbody>${saved.map(s => `<tr><td>${esc(s.name)}<div class="sub">${esc(userName(s.by))} · ${fdate(s.t, true)}</div></td><td class="n">${s.w.lag}</td><td class="n">${s.w.slip}</td><td class="n">${s.w.target}</td><td class="n">${s.w.share}</td><td class="n">${fmt(s.r.end, 1)}</td><td class="n">${mb(s.r.carry)}</td></tr>`).join("")}</tbody></table></div></section>` : ""}`;
+    ${crudList("fnWi", { head: `<h2>${L("สถานการณ์ที่บันทึกไว้", "Saved scenarios")}</h2><span class="sp"></span><span class="sub">${L("“บันทึกสถานการณ์” ใช้ค่าคันโยกปัจจุบัน", "“Save a scenario” uses the current levers")}</span>`, empty: L("ยังไม่ได้บันทึก", "Nothing saved yet") })}`;
 };
 FAI.kpi = () => {
   const K = kpiF(), G = fSignals(), canAsk = ROLE === "audit" || ROLE === "finhead", fin = ROLE === "fin", fp = Object.values(S.fSig || {}).filter(x => x.status === "fp").length, dec = Object.values(S.fSig || {}).filter(x => ["fp", "issue"].includes(x.status)).length;
@@ -264,7 +264,21 @@ FAI.kpi = () => {
           <td><div class="row" style="flex-wrap:wrap;gap:4px"><button class="btn ghost" type="button" data-jump="${g.link}">${L("เปิด", "Open")}</button>
             ${canAsk && s.status === "new" ? `<button class="btn" type="button" data-sg="ask" data-sgk="${esc(g.key)}">${L("ขอคำชี้แจง", "Ask")}</button>` : ""}
             ${fin && s.status === "asked" ? `<input type="text" id="sgn-${esc(g.key).replace(/[^\w-]/g, "_")}" placeholder="${L("คำชี้แจง", "Explanation")}" style="width:150px" aria-label="${L("คำชี้แจง", "Explanation")}"><button class="btn" type="button" data-sg="explain" data-sgk="${esc(g.key)}">${L("ชี้แจง", "Explain")}</button>` : ""}
-            ${canAsk && ["asked", "explained", "new"].includes(s.status) ? `<button class="btn ghost" type="button" data-sg="issue" data-sgk="${esc(g.key)}">${L("เป็นประเด็น", "Issue")}</button><button class="btn ghost" type="button" data-sg="fp" data-sgk="${esc(g.key)}">${L("ผลบวกลวง", "False positive")}</button>` : ""}</div></td></tr>`; }).join("") || `<tr><td colspan="4" class="sub">${L("ไม่มีสัญญาณ", "No signals")}</td></tr>`}</tbody></table></div></section>`;
+            ${canAsk && ["asked", "explained", "new"].includes(s.status) ? `${finAskBtn("sig", `issue~${esc(g.key)}`, L("เป็นประเด็น", "Issue"), "ghost")}${finAskBtn("sig", `fp~${esc(g.key)}`, L("ผลบวกลวง", "False positive"), "ghost")}` : ""}
+            ${canAsk && ["issue", "fp"].includes(s.status) ? finAskBtn("sig", `reopen~${esc(g.key)}`, L("เปิดใหม่", "Reopen"), "ghost") : ""}</div></td></tr>`; }).join("") || `<tr><td colspan="4" class="sub">${L("ไม่มีสัญญาณ", "No signals")}</td></tr>`}</tbody></table></div>${FIN_ASK && FIN_ASK.key === "sig" ? `<div class="body">${finAskForm("sig", FIN_ASK.act, `${{ issue: L("ยืนยันเป็นประเด็น", "Confirm as an issue"), fp: L("เป็นผลบวกลวง", "Mark as a false positive"), reopen: L("เปิดสัญญาณใหม่", "Reopen the signal") }[FIN_ASK.act.split("~")[0]]} · ${esc(FIN_ASK.act.split("~").slice(1).join("~"))}`, { impact: L("เหตุผลบันทึกไว้กับสัญญาณและในประวัติ", "The reason is kept with the signal and in the history") })}</div>` : ""}</section>`;
+};
+
+// The reason boxes of F9 (Finance CRUD FR-FC-41, 43): reject an agent step or stop a run; triage a signal or reopen it.
+FIN_ASK_RUN.frun = (act, why) => {
+  const runs = S.fRuns || [], r = runs.find(x => x.id === F_RUN_OPEN) || runs[runs.length - 1]; if (!r) return;
+  if (act === "no") { const s = r.steps[r.ptr]; s.status = "rejected"; s.by = me().id; s.why = why; audit(["ไม่อนุมัติขั้นตอนของ Agent", "Rejected an agent step"], `${r.id} ${s.tool} · ${why}`); r.ptr++; r.status = "running"; fAdvance(r); }
+  else { r.status = "stopped"; r.stopped = { by: me().id, t: nowIso(), why }; audit(["หยุดงาน Agent การเงิน", "Stopped a finance agent run"], `${r.id} · ${why}`); }
+  commit(); renderShell(); route(); toast(act === "no" ? L("ไม่อนุมัติขั้นนี้แล้ว", "Step rejected") : L("หยุดงานแล้ว", "Run stopped"));
+};
+FIN_ASK_RUN.sig = (act, why) => {
+  const [a, ...rest] = act.split("~"), k = rest.join("~"), cur = sigSt(k); S.fSig = S.fSig || {};
+  S.fSig[k] = Object.assign({}, cur, { status: a === "reopen" ? "new" : a, by: me().id, t: nowIso(), why, log: [...(cur.log || []), { a, why, by: me().id, t: nowIso() }] });
+  audit(["คัดกรองสัญญาณเตือนการเงิน", "Triaged a finance warning signal"], `${k} · ${a} · ${why}`); commit(); renderShell(); route(); toast(L("บันทึกแล้ว", "Saved"));
 };
 
 // ---------- bindings ----------
@@ -274,12 +288,9 @@ FAI.kpi = () => {
     $$("[data-fstart]").forEach(b => (b.onclick = () => { fStart(b.dataset.fstart); audit(["เริ่มงาน Agent การเงิน", "Started a finance agent"], b.dataset.fstart); done(); }));
     $$("[data-fopen]").forEach(s => (s.onchange = () => { F_RUN_OPEN = s.value; route(); }));
     $$("[data-fok]").forEach(b => (b.onclick = () => { const r = S.fRuns.find(x => x.id === b.dataset.fok), s = r.steps[r.ptr]; fApply(r, s); s.status = "approved"; s.by = me().id; audit(["อนุมัติขั้นตอนของ Agent", "Approved an agent step"], `${r.id} ${s.tool}`); r.ptr++; r.status = "running"; fAdvance(r); done(); }));
-    $$("[data-fno]").forEach(b => (b.onclick = () => { const r = S.fRuns.find(x => x.id === b.dataset.fno), s = r.steps[r.ptr]; s.status = "rejected"; audit(["ไม่อนุมัติขั้นตอนของ Agent", "Rejected an agent step"], `${r.id} ${s.tool}`); r.ptr++; r.status = "running"; fAdvance(r); done(); }));
     const wf = $("#wi-form");
     if (wf) wf.onsubmit = e => { e.preventDefault(); FWI = { lag: Number($("#wi-lag").value), slip: Number($("#wi-slip").value), target: Number($("#wi-target").value), share: Number($("#wi-share").value) }; route(); };
     const wr = $("#wi-reset"); if (wr) wr.onclick = () => { FWI = null; route(); };
-    const ws = $("#wi-save");
-    if (ws) ws.onclick = () => { const w = FWI || WI_DEF(), name = $("#wi-name").value.trim() || L(`สถานการณ์ ${(S.fWhatifs || []).length + 1}`, `Scenario ${(S.fWhatifs || []).length + 1}`); (S.fWhatifs = S.fWhatifs || []).push({ name, w, r: wiCalc(w), by: me().id, t: nowIso() }); audit(["บันทึกสถานการณ์จำลองการเงิน", "Saved a finance what-if scenario"], name); done(L("บันทึกแล้ว", "Saved")); };
     $$("[data-sg]").forEach(b => (b.onclick = () => {
       const k = b.dataset.sgk, a = b.dataset.sg, cur = sigSt(k); S.fSig = S.fSig || {};
       if (a === "explain") { const el = $("#sgn-" + k.replace(/[^\w-]/g, "_")), note = el ? el.value.trim() : ""; if (note.length < 5) { toast(L("พิมพ์คำชี้แจง", "Type the explanation")); return; } S.fSig[k] = Object.assign({}, cur, { status: "explained", note, by: me().id, t: nowIso() }); notify(["audit", "finhead"], [`ชี้แจงสัญญาณ ${k} แล้ว`, `Signal ${k} has been explained`], "fnc-ai:kpi"); }
