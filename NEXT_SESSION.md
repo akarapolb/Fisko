@@ -66,7 +66,8 @@ python -m http.server 8788 --bind 127.0.0.1
 - **Merging parallel branches:** the conflicts are always the same few files: `76-crud.js` (keep both sets of options), `82-intel-crud.js` (the demo guide's filter list), `tests/sweep.js` (keep both walks), `HANDOFF.md` / `NEXT_SESSION.md` / `README.md` (keep both sections), and the two built HTML files (take either side, then rebuild). Parse-check and run the full sweep after the merge.
 - **Routing in tests:** set `window.FISKO_ROUTE = "#page"` and call `route()`; the browser ignores bursts of hash changes. The sweep's `tick` uses a MessageChannel because background tabs throttle `setTimeout(0)`.
 - **Shell:** heredocs with Thai text break bash here; write Python scripts to the scratchpad and run them (`PYTHONIOENCODING=utf-8` when printing Thai). Long scans (a `grep` per name over every file) can pass the 2-minute tool limit; run them in the background.
-- **Round numbers:** the two branches both used 55 to 59; Finance's sections are suffixed `F` (55F to 61F) in `HANDOFF.md`. Round 62 (the shell) is section 62R; round 63 (its polish) is section 63. The next round on `main` is **64**.
+- **Generic SaaS:** Fisko is one product for every agency. Never put an agency's names, systems or rules in code or UI text; put them in that tenant's data file (`SEEDS[org]`, `PRJ_CFG[org]`, files named `*data-<org>*`). Grep `fisko-prototype.html` for the agency's terms before publishing.
+- **Round numbers:** the two branches both used 55 to 59; Finance's sections are suffixed `F` (55F to 61F) in `HANDOFF.md`. Round 62 (the shell) is section 62R; round 63 (its polish) is section 63; round 64 (the project registry) is section 64. The next round on `main` is **65**.
 - **Top bar width:** the organization and role selects live inside the context chip's panel (`#ctxpop`), moved there by `94-polish.js`; their ids and handlers are unchanged. Anything new in the top bar must fit in one row at about 900 px of page width (the rail and sidebar take 308 px).
 - **The shell wraps late:** `90-systems.js` to `93-presenter.js` load after every app file and wrap `route`, `renderShell`, `renderNav`, `crActBar`, `VIEWS.home` and `VIEWS.demo`. A new file that changes those should sort before `90` or wrap the wrapped version. New Workspace pages are NAV entries with `app: "all"` and group `ws`, and belong in `WS_PAGES` so the rail knows their system.
 
@@ -80,6 +81,7 @@ python -m http.server 8788 --bind 127.0.0.1
 | `84-proc-crud.js` to `88-proc-more.js` | Procurement CRUD: plan, requisitions, case files, contracts, waivers, signatures, invoices, demo P-E01..15, custom criteria |
 | `84-fin-crud.js` to `88-fin-nb-crud.js` | Finance CRUD: registers, vouchers, payments, commitments, receipts, non-budget; Finance demo E-F01..15 |
 | `calm.css` | `cr-*` list and drawer styles, as-of bar |
+| `95-projects.js`, `96-data-dpt-na02.js` | Project registry system (NA-02): cycle, register, project 360°, PM exchange, data sharing, ToR map; tenant wording in `PRJ_CFG[ORG]` |
 | `90-systems.js` to `93-presenter.js`, `systems.css` | Multi-system shell: rail, launcher, planned systems, crumbs, pins; inbox, exceptions, Today strip; review step; presenter |
 | `tests/run.html`, `tests/sweep.js` | Test runner and sweep (the sweep holds the walks) |
 | `Fisko_*_CRUD_Design.html` | The three CRUD designs (Thai) with build status |
@@ -99,5 +101,6 @@ Both branches were merged into `main` on 27 October 2026 (`claude/charming-shirl
 5. **Simulated to real AI:** a plan to swap the planner and answer writer for a real model, keeping the same tools, approvals and audit log.
 6. **Budget design leftovers** (chapter 13.4 of the Budget design): real e-Budgeting file formats, strategy-level risk register, divisions proposing KPI changes, central fund and supplementary requests, a five-level structure, BR-11 exception flags.
 7. **Shell follow-ups:** a Thai design note for the shell (round 62 was built straight from the Fabor console at the user's request); pins and recents per user on the server rather than per browser; the review step for the older non-drawer actions (the Budget workflow buttons).
+8. **Project registry follow-ups (NA-02):** check the 106 user units and the unit tree against DPT's real chart (the seed has 9 units); the A3 says 58 duties but lists 56 lines (some lines may hold two duties); give DPT construction contracts their own vendors (the shared seed's "Sample Systems Co." holds the civil-works contract); a real field mapping for the 12 items with the Nong Kor team.
 
 Start the next session by reading this file, then `HANDOFF.md` sections 47 to 61F, then run the full sweep on `main` to confirm a clean start.

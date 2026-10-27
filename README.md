@@ -117,6 +117,9 @@ This regenerates `Fisko_Prototype.html` and `fisko-prototype.html`.
 | `src/js/91-workbench.js` | Workspace across systems: Approvals inbox, Exception centre, Pinned and recent, the Today strip on My Workspace |
 | `src/js/92-review.js` | Enter, review, confirm for record actions in the shared drawer (typed id for actions that cannot be undone) |
 | `src/js/93-presenter.js` | Presenter mode: demo routes played from a bottom bar, executive cut of 7 steps, steps W-01 and W-02 |
+| `src/js/95-projects.js` | Project registry system (round 64, from DPT's NA-02 sheet): one project id across the 8-step budget cycle, project 360°, two-way exchange with the PM system, data sharing with a send log, ToR modules and JD duties; presenter route "na" |
+| `src/js/96-data-sample-prj.js` | The sample organization's registry setup (who receives its shared data) |
+| `src/js/96-data-dpt-na02.js` | DPT's registry setup: Nong Kor as the PM system, data consumers, the 12 ToR modules and the duties of the Finance and Planning divisions (left out of the artifact build) |
 | `src/js/94-polish.js` | Shell polish (round 63): organization and role in one context chip, one-row sidebar footer, eyebrows without the app name, two-column pages that stack when the page is narrow |
 | `src/js/99-boot.js` | Startup |
 

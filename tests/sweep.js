@@ -842,6 +842,31 @@
         rv.querySelector("button[type=submit]").click(); if (document.getElementById("cr-review")) errs.push("review step: confirm did not run");
         n++; window.FISKO_ROUTE = null; crClose(); if (CR_UNDO && CR_UNDO.timer) clearTimeout(CR_UNDO.timer);
       });
+      // the project registry (round 64): every project's 360° page, the PM exchange through an outage, the feed, and an external share approval
+      if (typeof prjList === "function") for (const org of o.orgs) { ORG = org; S = SEEDS[org].seed();
+        for (const lang of o.langs) { LANG = lang; safe(`projects ${org}/${lang}`, () => {
+          ROLE = "plan"; renderShell();
+          for (const p of prjList()) { PRJ_SEL = p.id; go2("prj-project"); bad(`project ${org}/${lang}/${p.id}`, txt(document.getElementById("view"))); if (!txt(document.getElementById("view")).includes(p.id)) errs.push(`project ${p.id}: id missing`); }
+          for (let k = 0; k <= 8; k++) { PRJ_STEP = k; go2("prj-cycle"); bad(`cycle ${org}/${lang}/${k}`, txt(document.getElementById("view"))); } PRJ_STEP = 0;
+          const tr = (S.allocs[CUR_FY].transfers || []).find(x => x.status === "pending" && prjList().some(p => p.pm && (p.ref === x.to || p.ref === x.from)));
+          if (tr) { tr.status = "approved"; if (!prjList().some(p => p.pm && prjOut(p).st === "changed")) errs.push(`projects ${org}: an approved transfer did not mark a project to resend`); }
+          go2("prj-pm"); document.getElementById("pm-online").click(); window.FISKO_ROUTE = "#prj-pm"; const sd = document.getElementById("pm-send"); if (sd) sd.click();
+          if (prjList().some(p => p.pm && prjOut(p).st === "sent" && S.prj.out[p.id].t.startsWith(TODAY))) errs.push(`projects ${org}: sent while the PM system was offline`);
+          document.getElementById("pm-online").click(); const sd2 = document.getElementById("pm-send"); if (sd2) sd2.click();
+          if (prjList().some(p => p.pm && prjOut(p).st !== "sent")) errs.push(`projects ${org}: the buffer did not empty once back online`);
+          let g = 0; while (document.getElementById("pm-recv") && g++ < 8) document.getElementById("pm-recv").click();
+          bad(`pm ${org}/${lang}`, txt(document.getElementById("view")));
+          ROLE = "fin"; renderShell(); go2("prj-pm"); document.querySelectorAll("#view [data-pmapply]").forEach(() => { const b = document.querySelector("#view [data-pmapply]"); if (b) b.click(); });
+          if (S.prj.inb.some(m => !m.applied)) errs.push(`projects ${org}: PM messages left unapplied`);
+          go2("prj-project"); bad(`project after feed ${org}/${lang}`, txt(document.getElementById("view")));
+          ROLE = "exec"; renderShell(); go2("prj-share"); const ok = document.querySelector("#view [data-shareok]");
+          if (ok) { const n0 = S.prj.log.length; ok.click(); if (S.prj.log.length !== n0) errs.push(`projects ${org}: approved without a reason`); document.getElementById("share-why").value = "Sweep: approve with a reason"; document.querySelector("#view [data-shareok]").click(); if (S.prj.log.length !== n0 + 1 || !S.prj.log[0].why) errs.push(`projects ${org}: approval not logged`); }
+          bad(`share ${org}/${lang}`, txt(document.getElementById("view"))); go2("prj-tor"); bad(`tor ${org}/${lang}`, txt(document.getElementById("view")));
+          for (const f of ["all", "gf", "planned"]) { PRJ_TORF = f; go2("prj-tor"); bad(`tor ${org}/${lang}/${f}`, txt(document.getElementById("view"))); } PRJ_TORF = "all";
+          go2("exceptions"); bad(`exceptions ${org}/${lang}`, txt(document.getElementById("view")));
+          n++; window.FISKO_ROUTE = null; S = SEEDS[org].seed();
+        }); await tick(); }
+      }
       report("shell");
     }
     window.onerror = oldErr; window.FISKO_ROUTE = null;

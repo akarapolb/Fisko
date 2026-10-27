@@ -181,3 +181,45 @@ body[data-app="admin"] #view > .tabs[role="tablist"] { display: none; }
 /* flex-wrap decides on the starting widths, before anything shrinks: keep them small and let the crumb grow */
 @media (min-width: 861px) { .top .crumb { flex: 1 1 120px; min-width: 100px; } .gsearch { flex-basis: 150px; } .ctxbtn { max-width: 200px; } }
 @media (min-width: 861px) { .ctxbtn { flex: 0 1 170px; } }
+
+/* ---- round 64: project registry ---- */
+.pcycle { list-style: none; margin: 0; padding: 14px 16px 6px; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 10px; }
+.pc-step { display: flex; flex-direction: column; gap: 6px; min-width: 0; position: relative; }
+.pc-step + .pc-step::before { content: "›"; position: absolute; left: -9px; top: 26px; color: var(--muted); font-weight: 700; }
+.pc-step > button { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; gap: 3px; padding: 9px 10px; border-radius: 10px; min-height: 104px;
+  background: var(--accent-soft); color: var(--ink); border: 1px solid transparent; }
+.pc-step.plan > button { background: var(--info-soft); }
+.pc-step.both > button { background: linear-gradient(135deg, var(--info-soft) 0 50%, var(--accent-soft) 50%); }
+.pc-step > button:hover, .pc-step.on > button { border-color: var(--accent); }
+.pc-step > button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pc-step b { font-size: 14px; line-height: 1.25; }
+.pc-n { font-size: 11px; color: var(--muted); }
+.pc-v { font-size: 12px; color: var(--ink-2); } .pc-v b { font-size: 13px; }
+.pc-m { display: flex; gap: 3px; margin-top: auto; }
+.pc-m i, .pstep, .pmod { font-style: normal; display: inline-grid; place-items: center; min-width: 19px; height: 19px; padding: 0 4px; box-sizing: border-box; border-radius: 6px;
+  background: var(--surface); color: var(--ink); font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; border: 1px solid var(--line); }
+.pstep { background: var(--accent); color: #fff; border-color: transparent; border-radius: 99px; }
+.pc-x { font-size: 11.5px; line-height: 1.3; color: var(--muted); padding: 3px 7px; border-radius: 7px; border: 1px dashed var(--line); }
+.pc-x.out { color: var(--warn); border-color: var(--warn); }
+.pc-x.both { color: var(--info); border-color: var(--info); }
+.ptl { list-style: none; margin: 0; padding: 12px 16px; display: grid; gap: 0; }
+.ptl li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 10px; padding-bottom: 12px; position: relative; }
+.ptl li:not(:last-child)::before { content: ""; position: absolute; left: 12px; top: 26px; bottom: 0; width: 2px; background: var(--line); }
+.ptl li.done::before { background: var(--accent); }
+.ptl-n { width: 26px; height: 26px; border-radius: 99px; display: grid; place-items: center; font-size: 12px; font-weight: 700; background: var(--surface-2); color: var(--muted); }
+.ptl li.done .ptl-n { background: var(--accent); color: #fff; }
+.ptl li.now .ptl-n { background: var(--surface); color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; }
+.ptl li.todo b { color: var(--muted); font-weight: 600; }
+.ptl .pc-x { display: inline-block; margin-top: 4px; }
+.pkv { padding: 12px 16px; margin: 0; }
+.pmods { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; padding: 14px 16px; }
+.pmodc { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; padding: 10px; border-radius: 10px; border: 1px solid var(--line); }
+.pmodc.tor { background: var(--accent-soft); } .pmodc.ext { background: var(--warn-soft); } .pmodc.new { background: var(--bad-soft); }
+.pmodc .pmod { min-width: 26px; height: 26px; font-size: 12.5px; }
+.pmod.tor { border-color: var(--accent); } .pmod.ext { border-color: var(--warn); } .pmod.new { border-color: var(--bad); }
+.pmods-i { display: flex; gap: 3px; flex-wrap: wrap; justify-content: flex-end; }
+.pgf { color: var(--warn); font-size: 12px; cursor: help; }
+.ptor-g { padding: 10px 16px 2px; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .02em; }
+
+@media (max-width: 1280px) { .pcycle { grid-template-columns: repeat(4, minmax(0, 1fr)); } .pc-step:nth-child(4n + 1)::before { content: none; } }
+@media (max-width: 620px) { .pcycle { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pc-step:nth-child(2n + 1)::before { content: none; } }
