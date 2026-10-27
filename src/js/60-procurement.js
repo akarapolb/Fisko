@@ -8,7 +8,9 @@ const famLine = id => famLines().find(l => l.id === id) || { id, name: ["-", "-"
 const famPlan = id => S.pplan.find(p => p.id === id) || { id, name: ["-", "-"], line: "", est: 0 };
 const famReq = id => S.reqn.find(r => r.id === id);
 const famCon = id => S.contracts.find(c => c.id === id);
-const famCommitted = lineId => sumv(S.contracts.filter(c => c.line === lineId).map(c => c.amount));
+// A draft contract commits nothing until it is signed (PC3).
+const conLive = c => c.status !== "terminated" && c.status !== "draft";
+const famCommitted = lineId => sumv(S.contracts.filter(c => c.line === lineId && c.status !== "draft").map(c => c.amount));
 const famReserved = lineId => sumv(S.reqn.filter(r => (r.status === "approved" || r.status === "pending") && famPlan(r.plan).line === lineId).map(r => r.amount));
 // Non-procurement commitments kept by Fisko Finance (round FN1): utilities, rent, service agreements, travel orders.
 // Advances drawn from the budget count as spending of the line (clause 62): the amount lent until cleared, then what was spent (round FN3).
@@ -17,7 +19,8 @@ const famAdv = lineId => sumv((S.advances || []).filter(a => a.line === lineId &
 const famVc = lineId => sumv((S.vouchers || []).filter(v => v.line === lineId && !v.contract && !v.commit && ["ready", "posted", "paid"].includes(v.state)).map(v => v.gross - (v.penalty || 0)));
 const famOther = lineId => sumv((S.fcommit || []).filter(c => c.line === lineId).map(c => c.amount - (c.released || 0))) + famAdv(lineId) + famVc(lineId);
 const famHeadroom = lineId => famLine(lineId).amount - famCommitted(lineId) - famReserved(lineId) - famOther(lineId);
-const phaseAccepted = ph => ph.signs.length >= PHASE_SIGNS;
+// Signatures needed: the size of the acceptance committee, at most two (R-PC-06). Older phases have no `need` and use two.
+const phaseAccepted = ph => ph.signs.length >= (ph.need || PHASE_SIGNS);
 const phaseSigners = c => c.phases.flatMap(ph => ph.signs.map(s => s.by));
 const famPeople = () => S.users.filter(u => u.active && u.role !== "admin" && u.role !== "proc" && u.role !== "prochead");
 const PMETHOD = { specific: ["เฉพาะเจาะจง", "Specific selection"], ebid: ["ประกวดราคาอิเล็กทรอนิกส์", "E-bidding"] };
@@ -48,7 +51,7 @@ function famTasks(R) {
     famAcceptedUnpaid().forEach(x => R(`${L("ขออนุมัติเบิกจ่าย", "Request a payment")} ${x.c.id} ${tx(x.ph.name)}`, `${mb(x.ph.amount)} ${L("ลบ.", "M")}`, TODAY, "fnc-pay", "p-info"));
     S.payreqs.filter(p => p.recon && p.recon.state === "diff").forEach(p => R(`${L("ชี้แจงผลต่างจากไฟล์ GFMIS", "Explain a GFMIS file difference")} ${p.id}`, "", TODAY, "fnc-recon:payfile", "p-warn"));
   }
-  S.contracts.filter(c => c.inspectors.includes(me().id)).forEach(c => c.phases.filter(ph => !phaseAccepted(ph) && ph.due <= addDays(TODAY, 30) && !ph.signs.some(s => s.by === me().id))
+  S.contracts.filter(c => conLive(c) && c.inspectors.includes(me().id)).forEach(c => c.phases.filter(ph => !phaseAccepted(ph) && ph.due <= addDays(TODAY, 30) && !ph.signs.some(s => s.by === me().id))
     .forEach(ph => R(`${L("ลงนามตรวจรับงาน", "Sign the acceptance")} ${c.id} ${tx(ph.name)}`, `${mb(ph.amount)} ${L("ลบ.", "M")}`, ph.due, "prc-contracts", "p-info")));
 }
 
@@ -100,7 +103,7 @@ PROC.reqn = () => {
         || `<tr><td colspan="7" class="sub">${L("ยังไม่มีใบขอซื้อขอจ้าง", "No requisitions yet")}</td></tr>`}</tbody></table></div></section>`;
 };
 function phaseSignText(c, ph) {
-  return `${ph.signs.map(s => esc(userName(s.by))).join(", ") || "—"} <span class="sub">(${ph.signs.length}/${PHASE_SIGNS})</span>`;
+  return `${ph.signs.map(s => esc(userName(s.by))).join(", ") || "—"} <span class="sub">(${ph.signs.length}/${ph.need || PHASE_SIGNS})</span>`;
 }
 PROC.conCreate = () => {
   const isProc = isProcRole(), open = S.cases.filter(c => caseState(c) === 8), me_ = me().id, people = famPeople().filter(u => u.id !== me_);
@@ -215,7 +218,7 @@ BIND.procurement = () => {
     if (insp.length < (c.amount <= S.pcfg.singleInspectorMax ? 1 : 2)) { toast(L("ต้องมีกรรมการตรวจรับอย่างน้อย 2 คน", "Choose at least 2 committee members")); return; }
     if (!sodCheck("SD-02", [me().id], insp, c.id)) return;
     const cs = caseByPlan(c.plan); if (cs && !sodCheck("SD-06", insp, caseJudges(cs), c.id)) return;
-    c.inspectors = insp; audit(["เปลี่ยนกรรมการตรวจรับ", "Changed the acceptance committee"], c.id); commit(); route(); toast(L("บันทึกกรรมการแล้ว", "Committee saved"));
+    c.inspectors = insp; c.phases.filter(ph => !phaseAccepted(ph)).forEach(ph => (ph.need = Math.min(2, insp.length))); audit(["เปลี่ยนกรรมการตรวจรับ", "Changed the acceptance committee"], c.id); commit(); route(); toast(L("บันทึกกรรมการแล้ว", "Committee saved"));
   }));
   const sample = $("#egp-sample");
   if (sample) sample.onclick = () => {

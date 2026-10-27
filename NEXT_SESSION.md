@@ -166,3 +166,7 @@ The Procurement CRUD design (`Fisko_Procurement_CRUD_Design.html`, core lifecycl
 ## Round 56 (Procurement CRUD round PC2)
 
 P4 case files are a list + drawer with rerun, cancel and withdraw-award actions; inside a case, market research, bids, quotations and committees are editable lists; reruns and cancellations start clean and keep the old round (`85-case-crud.js`, `HANDOFF.md` section 56). Next: PC3 (P7 contracts: drafts and signing, phase schedule, acceptance fixes, changes, guarantees, penalties, invoices, closing), then PC4 (demo script P-E01 to P-E15 and the sweep walk).
+
+## Round 57 (Procurement CRUD round PC3)
+
+P7 contracts are a list + drawer: a contract is drafted from a case at step 8 with the winner as supplier and an editable phase schedule, then signed or deleted; drafts commit nothing; acceptance needs as many signatures as the committee has (up to two); partly accepted phases pass the payment gate; closing the case closes the contract (`86-con-crud.js`, `HANDOFF.md` section 57). Next: PC4 (the demo script P-E01 to P-E15 and the sweep walk), plus the PC3 items left for later (signature withdrawal, penalty waiver, invoice edit and return, delivery and invoice Simulate, payment status on phases).

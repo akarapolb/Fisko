@@ -8,7 +8,7 @@ const dayDiff = (a, b) => Math.round((utcDay(b) - utcDay(a)) / 864e5);
 const CON_PANELS = [], CON_BINDS = [];
 const GUAR_TYPE = { bank: ["หนังสือค้ำประกันธนาคาร", "Bank guarantee"], cash: ["เงินสด", "Cash"], bond: ["พันธบัตรรัฐบาล", "Government bond"] };
 const EXT_CODE = { force: ["เหตุสุดวิสัย", "Force majeure"], owner: ["ผู้ว่าจ้างเป็นเหตุ", "Employer's fault"], vendor: ["ผู้ขายเป็นเหตุ", "Supplier's fault"] };
-const VAR_ST = { pending: [["รออนุมัติ", "Pending"], "p-warn"], approved: [["อนุมัติแล้ว", "Approved"], "p-ok"], rejected: [["ไม่อนุมัติ", "Rejected"], "p-bad"] };
+const VAR_ST = { withdrawn: [["ถอน", "Withdrawn"], "p-mute"], pending: [["รออนุมัติ", "Pending"], "p-warn"], approved: [["อนุมัติแล้ว", "Approved"], "p-ok"], rejected: [["ไม่อนุมัติ", "Rejected"], "p-bad"] };
 const conCase = c => caseByPlan(c.plan);
 const phDue = ph => addDays(ph.due, (ph.ext || 0) + (ph.extV || 0));
 // Days late for penalty: from the due date plus forgiven extension days (employer's fault or force majeure) to delivery, or to today if not yet delivered.
@@ -30,10 +30,11 @@ const phNet = (c, ph) => Math.max(0, (ph.result === "partial" ? ph.okAmount : ph
 function guarSt(c) {
   const g = c.guarantee; if (!g) return "none";
   if (g.status === "returned") return "returned";
+  if (g.status === "forfeited") return "forfeited";
   if (g.expires < TODAY) return "expired";
   return dayDiff(TODAY, g.expires) <= S.pcfg.guaranteeWarnDays ? "expiring" : "held";
 }
-const GUAR_TAG = { none: [["ไม่มีหลักประกัน", "No guarantee"], "p-bad"], held: [["มีผล", "In force"], "p-ok"], expiring: [["ใกล้หมดอายุ", "Expiring"], "p-warn"], expired: [["หมดอายุ", "Expired"], "p-bad"], returned: [["คืนแล้ว", "Returned"], "p-mute"] };
+const GUAR_TAG = { none: [["ไม่มีหลักประกัน", "No guarantee"], "p-bad"], held: [["มีผล", "In force"], "p-ok"], expiring: [["ใกล้หมดอายุ", "Expiring"], "p-warn"], expired: [["หมดอายุ", "Expired"], "p-bad"], returned: [["คืนแล้ว", "Returned"], "p-mute"], forfeited: [["ริบแล้ว", "Forfeited"], "p-bad"] };
 
 // ---------- R-11: three-way payment gate ----------
 function payGate(c, ph) {
@@ -41,7 +42,7 @@ function payGate(c, ph) {
   const checks = [
     ok(phaseAccepted(ph) && (ph.result === "ok" || ph.result === "partial") && ph.cert && !openDissent(ph), "คณะกรรมการตรวจรับครบ มีใบตรวจรับ และไม่มีความเห็นแย้งค้าง", "Committee accepted, certificates issued, no open dissent"),
     ok(inv, "มีใบแจ้งหนี้ของงวดนี้", "An invoice is recorded for this phase"),
-    ok(inv && inv.contract === c.no && inv.vendor === tx(c.vendor) && Math.abs(inv.amount - ph.amount) <= tol, "ใบแจ้งหนี้ตรงกับสัญญา ผู้ขาย และยอดงวด", "The invoice matches the contract, supplier and phase amount"),
+    ok(inv && inv.contract === c.no && inv.vendor === tx(c.vendor) && Math.abs(inv.amount - (ph.result === "partial" ? ph.okAmount : ph.amount)) <= tol, "ใบแจ้งหนี้ตรงกับสัญญา ผู้ขาย และยอดที่ตรวจรับ", "The invoice matches the contract, supplier and accepted amount"),
     ok(gs === "held" || gs === "expiring" || gs === "returned" && c.phases.every(x => phPaid(c, x) || x.n === ph.n), "หลักประกันสัญญายังมีผล", "The contract guarantee is in force"),
   ];
   const net = phNet(c, ph), released = !!ph.release, pass = checks.every(x => x.ok);
@@ -74,11 +75,13 @@ function conPanel(c, part) {
         <div class="row" style="margin-top:6px">${people.map(u => `<label class="field-inline"><input type="checkbox" name="cc-${c.id}" value="${u.id}" ${c.inspectors.includes(u.id) ? "checked" : ""}> ${esc(tx(u.name))}</label>`).join("")}<button class="btn" type="button" data-ccsave="${c.id}">${L("บันทึก", "Save")}</button></div></details>`) : ""}</div>`,
     guar: () => `
     <div class="body" style="padding-top:0"><div class="row"><b style="font-weight:600">${L("หลักประกันสัญญา", "Guarantee")}</b> ${tag(tx(GUAR_TAG[gs][0]), GUAR_TAG[gs][1])}
-      ${c.guarantee ? `<span class="sub">${tx(GUAR_TYPE[c.guarantee.type])} · ${fmt(c.guarantee.amount)} ${L("บาท", "baht")} · ${L("หมดอายุ", "expires")} ${fdate(c.guarantee.expires)}</span>` : ""}
+      ${c.guarantee ? `<span class="sub">${tx(GUAR_TYPE[c.guarantee.type])}${c.guarantee.ref ? ` · <span class="mono">${esc(c.guarantee.ref)}</span>` : ""} · ${fmt(c.guarantee.amount)} ${L("บาท", "baht")} · ${L("หมดอายุ", "expires")} ${fdate(c.guarantee.expires)}${(c.guarantee.ext || []).length ? ` · ${L("ต่ออายุ", "extended")} ${c.guarantee.ext.length}` : ""}</span>` : ""}
+      ${isProc && c.guarantee && !["returned", "forfeited"].includes(c.guarantee.status) && conLive(c) ? `<span class="row" style="display:inline-flex"><input type="date" id="gx-${c.id}" min="${addDays(c.guarantee.expires, 1)}" value="${addDays(c.guarantee.expires, 90)}" aria-label="${L("วันหมดอายุใหม่", "New expiry date")}"><button class="btn ghost" type="button" data-gext="${c.id}">${L("ต่ออายุ", "Extend")}</button></span>` : ""}
       ${isProc && c.guarantee && c.guarantee.status === "held" && canReturnGuar(c) ? `<button class="btn" type="button" data-gret="${c.id}">${L("บันทึกการคืนหลักประกัน", "Record the return")}</button>` : ""}</div>
       ${isProc && !c.guarantee ? `<form class="inline-form" data-gform="${c.id}" style="margin-top:6px"><div class="f" style="flex:0 1 190px"><label>${L("ชนิด", "Type")}</label><select name="type">${Object.keys(GUAR_TYPE).map(k => `<option value="${k}">${tx(GUAR_TYPE[k])}</option>`).join("")}</select></div>
+        <div class="f" style="flex:0 1 170px"><label>${L("เลขที่หนังสือหรือเอกสาร", "Document no.")}</label><input type="text" name="ref"></div>
         <div class="f" style="flex:0 1 150px"><label>${L("วงเงิน (บาท)", "Amount (baht)")}</label><input type="number" name="amt" min="1" step="1" value="${Math.round(c.amount * S.pcfg.guaranteePct / 100)}" required></div>
-        <div class="f" style="flex:0 1 170px"><label>${L("หมดอายุ", "Expires")}</label><input type="date" name="exp" value="${addDays(c.phases[c.phases.length - 1].due, 90)}" required></div><button class="btn" type="submit">${L("บันทึกหลักประกัน", "Record the guarantee")}</button></form>` : ""}</div>`,
+        <div class="f" style="flex:0 1 170px"><label>${L("หมดอายุ", "Expires")}</label><input type="date" name="exp" value="${addDays(c.phases[c.phases.length - 1].due, 90)}" required></div><button class="btn ghost" type="button" data-gsim="${c.id}">${L("จำลอง", "Simulate")}</button><button class="btn" type="submit">${L("บันทึกหลักประกัน", "Record the guarantee")}</button></form>` : ""}</div>`,
     phases: () => `
     <div class="tbl-wrap"><table><thead><tr><th>${L("งวด", "Phase")}</th><th>${L("กำหนดส่งมอบ", "Due")}</th><th class="n">${L("วงเงิน (ลบ.)", "Amount (M)")}</th><th>${L("ส่งมอบและค่าปรับ", "Delivery and penalty")}</th><th>${L("ตรวจรับ", "Acceptance")}</th><th>${L("ใบแจ้งหนี้และเบิกจ่าย", "Invoice and payment")}</th></tr></thead>
       <tbody>${c.phases.map(ph => { const pay = S.payreqs.find(p => p.contract === c.id && p.phase === ph.n && p.status !== "rejected"), acc = phaseAccepted(ph), late = phLate(ph), pn = phPenalty(c, ph), ad = acceptDue(c, ph), od = openDissent(ph);
@@ -104,7 +107,7 @@ function conPanel(c, part) {
       ${vars.length ? `<div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("การแก้ไข", "Change")}</th><th>${L("เหตุผล", "Reason")}</th><th>${L("ผู้อนุมัติ", "Approver")}</th><th>${L("สถานะ", "Status")}</th></tr></thead><tbody>${vars.map(v => `<tr><td class="mono">${v.id}</td>
         <td>${v.kind === "time" ? `${L("ขยายเวลา", "Extension")} +${v.days} ${L("วัน", "d")} · ${tx(c.phases.find(p => p.n === v.phase).name)} · ${tx(EXT_CODE[v.code])}` : `${L("เปลี่ยนวงเงิน", "Amount")} ${v.delta > 0 ? "+" : ""}${fmt(v.delta)} ${L("บาท", "baht")} (${fmt(Math.abs(v.delta) / c.base * 100, 1)}%)`}<div class="sub">${esc(userName(v.by))} · ${fdate(v.t, true)}</div></td>
         <td class="sub">${esc(v.why)}</td><td class="sub">${v.who === "exec" ? L("ผู้บริหาร", "Executive") : L("หัวหน้าพัสดุ", "Head of procurement")}${v.decided ? `<div>${esc(userName(v.decided.by))}</div>` : ""}</td>
-        <td>${stTag(VAR_ST, v.status)}${v.status === "pending" && canDecideVar(v) ? `<div class="row" style="margin-top:4px"><button class="btn primary" type="button" data-vok="${c.id}|${v.id}">${L("อนุมัติ", "Approve")}</button><button class="btn danger" type="button" data-vno="${c.id}|${v.id}">${L("ไม่อนุมัติ", "Reject")}</button></div>` : ""}</td></tr>`).join("")}</tbody></table></div>` : ""}
+        <td>${stTag(VAR_ST, v.status)}${v.status === "pending" && v.by === me().id ? `<div class="row" style="margin-top:4px"><button class="btn ghost" type="button" data-vwd="${c.id}|${v.id}">${L("ถอน", "Withdraw")}</button></div>` : ""}${v.status === "pending" && canDecideVar(v) ? `<div class="row" style="margin-top:4px"><button class="btn primary" type="button" data-vok="${c.id}|${v.id}">${L("อนุมัติ", "Approve")}</button><button class="btn danger" type="button" data-vno="${c.id}|${v.id}">${L("ไม่อนุมัติ", "Reject")}</button></div>` : ""}</td></tr>`).join("")}</tbody></table></div>` : ""}
       ${canVary() ? `<form class="inline-form" data-vform="${c.id}" style="margin-top:8px"><div class="f" style="flex:0 1 160px"><label>${L("ชนิด", "Kind")}</label><select name="kind"><option value="amount">${L("เปลี่ยนวงเงิน", "Change amount")}</option><option value="time">${L("ขยายเวลา", "Extend time")}</option></select></div>
         <div class="f" style="flex:0 1 140px"><label>${L("ส่วนต่างวงเงิน (บาท ลบได้)", "Amount change (baht)")}</label><input type="number" name="delta" step="1"></div>
         <div class="f" style="flex:0 1 150px"><label>${L("งวด (ขยายเวลา)", "Phase (time)")}</label><select name="phase">${c.phases.filter(p => !phaseAccepted(p)).map(p => `<option value="${p.n}">${tx(p.name)}</option>`).join("")}</select></div>
@@ -138,8 +141,14 @@ function bindContracts() {
   const two = v => v.split("|"), ph_ = (cid, n) => famCon(cid).phases.find(x => x.n === Number(n));
   $$("[data-copen2]").forEach(b => (b.onclick = () => { CASE_OPEN = b.dataset.copen2; PROC_TAB = "cases"; route(); }));
   $$("[data-gform]").forEach(f => (f.onsubmit = e => { e.preventDefault(); const c = famCon(f.dataset.gform), fd = new FormData(f);
-    c.guarantee = { type: fd.get("type"), amount: Math.round(Number(fd.get("amt"))), expires: fd.get("exp"), status: "held", t: nowIso(), by: me().id };
+    const amt = Math.round(Number(fd.get("amt"))), min = Math.round(c.amount * S.pcfg.guaranteePct / 100), last = c.phases[c.phases.length - 1].due;
+    if (amt < min) { toast(L(`วงเงินหลักประกันต้องไม่น้อยกว่า ${fmt(min)} บาท (ร้อยละ ${S.pcfg.guaranteePct})`, `The guarantee must be at least ${fmt(min)} baht (${S.pcfg.guaranteePct}%)`)); return; }
+    if (fd.get("exp") < last) { toast(L("หลักประกันต้องมีผลถึงงวดสุดท้ายเป็นอย่างน้อย", "The guarantee must last at least until the last phase")); return; }
+    c.guarantee = { type: fd.get("type"), ref: String(fd.get("ref") || "").trim(), amount: amt, expires: fd.get("exp"), status: "held", t: nowIso(), by: me().id };
     audit(["บันทึกหลักประกันสัญญา", "Recorded a contract guarantee"], `${c.id} ${fmt(c.guarantee.amount)}`); done(L("บันทึกหลักประกันแล้ว", "Guarantee recorded")); }));
+  $$("[data-gsim]").forEach(b => (b.onclick = () => { const f = b.closest("form"), c = famCon(b.dataset.gsim); f.type.value = "bank"; f.ref.value = `BG-${FAM_FY}-${String(4000 + S.contracts.indexOf(c) * 13).slice(-4)}`; f.amt.value = Math.round(c.amount * S.pcfg.guaranteePct / 100); f.exp.value = addDays(c.phases[c.phases.length - 1].due, 30 * Math.max(3, c.warrantyMonths || 0)); f.ref.focus(); toast(L("เติมค่าจำลองแล้ว ตรวจก่อนบันทึก", "Simulated values filled in; check them before saving")); }));
+  $$("[data-gext]").forEach(b => (b.onclick = () => { const c = famCon(b.dataset.gext), d = $("#gx-" + c.id).value; if (!d || d <= c.guarantee.expires) { toast(L("วันหมดอายุใหม่ต้องหลังวันเดิม", "The new expiry must be after the current one")); return; }
+    (c.guarantee.ext = c.guarantee.ext || []).push({ from: c.guarantee.expires, to: d, t: nowIso(), by: me().id }); c.guarantee.expires = d; audit(["ต่ออายุหลักประกันสัญญา", "Extended a contract guarantee"], `${c.id} → ${d}`); done(L("ต่ออายุแล้ว", "Extended")); }));
   $$("[data-gret]").forEach(b => (b.onclick = () => { const c = famCon(b.dataset.gret); c.guarantee.status = "returned"; audit(["คืนหลักประกันสัญญา", "Returned a contract guarantee"], c.id); done(L("บันทึกการคืนหลักประกันแล้ว", "Return recorded")); }));
   $$("[data-dlform]").forEach(f => (f.onsubmit = e => { e.preventDefault(); const [cid, n] = two(f.dataset.dlform), c = famCon(cid), ph = ph_(cid, n), d = new FormData(f).get("d");
     if (d < c.signed) { toast(L("วันส่งมอบต้องไม่ก่อนวันลงนามสัญญา", "Delivery can't be before the contract was signed")); return; }
@@ -210,6 +219,7 @@ function bindContracts() {
     notify(["proc", "fin"], [`${c.id} ${ok ? "แก้ไขสัญญาได้รับอนุมัติ" : "การแก้ไขสัญญาไม่ได้รับอนุมัติ"}${ok && v.kind === "amount" ? ` ภาระผูกพันเปลี่ยน ${v.delta > 0 ? "+" : ""}${fmt(v.delta)} บาท` : ""}`, `${c.id}: change ${ok ? "approved" : "rejected"}${ok && v.kind === "amount" ? `, commitment ${v.delta > 0 ? "+" : ""}${fmt(v.delta)} baht` : ""}`], "fnc-chain");
     done(ok ? L("อนุมัติแล้ว สร้างฉบับสัญญาใหม่", "Approved; new version created") : L("ไม่อนุมัติ", "Rejected"));
   };
+  $$("[data-vwd]").forEach(b => (b.onclick = () => { const [cid, vid] = b.dataset.vwd.split("|"), c = famCon(cid), v = c.vars.find(x => x.id === vid), snap = crSnap(); v.status = "withdrawn"; v.decided = { by: me().id, t: nowIso() }; audit(["ถอนการเสนอแก้ไขสัญญา", "Withdrew a proposed contract change"], `${c.id} ${v.id}`); done(); crUndoOffer(snap, L("ถอนแล้ว", "Withdrawn")); }));
   $$("[data-vok]").forEach(b => (b.onclick = () => vdec(...b.dataset.vok.split("|"), true)));
   $$("[data-vno]").forEach(b => (b.onclick = () => vdec(...b.dataset.vno.split("|"), false)));
   CON_BINDS.forEach(f => f(done));
@@ -224,7 +234,8 @@ function bindClose() {
     e.preventDefault(); const cs = caseOf(CASE_OPEN), les = $("#cl-les").value.trim();
     if (!closeChecks(cs).every(x => x.ok)) { toast(L("ยังปิดแฟ้มไม่ได้", "Can't close yet")); return; }
     if (les.length < 10) { toast(L("บันทึกบทเรียนอย่างน้อย 10 ตัวอักษร", "Write the lessons, at least 10 characters")); return; }
-    cs.close = { lessons: les, score: Number($("#cl-sc").value), by: me().id, t: nowIso() }; caseLog(cs, "closed_case", `${cs.close.score}/5`); audit(["ปิดแฟ้มจัดซื้อ", "Closed a procurement case"], cs.id);
+    cs.close = { lessons: les, score: Number($("#cl-sc").value), by: me().id, t: nowIso() }; caseLog(cs, "closed_case", `${cs.close.score}/5`);
+    const con = caseCon(cs); if (con && con.status === "active") { con.status = "closed"; con.closed = { by: me().id, t: nowIso() }; } famPlan(cs.plan).status = "closed"; audit(["ปิดแฟ้มจัดซื้อ", "Closed a procurement case"], cs.id);
     commit(); renderShell(); route(); toast(L("ปิดแฟ้มแล้ว", "Case closed"));
   };
 }

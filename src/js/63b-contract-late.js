@@ -226,7 +226,7 @@ closeChecks = cs => {
   famTasks = R => {
     base(R);
     if (!S.vendors) return;
-    if (isProcRole()) S.contracts.filter(c => c.status !== "terminated").forEach(c => {
+    if (isProcRole()) S.contracts.filter(conLive).forEach(c => {
       if (c.supervision) { checkpoints(c).filter(p => p.d <= TODAY && !p.a).forEach(p => R(`${L("ประเมินความก้าวหน้า", "Assess progress")} ${c.id} ${p.k === "due" ? L("ครบกำหนด", "end") : p.k + "%"}`, fdate(p.d), p.d, "prc-contracts", "p-warn"));
         const lr = lastReport(c); if (!lr || dayDiff(lr.d, TODAY) > S.pcfg.supReportDays) R(`${L("รับรายงานผู้ควบคุมงาน", "Get the supervisor's report")} ${c.id}`, lr ? `${L("ล่าสุด", "last")} ${fdate(lr.d)}` : "", TODAY, "prc-contracts", "p-info"); }
       rejectDue(c).forEach(x => R(`${L("ส่งหนังสือแจ้งผลตรวจรับไม่ถูกต้อง", "Send the rejection notice")} ${c.id} ${tx(x.ph.name)}`, `${L("ภายใน", "by")} ${fdate(x.due)}`, x.due, "prc-contracts", x.due < TODAY ? "p-bad" : "p-warn"));

@@ -80,40 +80,6 @@ FS.payfile = () => {
 };
 
 FIN_BINDS.push(() => {
-  const pf = $("#py-form");
-  if (pf) {
-    const fill = () => { const [cid, n] = $("#py-ph").value.split("|"), c = famCon(cid), ph = c.phases.find(x => x.n === Number(n)); $("#py-amt").value = payGate(c, ph).net; $("#py-gate").innerHTML = gateBox(c, ph); };
-    $("#py-ph").onchange = fill; fill();
-    pf.onsubmit = e => {
-      e.preventDefault();
-      const [cid, n] = $("#py-ph").value.split("|"), c = famCon(cid), ph = c.phases.find(x => x.n === Number(n)), amount = Math.round(Number($("#py-amt").value)), g = payGate(c, ph);
-      if (g.noPo) { toast(L("สัญญานี้ยังไม่มีเลขที่ใบสั่งซื้อ (PO) ใน GFMIS · บันทึกที่หน้า วงเงินผูกพันและใบสั่งซื้อ ก่อน (ข้อ 28)", "This contract has no GFMIS purchase order yet · record it on Commitments and POs first (clause 28)")); return; }
-      if (!g.ok) {
-        if (!ph.hold) { ph.hold = { by: me().id, t: nowIso(), fails: g.checks.filter(x => !x.ok).map(x => x.label).join("; ") }; audit(["ประตูเบิกจ่ายพักรายการ", "The payment gate held a request"], `${c.id} ${tx(ph.name)}`); notify(["prochead", "exec"], [`${c.id} ${ph.name[0]} ไม่ผ่านประตูเบิกจ่าย รอปลดข้อยกเว้น`, `${c.id} ${ph.name[1]} did not pass the payment gate and waits for a release`], "prc-contracts"); commit(); }
-        toast(L("ไม่ผ่านประตูเบิกจ่าย (R-11): พักเป็นข้อยกเว้นให้หัวหน้าพัสดุปลด", "Payment gate not passed (R-11): held as an exception for release")); return;
-      }
-      if (amount !== g.net) { toast(L(`ยอดที่ขอต้องเท่ากับยอดงวดหักค่าปรับและส่วนที่ไม่ผ่านตรวจรับ (${fmt(g.net)} บาท)`, `The amount must equal the phase amount less penalty and rejected work (${fmt(g.net)} baht)`)); return; }
-      const p = { id: nextId("PY", S.payreqs), contract: c.id, phase: ph.n, amount, by: me().id, status: "pending", t: nowIso(), decided: null, recon: null, gate: { penalty: g.penalty, rejected: g.rejected, released: g.released && !g.pass } };
-      S.payreqs.push(p);
-      audit(["ขออนุมัติเบิกจ่าย", "Requested a payment approval"], `${p.id} ${c.id}`);
-      notify(["exec"], [`คำขอเบิกจ่าย ${p.id} รออนุมัติ`, `Payment request ${p.id} is waiting for approval`], "fnc-pay");
-      commit(); renderShell(); route(); toast(L("ส่งขออนุมัติเบิกจ่ายแล้ว", "Sent for approval"));
-    };
-  }
-  const decide = (id, ok) => {
-    const p = S.payreqs.find(x => x.id === id), c = famCon(p.contract), au = famAuth();
-    if (ok) {
-      const actors = sodActors("exec", "spend");
-      if (!sodCheck("SD-03", actors, [p.by], p.id)) return;
-      if (!sodCheck("SD-04", actors, [...new Set([...c.inspectors, ...phaseSigners(c)])], p.id)) return;
-    }
-    p.status = ok ? "approved" : "rejected"; p.decided = { by: me().id, holder: au.holder, via: au.via, t: nowIso() };
-    audit(ok ? ["อนุมัติเบิกจ่าย", "Approved a payment"] : ["ไม่อนุมัติเบิกจ่าย", "Rejected a payment"], `${p.id} ${c.id}${onBehalf("exec", "spend")}`);
-    notify(["fin"], ok ? [`${p.id} อนุมัติแล้ว บันทึกใน GFMIS และนำเข้าไฟล์กระทบยอด`, `${p.id} is approved; record it in GFMIS and import the file to reconcile`] : [`${p.id} ไม่ได้รับอนุมัติ`, `${p.id} was not approved`], "fnc-recon:payfile");
-    commit(); renderShell(); route(); toast(ok ? L("อนุมัติเบิกจ่ายแล้ว", "Payment approved") : L("ไม่อนุมัติ", "Rejected"));
-  };
-  $$("[data-pyok]").forEach(b => (b.onclick = () => decide(b.dataset.pyok, true)));
-  $$("[data-pyno]").forEach(b => (b.onclick = () => decide(b.dataset.pyno, false)));
   const sample = $("#gf-sample");
   if (sample) sample.onclick = () => {
     const todo = S.payreqs.filter(p => p.status === "approved" && ["none", "diff"].includes(reconState(p)));

@@ -130,7 +130,7 @@ function prMine() {
 }
 function prDue(days) {
   const lim = addDays(TODAY, days), out = [];
-  (S.contracts || []).filter(c => c.status !== "terminated").forEach(c => {
+  (S.contracts || []).filter(conLive).forEach(c => {
     c.phases.filter(ph => !ph.cancelled && !phaseAccepted(ph) && ph.due <= lim).forEach(ph => out.push({ due: ph.due, kind: L("งวดส่งมอบ", "Phase due"), what: `${c.id} ${tx(ph.name)}`, sub: `${tx(c.vendor)} · ${mb(ph.amount)} ${L("ลบ.", "M")}`, link: "prc-contracts", con: c.id }));
     const g = c.guarantee, gx = g && g.expires;
     if (gx && gx <= lim && g.status !== "returned") out.push({ due: gx, kind: L("หลักประกันหมดอายุ", "Guarantee expires"), what: c.id, sub: tx(c.vendor), link: "prc-contracts", con: c.id });
@@ -142,7 +142,7 @@ PROC.todayKpis = () => {
   return `<section class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
     <div class="kpi hl"><span class="l">${L("งานของฉัน", "My work")}</span><span class="v">${mine.length}</span><span class="d" style="color:var(--rail-ink)">${mine.filter(x => x.due <= TODAY).length} ${L("ถึงกำหนดหรือเลยแล้ว", "due or overdue")}</span></div>
     <div class="kpi"><span class="l">${L("แฟ้มที่ดำเนินการอยู่", "Cases in progress")}</span><span class="v">${live.length}</span></div>
-    <div class="kpi"><span class="l">${L("สัญญาที่ใช้อยู่", "Active contracts")}</span><span class="v">${(S.contracts || []).filter(c => c.status !== "terminated" && c.status !== "closed").length}</span></div>
+    <div class="kpi"><span class="l">${L("สัญญาที่ใช้อยู่", "Active contracts")}</span><span class="v">${(S.contracts || []).filter(c => conLive(c) && c.status !== "closed").length}</span></div>
     <div class="kpi"><span class="l">${L("ครบกำหนดใน 60 วัน", "Due in 60 days")}</span><span class="v">${due.length}</span><span class="d sub">${late.length} ${L("เลยกำหนด", "overdue")}</span></div>
   </section>`;
 };

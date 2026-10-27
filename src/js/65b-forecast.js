@@ -71,7 +71,7 @@ function monthly(opt = {}, sims) {
   const rows = PFY_MONTHS.map(m => ({ m, comAct: 0, comFc: 0, lo: 0, hi: 0, payAct: 0, payFc: 0 }));
   S.contracts.forEach(c => { const i = mi(c.signed.slice(0, 7)); if (i >= 0) rows[i].comAct += c.amount; });
   S.payreqs.filter(p => p.status === "approved" && p.decided).forEach(p => { const i = mi(p.decided.t.slice(0, 7)); if (i >= 0) rows[i].payAct += p.amount; });
-  S.contracts.filter(c => c.status !== "terminated").forEach(c => c.phases.filter(ph => !ph.cancelled && !S.payreqs.some(p => p.contract === c.id && p.phase === ph.n && p.status === "approved")).forEach(ph => {
+  S.contracts.filter(conLive).forEach(c => c.phases.filter(ph => !ph.cancelled && !S.payreqs.some(p => p.contract === c.id && p.phase === ph.n && p.status === "approved")).forEach(ph => {
     let d = addDays(phDue(ph) > TODAY ? phDue(ph) : TODAY, lag); const i = mi(d.slice(0, 7)); if (i >= 0) rows[i].payFc += (ph.result === "partial" ? ph.okAmount : ph.amount);
   }));
   const per = PFY_MONTHS.map(() => new Array(N).fill(0));

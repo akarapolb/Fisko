@@ -291,7 +291,7 @@ function bindCases() {
   if (!c) return;
   const done = msg => { commit(); renderShell(); route(); if (msg) toast(msg); };
   const mv = $("#case-move"); if (mv) mv.onclick = () => { if (caseMove(c)) done(L("ไปขั้นต่อไปแล้ว", "Moved to the next step")); };
-  const tc = $("#case-tocon"); if (tc) tc.onclick = () => { CT_FROM = c.id; PROC_TAB = "contracts"; route(); };
+  const tc = $("#case-tocon"); if (tc) tc.onclick = () => { CT_FROM = c.id; CON_OPEN = null; procSet("contracts"); if (c.draftCon && famCon(c.draftCon)) crOpen("pcCon", c.draftCon); else crOpen("pcCon", "", "edit"); route(); };
   const gc = $("#case-gocon"); if (gc) gc.onclick = () => { CON_OPEN = c.contract; procSet("contracts"); route(); };
   const fl = $("#case-fail"); if (fl) fl.onclick = () => {
     const why = ($("#case-reason").value || "").trim();

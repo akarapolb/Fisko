@@ -177,6 +177,44 @@
           CASE_OPEN = null; crClose(); await tick();
         }
       }
+      // Procurement CRUD round PC3: a draft contract from a case at the contracting step (deleted, drafted again, phases
+      // rescheduled, a wrong total refused), signed (the line is committed only then, the case moves to step 9); then
+      // every contract drawer, edit form and new form for the procurement, finance and audit roles
+      if (o.suites.includes("render") && typeof CRUD !== "undefined" && CRUD.defs.pcCon) {
+        safe(`${org}/PC3 walk`, () => {
+          const D = CRUD.defs.pcCon; ROLE = "proc"; LANG = o.langs[0]; renderShell(); CON_OPEN = null; CASE_OPEN = null;
+          const c = S.cases.find(x => !x.cancelled && caseReq(x) && caseState(x) >= 3 && caseState(x) < 9);
+          if (!c) { errs.push(`${org}/PC3: no case to contract`); return; }
+          const rq = caseReq(c), price = Math.round(rq.amount * 0.9 / 1e3) * 1e3, v0 = csVendors()[1] || csVendors()[0];
+          c.award = { winner: [v0.name, v0.name], price, date: TODAY, appealEnd: null, minutes: "ทดสอบ", why: "" }; c.appealElapsed = true; setState(c, 8, "contracting");
+          const insp = famPeople().filter(u => u.id !== me().id && !caseJudges(c).includes(u.id)).slice(0, 2).map(u => u.id), half = Math.round(price / 2 / 1e3) * 1e3;
+          const v = { cs: c.id, no: "T/001", signed: TODAY, amount: price, war: 12, n: "2", a0: half, a1: price - half, d0: addDays(TODAY, 30), d1: addDays(TODAY, 60) };
+          insp.forEach(id => (v["i_" + id] = true));
+          const bad = D.check(v, null); if (bad.length) errs.push(`${org}/PC3: a valid draft was refused: ${bad.map(e => e.m).join("; ")}`);
+          if (!D.check(Object.assign({}, v, { a1: 1000 }), null).length) errs.push(`${org}/PC3: a wrong phase total was accepted`);
+          const before = famCommitted(c.line);
+          let k = D.create.run(v); const del = D.acts(k).find(a => a.id === "del"); del.run(k);
+          if (S.contracts.includes(k) || c.draftCon) errs.push(`${org}/PC3: the draft was not deleted`);
+          k = D.create.run(v);
+          if (k.status !== "draft" || famCommitted(c.line) !== before || caseState(c) !== 8) errs.push(`${org}/PC3: a draft committed the line or moved the case`);
+          const third = price - 2 * Math.round(price / 3 / 1e3) * 1e3;
+          D.edit.run(k, Object.assign({}, v, { n: "3", a0: Math.round(price / 3 / 1e3) * 1e3, a1: Math.round(price / 3 / 1e3) * 1e3, a2: third, d2: addDays(TODAY, 90) }));
+          if (k.phases.length !== 3 || sumv(k.phases.map(p => p.amount)) !== price) errs.push(`${org}/PC3: the phase schedule was not saved`);
+          procSet("contracts"); crOpen("pcCon", k.id); go2("procurement"); chk(`${org}/PC3/draft`);
+          D.acts(k).find(a => a.id === "sign").run(k);
+          if (k.status !== "active" || caseState(c) !== 9 || famCommitted(c.line) !== before + price) errs.push(`${org}/PC3: signing left ${k.status}, step ${caseState(c)}, committed ${famCommitted(c.line) - before}`);
+          if (!phaseAccepted({ signs: [{ by: "x" }], need: 1 }) || phaseAccepted({ signs: [{ by: "x" }] })) errs.push(`${org}/PC3: signatures needed are wrong`);
+          crOpen("pcCon", k.id); go2("procurement"); chk(`${org}/PC3/signed`); CON_OPEN = k.id; crClose(); go2("procurement"); chk(`${org}/PC3/contract page`); CON_OPEN = null;
+        });
+        for (const role of ["proc", "prochead", "div", "fin", "audit"].filter(r => o.roles.includes(r))) {
+          ROLE = role; LANG = o.langs[0]; safe("shell", renderShell); CON_OPEN = null;
+          if (!prSees(prPage("contracts"))) continue;
+          const sp = CRUD.defs.pcCon, open = (id, mode) => safe(`${org}/${role}/pcCon/${id || "new"}/${mode}`, () => { procSet("contracts"); crOpen("pcCon", id, mode); go2("procurement"); chk(`${org}/${role}/pcCon/${id || "new"}/${mode}`); if (!document.querySelector(".cr-drawer")) errs.push(`${org}/${role}/pcCon/${id}: no drawer`); });
+          for (const r of sp.list()) { open(r.id, "view"); if (sp.edit.can(r)) open(r.id, "edit"); }
+          if (sp.create.can()) open("", "edit");
+          crClose(); await tick();
+        }
+      }
       // Round C4: every B8 and B9 tab with the demo date moved to March and to September (simulated GFMIS imports)
       if (o.suites.includes("render") && typeof simDisb === "function" && S.y2569) for (const mi of [5, 11]) {
         S.asOf = FY_MONTH_ENDS()[mi]; TODAY = S.asOf; simDisb(mi);

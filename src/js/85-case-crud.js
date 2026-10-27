@@ -127,7 +127,7 @@ CRUD.def("csCm", {
   status: r => (!r.x ? "none" : committeeOk(r.x) ? "ok" : "part"),
   cols: [{ h: ["คณะกรรมการ", "Committee"], c: r => esc(tx(COMMITTEES[r.key])) }, { h: ["คำสั่ง", "Order"], c: r => (r.x ? `${esc(r.x.order)} <span class="sub">${fdate(r.x.date)}</span>` : "—") },
     { h: ["ประธานและกรรมการ", "Chair and members"], c: r => (r.x ? `<span class="sub">${committeeMembers(r.x).map(u => esc(userName(u))).join(", ")}</span>` : "—") }],
-  fields: r => { const x = r && r.x, P = people(), sel = x ? x.members : [];
+  fields: r => { const x = r && r.x, P = people().filter(u => u.role !== "vendor"), sel = x ? x.members : [];
     return [{ id: "order", label: ["เลขที่คำสั่ง", "Order no."], req: true, value: x ? x.order : "" }, { id: "date", label: ["วันที่", "Date"], type: "date", req: true, max: TODAY, value: x ? x.date : TODAY },
       { id: "chair", label: ["ประธาน", "Chair"], type: "select", req: true, wide: true, value: x ? x.chair : (P[0] || {}).id, opts: P.map(u => [u.id, `${tx(u.name)} · ${tx(ROLES[u.role])}`]) },
       { id: "_m", label: ["กรรมการ", "Members"], type: "info", wide: true, html: `${L("อย่างน้อย", "At least")} ${S.pcfg.minMembers - 1} ${L("คนนอกจากประธาน", "besides the chair")}` },
