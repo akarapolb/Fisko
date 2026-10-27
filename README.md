@@ -117,6 +117,7 @@ This regenerates `Fisko_Prototype.html` and `fisko-prototype.html`.
 | `src/js/91-workbench.js` | Workspace across systems: Approvals inbox, Exception centre, Pinned and recent, the Today strip on My Workspace |
 | `src/js/92-review.js` | Enter, review, confirm for record actions in the shared drawer (typed id for actions that cannot be undone) |
 | `src/js/93-presenter.js` | Presenter mode: demo routes played from a bottom bar, executive cut of 7 steps, steps W-01 and W-02 |
+| `src/js/94-polish.js` | Shell polish (round 63): organization and role in one context chip, one-row sidebar footer, eyebrows without the app name, two-column pages that stack when the page is narrow |
 | `src/js/99-boot.js` | Startup |
 
 ## Status

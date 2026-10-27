@@ -30,7 +30,7 @@ VIEWS.home = () => {
   const hour = new Date().getHours(), greet = hour < 12 ? L("สวัสดีตอนเช้า", "Good morning") : hour < 17 ? L("สวัสดีตอนบ่าย", "Good afternoon") : L("สวัสดีตอนเย็น", "Good evening");
   return `
   <section class="hero">
-    <div style="position:relative;z-index:1"><h1>${greet}, ${esc(tx(u.name).split(" ")[0])}</h1><p>${tx(ROLES[ROLE])} · ${unitName(u.unit)} · ${fdate(TODAY)}</p>
+    <div style="position:relative;z-index:1"><h1>${greet}, ${esc(tx(u.name).split(" ")[0])}</h1><p>${tx(ROLES[ROLE])}${unitName(u.unit) !== tx(ROLES[ROLE]) ? ` · ${unitName(u.unit)}` : ""} · ${fdate(TODAY)}</p>
       <div class="hero-meta"><span>${esc(tx(S.org))}</span><span>${L("ปีงบประมาณ", "Fiscal year")} ${FAM_FY}</span>${next[0] ? `<span>${L("กำหนดถัดไป", "Next deadline")}: ${esc(tx(next[0].name))}</span>` : ""}</div></div>
     <div class="hero-stats"><div class="hstat"><b>${tasks.length}</b><span>${L("งานที่ต้องทำ", "tasks to do")}</span></div><div class="hstat"><b>${over}</b><span>${L("เลยกำหนด", "overdue")}</span></div><div class="hstat"><b>${next.length ? daysUntil(next[0].date) : "–"}</b><span>${L("วันถึงกำหนดถัดไป", "days to next deadline")}</span></div></div>
   </section>

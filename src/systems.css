@@ -17,7 +17,9 @@
 .sr-btn.on { background: var(--sr-on); color: #fff; }
 .sr-btn.on::before { content: ""; position: absolute; left: -10px; top: 9px; bottom: 9px; width: 3px; border-radius: 0 3px 3px 0; background: #9DB0E3; }
 .sr-btn:focus-visible { outline: 2px solid #9DB0E3; outline-offset: 1px; }
-.sr-cnt { position: absolute; top: 2px; right: 0; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 99px; background: #E5E7EB; color: #1B2440; font: 700 10px/16px var(--sans, inherit); text-align: center; }
+/* the count sits on the button's corner, outside the icon, with a ring in the rail colour so it reads as a cut-out */
+.sr-cnt { position: absolute; top: -3px; right: -5px; min-width: 17px; height: 17px; padding: 0 4px; box-sizing: border-box; border-radius: 99px; background: #9DB0E3; color: #121A33; font-family: inherit; font-size: 10px; font-weight: 700; line-height: 17px; text-align: center; font-variant-numeric: tabular-nums; box-shadow: 0 0 0 2px var(--sr); pointer-events: none; }
+.sr-btn.on .sr-cnt { background: #fff; }
 .sr-sep { width: 24px; height: 1px; background: rgba(255, 255, 255, .1); margin: 4px 0; }
 .sr-sp { flex: 1; }
 
@@ -129,3 +131,53 @@ body.presenting .view { padding-bottom: 220px; }
 /* the top bar carries the crumb, so the selectors give up some width */
 @media (min-width: 861px) { #org, #role { max-width: 160px; text-overflow: ellipsis; } .top .crumb { min-width: 140px; } }
 @media (max-width: 1280px) and (min-width: 861px) { #sample-tag { display: none; } }
+
+/* ---------- round 63 polish ---------- */
+/* one context chip for organization and role (the selectors live in its panel) */
+.ctxbtn { flex: 0 1 auto; min-width: 0; max-width: 240px; height: 38px; display: inline-flex; align-items: center; gap: 8px; padding: 0 10px 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; text-align: left; }
+.ctxbtn:hover { background: var(--surface-2); }
+.ctxbtn:focus-visible { box-shadow: var(--ring); outline: none; }
+.ctx-o, .ctx-r { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; font-size: 13px; }
+.ctx-o { color: var(--muted); max-width: 110px; }
+.ctx-r { font-weight: 600; }
+.ctx-o + .ctx-r::before { content: "·"; color: var(--faint); margin-right: 8px; font-weight: 400; }
+.ctxbtn .brand-caret { color: var(--muted); font-size: 11px; flex: none; }
+.ctxpop { position: fixed; width: min(320px, calc(100vw - 24px)); padding: 14px; display: flex; flex-direction: column; gap: 12px; z-index: 30; }
+.ctxpop[hidden] { display: none; }
+.ctx-f { display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; color: var(--muted); font-weight: 600; }
+.ctx-f[hidden] { display: none; }
+.ctxpop select, .ctxpop .orgsel, .ctxpop #role { max-width: none !important; width: 100%; }
+.ctxpop .sub { margin: 0; font-size: 12.5px; }
+/* search: compact until it is used */
+@media (min-width: 861px) {
+  .gsearch { flex: 0 1 200px; min-width: 120px; transition: flex-basis .15s; }
+  .gsearch:focus-within { flex-basis: 300px; }
+  .gsearch input { width: 100%; }
+  .top { flex-wrap: wrap; row-gap: 8px; } /* a last guard: never push the bar off screen */
+}
+@media (prefers-reduced-motion: reduce) { .gsearch { transition: none; } }
+/* the sidebar footer in one row */
+.rail-foot { padding: 0 6px; }
+.rf-row { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.rf-row .sp { flex: 1; }
+.rail-foot .rf-row .btn { margin-top: 0; padding: 4px 9px; font-size: 12px; }
+/* two-column pages stack when the page itself is narrow, not only the window */
+/* (a class from 94-polish.js, not a container query: containment would anchor the fixed drawers to the page) */
+.view.narrow .grid2 { grid-template-columns: minmax(0, 1fr); }
+/* the Today strip fits five cards in a row */
+.sysdeck { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+@media (min-width: 861px) {
+  .top { gap: 8px; }
+  .top .crumb { flex: 1 1 160px; min-width: 120px; }
+  .gsearch { flex-basis: 170px; min-width: 110px; }
+  .ctxbtn { flex: 0 1 auto; max-width: 220px; }
+}
+/* below 1440 px the chip shows the role; the organization is in its panel and its tooltip */
+@media (min-width: 861px) and (max-width: 1440px) { .ctx-o { display: none; } .ctx-o + .ctx-r::before { content: none; } }
+/* Administration: the sidebar lists the M10 tabs, so the page's own tab row is not repeated */
+body[data-app="admin"] #view > .tabs[role="tablist"] { display: none; }
+/* wide tables keep their row actions in view: the last cell sticks to the right edge when it holds a button */
+.tbl-wrap td:last-child:has(> .btn, > button, > .row > .btn), .tbl-wrap table:has(td:last-child > .btn, td:last-child > button) th:last-child { position: sticky; right: 0; background: var(--surface); box-shadow: -8px 0 8px -8px rgba(17, 24, 39, .18); }
+/* flex-wrap decides on the starting widths, before anything shrinks: keep them small and let the crumb grow */
+@media (min-width: 861px) { .top .crumb { flex: 1 1 120px; min-width: 100px; } .gsearch { flex-basis: 150px; } .ctxbtn { max-width: 200px; } }
+@media (min-width: 861px) { .ctxbtn { flex: 0 1 170px; } }

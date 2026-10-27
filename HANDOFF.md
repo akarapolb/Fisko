@@ -1129,3 +1129,19 @@ Brought the design of the Fabor console prototype (`D:\Claude\Fabor\docs\design\
 - **Tests:** `tests/sweep.js` gains a shell section: rail, launcher and crumb for every organization, language and role and every allowed system; every presenter route step by step; and the review step on CM-2570-001 (enter, review shows the amount, confirm runs). The new pages are NAV entries (app `"all"`, groups `ws` and `planned`), so the render pass opens them for every role.
 - **Next round number on `main`:** 63.
 
+## 63. Round 63: polish of every page for the new shell (27 October 2026)
+
+The rail added in round 62 took 60 px from every page. An audit of every page, tab, role and language (layout overflow, headings, labels, leftover text) and a visual pass over each system found these, all fixed:
+
+- **The page scrolled sideways** by about 60 px: the top bar's controls no longer fitted, so the theme and user buttons were pushed off screen, and the breadcrumb was cut to a few letters. The organization and role selectors now fold into **one context chip** (`94-polish.js`) with a small panel holding both selectors (the Fabor console's tenant switcher). Below 1440 px the chip shows the role only (the organization stays in the panel and the tooltip). The search starts compact and widens on focus. The bar now fits on one row for all 12 roles in Thai and English, and nothing scrolls sideways at desktop or phone width.
+- **Rail badges** sat on top of the icons and were clipped: they now sit on the button's corner with a ring in the rail colour.
+- **Administration menu:** every M10 item showed the interface-error badge, because the bell refresh (`updateBell`) re-stamps a page's badge on every link carrying that page id; the same refresh also wiped the Workspace counts. Shell links no longer carry `data-v`, and only Integrations shows its count. The admin page's own row of 16 tabs is hidden, since the sidebar lists them.
+- **Wide tables** (Budget review, submission, suppliers, reports, advances, users): the row-action cell now sticks to the right edge, so the buttons stay in view while the table scrolls.
+- **Two-column pages** stack when the page itself is under 900 px wide (a class set by a ResizeObserver; a CSS container query would have anchored the fixed side drawers to the page).
+- **Today strip** fits five cards in one row instead of four and one.
+- **Sidebar footer** is one row (Sample data · Guide · Reset), giving long app menus their space back.
+- **Eyebrows** drop the app name the sidebar and the breadcrumb already show ("F1 · Finance", not "Fisko Finance · F1 · Finance").
+- **Greeting** no longer repeats the unit when it has the role's name ("Planning Division · Planning Division").
+- **Tests:** the sweep's shell section also checks the context chip, its panel and the sidebar footer.
+- **Next round number on `main`:** 64.
+

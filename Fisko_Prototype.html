@@ -1421,7 +1421,9 @@ ul.plain { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-di
 .sr-btn.on { background: var(--sr-on); color: #fff; }
 .sr-btn.on::before { content: ""; position: absolute; left: -10px; top: 9px; bottom: 9px; width: 3px; border-radius: 0 3px 3px 0; background: #9DB0E3; }
 .sr-btn:focus-visible { outline: 2px solid #9DB0E3; outline-offset: 1px; }
-.sr-cnt { position: absolute; top: 2px; right: 0; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 99px; background: #E5E7EB; color: #1B2440; font: 700 10px/16px var(--sans, inherit); text-align: center; }
+/* the count sits on the button's corner, outside the icon, with a ring in the rail colour so it reads as a cut-out */
+.sr-cnt { position: absolute; top: -3px; right: -5px; min-width: 17px; height: 17px; padding: 0 4px; box-sizing: border-box; border-radius: 99px; background: #9DB0E3; color: #121A33; font-family: inherit; font-size: 10px; font-weight: 700; line-height: 17px; text-align: center; font-variant-numeric: tabular-nums; box-shadow: 0 0 0 2px var(--sr); pointer-events: none; }
+.sr-btn.on .sr-cnt { background: #fff; }
 .sr-sep { width: 24px; height: 1px; background: rgba(255, 255, 255, .1); margin: 4px 0; }
 .sr-sp { flex: 1; }
 
@@ -1533,6 +1535,56 @@ body.presenting .view { padding-bottom: 220px; }
 /* the top bar carries the crumb, so the selectors give up some width */
 @media (min-width: 861px) { #org, #role { max-width: 160px; text-overflow: ellipsis; } .top .crumb { min-width: 140px; } }
 @media (max-width: 1280px) and (min-width: 861px) { #sample-tag { display: none; } }
+
+/* ---------- round 63 polish ---------- */
+/* one context chip for organization and role (the selectors live in its panel) */
+.ctxbtn { flex: 0 1 auto; min-width: 0; max-width: 240px; height: 38px; display: inline-flex; align-items: center; gap: 8px; padding: 0 10px 0 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; text-align: left; }
+.ctxbtn:hover { background: var(--surface-2); }
+.ctxbtn:focus-visible { box-shadow: var(--ring); outline: none; }
+.ctx-o, .ctx-r { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; font-size: 13px; }
+.ctx-o { color: var(--muted); max-width: 110px; }
+.ctx-r { font-weight: 600; }
+.ctx-o + .ctx-r::before { content: "·"; color: var(--faint); margin-right: 8px; font-weight: 400; }
+.ctxbtn .brand-caret { color: var(--muted); font-size: 11px; flex: none; }
+.ctxpop { position: fixed; width: min(320px, calc(100vw - 24px)); padding: 14px; display: flex; flex-direction: column; gap: 12px; z-index: 30; }
+.ctxpop[hidden] { display: none; }
+.ctx-f { display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; color: var(--muted); font-weight: 600; }
+.ctx-f[hidden] { display: none; }
+.ctxpop select, .ctxpop .orgsel, .ctxpop #role { max-width: none !important; width: 100%; }
+.ctxpop .sub { margin: 0; font-size: 12.5px; }
+/* search: compact until it is used */
+@media (min-width: 861px) {
+  .gsearch { flex: 0 1 200px; min-width: 120px; transition: flex-basis .15s; }
+  .gsearch:focus-within { flex-basis: 300px; }
+  .gsearch input { width: 100%; }
+  .top { flex-wrap: wrap; row-gap: 8px; } /* a last guard: never push the bar off screen */
+}
+@media (prefers-reduced-motion: reduce) { .gsearch { transition: none; } }
+/* the sidebar footer in one row */
+.rail-foot { padding: 0 6px; }
+.rf-row { display: flex; align-items: center; gap: 6px; font-size: 12px; }
+.rf-row .sp { flex: 1; }
+.rail-foot .rf-row .btn { margin-top: 0; padding: 4px 9px; font-size: 12px; }
+/* two-column pages stack when the page itself is narrow, not only the window */
+/* (a class from 94-polish.js, not a container query: containment would anchor the fixed drawers to the page) */
+.view.narrow .grid2 { grid-template-columns: minmax(0, 1fr); }
+/* the Today strip fits five cards in a row */
+.sysdeck { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+@media (min-width: 861px) {
+  .top { gap: 8px; }
+  .top .crumb { flex: 1 1 160px; min-width: 120px; }
+  .gsearch { flex-basis: 170px; min-width: 110px; }
+  .ctxbtn { flex: 0 1 auto; max-width: 220px; }
+}
+/* below 1440 px the chip shows the role; the organization is in its panel and its tooltip */
+@media (min-width: 861px) and (max-width: 1440px) { .ctx-o { display: none; } .ctx-o + .ctx-r::before { content: none; } }
+/* Administration: the sidebar lists the M10 tabs, so the page's own tab row is not repeated */
+body[data-app="admin"] #view > .tabs[role="tablist"] { display: none; }
+/* wide tables keep their row actions in view: the last cell sticks to the right edge when it holds a button */
+.tbl-wrap td:last-child:has(> .btn, > button, > .row > .btn), .tbl-wrap table:has(td:last-child > .btn, td:last-child > button) th:last-child { position: sticky; right: 0; background: var(--surface); box-shadow: -8px 0 8px -8px rgba(17, 24, 39, .18); }
+/* flex-wrap decides on the starting widths, before anything shrinks: keep them small and let the crumb grow */
+@media (min-width: 861px) { .top .crumb { flex: 1 1 120px; min-width: 100px; } .gsearch { flex-basis: 150px; } .ctxbtn { max-width: 200px; } }
+@media (min-width: 861px) { .ctxbtn { flex: 0 1 170px; } }
 </style>
 </head>
 <body>
@@ -3027,7 +3079,7 @@ VIEWS.home = () => {
   const hour = new Date().getHours(), greet = hour < 12 ? L("สวัสดีตอนเช้า", "Good morning") : hour < 17 ? L("สวัสดีตอนบ่าย", "Good afternoon") : L("สวัสดีตอนเย็น", "Good evening");
   return `
   <section class="hero">
-    <div style="position:relative;z-index:1"><h1>${greet}, ${esc(tx(u.name).split(" ")[0])}</h1><p>${tx(ROLES[ROLE])} · ${unitName(u.unit)} · ${fdate(TODAY)}</p>
+    <div style="position:relative;z-index:1"><h1>${greet}, ${esc(tx(u.name).split(" ")[0])}</h1><p>${tx(ROLES[ROLE])}${unitName(u.unit) !== tx(ROLES[ROLE]) ? ` · ${unitName(u.unit)}` : ""} · ${fdate(TODAY)}</p>
       <div class="hero-meta"><span>${esc(tx(S.org))}</span><span>${L("ปีงบประมาณ", "Fiscal year")} ${FAM_FY}</span>${next[0] ? `<span>${L("กำหนดถัดไป", "Next deadline")}: ${esc(tx(next[0].name))}</span>` : ""}</div></div>
     <div class="hero-stats"><div class="hstat"><b>${tasks.length}</b><span>${L("งานที่ต้องทำ", "tasks to do")}</span></div><div class="hstat"><b>${over}</b><span>${L("เลยกำหนด", "overdue")}</span></div><div class="hstat"><b>${next.length ? daysUntil(next[0].date) : "–"}</b><span>${L("วันถึงกำหนดถัดไป", "days to next deadline")}</span></div></div>
   </section>
@@ -19532,7 +19584,8 @@ toggleAppMenu = function (show) { const el = $("#launcher"), open = el && !el.hi
     $("#appsw").setAttribute("aria-label", `${L("ทุกระบบ", "All systems")}: ${tx(sysName(SYS))}`);
     $("#appsw").setAttribute("aria-haspopup", "dialog");
   };
-  const link = (href, v, ico, label, badge = "") => `<a href="#${href}" data-v="${v}" data-href="${href}"><span class="ni">${svgI(ico)}</span><span class="nl">${label}</span>${badge}</a>`;
+  // No data-v here: the bell's refresh (updateBell) re-stamps a page's own badge on every link with that page id.
+  const link = (href, v, ico, label, badge = "") => `<a href="#${href}" data-href="${href}"><span class="ni">${svgI(ico)}</span><span class="nl">${label}</span>${badge}</a>`;
   const cnt = n => (n ? `<span class="badge">${n}</span>` : "");
   renderNav = function () {
     if (SYSTEMS[SYS] && SYSTEMS[SYS].app) {
@@ -19552,7 +19605,7 @@ toggleAppMenu = function (show) { const el = $("#launcher"), open = el && !el.hi
         if (pp.length) h += `<div class="nav-h">${L("ปักหมุด", "Pinned")}</div>` + pp.map(p => `<a href="#" data-pinlink="${esc(p.link)}"><span class="ni">${svgI(SYSTEMS[p.sys] ? SYSTEMS[p.sys].icon : "star")}</span><span class="nl">${esc(tx(p.label))}</span></a>`).join("");
         h += `<div class="nav-h">${L("การสาธิต", "Demo")}</div>` + link("demo", "demo", "book", L("คู่มือการสาธิต", "Demo guide")) + `<a href="#" data-presstart><span class="ni">${svgI("play")}</span><span class="nl">${L("โหมดนำเสนอ", "Presenter mode")}</span></a>`;
       } else if (SYS === "admin") {
-        h += `<div class="nav-h">${L("ผู้ดูแลระบบ", "Administration")}</div>` + (typeof ADMIN_TABS !== "undefined" ? ADMIN_TABS.filter(t => !t.roles || t.roles.includes(ROLE)) : []).map(t => link("admin-" + t.id, "admin", NAV_ICON["admin-" + t.id] || "settings", tx(t.label))).join("");
+        h += `<div class="nav-h">${L("ผู้ดูแลระบบ", "Administration")}</div>` + (typeof ADMIN_TABS !== "undefined" ? ADMIN_TABS.filter(t => !t.roles || t.roles.includes(ROLE)) : []).map(t => link("admin-" + t.id, "admin", NAV_ICON["admin-" + t.id] || "settings", tx(t.label), t.id === "integrations" ? cnt(S.integrations.filter(g => g.status === "error").length) : "")).join("");
       } else if (SYSTEMS[SYS] && SYSTEMS[SYS].planned) {
         h += `<div class="nav-h">${L("อยู่ในแผน", "Planned")}</div>` + link("sys-" + SYS, "sys-" + SYS, SYSTEMS[SYS].icon, L("ภาพรวมของระบบ", "What it will cover")) + link("home", "home", "home", L("กลับพื้นที่ทำงาน", "Back to Workspace"));
       }
@@ -19900,6 +19953,63 @@ document.addEventListener("keydown", e => {
     <div class="body sub">${L("เล่นทีละขั้นจากแถบด้านล่าง แต่ละขั้นสลับบทบาทและเปิดหน้าให้เอง ใช้ PageDown / PageUp หรือรีโมตนำเสนอเพื่อเลื่อนขั้น", "Plays one step at a time from a bar at the bottom; each step switches the role and opens its page. Use PageDown / PageUp or a presentation clicker.")}</div></section><ol class="demo">`);
   BIND.demo = () => { b && b(); $$("[data-presrt]").forEach(x => (x.onclick = () => presStart(x.dataset.presrt))); };
 }
+
+/* ---- 94-polish.js ---- */
+// Polish for the multi-system shell (round 63). The system rail took 60 px from every page, so the top bar and the
+// pages get room back: the organization and role selectors fold into one context chip with a small panel (the Fabor
+// console's tenant switcher), the sidebar footer is one row, and page eyebrows drop the app name the sidebar and the
+// breadcrumb already show.
+function renderCtx() {
+  const org = $("#org"), role = $("#role");
+  let b = $("#ctx"), p = $("#ctxpop");
+  if (!b) {
+    b = document.createElement("button"); b.type = "button"; b.id = "ctx"; b.className = "ctxbtn";
+    b.setAttribute("aria-haspopup", "true"); b.setAttribute("aria-expanded", "false"); b.setAttribute("aria-controls", "ctxpop");
+    org.before(b);
+    p = document.createElement("div"); p.id = "ctxpop"; p.className = "npanel ctxpop"; p.hidden = true; $("#npanel").before(p);
+    p.innerHTML = `<label class="ctx-f" id="ctx-orgf"><span id="ctx-orgl"></span></label><label class="ctx-f"><span id="ctx-rolel"></span></label><p class="sub" id="ctx-note"></p>`;
+    $("#ctx-orgf").appendChild(org); $("#ctx-rolel").after(role);
+    b.onclick = e => { e.stopPropagation(); toggleNotes(false); toggleUserMenu(false); toggleCtx(); };
+    document.addEventListener("click", e => { if (!p.hidden && !e.target.closest("#ctxpop")) toggleCtx(false); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && !p.hidden) { toggleCtx(false); b.focus(); } });
+    org.addEventListener("change", () => toggleCtx(false)); role.addEventListener("change", () => toggleCtx(false));
+  }
+  $("#ctx-orgf").hidden = org.hidden;
+  $("#ctx-orgl").textContent = L("หน่วยงาน", "Organization"); $("#ctx-rolel").textContent = L("บทบาท (ทางลัดสำหรับการสาธิต)", "Role (a demo shortcut)");
+  $("#ctx-note").textContent = L("การสลับบทบาทจะเข้าสู่ระบบเป็นผู้ใช้ตัวอย่างของบทบาทนั้น", "Switching role signs in as that role's sample user");
+  b.innerHTML = `<span class="ctx-o">${esc(tx(S.org))}</span><span class="ctx-r">${esc(tx(ROLES[ROLE]))}</span><span class="brand-caret" aria-hidden="true">▾</span>`;
+  b.setAttribute("aria-label", `${L("หน่วยงานและบทบาท", "Organization and role")}: ${tx(S.org)} · ${tx(ROLES[ROLE])}`);
+  b.title = `${tx(S.org)} · ${tx(ROLES[ROLE])}`;
+  p.hidden = true; b.setAttribute("aria-expanded", "false");
+}
+function toggleCtx(show) {
+  const p = $("#ctxpop"), b = $("#ctx"), s = show === undefined ? p.hidden : show;
+  p.hidden = !s; b.setAttribute("aria-expanded", String(s));
+  if (!s) return;
+  const r = b.getBoundingClientRect();
+  p.style.top = r.bottom + 8 + "px"; p.style.left = Math.max(12, Math.min(r.left, innerWidth - p.offsetWidth - 12)) + "px"; p.style.right = "auto";
+  const f = p.querySelector("select:not([hidden])"); if (f) f.focus();
+}
+{
+  const base = renderShell;
+  renderShell = function () {
+    base.apply(this, arguments);
+    renderCtx();
+    // One row at the foot of the sidebar: the demo guide also sits in Workspace.
+    $("#rail-foot").innerHTML = `<div class="rf-row"><span>${L("ข้อมูลตัวอย่าง", "Sample data")}</span><span class="sp"></span><button class="btn" type="button" id="demo-guide">${L("คู่มือ", "Guide")}</button><button class="btn" type="button" id="reset">${L("รีเซ็ต", "Reset")}</button></div>`;
+    $("#rail-foot").title = L("ต้นแบบเพื่อการหารือ ข้อมูลทั้งหมดเป็นตัวอย่าง", "Discussion prototype. All data is sample data.");
+    $("#demo-guide").onclick = () => go("demo"); $("#reset").onclick = resetDemo;
+  };
+  const baseRoute = route;
+  route = function () {
+    const r = baseRoute.apply(this, arguments);
+    // "Fisko Finance · F1 · Finance" → "F1 · Finance": the app is already named in the sidebar and the breadcrumb.
+    $$("#view .head .eyebrow").forEach(e => { e.innerHTML = e.innerHTML.replace(/^\s*Fisko (Budget|Procurement|Finance) · /, ""); });
+    return r;
+  };
+}
+// Two-column pages stack when the page itself is under 900 px wide (the rail and the sidebar take 308 px of the window).
+if (typeof ResizeObserver === "function") new ResizeObserver(es => es.forEach(e => e.target.classList.toggle("narrow", e.contentRect.width < 900))).observe($("#view"));
 
 /* ---- 99-boot.js ---- */
 // Boot: pick the saved organization, load its state, draw the shell and the current page.

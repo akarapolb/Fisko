@@ -178,7 +178,8 @@ toggleAppMenu = function (show) { const el = $("#launcher"), open = el && !el.hi
     $("#appsw").setAttribute("aria-label", `${L("ทุกระบบ", "All systems")}: ${tx(sysName(SYS))}`);
     $("#appsw").setAttribute("aria-haspopup", "dialog");
   };
-  const link = (href, v, ico, label, badge = "") => `<a href="#${href}" data-v="${v}" data-href="${href}"><span class="ni">${svgI(ico)}</span><span class="nl">${label}</span>${badge}</a>`;
+  // No data-v here: the bell's refresh (updateBell) re-stamps a page's own badge on every link with that page id.
+  const link = (href, v, ico, label, badge = "") => `<a href="#${href}" data-href="${href}"><span class="ni">${svgI(ico)}</span><span class="nl">${label}</span>${badge}</a>`;
   const cnt = n => (n ? `<span class="badge">${n}</span>` : "");
   renderNav = function () {
     if (SYSTEMS[SYS] && SYSTEMS[SYS].app) {
@@ -198,7 +199,7 @@ toggleAppMenu = function (show) { const el = $("#launcher"), open = el && !el.hi
         if (pp.length) h += `<div class="nav-h">${L("ปักหมุด", "Pinned")}</div>` + pp.map(p => `<a href="#" data-pinlink="${esc(p.link)}"><span class="ni">${svgI(SYSTEMS[p.sys] ? SYSTEMS[p.sys].icon : "star")}</span><span class="nl">${esc(tx(p.label))}</span></a>`).join("");
         h += `<div class="nav-h">${L("การสาธิต", "Demo")}</div>` + link("demo", "demo", "book", L("คู่มือการสาธิต", "Demo guide")) + `<a href="#" data-presstart><span class="ni">${svgI("play")}</span><span class="nl">${L("โหมดนำเสนอ", "Presenter mode")}</span></a>`;
       } else if (SYS === "admin") {
-        h += `<div class="nav-h">${L("ผู้ดูแลระบบ", "Administration")}</div>` + (typeof ADMIN_TABS !== "undefined" ? ADMIN_TABS.filter(t => !t.roles || t.roles.includes(ROLE)) : []).map(t => link("admin-" + t.id, "admin", NAV_ICON["admin-" + t.id] || "settings", tx(t.label))).join("");
+        h += `<div class="nav-h">${L("ผู้ดูแลระบบ", "Administration")}</div>` + (typeof ADMIN_TABS !== "undefined" ? ADMIN_TABS.filter(t => !t.roles || t.roles.includes(ROLE)) : []).map(t => link("admin-" + t.id, "admin", NAV_ICON["admin-" + t.id] || "settings", tx(t.label), t.id === "integrations" ? cnt(S.integrations.filter(g => g.status === "error").length) : "")).join("");
       } else if (SYSTEMS[SYS] && SYSTEMS[SYS].planned) {
         h += `<div class="nav-h">${L("อยู่ในแผน", "Planned")}</div>` + link("sys-" + SYS, "sys-" + SYS, SYSTEMS[SYS].icon, L("ภาพรวมของระบบ", "What it will cover")) + link("home", "home", "home", L("กลับพื้นที่ทำงาน", "Back to Workspace"));
       }

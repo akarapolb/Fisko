@@ -823,6 +823,7 @@
           renderShell(); go2("home");
           bad(`rail ${org}/${lang}/${role}`, txt(document.getElementById("sysrail")) + " " + (document.getElementById("sysrail") || { innerHTML: "" }).innerHTML.replace(/<[^>]+>/g, " "));
           openLauncher(); bad(`launcher ${org}/${lang}/${role}`, txt(document.getElementById("launcher"))); closeLauncher();
+          bad(`context ${org}/${lang}/${role}`, txt(document.getElementById("ctx")) + " " + txt(document.getElementById("ctxpop")) + " " + txt(document.getElementById("rail-foot")));
           for (const id of SYS_IDS.filter(sysAllowed)) { switchSys(id); window.FISKO_ROUTE = location.hash; route(); bad(`crumb ${org}/${lang}/${role}/${id}`, txt(document.getElementById("crumb")) + " " + txt(document.getElementById("nav"))); }
           window.FISKO_ROUTE = null;
         }); await tick(); } }
