@@ -149,8 +149,9 @@ FS.yearEnd = () => {
       <div class="body">
         <div>${dotI(carryCands().every(x => carrySent(x.id)) ? "ok" : "warn")}${L("เสนอกันเงินเหลื่อมปีครบทุกรายการที่เข้าเกณฑ์", "Every carry-over candidate is proposed")} (${carryCands().filter(x => !carrySent(x.id)).length} ${L("ค้าง", "left")}) · ${L("ข้อ 106", "cl. 106")}</div>
         <div>${dotI((S.advances || []).filter(a => OPEN_ADV.includes(a.state)).length ? "warn" : "ok")}${L("เงินยืมค้างที่จะคาบเกี่ยวปี", "Advances that will run into the new year")} ${(S.advances || []).filter(a => OPEN_ADV.includes(a.state)).length} · ${L("ข้อ 62", "cl. 62")}</div>
-        <div>${dotI("warn")}${L("เปลี่ยนเล่มใบเสร็จและรายงานใบเสร็จภายใน 31 ต.ค.", "New receipt books, and the receipt report by 31 Oct")} · ${L("ข้อ 74–75", "cl. 74–75")}</div>
-        <div>${dotI("warn")}${L("งบทดลองสิ้นปีและชุดเอกสารประกอบรายงานการเงิน (ร่าง)", "Year-end trial balance and the financial statement pack (draft)")}</div>
+        ${(() => { const books = (S.rbooks || []).filter(x => x.fy === FAM_FY + 1 && !x.returned).length, rep = (S.rbookReports || []).some(x => x.fy === FAM_FY), tb = (S.tbs || []).find(t => t.month === nfy.slice(0, 7)); // Finance CRUD FR-FC-38: from the records, not fixed
+          return `<div>${dotI(books && rep ? "ok" : "warn")}${L("เล่มใบเสร็จปีใหม่", "Next year's receipt books")} ${books} ${L("เล่ม", "issued")} · ${L(`รายงานใบเสร็จปี ${FAM_FY} ภายใน 31 ต.ค.`, `FY${FAM_FY} receipt report by 31 Oct`)} ${rep ? L("ส่งแล้ว", "sent") : L("ยังไม่ส่ง", "not sent")} · ${L("ข้อ 74–75", "cl. 74–75")}</div>
+        <div>${dotI(tb && tb.ok ? "ok" : "warn")}${L("งบทดลองเดือนกันยายนจาก GFMIS", "September trial balance from GFMIS")} ${tb ? (tb.ok ? L("นำเข้าแล้วและตรงกัน", "imported and matching") : L("นำเข้าแล้วแต่ไม่ตรง", "imported, does not match")) : L("ยังไม่นำเข้า", "not imported")} · ${L("ชุดเอกสารประกอบรายงานการเงินจัดทำใน GFMIS", "the financial statement pack is prepared in GFMIS")}</div>`; })()}
       </div></section>`;
 };
 FS.auditQ = () => {

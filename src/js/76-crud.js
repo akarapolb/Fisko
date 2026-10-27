@@ -11,7 +11,8 @@
 //   check: (vals, r | null) => [{ f: fieldId | null, m: message }],
 //   create: { can: () => bool, label: [th, en], run: vals => record },   // run returns the new record
 //   edit: { can: r => bool, run: (r, vals, why) => void, why: r => bool, label: r => [th, en] },  // why: ask for a reason when saving; label: the button (default Edit)
-//   acts: r => [{ id, label, kind: primary|danger|ghost, why: bool, whyLabel, whyMin, confirm: text, impact: () => text, undo: false, run: (r, why) => toastText }],
+//   acts: r => [{ id, label, kind: primary|danger|ghost, why: bool, whyLabel, whyMin, confirm: text, impact: () => text, undo: false, num: { label, min, max, value }, run: (r, why, num) => toastText }],
+//         num asks for an amount in the same box (for example how much of a commitment to release)
 //   view: r => html (the details tab), tabs: r => [[id, label, html]], hist: r => history key,
 //   prefill: () => vals (for a new record),
 // }
@@ -80,6 +81,7 @@ function crActBar(sp, r) {
   if (o.ask) {
     const a = acts.find(x => x.id === o.ask);
     if (a) return `<form class="cr-ask" id="cr-ask"><b>${a.label}</b>${a.impact ? `<div class="sub">${a.impact()}</div>` : ""}${a.confirm ? `<div>${a.confirm}</div>` : ""}
+      ${a.num ? `<label for="cr-num">${tx(a.num.label)}</label><input type="number" id="cr-num" step="any" min="${a.num.min ?? 0}" max="${a.num.max}" value="${a.num.value ?? a.num.max}" inputmode="decimal" style="max-width:200px">` : ""}
       ${a.why ? `<label for="cr-why">${a.whyLabel || L("เหตุผล (อย่างน้อย 10 ตัวอักษร)", "Reason (at least 10 characters)")}</label><textarea id="cr-why" rows="2" required minlength="${a.whyMin || CR_WHY_MIN}"></textarea>${o.err ? `<div class="cr-err">${esc(o.err)}</div>` : ""}` : ""}
       <div class="row"><button class="btn ${a.kind === "danger" ? "danger" : "primary"}" type="submit">${L("ยืนยัน", "Confirm")}</button><button class="btn ghost" type="button" data-crask="">${L("ยกเลิก", "Back")}</button></div></form>`;
   }
@@ -158,12 +160,12 @@ document.addEventListener("click", e => {
   if (t.hasAttribute("data-crcancel")) { if (CR_OPEN.id) { CR_OPEN.mode = "view"; CR_OPEN.draft = null; CR_OPEN.err = null; CR_OPEN.dirty = false; } else crClose(); route(); return; }
   if (t.dataset.crask !== undefined) {
     const sp = crSpec(CR_OPEN.key), r = crRec(CR_OPEN.key, CR_OPEN.id), a = t.dataset.crask && (sp.acts(r) || []).find(x => x && x.id === t.dataset.crask);
-    if (a && !a.why && !a.confirm && !a.impact) return crRun(sp, r, a, "");
+    if (a && !a.why && !a.confirm && !a.impact && !a.num) return crRun(sp, r, a, "");
     CR_OPEN.ask = t.dataset.crask || null; CR_OPEN.err = null; route(); const w = $("#cr-why"); if (w) w.focus();
   }
 });
-function crRun(sp, r, a, why) {
-  const snap = crSnap(), msg = a.run(r, why);
+function crRun(sp, r, a, why, num) {
+  const snap = crSnap(), msg = a.run(r, why, num);
   if (CR_OPEN) { CR_OPEN.ask = null; CR_OPEN.err = null; }
   if (CR_OPEN && !crRec(CR_OPEN.key, CR_OPEN.id)) crClose();
   crDone(msg, a.undo === false ? null : snap);
@@ -175,7 +177,9 @@ document.addEventListener("submit", e => {
     const sp = crSpec(CR_OPEN.key), r = crRec(CR_OPEN.key, CR_OPEN.id), a = (sp.acts(r) || []).find(x => x && x.id === CR_OPEN.ask), w = $("#cr-why"), why = w ? w.value.trim() : "";
     if (!a) return;
     if (a.why && why.length < (a.whyMin || CR_WHY_MIN)) { CR_OPEN.err = a.whyMin ? L("กรอกข้อความก่อนยืนยัน", "Fill this in before confirming") : L("ใส่เหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters"); route(); const x = $("#cr-why"); if (x) { x.value = why; x.focus(); } return; }
-    return crRun(sp, r, a, why);
+    let num;
+    if (a.num) { num = Number(($("#cr-num") || { value: "" }).value); if (!(num > (a.num.min ?? 0)) || num > a.num.max) { CR_OPEN.err = L(`ใส่จำนวนที่มากกว่า ${fmt(a.num.min ?? 0)} และไม่เกิน ${fmt(a.num.max)}`, `Enter an amount above ${fmt(a.num.min ?? 0)} and at most ${fmt(a.num.max)}`); route(); const x = $("#cr-num"); if (x) x.focus(); return; } }
+    return crRun(sp, r, a, why, num);
   }
   if (e.target.id !== "cr-form") return;
   e.preventDefault();

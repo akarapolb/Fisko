@@ -96,7 +96,10 @@ const needsPo = x => poKind(x) && x.amount >= fcfg().poMin && !x.gfPo;
 const fcRef = id => (S.contracts || []).find(c => c.id === id) || (S.fcommit || []).find(c => c.id === id);
 // Carry-over candidates (FR-FN-06): signed by the year end, at least the carry-over amount still unpaid, last payment due after the year end.
 const carryCands = () => finCommits().filter(x => x.signed <= FY_END && fcLeft(x) >= fcfg().carryMin && x.due > FY_END);
-const carrySent = id => (S.carry && S.carry.reqs || []).some(r => r.src === id);
+const carryReq = id => (S.carry && S.carry.reqs || []).find(r => r.src === id && !["withdrawn", "rejected"].includes(r.status));
+const carrySent = id => !!carryReq(id);
+// A PO number can be corrected or cleared until a voucher that relies on it is in a GFMIS file (FR-FC-03).
+const poLocked = x => (S.vouchers || []).some(v => (v.commit === x.id || v.contract === x.id) && (v.gfFile || ["posted", "paid"].includes(v.state)));
 // The acceptance date of a phase is the last committee signature; the request clock (clause 28) starts from it.
 const accDate = ph => ph.signs.map(s => s.t).sort().pop().slice(0, 10);
 const reqDue = ph => addWorkdays(accDate(ph), fcfg().reqDays);
@@ -152,7 +155,8 @@ FS.byKind = () => {
     const poRow = x => {
       const open = FN_PO === x.id, l = famLine(x.line);
       return `<tr><td class="mono">${x.id}</td><td>${esc(tx(x.name))}<div class="sub">${tx(FC_KIND[x.kind])} · ${esc(tx(x.vendor))}</div></td><td class="n">${fmt(x.amount)}</td><td>${x.gfPo ? `<span class="mono">${esc(x.gfPo.no)}</span><div class="sub">${fdate(x.gfPo.t)}</div>` : poKind(x) && x.amount >= c.poMin ? tag(L("ยังไม่มี PO", "No PO yet"), "p-warn") : `<span class="sub">${L("ไม่ต้องมี", "Not needed")}</span>`}</td>
-        <td>${maker && needsPo(x) ? `<button class="btn" type="button" data-fnpo="${x.id}">${open ? L("ปิด", "Close") : L("เตรียมข้อมูล PO", "Prepare PO data")}</button>` : ""}</td></tr>
+        <td>${maker && needsPo(x) ? `<button class="btn" type="button" data-fnpo="${x.id}">${open ? L("ปิด", "Close") : L("เตรียมข้อมูล PO", "Prepare PO data")}</button>` : maker && x.gfPo && !poLocked(x) ? rowBtn(`poe:${x.id}`, L("แก้เลข PO…", "Correct the PO…")) : ""}</td></tr>
+        ${maker && x.gfPo && !poLocked(x) && FIN_ROW === `poe:${x.id}` ? rowForm(5, `<b style="font-weight:600">${L("แก้เลข PO", "Correct the PO")} ${x.id}</b><label class="sub" for="poe-${x.id}">${L("เลขใหม่ (10 หลัก)", "New number (10 digits)")}</label><input type="text" id="poe-${x.id}" inputmode="numeric" maxlength="10" value="${esc(x.gfPo.no)}" style="width:140px"><input type="text" id="pow-${x.id}" placeholder="${L("เหตุผล", "Reason")}" aria-label="${L("เหตุผล", "Reason")}" style="min-width:200px;flex:1"><button class="btn primary" type="button" data-poedit="${x.id}">${L("บันทึก", "Save")}</button><button class="btn danger" type="button" data-poclr="${x.id}">${L("ล้างเลข PO", "Clear the PO")}</button>`) : ""}
         ${open ? `<tr><td colspan="5"><div class="callout" style="margin:0"><b>${L("ข้อมูลสำหรับลงใบสั่งซื้อใน GFMIS", "Data for the GFMIS purchase order")}</b>
           <div class="sub">${L("ผู้ขาย", "Supplier")}: ${esc(tx(x.vendor))} · ${L("รหัสงบประมาณ", "Budget code")}: <span class="mono">${x.line}</span> ${esc(lineLabel(l))} · ${L("วงเงิน", "Amount")}: ${fmt(x.amount)} ${L("บาท", "baht")} · ${L("ลงนาม", "Signed")} ${fdate(x.signed)}${x.ref.phases ? ` · ${x.ref.phases.length} ${L("งวด", "phases")}: ${x.ref.phases.map(ph => `${fdate(ph.due)} ${fmt(ph.amount)}`).join(" / ")}` : ""}</div>
           <form class="inline-form" data-poform="${x.id}" style="margin-top:8px"><div class="f" style="flex:0 1 220px"><label for="po-${x.id}">${L("เลขที่ PO จาก GFMIS (10 หลัก)", "GFMIS PO number (10 digits)")}</label><input type="text" id="po-${x.id}" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" required placeholder="7000000000"></div><button class="btn primary" type="submit">${L("บันทึกเลขที่ PO", "Save PO number")}</button></form></div></td></tr>` : ""}`;
@@ -163,31 +167,15 @@ FS.byKind = () => {
       <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("รายการ", "Item")}</th><th class="n">${L("วงเงิน (บาท)", "Amount (baht)")}</th><th>${L("PO ใน GFMIS", "GFMIS PO")}</th><th></th></tr></thead>
         <tbody>${all.slice().sort((a, b) => (needsPo(b) - needsPo(a))).map(poRow).join("")}</tbody></table></div></section>`;
   };
-  FS.commitOther = () => {
-    const all = finCommits(), maker = ROLE === "fin", lines = famLines().filter(l => l.type === "ope" || l.type === "inv");
-    return `
-    <section class="panel"><header><h2>${L("ผูกพันที่ไม่ใช่การจัดซื้อ", "Commitments outside procurement")}</h2><span class="sp"></span><span class="sub">${L("กันวงเงินจากรายการจัดสรร คืนวงเงินได้พร้อมเหตุผล (FR-FN-03, 04)", "Reserve the allocation line; release with a reason (FR-FN-03, 04)")}</span></header>
-      <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("รายการ", "Item")}</th><th class="n">${L("ผูกพัน (บาท)", "Committed (baht)")}</th><th class="n">${L("จ่ายแล้ว", "Paid")}</th><th class="n">${L("คืนแล้ว", "Released")}</th><th class="n">${L("คงค้าง", "Left")}</th><th></th></tr></thead>
-        <tbody>${all.filter(x => x.src === "other").map(x => `<tr><td class="mono">${x.id}</td><td>${esc(tx(x.name))}<div class="sub">${tx(FC_KIND[x.kind])} · ${esc(tx(x.vendor))} · <span class="mono">${x.line}</span> · ${L("ถึง", "to")} ${fdate(x.due)}</div></td><td class="n">${fmt(x.amount)}</td><td class="n">${fmt(x.paid)}</td><td class="n">${fmt(x.released)}</td><td class="n">${fmt(fcLeft(x))}${vcReserved(y => y.commit === x.id) ? `<div class="sub">${L("จองโดยใบขอเบิก", "held by vouchers")} ${fmt(vcReserved(y => y.commit === x.id))}</div>` : ""}</td>
-          <td><div class="row" style="flex-wrap:nowrap">${maker && fcLeft(x) > 0 ? rowBtn(`rel:${x.id}`, L("คืนวงเงิน…", "Release…")) : ""}${historyBtn(x.id, x.id)}</div></td></tr>
-          ${maker && fcLeft(x) > 0 && FIN_ROW === `rel:${x.id}` ? rowForm(7, `<b style="font-weight:600">${L("คืนวงเงิน", "Release")} ${x.id}</b><input type="number" id="rl-${x.id}" min="1" max="${fcLeft(x)}" step="1" style="width:140px" placeholder="${L("บาท", "baht")} (≤ ${fmt(fcLeft(x))})" aria-label="${L("คืนวงเงิน (บาท)", "Release (baht)")}"><input type="text" id="rw-${x.id}" placeholder="${L("เหตุผล", "Reason")}" style="min-width:220px;flex:1" aria-label="${L("เหตุผล", "Reason")}"><button class="btn primary" type="button" data-fnrel="${x.id}">${L("คืนวงเงิน", "Release")}</button>`) : ""}`).join("")
-          || `<tr><td colspan="7" class="sub">${L("ยังไม่มี", "None yet")}</td></tr>`}</tbody></table></div>
-      ${maker ? `<div class="body"><form class="inline-form" id="fc-form">
-        <div class="f" style="flex:0 1 170px"><label for="fc-kind">${L("ประเภท", "Kind")}</label><select id="fc-kind">${["utility", "rent", "service", "travel"].map(k => `<option value="${k}">${tx(FC_KIND[k])}</option>`).join("")}</select></div>
-        <div class="f" style="flex:2 1 220px"><label for="fc-name">${L("รายการ", "Item")}</label><input type="text" id="fc-name" required></div>
-        <div class="f" style="flex:1 1 160px"><label for="fc-vendor">${L("เจ้าหนี้", "Payee")}</label><input type="text" id="fc-vendor" required></div>
-        <div class="f" style="flex:2 1 240px"><label for="fc-line">${L("รายการจัดสรร", "Allocation line")}</label><select id="fc-line">${lines.map(l => `<option value="${l.id}">${esc(lineLabel(l))} · ${L("คงเหลือ", "free")} ${mb(famHeadroom(l.id))}</option>`).join("")}</select></div>
-        <div class="f" style="flex:0 1 140px"><label for="fc-amt">${L("วงเงิน (บาท)", "Amount (baht)")}</label><input type="number" id="fc-amt" min="1" step="1" required></div>
-        <div class="f" style="flex:0 1 160px"><label for="fc-due">${L("จ่ายงวดสุดท้าย", "Last payment")}</label><input type="date" id="fc-due" value="${FY_END}" required></div>
-        <button class="btn primary" type="submit">${L("บันทึกผูกพัน", "Add commitment")}</button></form></div>` : ""}</section>`;
-  };
+  // FS.commitOther is a shared list in 86-fin-commit-crud.js (Finance CRUD FR-FC-02).
   FS.carry = () => {
     const maker = ROLE === "fin", c = fcfg(), cc = carryCands();
     return `
     <section class="panel"><header><h2>${L("รายการเข้าเกณฑ์กันเงินเหลื่อมปี", "Carry-over candidates")}</h2><span class="sp"></span><span class="sub">${L("ผูกพันก่อนสิ้นปี คงค้างตั้งแต่", "Committed before the year end, at least")} ${fmt(c.carryMin)} ${L("บาท และจ่ายงวดสุดท้ายหลัง", "baht left, last payment after")} ${fdate(FY_END)} · ${L("ยื่นใน GFMIS ภายใน", "file in GFMIS by")} ${fdate(c.carryBy)} (${L("ข้อ 105–106", "clauses 105–106")})</span></header>
       <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("รายการ", "Item")}</th><th>${L("ลงนาม", "Signed")}</th><th>${L("งวดสุดท้าย", "Last payment")}</th><th class="n">${L("คงค้าง (บาท)", "Left (baht)")}</th><th></th></tr></thead>
         <tbody>${cc.map(x => `<tr><td class="mono">${x.id}</td><td>${esc(tx(x.name))}<div class="sub">${esc(tx(x.vendor))}</div></td><td class="sub">${fdate(x.signed)}</td><td class="sub">${fdate(x.due)}</td><td class="n">${fmt(fcLeft(x))}</td>
-          <td>${carrySent(x.id) ? tag(L("ส่งให้ M06 แล้ว", "Sent to M06"), "p-ok") : maker ? `<button class="btn" type="button" data-fncf="${x.id}">${L("เสนอกันเงิน (M06)", "Propose carry-over (M06)")}</button>` : ""}</td></tr>`).join("")
+          <td>${carrySent(x.id) ? `${tag(`${carryReq(x.id).id} · ${carryReq(x.id).status === "approved" ? L("อนุมัติแล้ว", "Approved") : L("รออนุมัติใน M06", "Waiting in M06")}`, carryReq(x.id).status === "approved" ? "p-ok" : "p-warn")}${maker && carryReq(x.id).status === "pending" ? ` ${rowBtn(`cfw:${x.id}`, L("ถอน…", "Withdraw…"))}` : ""}` : maker ? `<button class="btn" type="button" data-fncf="${x.id}">${L("เสนอกันเงิน (M06)", "Propose carry-over (M06)")}</button>` : ""}</td></tr>
+          ${maker && carrySent(x.id) && FIN_ROW === `cfw:${x.id}` ? rowForm(6, `<b style="font-weight:600">${L("ถอนคำขอกันเงิน", "Withdraw the carry-over request")} ${carryReq(x.id).id}</b><input type="text" id="cfw-${x.id}" placeholder="${L(`เหตุผล (อย่างน้อย ${CR_WHY_MIN} ตัวอักษร)`, `Reason (at least ${CR_WHY_MIN} characters)`)}" aria-label="${L("เหตุผล", "Reason")}" style="min-width:240px;flex:1"><button class="btn danger" type="button" data-cfwd="${x.id}">${L("ถอนคำขอ", "Withdraw")}</button>`) : ""}`).join("")
           || `<tr><td colspan="6" class="sub">${L("ไม่มีรายการเข้าเกณฑ์", "No commitment meets the rule")}</td></tr>`}</tbody></table></div></section>`;
   };
 }
@@ -207,28 +195,27 @@ FS.byKind = () => {
       audit(["บันทึกเลขที่ใบสั่งซื้อจาก GFMIS", "Recorded a GFMIS purchase order"], `${id} · PO ${no}`);
       commit(); renderShell(); route(); toast(L("บันทึกเลขที่ PO แล้ว · ขอเบิกได้เมื่อตรวจรับ", "PO saved · payments can be requested after acceptance"));
     }));
-    $$("[data-fnrel]").forEach(b => (b.onclick = () => {
-      const id = b.dataset.fnrel, r = fcRef(id), x = finCommits().find(y => y.id === id), amt = Math.round(Number($("#rl-" + id).value)), why = $("#rw-" + id).value.trim();
-      if (!(amt > 0) || amt > fcLeft(x)) { toast(L("ยอดคืนต้องมากกว่าศูนย์และไม่เกินยอดคงค้าง", "The release must be above zero and within what is left")); return; }
-      if (why.length < 5) { toast(L("ระบุเหตุผลอย่างน้อย 5 ตัวอักษร", "Give a reason of at least 5 characters")); return; }
-      r.released = (r.released || 0) + amt; FIN_ROW = null; (r.log = r.log || []).push({ t: nowIso(), by: me().id, amt, why });
-      audit(["คืนวงเงินผูกพัน", "Released a commitment"], `${id} · ${fmt(amt)} · ${why}`);
-      notify(["plan"], [`การเงินคืนวงเงินผูกพัน ${id} ${fmt(amt)} บาท ไปที่รายการ ${r.line}`, `Finance released ${fmt(amt)} baht of ${id} back to line ${r.line}`], "alloc-lines");
-      commit(); route(); toast(L("คืนวงเงินแล้ว", "Released"));
+    $$("[data-poedit],[data-poclr]").forEach(b => (b.onclick = () => {
+      const id = b.dataset.poedit || b.dataset.poclr, r = fcRef(id), old = r.gfPo.no, why = $("#pow-" + id).value.trim(), no = $("#poe-" + id).value.trim();
+      if (why.length < CR_WHY_MIN) { toast(L(`ระบุเหตุผลอย่างน้อย ${CR_WHY_MIN} ตัวอักษร`, `Give a reason of at least ${CR_WHY_MIN} characters`)); return; }
+      if (b.dataset.poedit) {
+        if (!/^\d{10}$/.test(no)) { toast(L("เลขที่ PO ต้องเป็นตัวเลข 10 หลัก", "The PO number must be 10 digits")); return; }
+        if (finCommits().some(x => x.id !== id && x.gfPo && x.gfPo.no === no)) { toast(L("เลขที่ PO นี้ใช้กับรายการอื่นแล้ว", "This PO number is already used")); return; }
+        (r.gfPoHist = r.gfPoHist || []).push(Object.assign({}, r.gfPo, { until: nowIso(), why })); r.gfPo = { no, t: nowIso(), by: me().id };
+        audit(["แก้เลขที่ใบสั่งซื้อ GFMIS", "Corrected a GFMIS purchase order"], `${id} · PO ${old} → ${no} · ${why}`);
+      } else { (r.gfPoHist = r.gfPoHist || []).push(Object.assign({}, r.gfPo, { until: nowIso(), why, cleared: true })); r.gfPo = null; audit(["ล้างเลขที่ใบสั่งซื้อ GFMIS", "Cleared a GFMIS purchase order"], `${id} · PO ${old} · ${why}`); }
+      FIN_ROW = null; commit(); renderShell(); route(); toast(b.dataset.poedit ? L("แก้เลข PO แล้ว", "PO corrected") : L("ล้างเลข PO แล้ว · ต้องบันทึกใหม่ก่อนขอเบิก", "PO cleared · record one again before any payment"));
     }));
-    const ff = $("#fc-form");
-    if (ff) ff.onsubmit = e => {
-      e.preventDefault();
-      const line = $("#fc-line").value, amount = Math.round(Number($("#fc-amt").value));
-      if (amount > famHeadroom(line)) { toast(L("เกินวงเงินคงเหลือของรายการจัดสรร (ข้อ 18)", "More than the line has left (clause 18)")); return; }
-      const id = `CM-${FAM_FY}-${String((S.fcommit || []).length + 1).padStart(3, "0")}`, nm = $("#fc-name").value.trim(), vd = $("#fc-vendor").value.trim();
-      (S.fcommit = S.fcommit || []).push({ id, kind: $("#fc-kind").value, name: [nm, nm], vendor: [vd, vd], line, amount, released: 0, paid: 0, signed: TODAY, due: $("#fc-due").value, gfPo: null, by: me().id, t: nowIso() });
-      audit(["บันทึกวงเงินผูกพัน", "Added a commitment"], `${id} · ${fmt(amount)}`);
-      commit(); renderShell(); route(); toast(amount >= fcfg().poMin ? L("บันทึกแล้ว · ต้องบันทึกเลขที่ PO ใน GFMIS ก่อนขอเบิก", "Saved · record the GFMIS PO before any payment") : L("บันทึกแล้ว", "Saved"));
-    };
+    $$("[data-cfwd]").forEach(b => (b.onclick = () => {
+      const q = carryReq(b.dataset.cfwd), why = $("#cfw-" + b.dataset.cfwd).value.trim();
+      if (why.length < CR_WHY_MIN) { toast(L(`ระบุเหตุผลอย่างน้อย ${CR_WHY_MIN} ตัวอักษร`, `Give a reason of at least ${CR_WHY_MIN} characters`)); return; }
+      q.status = "withdrawn"; q.decision = why; q.decided = { by: me().id, t: nowIso() }; FIN_ROW = null;
+      audit(["ถอนคำขอกันเงินเหลื่อมปี", "Withdrew a carry-over request"], `${q.id} · ${q.src} · ${why}`); notify(["exec", "plan"], [`การเงินถอนคำขอกันเงิน ${q.id}: ${why}`, `Finance withdrew carry-over request ${q.id}: ${why}`], "alloc-carry");
+      commit(); renderShell(); route(); toast(L("ถอนคำขอแล้ว", "Withdrawn"));
+    }));
     $$("[data-fncf]").forEach(b => (b.onclick = () => {
       const x = finCommits().find(y => y.id === b.dataset.fncf), C = S.carry;
-      const c = { id: `CF-${CUR_FY}-${String(C.reqs.length + 1).padStart(2, "0")}`, line: x.line, amount: fcLeft(x), po: x.gfPo ? x.gfPo.no : x.id, poDate: x.signed, vendor: tx(x.vendor), status: "pending", t: nowIso(), by: me().id, src: x.id };
+      const c = { id: `CF-${CUR_FY}-${String(maxNo(C.reqs.map(r => r.id), new RegExp(`^CF-${CUR_FY}-(\\d+)`)) + 1).padStart(2, "0")}`, line: x.line, amount: fcLeft(x), po: x.gfPo ? x.gfPo.no : x.id, poDate: x.signed, vendor: tx(x.vendor), status: "pending", t: nowIso(), by: me().id, src: x.id };
       const bad = cfChecks(c).filter(k => !k[0]);
       if (bad.length) { toast(`${L("ยังเสนอไม่ได้", "Can't propose yet")}: ${bad.map(k => k[1]).join(", ")}`); return; }
       C.reqs.push(c);

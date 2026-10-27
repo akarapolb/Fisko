@@ -851,3 +851,39 @@ The round-44 follow-ups. No rule or data change; `DATA_V` stays 35. `main` was f
   - **By hand:** the seeded file's drawer.
   - **Not checked by hand:** the result forms at phone width, dark mode, and English wording beyond the sweep.
   - **Prototype for this branch:** https://claude.ai/artifact/8ZSzN2o5CVN6hj5Gh3MKyK (private).
+
+## 58F. Finance CRUD round FC4: commitments, PO correction, carry-over withdrawal, advances (round 58, Finance)
+
+- **New file `src/js/86-fin-commit-crud.js` — commitments outside procurement (`fnCm`, FR-FC-02):**
+  - **Create:** the form adds an English name, and the amount is checked against the line's headroom (clause 18).
+  - **Edit:** everything can change while no voucher uses the commitment. Once one does, only the last payment date changes, and that needs a reason.
+  - **Release part:** you are asked how much, up to the amount no voucher holds.
+  - **Cancel what is left:** refused while a voucher still holds part of it (R-FC-04).
+  - **Delete:** allowed only for a commitment never used and with no PO. Numbers come from `S.fcSeq`, so they are never reused.
+  - **Drawer:** lists its vouchers and releases.
+  - The old inline form and the release form row are gone from 66b.
+- **76-crud.js:** an action can ask for an amount in the same reason box (`num: { label, max, value }`, passed as `run(r, why, num)` and checked against its range).
+- **PO correction (FR-FC-03, 66b):** a saved GFMIS PO number can be corrected or cleared, with a reason, until a voucher that relies on it is in a GFMIS file (`poLocked`). The old numbers are kept in `gfPoHist`.
+- **Carry-over (FR-FC-05, 66b):**
+  - A pending proposal shows its number and status, and can be withdrawn with a reason (status `withdrawn`, which Budget's carry-over list already hides).
+  - A withdrawn or rejected proposal can be proposed again (`carryReq`).
+  - `CF-` numbers come from the highest used.
+- **Advances (66d):**
+  - **One request form (`advForm`, `advSave`, `bindAdvForm`)** for a new request, the borrower's edit while it waits for approval, and Finance entering a request for someone from F4 (FR-FC-21). An entered request records `enteredBy`, and that person can't approve it.
+  - **Expense rows:** add or remove any number of rows (no longer fixed at three).
+  - **Cancel after approval:** the borrower, or Finance, can cancel an approved advance that isn't paid yet, with a reason.
+  - **Pay:** checked against SD-12, so the borrower can't pay themselves (FR-FC-23). A clock (clause 57) asks for an approved advance to be paid before its start date.
+  - **Take back a clearing:** the borrower can pull a clearing back to fix it before Finance checks it (FR-FC-24).
+  - **F4 register:** gets search, a unit filter, a sort by clear-by date, and "Enter a request for someone".
+  - Demand date edits (FR-FC-25) are not built.
+- **Years (FX-03):** ids and loan contracts already read the year after round 54. The year-end list now computes its last two lines from the records: next year's receipt books and the yearly receipt report, and the September trial balance (FR-FC-38).
+- **Tests:**
+  - **Render pass:** every commitment opens for fin, finhead, exec and audit, with its details, history, edit form and each action box, plus the new-commitment form. Fin also gets the PO correction rows, the on-behalf advance form, and the advance register with search and sort.
+  - **Walk:**
+    - Commitments: a commitment above the line is refused; an edit goes through; a voucher locks the amount; a release is capped by what vouchers hold; cancelling is refused while a voucher holds part of it; a delete goes through and its number isn't reused.
+    - PO and carry-over: a PO is corrected, then cleared; a carry-over is proposed, then withdrawn.
+    - Advances: one is edited on My advances, then cancelled after approval (a missing reason is refused). Finance enters one for someone. One is paid with its clock showing, has its clearing taken back, and SD-12 stops the borrower paying themselves.
+    - Year-end list renders.
+  - **Results:** the full sweep passes, 12,385 checks.
+  - **By hand:** the release box with its amount.
+  - **Not checked by hand:** phone width, dark mode, and English wording beyond the sweep.

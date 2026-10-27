@@ -69,11 +69,14 @@ function advDetail(a, where) {
   if (where === "fin" && fin && a.state === "clearing") act.push(["accept", L("ตรวจผ่าน รับใบสำคัญ", "Accept the clearing"), "primary", false], ["object", L("ทักท้วง", "Object"), "danger", true]);
   if (where === "fin" && ROLE === "finhead" && advOverdue(a) && !a.demand) act.push(["demand", L("ออกหนังสือเรียกชดใช้ (ข้อ 68)", "Issue a demand (clause 68)"), "primary", false]);
   if (where === "fin" && ROLE === "finhead" && a.demand && !a.reported && OPEN_ADV.includes(a.state) && daysUntil(a.demand.due) < 0) act.push(["report", L("รายงานหัวหน้าส่วนราชการ", "Report to the head of the agency"), "danger", false]);
-  if (mine && a.state === "request") act.push(["cancel", L("ยกเลิกคำขอ", "Cancel the request"), "ghost", true]);
+  if ((mine || (where === "fin" && ROLE === "fin" && a.enteredBy)) && a.state === "request") act.push(["edit", L("แก้ไขคำขอ", "Edit the request"), "", false]);
+  if (mine && ["request", "approved"].includes(a.state)) act.push(["cancel", a.state === "request" ? L("ยกเลิกคำขอ", "Cancel the request") : L("ยกเลิกเงินยืม (ยังไม่ได้รับเงิน)", "Cancel (not paid yet)"), "ghost", true]);
+  else if (where === "fin" && ROLE === "fin" && a.state === "approved") act.push(["cancel", L("ยกเลิกเงินยืมที่ยังไม่จ่าย", "Cancel before payment"), "danger", true]);
+  if (mine && a.state === "clearing") act.push(["crecall", L("ดึงใบสำคัญกลับมาแก้ไข", "Take the clearing back to fix"), "", true]);
   const ask = FIN_ASK && FIN_ASK.key === "adv" && act.find(x => x[0] === FIN_ASK.act);
   const askHtml = ask ? finAskForm("adv", ask[0], ask[1], ask[0] === "approve"
       ? { need: false, whyLabel: L("เหตุผล (เมื่ออนุมัติน้อยกว่ายอดขอ ข้อ 59)", "Reason (when approving less than asked, clause 59)"), extra: `<label for="adv-amt">${L("ยอดอนุมัติ (บาท)", "Amount approved (baht)")}</label><input type="number" id="adv-amt" value="${a.amount}" min="1" max="${a.amount}" step="1" style="max-width:180px">` }
-      : { danger: ask[2] === "danger", impact: ask[0] === "object" ? L(`ผู้ยืมต้องแก้ภายใน ${fcfg().advFix} วัน`, `The borrower fixes it within ${fcfg().advFix} days`) : ask[0] === "cancel" ? L("คำขอนี้ยกเลิก ยังยื่นใหม่ได้", "This request is cancelled; you can ask again") : "" }) : "";
+      : { danger: ask[2] === "danger", impact: ask[0] === "cancel" && a.state === "approved" ? L("คืนวงเงินที่อนุมัติให้รายการจัดสรร ผู้ยืมได้รับแจ้ง", "Gives the approved amount back to the line; the borrower is told") : ask[0] === "crecall" ? L("กลับไปแก้ใบสำคัญแล้วส่งใหม่ นาฬิกาส่งใช้เดินต่อ", "Fix the clearing and send it again; the clearing clock keeps running") : ask[0] === "object" ? L(`ผู้ยืมต้องแก้ภายใน ${fcfg().advFix} วัน`, `The borrower fixes it within ${fcfg().advFix} days`) : ask[0] === "cancel" ? L("คำขอนี้ยกเลิก ยังยื่นใหม่ได้", "This request is cancelled; you can ask again") : "" }) : "";
   const cl = a.clearing;
   return `<section class="panel" id="adv-detail"><header><h2><span class="mono">${a.id}</span> · ${esc(tx(a.purpose))}</h2><span class="sp"></span>${advTag(a)}<button class="btn ghost" type="button" id="adv-close">${L("ปิด", "Close")}</button></header>
     <div class="body">${finDrTabs("adv", [["view", L("รายละเอียด", "Details"), `
@@ -111,12 +114,85 @@ function clearForm(a) {
     <button class="btn primary" type="submit">${L("ส่งใบสำคัญ", "Send the evidence")}</button></form>`;
 }
 
+// ---------- the request form: new, edited by the borrower, or entered by Finance for someone (FR-FC-21) ----------
+let ADV_EDIT = null; // null, an advance id being edited, or "new" (Finance entering a request for someone)
+const ADV_Q = { q: "", unit: "", sort: null };
+const advItemRow = (k, amt) => `<div class="row" data-airow style="gap:8px;flex:1 1 100%;align-items:flex-end;flex-wrap:nowrap">
+  <div class="f" style="flex:1 1 180px"><select data-aik aria-label="${L("รายการ", "Item")}"><option value="">—</option>${Object.keys(ADV_ITEMS).map(x => `<option value="${x}" ${x === k ? "selected" : ""}>${tx(ADV_ITEMS[x][0])}</option>`).join("")}</select></div>
+  <div class="f" style="flex:0 1 130px"><input type="number" data-aia min="0" step="1" value="${amt || ""}" aria-label="${L("บาท", "Baht")}" placeholder="${L("บาท", "Baht")}"></div>
+  <button class="btn ghost" type="button" data-airm aria-label="${L("ลบรายการนี้", "Remove this item")}">✕</button></div>`;
+function advForm(a, forOther) {
+  const who = a ? S.users.find(u => u.id === a.borrower) : me(), unitLines = famLines().filter(l => l.type === "ope" && l.unit === who.unit);
+  const lines = forOther || !unitLines.length ? famLines().filter(l => l.type === "ope") : unitLines;
+  const v = a || { type: "travel", purpose: ["", ""], start: addDays(TODAY, 7), end: addDays(TODAY, 9), source: "budget", fund: null, nbLine: null, line: (lines[0] || {}).id, items: [{ k: "perdiem" }, { k: "hotel" }, { k: "transport" }], temp: false, collateral: "" };
+  const nb = v.fund ? `${v.fund}|${v.nbLine}` : "";
+  return `<form class="inline-form" id="adv-form" data-edit="${a ? a.id : ""}" data-other="${forOther ? 1 : ""}">
+      ${forOther && !a ? `<div class="f" style="flex:1 1 100%"><label for="af-who">${L("ผู้ยืม", "Borrower")}</label><select id="af-who">${S.users.filter(u => u.active !== false && u.role !== "admin").map(u => `<option value="${u.id}">${esc(userName(u.id))} · ${esc(unitName(u.unit))}</option>`).join("")}</select><div class="sub">${L("ผู้ยืมยังเป็นเจ้าของคำขอ ผู้บันทึกแทนอนุมัติคำขอนี้ไม่ได้ (SD-12)", "The borrower still owns the request; whoever enters it can't approve it (SD-12)")}</div></div>` : ""}
+      <div class="f" style="flex:1 1 220px"><label for="af-type">${L("ประเภท", "Type")}</label><select id="af-type">${Object.keys(ADV_T).map(k => `<option value="${k}" ${v.type === k ? "selected" : ""}>${tx(ADV_T[k])}</option>`).join("")}</select></div>
+      <div class="f" style="flex:2 1 260px"><label for="af-purpose">${L("วัตถุประสงค์", "Purpose")}</label><input type="text" id="af-purpose" value="${esc(tx(v.purpose))}" required></div>
+      <div class="f" style="flex:0 1 160px"><label for="af-start">${L("ตั้งแต่", "From")}</label><input type="date" id="af-start" value="${v.start}" required></div>
+      <div class="f" style="flex:0 1 160px"><label for="af-end">${L("ถึง", "To")}</label><input type="date" id="af-end" value="${v.end}" required></div>
+      <div class="f" style="flex:0 1 170px"><label for="af-src">${L("แหล่งเงิน", "Source")}</label><select id="af-src"><option value="budget">${L("เงินงบประมาณ", "Budget")}</option><option value="nonbudget" ${v.source === "nonbudget" ? "selected" : ""}>${L("เงินนอกงบประมาณ", "Non-budget money")}</option></select></div>
+      ${typeof nbLineOptions === "function" && nbLineOptions() ? `<div class="f" style="flex:2 1 260px"><label for="af-nb">${L("รายการในแผนเงินนอกงบประมาณ (ถ้าใช้)", "Non-budget plan line (if used)")}</label><select id="af-nb"><option value="">—</option>${nbLineOptions().replace(`value="${nb}"`, `value="${nb}" selected`)}</select></div>` : ""}
+      <div class="f" style="flex:2 1 240px"><label for="af-line">${L("รายการจัดสรร", "Allocation line")}</label><select id="af-line">${lines.map(l => `<option value="${l.id}" ${v.line === l.id ? "selected" : ""}>${esc(lineLabel(l))}</option>`).join("")}</select></div>
+      <div class="f" style="flex:1 1 100%"><span class="cr-lab">${L("รายการค่าใช้จ่าย", "Items")}</span><div id="af-items">${v.items.map(i => advItemRow(i.k, i.amt)).join("")}</div>
+        <div class="row" style="gap:8px;margin-top:6px"><button class="btn ghost" type="button" id="af-addrow">+ ${L("เพิ่มรายการ", "Add an item")}</button><button class="btn ghost" type="button" id="af-calc">${L("คำนวณเบี้ยเลี้ยงและที่พักจากจำนวนวัน", "Work out per diem and accommodation from the dates")}</button></div></div>
+      <div class="f" style="flex:1 1 100%"><label><input type="checkbox" id="af-temp" ${v.temp ? "checked" : ""}> ${L("ผู้ยืมไม่มีเงินเดือนที่หักส่งใช้ได้ (เช่น ลูกจ้างชั่วคราว)", "The borrower has no salary to deduct from (for example a temporary worker)")}</label></div>
+      <div class="f" style="flex:1 1 280px"><label for="af-coll">${L("หลักประกันหรือผู้ค้ำประกัน (ข้อ 58)", "Collateral or guarantor (clause 58)")}</label><input type="text" id="af-coll" value="${esc(v.collateral || "")}"></div>
+      <div class="row" style="gap:8px;flex:1 1 100%"><button class="btn primary" type="submit">${a ? L("บันทึกการแก้ไข", "Save the changes") : forOther ? L("บันทึกคำขอแทน", "Enter the request") : L("ส่งคำขอยืม", "Send the request")}</button>${a || forOther ? `<button class="btn ghost" type="button" data-afx>${L("ยกเลิก", "Cancel")}</button>` : ""}</div></form>`;
+}
+// Saves the form. vals: { who, type, purpose, start, end, src, nb, line, items, temp, coll }. Returns an error text or the advance.
+function advSave(vals, a) {
+  const items = vals.items.filter(i => i.k && i.amt > 0);
+  if (!items.length) return L("ใส่อย่างน้อยหนึ่งรายการ", "Add at least one item");
+  if (!vals.purpose) return L("ใส่วัตถุประสงค์", "Give the purpose");
+  if (vals.end < vals.start) return L("วันสิ้นสุดต้องไม่ก่อนวันเริ่ม", "The end can't be before the start");
+  if (vals.src === "nonbudget" && !vals.nb) return L("เลือกรายการในแผนเงินนอกงบประมาณ", "Pick the non-budget plan line");
+  const set = x => Object.assign(x, { type: vals.type, purpose: [vals.purpose, vals.purpose], start: vals.start, end: vals.end, items, amount: sumv(items.map(i => i.amt)), source: vals.src, line: vals.line,
+    fund: vals.src === "nonbudget" ? vals.nb.split("|")[0] : null, nbLine: vals.src === "nonbudget" ? vals.nb.split("|")[1] : null, temp: vals.temp, collateral: vals.coll });
+  if (a) {
+    const old = a.amount; set(a);
+    advLog(a, ["แก้ไขคำขอ", "Edited the request"], old !== a.amount ? `${fmt(old)} → ${fmt(a.amount)}` : ""); audit(["แก้ไขคำขอยืมเงิน", "Edited an advance request"], `${a.id} · ${fmt(old)} → ${fmt(a.amount)}`);
+    notify(["exec"], [`คำขอยืมเงิน ${a.id} ถูกแก้ไข ${fmt(a.amount)} บาท`, `Advance request ${a.id} was changed: ${fmt(a.amount)} baht`], "fnc-adv");
+    return a;
+  }
+  const who = S.users.find(u => u.id === (vals.who || me().id));
+  const n = set({ id: nextAdv(), borrower: who.id, unit: who.unit, returned: null, approvedAmt: null, state: "request", t: nowIso(), log: [] });
+  if (who.id !== me().id) n.enteredBy = me().id;
+  S.advSeqC = (S.advSeqC || 0) + 1; n.contract = { no: `สย.${String(S.advSeqC).padStart(3, "0")}/${FAM_FY}`, t: nowIso() };
+  advLog(n, [n.enteredBy ? "การเงินบันทึกคำขอแทนผู้ยืม" : "ขอยืมเงิน", n.enteredBy ? "Entered by Finance for the borrower" : "Requested"], fmt(n.amount)); (S.advances = S.advances || []).push(n);
+  audit(["ขอยืมเงิน", "Asked for an advance"], `${n.id} · ${fmt(n.amount)}${n.enteredBy ? ` · ${L("บันทึกแทน", "entered for")} ${userName(n.borrower)}` : ""}`);
+  notify(["exec"], [`คำขอยืมเงิน ${n.id} ${fmt(n.amount)} บาท รออนุมัติ`, `Advance request ${n.id} (${fmt(n.amount)} baht) is waiting for approval`], "fnc-adv");
+  return n;
+}
+function bindAdvForm() {
+  const f = $("#adv-form"); if (!f) return;
+  const c = fcfg(), rows = () => $$("#af-items [data-airow]");
+  const bindRm = () => $$("[data-airm]").forEach(b => (b.onclick = () => { if (rows().length > 1) b.closest("[data-airow]").remove(); else toast(L("ต้องมีอย่างน้อยหนึ่งรายการ", "Keep at least one item")); }));
+  const addRow = (k, amt) => { $("#af-items").insertAdjacentHTML("beforeend", advItemRow(k, amt)); bindRm(); };
+  bindRm();
+  $("#af-addrow").onclick = () => { addRow("", ""); const r = rows(); r[r.length - 1].querySelector("select").focus(); };
+  $("#af-calc").onclick = () => { const d = Math.max(1, dayDiff($("#af-start").value, $("#af-end").value) + 1); while (rows().length < 2) addRow("", ""); const r = rows();
+    r[0].querySelector("[data-aik]").value = "perdiem"; r[0].querySelector("[data-aia]").value = d * c.perDiem; r[1].querySelector("[data-aik]").value = "hotel"; r[1].querySelector("[data-aia]").value = Math.max(0, d - 1) * c.hotel; };
+  const x = $("[data-afx]"); if (x) x.onclick = () => { ADV_EDIT = null; route(); };
+  f.onsubmit = e => {
+    e.preventDefault();
+    const a = f.dataset.edit ? advOf(f.dataset.edit) : null;
+    const vals = { who: $("#af-who") ? $("#af-who").value : null, type: $("#af-type").value, purpose: $("#af-purpose").value.trim(), start: $("#af-start").value, end: $("#af-end").value, src: $("#af-src").value, nb: $("#af-nb") ? $("#af-nb").value : "",
+      line: $("#af-line").value, items: rows().map(r => ({ k: r.querySelector("[data-aik]").value, amt: Math.round(Number(r.querySelector("[data-aia]").value)) })), temp: $("#af-temp").checked, coll: $("#af-coll").value.trim() };
+    const r = advSave(vals, a);
+    if (typeof r === "string") { toast(r); return; }
+    ADV_EDIT = null; ADV_OPEN = r.id; const bad = advChecks(r).filter(k => !k.ok);
+    commit(); renderShell(); route();
+    toast(bad.length ? L(`บันทึกแล้ว แต่ยังติด ${bad.map(k => k.id).join(", ")} ผู้อนุมัติจะอนุมัติไม่ได้จนกว่าจะแก้`, `Saved, but ${bad.map(k => k.id).join(", ")} is not met; it can't be approved until fixed`) : a ? L("บันทึกการแก้ไขแล้ว", "Changes saved") : L("ส่งคำขอแล้ว · รอผู้มีอำนาจอนุมัติ", "Request sent · waiting for approval"));
+  };
+}
+
 // ---------- My advances (every user) ----------
 VIEWS.advances = () => {
   const mine = (S.advances || []).filter(a => a.borrower === me().id), open = mine.filter(a => OPEN_ADV.includes(a.state)), c = fcfg();
   const det = ADV_OPEN && advOf(ADV_OPEN), showDet = det && det.borrower === me().id;
-  const lines = famLines().filter(l => l.type === "ope" && (l.unit === me().unit || !famLines().some(x => x.type === "ope" && x.unit === me().unit)));
-  const itemRow = (n, k, amt) => `<div class="f" style="flex:1 1 180px"><label for="ai-k${n}">${L("รายการ", "Item")} ${n + 1}</label><select id="ai-k${n}"><option value="">—</option>${Object.keys(ADV_ITEMS).map(x => `<option value="${x}" ${x === k ? "selected" : ""}>${tx(ADV_ITEMS[x][0])}</option>`).join("")}</select></div><div class="f" style="flex:0 1 130px"><label for="ai-a${n}">${L("บาท", "Baht")}</label><input type="number" id="ai-a${n}" min="0" step="1" value="${amt || ""}"></div>`;
+  const editing = ADV_EDIT && ADV_EDIT !== "new" && advOf(ADV_EDIT), mineEd = editing && editing.borrower === me().id && editing.state === "request" ? editing : null;
   return `
   <div class="head"><div><div class="eyebrow">${L("พื้นที่ทำงานของฉัน", "My Workspace")}</div><h1>${L("เงินยืมของฉัน", "My advances")}</h1>
     <p>${L("ขอยืมเงินเพื่อปฏิบัติราชการ และส่งใช้ภายในกำหนด ตามระเบียบกระทรวงการคลังฯ พ.ศ. 2562 หมวด 5", "Borrow for official work and clear it on time, under chapter 5 of the Finance Ministry regulation of 2562")}</p></div></div>
@@ -125,24 +201,16 @@ VIEWS.advances = () => {
     <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("วัตถุประสงค์", "Purpose")}</th><th class="n">${L("ยอด (บาท)", "Amount (baht)")}</th><th>${L("ส่งใช้ภายใน", "Clear by")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
       <tbody>${mine.slice().reverse().map(a => `<tr><td class="mono">${a.id}</td><td>${esc(tx(a.purpose))}<div class="sub">${tx(ADV_T[a.type])} · ${fdate(a.start)}–${fdate(a.end)}</div></td><td class="n">${fmt(advAmt(a))}</td><td>${advDueTxt(a)}</td><td>${advTag(a)}</td><td><button class="btn ${["paid", "objected"].includes(a.state) ? "primary" : "ghost"}" type="button" data-advopen="${a.id}">${["paid", "objected"].includes(a.state) ? L("ส่งใช้", "Clear") : L("เปิด", "Open")}</button></td></tr>`).join("")
         || `<tr><td colspan="6" class="sub">${L("ยังไม่เคยยืม", "No advances yet")}</td></tr>`}</tbody></table></div></section>
-  <section class="panel"><header><h2>${L("ขอยืมเงิน", "Ask for an advance")}</h2><span class="sp"></span><span class="sub">${L("ระบบสร้างสัญญายืมเงินตามแบบ (ข้อ 55)", "The system draws up the loan contract in the set form (clause 55)")}</span></header>
-    ${open.length ? `<div class="body"><div class="alert" style="margin:0"><div class="ic" style="background:var(--warn-soft);color:var(--warn)">!</div><div><b>${L("ยังขอยืมใหม่ไม่ได้", "You can't ask for a new advance yet")}</b><p>${L(`มีเงินยืมค้าง ${open.map(a => a.id).join(", ")} ต้องส่งใช้ให้ครบก่อน (ข้อ 59)`, `${open.map(a => a.id).join(", ")} is still open; clear it first (clause 59)`)}</p></div></div></div>` : `<div class="body"><form class="inline-form" id="adv-form">
-      <div class="f" style="flex:1 1 220px"><label for="af-type">${L("ประเภท", "Type")}</label><select id="af-type">${Object.keys(ADV_T).map(k => `<option value="${k}">${tx(ADV_T[k])}</option>`).join("")}</select></div>
-      <div class="f" style="flex:2 1 260px"><label for="af-purpose">${L("วัตถุประสงค์", "Purpose")}</label><input type="text" id="af-purpose" required></div>
-      <div class="f" style="flex:0 1 160px"><label for="af-start">${L("ตั้งแต่", "From")}</label><input type="date" id="af-start" value="${addDays(TODAY, 7)}" required></div>
-      <div class="f" style="flex:0 1 160px"><label for="af-end">${L("ถึง", "To")}</label><input type="date" id="af-end" value="${addDays(TODAY, 9)}" required></div>
-      <div class="f" style="flex:0 1 170px"><label for="af-src">${L("แหล่งเงิน", "Source")}</label><select id="af-src"><option value="budget">${L("เงินงบประมาณ", "Budget")}</option><option value="nonbudget">${L("เงินนอกงบประมาณ", "Non-budget")}</option></select></div>
-      ${typeof nbLineOptions === "function" && nbLineOptions() ? `<div class="f" style="flex:2 1 260px"><label for="af-nb">${L("รายการในแผนเงินนอกงบประมาณ (ถ้าใช้)", "Non-budget plan line (if used)")}</label><select id="af-nb"><option value="">—</option>${nbLineOptions()}</select></div>` : ""}
-      <div class="f" style="flex:2 1 240px"><label for="af-line">${L("รายการจัดสรร", "Allocation line")}</label><select id="af-line">${lines.map(l => `<option value="${l.id}">${esc(lineLabel(l))}</option>`).join("")}</select></div>
-      ${itemRow(0, "perdiem")}${itemRow(1, "hotel")}${itemRow(2, "transport")}
-      <div class="f" style="flex:1 1 100%"><button class="btn ghost" type="button" id="af-calc">${L("คำนวณเบี้ยเลี้ยงและที่พักจากจำนวนวัน", "Work out per diem and accommodation from the dates")}</button> <span class="sub">${L("อัตรา", "Rates")}: ${fmt(c.perDiem)} ${L("บาท/วัน", "baht/day")} · ${fmt(c.hotel)} ${L("บาท/คืน", "baht/night")} (M10)</span></div>
-      <div class="f" style="flex:1 1 100%"><label><input type="checkbox" id="af-temp"> ${L("ผู้ยืมไม่มีเงินเดือนที่หักส่งใช้ได้ (เช่น ลูกจ้างชั่วคราว)", "The borrower has no salary to deduct from (e.g. temporary staff)")}</label></div>
-      <div class="f" style="flex:1 1 280px"><label for="af-coll">${L("หลักประกันหรือผู้ค้ำประกัน (ข้อ 58)", "Collateral or guarantor (clause 58)")}</label><input type="text" id="af-coll"></div>
-      <button class="btn primary" type="submit">${L("ส่งคำขอยืม", "Send the request")}</button></form></div>`}</section>`;
+  <section class="panel"><header><h2>${mineEd ? `${L("แก้ไขคำขอ", "Edit the request")} <span class="mono">${mineEd.id}</span>` : L("ขอยืมเงิน", "Ask for an advance")}</h2><span class="sp"></span><span class="sub">${L("ระบบสร้างสัญญายืมเงินตามแบบ (ข้อ 55)", "The system draws up the loan contract in the set form (clause 55)")}</span></header>
+    ${!mineEd && open.length ? `<div class="body"><div class="alert" style="margin:0"><div class="ic" style="background:var(--warn-soft);color:var(--warn)">!</div><div><b>${L("ยังขอยืมใหม่ไม่ได้", "You can't ask for a new advance yet")}</b><p>${L(`มีเงินยืมค้าง ${open.map(a => a.id).join(", ")} ต้องส่งใช้ให้ครบก่อน (ข้อ 59)`, `${open.map(a => a.id).join(", ")} is still open; clear it first (clause 59)`)}</p></div></div></div>` : `<div class="body">${advForm(mineEd, false)}</div>`}</section>`;
 };
 
 // ---------- F4 register (finance) ----------
-FS.advDetail = () => { const det = ADV_OPEN && advOf(ADV_OPEN); return det ? advDetail(det, "fin") : ""; };
+FS.advDetail = () => {
+  const ed = ADV_EDIT === "new" ? null : ADV_EDIT && advOf(ADV_EDIT);
+  if (ADV_EDIT === "new" || (ed && ed.enteredBy && ed.state === "request" && ROLE === "fin")) return `<section class="panel" id="adv-detail"><header><h2>${ed ? `${L("แก้ไขคำขอ", "Edit the request")} <span class="mono">${ed.id}</span>` : L("บันทึกคำขอยืมแทนผู้ยืม", "Enter a request for a borrower")}</h2><span class="sp"></span><button class="btn ghost" type="button" id="adv-close">${L("ปิด", "Close")}</button></header><div class="body">${advForm(ed || null, true)}</div></section>`;
+  const det = ADV_OPEN && advOf(ADV_OPEN); return det ? advDetail(det, "fin") : "";
+};
 FS.advKpis = () => {
   const A = S.advances || [], open = A.filter(a => OPEN_ADV.includes(a.state)), over = A.filter(advOverdue);
   return `
@@ -157,12 +225,18 @@ FS.advRegister = () => {
   const A = S.advances || [], over = A.filter(advOverdue);
   const groups = { open: ["request", "approved", "paid", "clearing", "objected"], over: null, done: ["cleared", "rejected", "cancelled"], all: null };
   const GL = { open: L("กำลังดำเนินการ", "In progress"), over: L("เลยกำหนด", "Overdue"), done: L("ปิดแล้ว", "Closed"), all: L("ทั้งหมด", "All") };
-  const pick = k => (k === "over" ? over : groups[k] ? A.filter(a => groups[k].includes(a.state)) : A);
+  const Q = ADV_Q, base = k => (k === "over" ? over : groups[k] ? A.filter(a => groups[k].includes(a.state)) : A);
+  const pick = k => { let xs = base(k); if (Q.unit) xs = xs.filter(a => a.unit === Q.unit); if (Q.q) { const q = Q.q.toLowerCase(); xs = xs.filter(a => `${a.id} ${userName(a.borrower)} ${tx(a.purpose)}`.toLowerCase().includes(q)); }
+    return Q.sort ? xs.slice().sort((a, b) => ((advDue(a) || a.start) < (advDue(b) || b.start) ? -1 : 1) * Q.sort) : xs.slice().reverse(); };
   return `
   <section class="panel"><header><h2>${L("ทะเบียนคุมเงินยืม", "Advance register")}</h2><span class="sp"></span>
     ${segBar(Object.keys(GL).map(k => [k, `${GL[k]} (${pick(k).length})`]), ADV_F, "advf")}</header>
+    <div class="cr-bar"><input type="search" class="cr-q" id="advq" value="${esc(Q.q)}" placeholder="${L("ค้นหาเลขที่ ผู้ยืม หรือวัตถุประสงค์", "Search number, borrower or purpose")}" aria-label="${L("ค้นหาเงินยืม", "Search advances")}">
+      <select id="advq-unit" aria-label="${L("หน่วยงาน", "Unit")}"><option value="">${L("หน่วยงาน: ทั้งหมด", "Unit: all")}</option>${[...new Set(A.map(a => a.unit))].map(u => `<option value="${u}" ${Q.unit === u ? "selected" : ""}>${esc(unitName(u))}</option>`).join("")}</select>
+      <button class="btn ghost" type="button" id="advq-sort" aria-pressed="${!!Q.sort}">${L("เรียงตามวันส่งใช้", "Sort by clear-by date")}${Q.sort ? (Q.sort > 0 ? " ▲" : " ▼") : ""}</button>
+      <span class="sp"></span>${ROLE === "fin" ? `<button class="btn primary" type="button" id="adv-new">+ ${L("บันทึกคำขอแทนผู้ยืม", "Enter a request for someone")}</button>` : ""}</div>
     <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("ผู้ยืม / วัตถุประสงค์", "Borrower / purpose")}</th><th class="n">${L("ยอด (บาท)", "Amount (baht)")}</th><th>${L("ส่งใช้ภายใน", "Clear by")}</th><th>${L("อายุหนี้", "Age")}</th><th>${L("สถานะ", "Status")}</th><th></th></tr></thead>
-      <tbody>${pick(ADV_F).slice().reverse().map(a => `<tr${ADV_OPEN === a.id ? ' style="background:var(--tint)"' : ""}><td class="mono">${a.id}</td><td>${esc(userName(a.borrower))} <span class="sub">${unitName(a.unit)}</span><div class="sub">${esc(tx(a.purpose))} · ${tx(ADV_T[a.type])}</div></td><td class="n">${fmt(advAmt(a))}</td><td>${advDueTxt(a)}</td><td class="sub">${advAge(a) ? tx(AGE[advAge(a)]) : "—"}</td><td>${advTag(a)}${a.demand ? `<div class="sub">${L("เรียกชดใช้แล้ว", "Demand issued")}</div>` : ""}</td><td><button class="btn ghost" type="button" data-advopen="${a.id}">${L("เปิด", "Open")}</button></td></tr>`).join("")
+      <tbody>${pick(ADV_F).map(a => `<tr${ADV_OPEN === a.id ? ' style="background:var(--tint)"' : ""}><td class="mono">${a.id}</td><td>${esc(userName(a.borrower))} <span class="sub">${unitName(a.unit)}</span><div class="sub">${esc(tx(a.purpose))} · ${tx(ADV_T[a.type])}</div></td><td class="n">${fmt(advAmt(a))}</td><td>${advDueTxt(a)}</td><td class="sub">${advAge(a) ? tx(AGE[advAge(a)]) : "—"}</td><td>${advTag(a)}${a.demand ? `<div class="sub">${L("เรียกชดใช้แล้ว", "Demand issued")}</div>` : ""}</td><td><button class="btn ghost" type="button" data-advopen="${a.id}">${L("เปิด", "Open")}</button></td></tr>`).join("")
         || `<tr><td colspan="7" class="sub">${L("ไม่มีรายการในกลุ่มนี้", "Nothing in this group")}</td></tr>`}</tbody></table></div></section>`;
 };
 FS.advAge = () => {
@@ -179,7 +253,8 @@ FIN_ASK_RUN.adv = (k, why) => { const a = ADV_OPEN && advOf(ADV_OPEN); return a 
 // Reason-needing actions return an error text for the reason box instead of acting.
 function advAct(a, k, why0) {
   const why = String(why0 || "").trim(), done = (msg, roles, text, link) => { if (roles) notify(roles, text, link || "fnc-adv"); commit(); renderShell(); route(); toast(msg); };
-  if (["reject", "object", "cancel"].includes(k) && why.length < CR_WHY_MIN) return L(`ใส่เหตุผลอย่างน้อย ${CR_WHY_MIN} ตัวอักษร`, `Give a reason of at least ${CR_WHY_MIN} characters`);
+  if (k === "edit") { ADV_EDIT = a.id; route(); const f = $("#adv-form input, #adv-form select"); if (f) f.focus(); return; }
+  if (["reject", "object", "cancel", "crecall"].includes(k) && why.length < CR_WHY_MIN) return L(`ใส่เหตุผลอย่างน้อย ${CR_WHY_MIN} ตัวอักษร`, `Give a reason of at least ${CR_WHY_MIN} characters`);
   if (k === "approve") {
     if (!sodCheck("SD-12", sodActors("exec", "spend"), [a.borrower], a.id)) return;
     const bad = advChecks(a).filter(c => !c.ok); if (bad.length) { toast(`${L("ยังอนุมัติไม่ได้", "Can't approve yet")}: ${bad.map(c => c.id).join(", ")}`); return; }
@@ -192,8 +267,20 @@ function advAct(a, k, why0) {
     return done(L("อนุมัติแล้ว · การเงินจ่ายผ่าน e-Payment", "Approved · Finance pays by e-Payment"), ["fin"], [`เงินยืม ${a.id} อนุมัติแล้ว รอจ่าย`, `Advance ${a.id} is approved and waiting to be paid`]);
   }
   if (k === "reject") { a.state = "rejected"; advLog(a, ["ไม่อนุมัติ", "Rejected"], why); audit(["ไม่อนุมัติเงินยืม", "Rejected an advance"], `${a.id} · ${why}`); return done(L("บันทึกแล้ว", "Saved"), [S.users.find(u => u.id === a.borrower).role], [`เงินยืม ${a.id} ไม่ได้รับอนุมัติ: ${why}`, `Advance ${a.id} was not approved: ${why}`], "advances"); }
-  if (k === "cancel") { a.state = "cancelled"; advLog(a, ["ยกเลิกคำขอ", "Cancelled"], why); audit(["ยกเลิกคำขอยืมเงิน", "Cancelled an advance request"], a.id); ADV_OPEN = null; return done(L("ยกเลิกแล้ว", "Cancelled")); }
+  if (k === "cancel") {
+    if (!["request", "approved"].includes(a.state)) return;
+    const was = a.state; a.state = "cancelled"; a.cancelled = { by: me().id, t: nowIso(), why, was };
+    advLog(a, [was === "request" ? "ยกเลิกคำขอ" : "ยกเลิกเงินยืมที่อนุมัติแล้ว", was === "request" ? "Cancelled" : "Cancelled after approval"], why); audit(["ยกเลิกคำขอยืมเงิน", "Cancelled an advance request"], `${a.id} · ${why}`); ADV_OPEN = null;
+    const bo = S.users.find(u => u.id === a.borrower);
+    return done(L("ยกเลิกแล้ว", "Cancelled"), a.borrower === me().id ? (was === "approved" ? ["fin"] : null) : [bo.role], [`เงินยืม ${a.id} ถูกยกเลิก: ${why}`, `Advance ${a.id} was cancelled: ${why}`], a.borrower === me().id ? "fnc-adv" : "advances");
+  }
+  if (k === "crecall") {
+    if (a.state !== "clearing" || a.borrower !== me().id) return;
+    a.state = a.clearFrom || "paid"; advLog(a, ["ดึงใบสำคัญกลับมาแก้ไข", "Took the clearing back"], why); audit(["ดึงใบสำคัญส่งใช้เงินยืมกลับ", "Took an advance clearing back"], `${a.id} · ${why}`);
+    return done(L("ดึงกลับแล้ว แก้แล้วส่งใหม่", "Taken back · fix it and send again"), ["fin"], [`ผู้ยืมดึงใบสำคัญ ${a.id} กลับไปแก้ไข`, `The borrower took the clearing of ${a.id} back to fix`]);
+  }
   if (k === "pay") {
+    if (!sodCheck("SD-12", [me().id], [a.borrower], a.id)) return; // the borrower doesn't pay themselves (FR-FC-23)
     a.state = "paid"; a.paid = { t: nowIso(), ref: `EP-ADV-${a.id.slice(-3)}` };
     advLog(a, ["จ่ายเงินยืมผ่าน e-Payment", "Paid by e-Payment"], a.paid.ref); audit(["จ่ายเงินยืม", "Paid an advance"], `${a.id} · ${fmt(advAmt(a))}`);
     return done(L(`จ่ายแล้ว · ต้องส่งใช้ภายใน ${fdate(advDue(a))}`, `Paid · to be cleared by ${fdate(advDue(a))}`), [S.users.find(u => u.id === a.borrower).role], [`ได้รับเงินยืม ${a.id} แล้ว ส่งใช้ภายใน ${fdate(advDue(a))}`, `Advance ${a.id} paid; clear it by ${fdate(advDue(a))}`], "advances");
@@ -228,8 +315,13 @@ function advAct(a, k, why0) {
   }
 }
 function bindAdvShared() {
-  $$("[data-advopen]").forEach(b => (b.onclick = () => { ADV_OPEN = b.dataset.advopen; FIN_ASK = null; route(); }));
-  const cl = $("#adv-close"); if (cl) cl.onclick = () => { ADV_OPEN = null; FIN_ASK = null; route(); };
+  $$("[data-advopen]").forEach(b => (b.onclick = () => { ADV_OPEN = b.dataset.advopen; ADV_EDIT = null; FIN_ASK = null; route(); }));
+  const q = $("#advq"); if (q) q.oninput = () => { const pos = q.selectionStart; ADV_Q.q = q.value; route(); const n = $("#advq"); if (n) { n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} } };
+  const qu = $("#advq-unit"); if (qu) qu.onchange = () => { ADV_Q.unit = qu.value; route(); };
+  const qs = $("#advq-sort"); if (qs) qs.onclick = () => { ADV_Q.sort = ADV_Q.sort === 1 ? -1 : ADV_Q.sort === -1 ? null : 1; route(); const b = $("#advq-sort"); if (b) b.focus(); };
+  const nw = $("#adv-new"); if (nw) nw.onclick = () => { ADV_EDIT = "new"; ADV_OPEN = null; FIN_ASK = null; route(); const s = $("#af-who"); if (s) s.focus(); };
+  const cl = $("#adv-close"); if (cl) cl.onclick = () => { ADV_OPEN = null; ADV_EDIT = null; FIN_ASK = null; route(); };
+  bindAdvForm();
   const a = ADV_OPEN && advOf(ADV_OPEN);
   if (!a) return;
   $$("[data-adv]").forEach(b => (b.onclick = () => advAct(a, b.dataset.adv)));
@@ -239,35 +331,13 @@ function bindAdvShared() {
     const spent = Math.round(Number($("#ac-spent").value)); if (!(spent >= 0)) return;
     if (a.type === "travel") { const back = $("#ac-back").value; if (back < a.start) { toast(L("วันกลับต้องไม่ก่อนวันเริ่มเดินทาง", "The return date can't be before the start")); return; } a.returned = back; }
     a.clearing = { t: nowIso(), spent, note: $("#ac-note").value.trim(), receipts: true };
-    a.state = "clearing"; advLog(a, ["ส่งใบสำคัญ", "Sent the evidence"], `${fmt(spent)}`);
+    a.clearFrom = a.state; a.state = "clearing"; advLog(a, ["ส่งใบสำคัญ", "Sent the evidence"], `${fmt(spent)}`);
     audit(["ส่งใบสำคัญส่งใช้เงินยืม", "Sent an advance clearing"], `${a.id} · ${fmt(spent)}`);
     notify(["fin"], [`ใบสำคัญส่งใช้เงินยืม ${a.id} รอตรวจ`, `Clearing of ${a.id} is waiting to be checked`], "fnc-adv");
     commit(); renderShell(); route(); toast(spent < advAmt(a) ? L(`ส่งแล้ว · นำเงินเหลือ ${fmt(advAmt(a) - spent)} บาทคืนการเงิน`, `Sent · return ${fmt(advAmt(a) - spent)} baht to Finance`) : L("ส่งใบสำคัญแล้ว", "Evidence sent"));
   };
 }
-BIND.advances = () => {
-  bindAdvShared();
-  const f = $("#adv-form");
-  if (!f) return;
-  const c = fcfg();
-  $("#af-calc").onclick = () => { const d = Math.max(1, dayDiff($("#af-start").value, $("#af-end").value) + 1); $("#ai-k0").value = "perdiem"; $("#ai-a0").value = d * c.perDiem; $("#ai-k1").value = "hotel"; $("#ai-a1").value = Math.max(0, d - 1) * c.hotel; };
-  f.onsubmit = e => {
-    e.preventDefault();
-    const items = [0, 1, 2].map(n => ({ k: $("#ai-k" + n).value, amt: Math.round(Number($("#ai-a" + n).value)) })).filter(i => i.k && i.amt > 0);
-    if (!items.length) { toast(L("ใส่อย่างน้อยหนึ่งรายการ", "Add at least one item")); return; }
-    const start = $("#af-start").value, end = $("#af-end").value; if (end < start) { toast(L("วันสิ้นสุดต้องไม่ก่อนวันเริ่ม", "The end can't be before the start")); return; }
-    const p = $("#af-purpose").value.trim(), src = $("#af-src").value, nbv = $("#af-nb") ? $("#af-nb").value : "";
-    if (src === "nonbudget" && !nbv) { toast(L("เลือกรายการในแผนเงินนอกงบประมาณ", "Pick the non-budget plan line")); return; }
-    const a = { id: nextAdv(), borrower: me().id, unit: me().unit, type: $("#af-type").value, purpose: [p, p], start, end, returned: null, items, amount: sumv(items.map(i => i.amt)), approvedAmt: null,
-      source: src, line: $("#af-line").value, fund: src === "nonbudget" ? nbv.split("|")[0] : null, nbLine: src === "nonbudget" ? nbv.split("|")[1] : null, temp: $("#af-temp").checked, collateral: $("#af-coll").value.trim(), state: "request", t: nowIso(), log: [] };
-    S.advSeqC = (S.advSeqC || 0) + 1; a.contract = { no: `สย.${String(S.advSeqC).padStart(3, "0")}/${CUR_FY}`, t: nowIso() };
-    advLog(a, ["ขอยืมเงิน", "Requested"], fmt(a.amount)); (S.advances = S.advances || []).push(a); ADV_OPEN = a.id;
-    const bad = advChecks(a).filter(k => !k.ok);
-    audit(["ขอยืมเงิน", "Asked for an advance"], `${a.id} · ${fmt(a.amount)}`);
-    notify(["exec"], [`คำขอยืมเงิน ${a.id} ${fmt(a.amount)} บาท รออนุมัติ`, `Advance request ${a.id} (${fmt(a.amount)} baht) is waiting for approval`], "fnc-adv");
-    commit(); renderShell(); route(); toast(bad.length ? L(`ส่งแล้ว แต่ยังติด ${bad.map(k => k.id).join(", ")} ผู้อนุมัติจะอนุมัติไม่ได้จนกว่าจะแก้`, `Sent, but ${bad.map(k => k.id).join(", ")} is not met; it can't be approved until fixed`) : L("ส่งคำขอแล้ว · สร้างสัญญายืมเงินแล้ว", "Request sent · loan contract drawn up"));
-  };
-};
+BIND.advances = () => bindAdvShared();
 {
   FIN_BINDS.push(() => { bindAdvShared(); $$("[data-advf]").forEach(b => (b.onclick = () => { ADV_F = b.dataset.advf; route(); })); });
 }
@@ -283,6 +353,7 @@ NAV_ICON.advances = "wallet"; NAV_ICON.adv = "wallet";
     const out = base();
     (S.advances || []).forEach(a => {
       if (["paid", "objected"].includes(a.state) && !a.demand) out.push({ due: a.state === "objected" ? a.objection.due : advDue(a), title: `${a.state === "objected" ? L("ผู้ยืมแก้ข้อทักท้วง", "Borrower fixes the objection") : L("ส่งใช้เงินยืม", "Advance to be cleared")} ${a.id}`, sub: `${userName(a.borrower)} · ${fmt(advAmt(a))} ${L("บาท", "baht")}`, link: "fnc-adv", src: L("ข้อ 65", "cl. 65") });
+      if (a.state === "approved") out.push({ due: a.start, title: `${L("จ่ายเงินยืมก่อนวันเริ่ม", "Pay the advance before it starts")} ${a.id}`, sub: `${userName(a.borrower)} · ${fmt(advAmt(a))} ${L("บาท", "baht")}`, link: "fnc-adv", src: L("ข้อ 57", "cl. 57") });
       if (a.demand && OPEN_ADV.includes(a.state) && !a.reported) out.push({ due: a.demand.due, title: `${L("ครบกำหนดตามหนังสือเรียกชดใช้", "Demand falls due")} ${a.id}`, sub: userName(a.borrower), link: "fnc-adv", src: L("ข้อ 68", "cl. 68") });
     });
     return out.sort((x, y) => (x.due < y.due ? -1 : 1));

@@ -270,6 +270,69 @@
           VC_OPEN = va.id; finSet("pay:vouchers"); go2("finance"); chk(`${org}/FC3/refund`);
         }); S = JSON.parse(keep); crClose(); VC_OPEN = null; FIN_ASK = null; ROLE = "fin"; await tick(); }
       }
+      // Finance CRUD round FC4: commitments on the shared list, PO correction, carry-over withdrawal, advance forms, then a walk
+      if (o.suites.includes("render") && CRUD.defs && CRUD.defs.fnCm) {
+        for (const role of ["fin", "finhead", "exec", "audit"].filter(r => o.roles.includes(r))) {
+          ROLE = role; LANG = o.langs[0]; safe("shell", renderShell);
+          const sp = CRUD.defs.fnCm, open = (id, mode, t) => safe(`${org}/${role}/fnCm/${id || "new"}/${mode}${t ? "/" + t : ""}`, () => { finSet("chain:other"); crOpen("fnCm", id, mode); if (t) CR_OPEN.tab = t; go2("finance"); chk(`${org}/${role}/fnCm/${id || "new"}/${mode}${t || ""}`); if (!document.querySelector(".cr-drawer")) errs.push(`${org}/${role}/fnCm/${id}: no drawer`); });
+          for (const r of sp.list() || []) { open(r.id, "view"); open(r.id, "view", "hist"); if (sp.edit.can(r)) open(r.id, "edit"); for (const a of sp.acts(r)) safe(`${org}/${role}/fnCm/${r.id}/ask ${a.id}`, () => { finSet("chain:other"); crOpen("fnCm", r.id); CR_OPEN.ask = a.id; go2("finance"); chk(`${org}/${role}/fnCm/${r.id}/ask ${a.id}`); }); }
+          if (sp.create.can()) open("", "edit");
+          crClose();
+          if (role === "fin") {
+            for (const x of finCommits().filter(x => x.gfPo && !poLocked(x))) safe(`${org}/fin/po ${x.id}`, () => { finSet("chain:po"); FIN_ROW = `poe:${x.id}`; go2("finance"); chk(`${org}/fin/po ${x.id}`); });
+            safe(`${org}/fin/adv new`, () => { finSet("adv"); ADV_OPEN = null; ADV_EDIT = "new"; go2("finance"); chk(`${org}/fin/adv new`); if (!document.querySelector("#adv-form #af-who")) errs.push(`${org}/fin: no on-behalf advance form`); });
+            safe(`${org}/fin/adv list`, () => { ADV_EDIT = null; Object.assign(ADV_Q, { q: "AD", sort: 1 }); finSet("adv"); go2("finance"); chk(`${org}/fin/adv list`); Object.assign(ADV_Q, { q: "", unit: "", sort: null }); });
+            FIN_ROW = null; ADV_EDIT = null;
+          }
+          await tick();
+        }
+        if (["fin", "finhead", "exec", "div"].every(r => o.roles.includes(r))) { const keep = JSON.stringify(S); safe(`${org}/FC4 walk`, () => {
+          const as = r => { ROLE = r; LANG = o.langs[0]; renderShell(); }, E = m => errs.push(`${org}/FC4: ${m}`), C = CRUD.defs.fnCm, act = (c, id, why, n) => { const a = C.acts(c).find(x => x.id === id); if (!a) { E(`no action ${id}`); return; } return a.run(c, why, n); };
+          const line = famLines().find(l => l.type === "ope" && famHeadroom(l.id) > 300000);
+          if (!line) { E("no line with room"); return; }
+          as("fin");
+          const base = { kind: "utility", th: "ค่าน้ำประปาทดสอบ", en: "Test water", vendor: "การประปาทดสอบ", line: line.id, amount: 50000, due: FY_END };
+          if (!C.check(Object.assign({}, base, { amount: 1e13 }), null).length) E("a commitment above the line passed");
+          const c = C.create.run(base); C.edit.run(c, Object.assign({}, base, { amount: 60000 }), ""); if (c.amount !== 60000) E("edit amount");
+          const v = vcSave({ type: "utility", commit: c.id, nb: "", line: "", desc: "ค่าน้ำทดสอบ", vendor: "", payee: "การประปาทดสอบ", kind: "gov", tax: "", gross: 20000, vat: false, contrib: false, due: addDays(TODAY, 5), method: "epay", mwhy: "" }).v;
+          v.ev = { bill: true }; vcAct(v, "submit");
+          if (!C.fields(c, {}).find(f => f.id === "amount").lock || !C.edit.why(c)) E("amount not locked once a voucher uses it");
+          act(c, "rel", "ปรับลดตามประมาณการใหม่", 10000); if (c.released !== 10000) E(`release gave ${c.released}`);
+          if (C.acts(c).find(x => x.id === "rel").num.max !== 30000) E(`release max ${C.acts(c).find(x => x.id === "rel").num.max}`);
+          act(c, "off", "ไม่ใช้บริการต่อแล้ว"); if (c.cancelled) E("cancelled while a voucher holds part of it (R-FC-04)");
+          const c2 = C.create.run(Object.assign({}, base, { amount: 1000 })); act(c2, "del", "บันทึกซ้ำโดยไม่ตั้งใจ"); if (S.fcommit.includes(c2)) E("delete");
+          const c3 = C.create.run(Object.assign({}, base, { amount: 1000 })); if (c3.id === c2.id) E("a deleted number was reused");
+          finSet("chain:other"); crOpen("fnCm", c.id); go2("finance"); chk(`${org}/FC4/commitment`); crClose();
+          // a saved PO corrected, then cleared
+          const px = finCommits().find(x => x.gfPo && !poLocked(x));
+          if (px) { finSet("chain:po"); FIN_ROW = `poe:${px.id}`; go2("finance"); $("#poe-" + px.id).value = "7999999991"; $("#pow-" + px.id).value = "พิมพ์เลขผิดหนึ่งหลัก"; document.querySelector(`[data-poedit="${px.id}"]`).click();
+            if (fcRef(px.id).gfPo.no !== "7999999991") E("PO correction"); FIN_ROW = `poe:${px.id}`; route(); $("#pow-" + px.id).value = "PO ถูกยกเลิกใน GFMIS"; document.querySelector(`[data-poclr="${px.id}"]`).click(); if (fcRef(px.id).gfPo) E("PO clear"); }
+          // carry-over: propose, then withdraw
+          const cx = carryCands().find(x => !carrySent(x.id));
+          if (cx) { finSet("chain:carry"); FIN_ROW = null; go2("finance"); const b = document.querySelector(`[data-fncf="${cx.id}"]`); if (b) { b.click(); if (!carrySent(cx.id)) E("carry proposal"); else { FIN_ROW = `cfw:${cx.id}`; route(); $("#cfw-" + cx.id).value = "ผู้ขายส่งงานครบก่อนสิ้นปีแล้ว"; document.querySelector(`[data-cfwd="${cx.id}"]`).click(); if (carrySent(cx.id)) E("carry withdraw"); } } }
+          FIN_ROW = null;
+          // advances: edit, cancel after approval, Finance entering one, SD-12 at payment, taking a clearing back
+          const borrower = S.users.find(u => u.role === "div" && u.primary);
+          const finId = S.users.find(u => u.role === "fin" && u.primary).id;
+          (S.advances || []).filter(a => [borrower.id, finId].includes(a.borrower) && OPEN_ADV.includes(a.state)).forEach(a => { a.clearing = a.clearing || { t: nowIso(), spent: advAmt(a), note: "", receipts: true }; a.state = "cleared"; }); // a clean start for clause 59
+          const av = { who: null, type: "travel", purpose: "ประชุมทดสอบ", start: addDays(TODAY, 10), end: addDays(TODAY, 11), src: "budget", nb: "", line: line.id, items: [{ k: "perdiem", amt: 480 }, { k: "hotel", amt: 1500 }, { k: "transport", amt: 800 }], temp: false, coll: "" };
+          as("div"); if (typeof advSave(Object.assign({}, av, { items: [] })) !== "string") E("an advance with no items passed");
+          const a1 = advSave(av); advSave(Object.assign({}, av, { items: av.items.slice(0, 2) }), a1); if (a1.amount !== 1980) E(`advance edit gave ${a1.amount}`);
+          ADV_EDIT = a1.id; go2("advances"); chk(`${org}/FC4/advance edit`); if (!document.querySelector('#adv-form[data-edit]') || document.querySelector("#adv-form").dataset.edit !== a1.id) E("no edit form on My advances"); ADV_EDIT = null;
+          as("exec"); advAct(a1, "approve", ""); if (a1.state !== "approved") E(`approve gave ${a1.state}`);
+          as("div"); if (!advAct(a1, "cancel", "สั้น")) E("cancel without a reason"); advAct(a1, "cancel", "ยกเลิกการประชุมแล้ว"); if (a1.state !== "cancelled") E("cancel after approval");
+          as("fin"); const a2 = advSave(Object.assign({}, av, { who: borrower.id })); if (a2.borrower !== borrower.id || a2.enteredBy !== me().id) E("entered for someone");
+          as("exec"); advAct(a2, "approve", ""); as("fin"); advAct(a2, "pay"); if (a2.state !== "paid") E(`pay gave ${a2.state}`);
+          if (!finClocks().some(k => k.title.includes(a2.id)) ) E("no clock for the paid advance");
+          a2.clearing = { t: nowIso(), spent: 1980, note: "", receipts: true }; a2.clearFrom = "paid"; a2.state = "clearing";
+          as("div"); advAct(a2, "crecall", "แนบใบเสร็จผิดฉบับ"); if (a2.state !== "paid") E("clearing taken back");
+          as("fin"); const a3 = advSave(Object.assign({}, av, { purpose: "ทดสอบผู้ยืมจ่ายเอง" }));
+          as("exec"); advAct(a3, "approve", ""); if (!finClocks().some(k => k.title.includes(a3.id))) E("no clock for an approved advance");
+          as("fin"); advAct(a3, "pay"); if (a3.state !== "approved") E("SD-12 let the borrower pay themselves");
+          finSet("adv"); ADV_OPEN = a2.id; go2("finance"); chk(`${org}/FC4/advance`); ADV_OPEN = null;
+          finSet("close:year"); go2("finance"); chk(`${org}/FC4/yearend`);
+        }); S = JSON.parse(keep); crClose(); FIN_ROW = null; ADV_OPEN = null; ADV_EDIT = null; ROLE = "fin"; await tick(); }
+      }
       // Round C4: every B8 and B9 tab with the demo date moved to March and to September (simulated GFMIS imports)
       if (o.suites.includes("render") && typeof simDisb === "function" && S.y2569) for (const mi of [5, 11]) {
         S.asOf = FY_MONTH_ENDS()[mi]; TODAY = S.asOf; simDisb(mi);
