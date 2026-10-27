@@ -966,3 +966,29 @@ The round-44 follow-ups. No rule or data change; `DATA_V` stays 35. `main` was f
 - **Finance CRUD design complete:** rounds FC1 to FC6 are built.
   - **Not built:** FR-FC-25 (demand date edits), FR-FC-34 (GFMIS report re-import), FR-FC-35 (payment-file undo and manual match), and the back-dated daily cash report.
   - **Branch prototype:** https://claude.ai/artifact/8ZSzN2o5CVN6hj5Gh3MKyK (private).
+
+## 61F. Finance CRUD leftovers: demand date, GFMIS re-import, payment-file undo and match, late daily cash (round 61, Finance)
+
+- **FR-FC-25: demand due date (66d)**
+  - While a demand is open, the finance head can change its due date from the drawer's reason box. The box has a date field, and the new date must fall between today and 30 days after the clear-by date (clause 68).
+  - Each move is kept in `a.demand.moves`, and the borrower is notified.
+  - When the advance is cleared, the demand closes on its own (`a.demand.closed`). The drawer shows the moves and the closing.
+- **FR-FC-34: re-import GFMIS reports (66f)**
+  - Both the GFMIS revenue report and the month's trial balance can be imported again, with a reason.
+  - The earlier import is kept: `S.gfrOld` holds the remittance document numbers, and `S.tbsOld` holds the trial balance with who replaced it and why.
+  - Re-importing a closed month's trial balance isn't offered (R-FC-02).
+- **FR-FC-35: payment-result file (62)**
+  - **Undo an import.** Only the latest import still in force can be undone, with a reason, while its month is open. Each import now records every payment's previous result (`g.prev`), and undo restores it.
+  - **Match by hand.** A row "not in Fisko" can be matched by hand to an approved payment that is waiting, with a reason. This checks SD-05, and the result is matched or a difference according to the amounts.
+  - **Edit an explanation.** An explanation can be changed while its month is open; earlier wordings are kept in `recon.edits`.
+- **Late daily cash report (66e, part of FR-FC-29)**
+  - F6 lists the working days in the last two weeks that had cash or cheques but no report. For each one, Finance can make a late report with a reason (`r.late`), and the committee is notified.
+  - A day picker on F6 and on the committee's count page shows open late reports. Counting, recounting, changing a count and acknowledging all work on the day shown (`dcDay()`), and SD-13 checks the people who handled money on that day.
+- **Tests:** a new sweep walk covers each item:
+  - moving a demand date (a date past 30 days is refused), then closing the demand on clearing;
+  - re-importing both GFMIS reports;
+  - importing a payment file, matching its extra row by hand, editing an explanation, and undoing the import;
+  - making a late daily cash report.
+- **Found while testing:** the "month is closed" check for the trial-balance re-import had an operator-precedence bug (`!x.status === "closed"`), so the button never appeared. It now reads `!== "closed"`.
+- **Full sweep:** 12,760 checks pass.
+- **Not checked by hand:** phone width, dark mode, and English wording beyond the sweep.

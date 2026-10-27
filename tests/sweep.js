@@ -455,6 +455,42 @@
           if (DEMO.filter(x => x.part === "fin").length !== 15) E("demo steps E-F01 to E-F15");
         }); S = JSON.parse(keep); crClose(); FIN_ASK = null; FWI = null; ROLE = "fin"; await tick(); }
       }
+      // Finance CRUD leftovers (round 61F): the demand date, re-imported GFMIS reports, the payment-file undo and match, a late daily cash report
+      if (o.suites.includes("render") && typeof pfCanUndo === "function" && ["fin", "finhead"].every(r => o.roles.includes(r))) { const keep = JSON.stringify(S); safe(`${org}/FC7 walk`, () => {
+        const as = r => { ROLE = r; LANG = o.langs[0]; renderShell(); }, E = m => errs.push(`${org}/FC7: ${m}`);
+        const why = "เหตุผลสำหรับการทดสอบ";
+        (S.periods || []).forEach(p => (p.status = "open"));
+        // FR-FC-25: move a demand's due date, then the demand closes when the advance is cleared
+        const a = (S.advances || []).find(x => OPEN_ADV.includes(x.state) && !["fin", "finhead"].includes((S.users.find(u => u.id === x.borrower) || {}).role));
+        if (a) {
+          a.state = "paid"; a.demand = { t: nowIso(), by: "x", due: addDays(advDue(a), 10) };
+          as("finhead"); finSet("adv"); ADV_OPEN = a.id; FIN_ASK = { key: "adv", act: "ddue" }; go2("finance"); chk(`${org}/FC7/ddue box`);
+          const box = $("#adv-ddue"); if (!box) E("no demand date box"); else { box.value = addDays(advDue(a), 99); if (!advAct(a, "ddue", why)) E("a date past 30 days went through"); box.value = addDays(advDue(a), 20); if (advAct(a, "ddue", why)) E("moving the demand"); if (a.demand.due !== addDays(advDue(a), 20) || !(a.demand.moves || []).length) E("demand date not moved"); }
+          FIN_ASK = null; a.clearing = { t: nowIso(), spent: advAmt(a), note: "", receipts: true }; a.state = "clearing"; as("fin"); advAct(a, "accept"); if (!a.demand.closed) E("demand not closed when cleared");
+          ADV_OPEN = null;
+        }
+        // FR-FC-34: the trial balance and revenue report imported again
+        as("fin"); BK_MONTH = curMonth(); finSet("recon:gfmis"); go2("finance");
+        if ($("#tb-imp")) $("#tb-imp").click();
+        if ((S.tbs || []).some(t => t.month === BK_MONTH)) { FIN_ROW = "tba"; route(); $("#tba-why").value = why; $("#tb-again").click(); if (!(S.tbsOld || []).length || !(S.tbs || []).some(t => t.month === BK_MONTH)) E("trial balance import again"); }
+        if ((S.remits || []).some(r => !r.gf) && $("#gfr-imp")) { $("#gfr-imp").click(); }
+        if ((S.remits || []).some(r => r.gf)) { FIN_ROW = "gfra"; route(); $("#gfra-why").value = why; $("#gfr-again").click(); if (!(S.gfrOld || []).length || (S.remits || []).some(r => !r.gf)) E("revenue report import again"); }
+        // FR-FC-35: import a payment file, match the extra row by hand, edit an explanation, undo the import
+        finSet("recon:payfile"); FIN_ROW = null; go2("finance"); $("#gf-sample").click(); if ($("#gf-go")) $("#gf-go").click();
+        const g = (S.gfmisFiles || [])[0];
+        if (g) {
+          const xi = g.rows.findIndex(r => r.state === "extra"), open = S.payreqs.filter(p => p.status === "approved" && ["none", "diff"].includes(reconState(p)));
+          if (xi >= 0 && open.length) { FIN_ROW = `pfm:${g.id}:${xi}`; route(); $("#pfm-why").value = why; document.querySelector(`[data-pfmatch="${g.id}:${xi}"]`).click(); if (g.rows[xi].state !== "manual") E("match by hand"); }
+          const d = S.payreqs.find(p => reconState(p) === "diff");
+          if (d) { FIN_ROW = "rn:" + d.id; route(); $("#rn-" + d.id).value = "ค่าธรรมเนียมโอน"; document.querySelector(`[data-rexp="${d.id}"]`).click(); FIN_ROW = "rn:" + d.id; route(); if (!$("#rn-" + d.id)) E("no edit for an explanation"); else { $("#rn-" + d.id).value = "ค่าธรรมเนียมโอนระหว่างธนาคาร"; document.querySelector(`[data-rexp="${d.id}"]`).click(); if (d.recon.note !== "ค่าธรรมเนียมโอนระหว่างธนาคาร" || !(d.recon.edits || []).length) E("edit the explanation"); } }
+          if (pfCanUndo(g)) { FIN_ROW = "pfu:" + g.id; route(); $("#pfu-why").value = why; document.querySelector(`[data-pfundo="${g.id}"]`).click(); if (!g.undone || g.rows.some(r => r.pay && (S.payreqs.find(p => p.id === r.pay) || {}).recon && S.payreqs.find(p => p.id === r.pay).recon.file === g.id)) E("undo the import"); }
+          else E("the latest import can't be undone");
+        }
+        // a late daily cash report for a missed day, counted on its own day
+        finSet("cash"); FIN_ROW = null; go2("finance"); const miss = dcMissed();
+        if (miss.length) { const d = miss[0]; FIN_ROW = "dcl:" + d; route(); $(`#dcl-why-${d}`).value = why; document.querySelector(`[data-dclate="${d}"]`).click(); const r = dcOf(d); if (!r || !r.late) E("late report"); else { if (dcDay() !== d) E("the late day isn't shown"); chk(`${org}/FC7/late report`); } }
+        BK_MONTH = null; FIN_ROW = null; DC_D = null;
+      }); S = JSON.parse(keep); FIN_ASK = null; FIN_ROW = null; ADV_OPEN = null; DC_D = null; BK_MONTH = null; ROLE = "fin"; await tick(); }
       // Round C4: every B8 and B9 tab with the demo date moved to March and to September (simulated GFMIS imports)
       if (o.suites.includes("render") && typeof simDisb === "function" && S.y2569) for (const mi of [5, 11]) {
         S.asOf = FY_MONTH_ENDS()[mi]; TODAY = S.asOf; simDisb(mi);

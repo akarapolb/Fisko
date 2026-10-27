@@ -92,7 +92,8 @@ const BK_MONTHS = ["2026-09", "2026-10"];
     return `
       <section class="panel"><header><h2>${L("นำส่งเงิน ↔ รายงาน GFMIS", "Remittances ↔ GFMIS report")}</h2><span class="sp"></span>${maker && rem.some(r => !r.gf) ? `<button class="btn" type="button" id="gfr-imp">${L("นำเข้ารายงานรายได้ (ตัวอย่าง)", "Import the revenue report (sample)")}</button>` : ""}</header>
         <div class="tbl-wrap"><table><thead><tr><th>${L("นำส่ง", "Remittance")}</th><th class="n">${L("บาท", "Baht")}</th><th>GFMIS</th></tr></thead>
-          <tbody>${rem.map(r => `<tr><td class="mono">${r.id}<div class="sub">${tx(REV_T[r.cls])}</div></td><td class="n">${fmt(r.amount, 2)}</td><td>${r.gf ? `${dotI("ok")}<span class="mono">${esc(r.gf.doc)}</span>` : `${dotI("warn")}<span class="sub">${L("ยังไม่พบในรายงาน", "Not in a report yet")}</span>`}</td></tr>`).join("") || `<tr><td colspan="3" class="sub">—</td></tr>`}</tbody></table></div></section>`;
+          <tbody>${rem.map(r => `<tr><td class="mono">${r.id}<div class="sub">${tx(REV_T[r.cls])}</div></td><td class="n">${fmt(r.amount, 2)}</td><td>${r.gf ? `${dotI("ok")}<span class="mono">${esc(r.gf.doc)}</span>` : `${dotI("warn")}<span class="sub">${L("ยังไม่พบในรายงาน", "Not in a report yet")}</span>`}</td></tr>`).join("") || `<tr><td colspan="3" class="sub">—</td></tr>`}</tbody></table></div>${maker && rem.some(r => r.gf) ? (FIN_ROW === "gfra" ? `<div class="body row fn-rowform" style="gap:8px;flex-wrap:wrap"><input type="text" id="gfra-why" placeholder="${L("เหตุผลที่นำเข้าใหม่", "Why import again")}" aria-label="${L("เหตุผล", "Reason")}" style="min-width:220px;flex:1"><button class="btn primary" type="button" id="gfr-again">${L("นำเข้ารายงานใหม่", "Import again")}</button><button class="btn ghost" type="button" data-frow="">${L("ปิด", "Close")}</button></div>` : `<div class="body">${rowBtn("gfra", L("นำเข้ารายงานใหม่…", "Import the report again…"))}</div>`) : ""}
+          ${(S.gfrOld || []).length ? `<div class="body sub">${S.gfrOld.map(x => `${L("ฉบับก่อน", "Earlier import")} · ${esc(userName(x.by))} · ${fdate(x.t, true)} · ${esc(x.why)} · ${x.docs.length} ${L("รายการ", "items")}`).join("<br>")}</div>` : ""}</section>`;
   };
   FS.tb = () => {
     const m = BK_MONTH || curMonth(), maker = ROLE === "fin", tb = (S.tbs || []).find(t => t.month === m);
@@ -101,7 +102,8 @@ const BK_MONTHS = ["2026-09", "2026-10"];
         ${tb ? `<div class="tbl-wrap"><table><thead><tr><th>${L("บัญชี", "Account")}</th><th class="n">${L("เดบิต", "Debit")}</th><th class="n">${L("เครดิต", "Credit")}</th></tr></thead>
           <tbody>${tb.rows.map(r => `<tr><td><span class="mono">${r.code}</span> ${esc(tx(r.name))}</td><td class="n">${r.dr ? fmt(r.dr, 2) : ""}</td><td class="n">${r.cr ? fmt(r.cr, 2) : ""}</td></tr>`).join("")}</tbody>
           <tfoot><tr><td>${L("รวม", "Total")}</td><td class="n">${fmt(sumv(tb.rows.map(r => r.dr)), 2)}</td><td class="n">${fmt(sumv(tb.rows.map(r => r.cr)), 2)}</td></tr></tfoot></table></div>
-          <div class="body sub">${dotI(tb.ok ? "ok" : "bad")}${tb.ok ? L("เดบิตเท่ากับเครดิต และเงินฝากธนาคารตรงกับยอดตามบัญชีใน Fisko", "Debits equal credits and the bank balance matches the Fisko books") : L("ไม่ตรงกับยอดใน Fisko ตรวจสอบ", "Doesn't match the Fisko books; check")} · ${L("นำเข้า", "imported")} ${fdate(tb.t, true)}</div>` : `<div class="body sub">${L("ยังไม่ได้นำเข้า", "Not imported yet")}</div>`}</section>`;
+          <div class="body sub">${dotI(tb.ok ? "ok" : "bad")}${tb.ok ? L("เดบิตเท่ากับเครดิต และเงินฝากธนาคารตรงกับยอดตามบัญชีใน Fisko", "Debits equal credits and the bank balance matches the Fisko books") : L("ไม่ตรงกับยอดใน Fisko ตรวจสอบ", "Doesn't match the Fisko books; check")} · ${L("นำเข้า", "imported")} ${fdate(tb.t, true)}</div>` : `<div class="body sub">${L("ยังไม่ได้นำเข้า", "Not imported yet")}</div>`}${maker && tb && ((S.periods || []).find(p => p.month === m) || {}).status !== "closed" ? (FIN_ROW === "tba" ? `<div class="body row fn-rowform" style="gap:8px;flex-wrap:wrap"><input type="text" id="tba-why" placeholder="${L("เหตุผลที่นำเข้าใหม่", "Why import again")}" aria-label="${L("เหตุผล", "Reason")}" style="min-width:220px;flex:1"><button class="btn primary" type="button" id="tb-again">${L("นำเข้างบทดลองใหม่", "Import again")}</button><button class="btn ghost" type="button" data-frow="">${L("ปิด", "Close")}</button></div>` : `<div class="body">${rowBtn("tba", L("นำเข้างบทดลองใหม่…", "Import the trial balance again…"))}</div>`) : ""}
+          ${(S.tbsOld || []).filter(t => t.month === m).length ? `<div class="body sub">${S.tbsOld.filter(t => t.month === m).map(x => `${L("ฉบับก่อน", "Earlier import")} ${fdate(x.t, true)} · ${L("แทนที่โดย", "replaced by")} ${esc(userName(x.replaced.by))} · ${esc(x.replaced.why)}`).join("<br>")}</div>` : ""}</section>`;
   };
 }
 
@@ -211,6 +213,13 @@ FS.budgetFeed = () => {
         S.bankRecs = (S.bankRecs || []).filter(x => !(x.acct === acct && x.month === m)); S.bankRecs.push(r);
         audit(["ลงนามงบพิสูจน์ยอดเงินฝากธนาคาร", "Signed a bank reconciliation"], `${acct} · ${m}`); done(L("ลงนามแล้ว", "Signed"));
       };
+      // FR-FC-34: a report imported again replaces the old one, which is kept with the reason.
+      const gra = $("#gfr-again");
+      if (gra) gra.onclick = () => { const w = why("#gfra-why"); if (!w) return; (S.gfrOld = S.gfrOld || []).unshift({ t: nowIso(), by: me().id, why: w, docs: (S.remits || []).filter(r => r.gf).map(r => ({ id: r.id, doc: r.gf.doc })) }); (S.remits || []).forEach(r => { r.gf = null; }); FIN_ROW = null;
+        audit(["นำเข้ารายงานรายได้จาก GFMIS ใหม่", "Imported the GFMIS revenue report again"], w); route(); const g = $("#gfr-imp"); if (g) g.click(); };
+      const tba = $("#tb-again");
+      if (tba) tba.onclick = () => { const w = why("#tba-why"); if (!w) return; const old = (S.tbs || []).find(t => t.month === m); (S.tbsOld = S.tbsOld || []).unshift(Object.assign({}, old, { replaced: { by: me().id, t: nowIso(), why: w } })); S.tbs = S.tbs.filter(t => t !== old); FIN_ROW = null;
+        audit(["นำเข้างบทดลองจาก GFMIS ใหม่", "Imported the GFMIS trial balance again"], `${m} · ${w}`); route(); const t = $("#tb-imp"); if (t) t.click(); };
       const gr = $("#gfr-imp");
       if (gr) gr.onclick = () => { (S.remits || []).filter(r => !r.gf).forEach(r => { S.gfSeq = (S.gfSeq || 3600000400) + 1; r.gf = { doc: String(S.gfSeq), t: nowIso() }; }); audit(["นำเข้ารายงานรายได้จาก GFMIS", "Imported the GFMIS revenue report"], ""); done(L("นำเข้าแล้ว · การนำส่งตรงกับ GFMIS", "Imported · remittances match GFMIS")); };
       const ti = $("#tb-imp");

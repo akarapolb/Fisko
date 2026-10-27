@@ -7,6 +7,13 @@
 // - Cash committee (FR-FN-31, clauses 86–88) and the daily cash report counted and signed by each member, with
 //   differences reported (FR-FN-32, clauses 92–95), duty rule SD-13. Key handover (FR-FN-33) is not built.
 // All bank and GFMIS references are simulated.
+let DC_D = null; // the day the daily cash panels show; reports made late for a missed day are counted here too
+const dcDay = () => (DC_D && dcOf(DC_D) ? DC_D : TODAY);
+// Working days in the last two weeks that had cash or cheques but no report (clause 92).
+const dcMissed = () => { const out = []; for (let i = 1; i <= 14; i++) { const d = addDays(TODAY, -i), w = new Date(d + "T00:00:00Z").getUTCDay(); if (w !== 0 && w !== 6 && !(S.holidays || []).includes(d) && dcNeeded(d) && !dcOf(d)) out.push(d); } return out; };
+// The days still open for counting or acknowledgement, to pick from.
+const dcPicker = () => { const ds = [...new Set([TODAY, ...(S.dailyCash || []).filter(r => r.date < TODAY && (r.status === "counting" || !r.ack) && r.late).map(r => r.date)])].sort().reverse();
+  return ds.length > 1 ? `<div class="fn-filter" style="margin:0 0 10px"><span class="sub">${L("วันที่", "Day")}</span>${segBar(ds.map(d => [d, `${fdate(d)}${d !== TODAY ? ` · ${L("ย้อนหลัง", "late")}` : ""}`]), dcDay(), "dcd")}</div>` : ""; };
 let DC_EDIT = false; // a committee member changing their own count before everyone has counted (FR-FC-30)
 const REV_T = { revenue: ["รายได้แผ่นดิน", "State revenue"], nonbudget: ["เงินนอกงบประมาณ", "Non-budget money"], over: ["เงินเบิกเกินส่งคืน", "Over-drawn money returned"], old: ["เงินเหลือจ่ายปีเก่าส่งคืน", "Prior-year balance returned"] };
 const RC_KIND = { revenue: ["รายได้แผ่นดิน (ค่าขายเอกสาร ค่าปรับ ขายทรัพย์สิน ฯลฯ)", "State revenue (document sales, fines, asset sales, etc.)"], nonbudget: ["เงินนอกงบประมาณ", "Non-budget money"], refund: ["เงินคืนจากการจ่าย", "Money paid out and returned"], advback: ["เงินยืมเหลือคืน", "Unspent advance returned"] };
@@ -87,7 +94,7 @@ FS.wht = () => {
 function dcPanel(d, where) {
   const r = dcOf(d), sys = r ? r.sys : dcSys(d), C = cashC(d), mine = isCounter(), c = r && r.counts[me().id];
   const st = !r ? null : r.status === "signed" ? tag(L("ลงนามครบ เก็บในตู้นิรภัยแล้ว", "Signed by all · in the safe"), "p-ok") : r.status === "diff" ? tag(L("ยอดนับไม่ตรง รายงานหัวหน้าส่วนราชการแล้ว", "Count differs · reported to the head"), "p-bad") : tag(L("รอกรรมการตรวจนับ", "Waiting for the committee"), "p-warn");
-  return `<section class="panel"><header><h2>${L("รายงานเงินคงเหลือประจำวัน", "Daily cash report")} ${fdate(d)}</h2><span class="sp"></span>${st || ""}</header>
+  return `<section class="panel"><header><h2>${L("รายงานเงินคงเหลือประจำวัน", "Daily cash report")} ${fdate(d)}</h2><span class="sp"></span>${r && r.late ? tag(L("ทำย้อนหลัง", "Made late"), "p-warn") : ""}${st || ""}</header>${r && r.late ? `<div class="body sub" style="padding-bottom:0">${L("เหตุผลที่ทำย้อนหลัง", "Why it is late")}: ${esc(r.late.why)} · ${esc(userName(r.by))} ${fdate(r.t, true)}</div>` : ""}
     <div class="body">
       ${!r && !dcNeeded(d) ? `<p class="sub">${L("วันนี้ไม่มีรับจ่ายเงินสดหรือเช็ค ไม่ต้องทำรายงาน แต่หมายเหตุในรายงานของวันถัดไป (ข้อ 92)", "No cash or cheques today; no report is needed, but note it in the next day's report (clause 92)")}</p>` : `
       <table style="width:100%;max-width:520px"><tbody>
@@ -108,7 +115,10 @@ function dcPanel(d, where) {
       </div>`}
     </div></section>`;
 }
-FS.cashToday = () => dcPanel(TODAY, "fin");
+FS.cashToday = () => { const miss = ROLE === "fin" ? dcMissed() : [];
+  return dcPicker() + dcPanel(dcDay(), "fin") + (miss.length ? `<section class="panel"><header><h2>${L("วันที่ยังไม่มีรายงาน", "Days without a report")}</h2><span class="sp"></span><span class="sub">${L("มีเงินสดหรือเช็คแต่ไม่ได้ทำรายงาน (ข้อ 92)", "Cash or cheques but no report (clause 92)")}</span></header>
+    <div class="tbl-wrap"><table><tbody>${miss.map(d => `<tr><td>${dotI("warn")}${fdate(d)}</td><td class="n">${fmt(dcSys(d).cash, 2)}</td><td>${rowBtn("dcl:" + d, L("ทำรายงานย้อนหลัง…", "Make it late…"))}</td></tr>
+      ${FIN_ROW === "dcl:" + d ? rowForm(3, `<input type="text" id="dcl-why-${d}" placeholder="${L("เหตุผลที่ทำย้อนหลัง", "Why it is late")}" aria-label="${L("เหตุผล", "Reason")}" style="min-width:240px;flex:1"><button class="btn primary" type="button" data-dclate="${d}">${L("ทำรายงานและส่งมอบให้กรรมการ", "Prepare it and hand over to the committee")}</button>`) : ""}`).join("")}</tbody></table></div></section>` : ""); };
 // FS.cashCmte (dated appointment orders) is a shared list in 84-fin-crud.js (FR-FC-46).
 FS.cashHist = () => {
   const D = (S.dailyCash || []).slice().reverse();
@@ -121,7 +131,7 @@ FS.cashHist = () => {
 VIEWS.cashcount = () => `
   <div class="head"><div><div class="eyebrow">${L("พื้นที่ทำงานของฉัน", "My Workspace")}</div><h1>${L("ตรวจนับเงินประจำวัน", "Daily cash count")}</h1>
     <p>${L("กรรมการเก็บรักษาเงินตรวจนับตัวเงินและเอกสารแทนตัวเงินกับรายงาน แล้วลงนาม (ข้อ 93)", "Cash committee members count the cash and cheques against the report and sign (clause 93)")}</p></div></div>
-  ${isCounter() ? dcPanel(TODAY, "me") : `<section class="panel"><div class="body sub">${L("คุณไม่ได้อยู่ในคำสั่งแต่งตั้งกรรมการเก็บรักษาเงิน", "You are not on the cash committee order")}</div></section>`}`;
+  ${isCounter() ? dcPicker() + dcPanel(dcDay(), "me") : `<section class="panel"><div class="body sub">${L("คุณไม่ได้อยู่ในคำสั่งแต่งตั้งกรรมการเก็บรักษาเงิน", "You are not on the cash committee order")}</div></section>`}`;
 
 // ---------- actions ----------
 function rcIssue(o) {
@@ -153,6 +163,14 @@ const bindRecv = () => {
 };
 const bindCash = () => {
   const done = msg => { commit(); renderShell(); route(); toast(msg); };
+  $$("[data-dcd]").forEach(b => (b.onclick = () => { DC_D = b.dataset.dcd; DC_EDIT = false; route(); }));
+  $$("[data-dclate]").forEach(b => (b.onclick = () => {
+    const d = b.dataset.dclate, why = ($(`#dcl-why-${d}`) || { value: "" }).value.trim(); if (why.length < CR_WHY_MIN) { toast(L(`ระบุเหตุผลอย่างน้อย ${CR_WHY_MIN} ตัวอักษร`, `Give a reason of at least ${CR_WHY_MIN} characters`)); return; }
+    (S.dailyCash = S.dailyCash || []).push({ date: d, by: me().id, t: nowIso(), sys: dcSys(d), counts: {}, status: "counting", ack: null, late: { why } }); DC_D = d; FIN_ROW = null;
+    audit(["จัดทำรายงานเงินคงเหลือย้อนหลัง", "Prepared a late daily cash report"], `${d} · ${why}`);
+    notify(["plan", "divhead"], [`รายงานเงินคงเหลือของวันที่ ${fdate(d)} (ทำย้อนหลัง) รอกรรมการตรวจนับ`, `The late daily cash report for ${fdate(d)} is waiting for the committee's count`], "cashcount");
+    done(L("ทำรายงานย้อนหลังแล้ว · ส่งมอบให้กรรมการ", "Late report prepared · handed over to the committee"));
+  }));
   const mk = $("#dc-make");
   if (mk) mk.onclick = () => {
     (S.dailyCash = S.dailyCash || []).push({ date: TODAY, by: me().id, t: nowIso(), sys: dcSys(TODAY), counts: {}, status: "counting", ack: null });
@@ -162,19 +180,19 @@ const bindCash = () => {
   };
   const ct = $("#dc-count");
   if (ct) ct.onclick = () => {
-    const r = dcOf(TODAY), cash = Number($("#dc-cash").value), chq = Number($("#dc-chq").value || 0);
+    const r = dcOf(dcDay()), cash = Number($("#dc-cash").value), chq = Number($("#dc-chq").value || 0);
     if ($("#dc-cash").value === "") { toast(L("ใส่ยอดเงินสดที่นับได้", "Enter the cash counted")); return; }
-    const handlers = [...new Set((S.receipts || []).filter(x => x.date === TODAY).map(x => x.by).concat((S.vouchers || []).filter(v => v.paid && v.paid.t.slice(0, 10) === TODAY && v.method !== "epay").map(v => v.maker)))];
-    if (!sodCheck("SD-13", [me().id], handlers, `DC ${TODAY}`)) return;
-    if (r.counts[me().id]) audit(["แก้ยอดนับเงินของตน", "Changed own cash count"], `${TODAY} · ${fmt(r.counts[me().id].cash, 2)} → ${fmt(cash, 2)}`);
+    const handlers = [...new Set((S.receipts || []).filter(x => x.date === dcDay()).map(x => x.by).concat((S.vouchers || []).filter(v => v.paid && v.paid.t.slice(0, 10) === dcDay() && v.method !== "epay").map(v => v.maker)))];
+    if (!sodCheck("SD-13", [me().id], handlers, `DC ${dcDay()}`)) return;
+    if (r.counts[me().id]) audit(["แก้ยอดนับเงินของตน", "Changed own cash count"], `${dcDay()} · ${fmt(r.counts[me().id].cash, 2)} → ${fmt(cash, 2)}`);
     r.counts[me().id] = { cash, cheque: chq, t: nowIso() }; DC_EDIT = false;
-    audit(["ตรวจนับเงินและลงนามรายงานเงินคงเหลือ", "Counted the cash and signed the daily report"], `${TODAY} · ${fmt(cash, 2)} / ${fmt(chq, 2)}`);
-    const C = cashC(), all = C.members.every(u => r.counts[u]);
+    audit(["ตรวจนับเงินและลงนามรายงานเงินคงเหลือ", "Counted the cash and signed the daily report"], `${dcDay()} · ${fmt(cash, 2)} / ${fmt(chq, 2)}`);
+    const C = cashC(dcDay()), all = C.members.every(u => r.counts[u]);
     if (all) {
       const ok = C.members.every(u => r.counts[u].cash === r.sys.cash && r.counts[u].cheque === r.sys.cheque);
       r.status = ok ? "signed" : "diff";
-      if (!ok) { audit(["ยอดเงินที่นับไม่ตรงกับรายงาน", "The count differs from the report"], TODAY); notify(["exec", "finhead", "audit"], [`ยอดเงินที่กรรมการนับวันที่ ${fdate(TODAY)} ไม่ตรงกับรายงานเงินคงเหลือ (ข้อ 95)`, `The cash count on ${fdate(TODAY)} differs from the daily report (clause 95)`], "fnc-cash"); }
-      else notify(["exec"], [`รายงานเงินคงเหลือประจำวัน ${fdate(TODAY)} ลงนามครบแล้ว`, `Daily cash report ${fdate(TODAY)} is signed by all`], "fnc-cash");
+      if (!ok) { audit(["ยอดเงินที่นับไม่ตรงกับรายงาน", "The count differs from the report"], dcDay()); notify(["exec", "finhead", "audit"], [`ยอดเงินที่กรรมการนับวันที่ ${fdate(dcDay())} ไม่ตรงกับรายงานเงินคงเหลือ (ข้อ 95)`, `The cash count on ${fdate(dcDay())} differs from the daily report (clause 95)`], "fnc-cash"); }
+      else notify(["exec"], [`รายงานเงินคงเหลือประจำวัน ${fdate(dcDay())} ลงนามครบแล้ว`, `Daily cash report ${fdate(dcDay())} is signed by all`], "fnc-cash");
       return done(ok ? L("ลงนามครบ เก็บเงินในตู้นิรภัยแล้ว", "Signed by all · money is in the safe") : L("ยอดไม่ตรง · บันทึกยอดที่นับได้และรายงานหัวหน้าส่วนราชการแล้ว (ข้อ 95)", "Count differs · the counted amount is recorded and reported to the head (clause 95)"));
     }
     done(L("ลงนามแล้ว · รอกรรมการคนอื่น", "Signed · waiting for the other members"));
@@ -182,13 +200,13 @@ const bindCash = () => {
   const de = $("#dc-edit"); if (de) de.onclick = () => { DC_EDIT = true; route(); const x = $("#dc-cash"); if (x) x.focus(); };
   const rc = $("#dc-recount");
   if (rc) rc.onclick = () => {
-    const r = dcOf(TODAY), why = $("#dcre-why").value.trim(); if (why.length < CR_WHY_MIN) { toast(L(`ระบุเหตุผลอย่างน้อย ${CR_WHY_MIN} ตัวอักษร`, `Give a reason of at least ${CR_WHY_MIN} characters`)); return; }
+    const r = dcOf(dcDay()), why = $("#dcre-why").value.trim(); if (why.length < CR_WHY_MIN) { toast(L(`ระบุเหตุผลอย่างน้อย ${CR_WHY_MIN} ตัวอักษร`, `Give a reason of at least ${CR_WHY_MIN} characters`)); return; }
     (r.recounts = r.recounts || []).push({ t: nowIso(), by: me().id, why, counts: r.counts, status: r.status }); r.counts = {}; r.status = "counting"; FIN_ROW = null;
-    audit(["สั่งตรวจนับเงินใหม่", "Asked the committee to count again"], `${TODAY} · ${why}`);
-    notify([...new Set(cashC().members.concat(cashC().subs).map(id => (S.users.find(u => u.id === id) || {}).role).filter(Boolean))], [`หัวหน้าการเงินสั่งนับเงินวันที่ ${fdate(TODAY)} ใหม่: ${why}`, `The finance head asked for the ${fdate(TODAY)} cash to be counted again: ${why}`], "cashcount");
+    audit(["สั่งตรวจนับเงินใหม่", "Asked the committee to count again"], `${dcDay()} · ${why}`);
+    notify([...new Set(cashC().members.concat(cashC().subs).map(id => (S.users.find(u => u.id === id) || {}).role).filter(Boolean))], [`หัวหน้าการเงินสั่งนับเงินวันที่ ${fdate(dcDay())} ใหม่: ${why}`, `The finance head asked for the ${fdate(dcDay())} cash to be counted again: ${why}`], "cashcount");
     done(L("สั่งนับใหม่แล้ว · การนับเดิมเก็บในประวัติ", "Counting again · the earlier count is kept in the history"));
   };
-  const ak = $("#dc-ack"); if (ak) ak.onclick = () => { const r = dcOf(TODAY); r.ack = { by: me().id, t: nowIso() }; audit(["รับทราบรายงานเงินคงเหลือประจำวัน", "Acknowledged the daily cash report"], TODAY); done(L("รับทราบแล้ว", "Acknowledged")); };
+  const ak = $("#dc-ack"); if (ak) ak.onclick = () => { const r = dcOf(dcDay()); r.ack = { by: me().id, t: nowIso() }; audit(["รับทราบรายงานเงินคงเหลือประจำวัน", "Acknowledged the daily cash report"], dcDay()); done(L("รับทราบแล้ว", "Acknowledged")); };
 };
 {
   FIN_BINDS.push(bindRecv, bindCash);

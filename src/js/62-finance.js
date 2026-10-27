@@ -111,12 +111,20 @@ FS.payfile = () => {
       <tbody>${appr.map(p => { const st = reconState(p);
         return `<tr><td class="mono">${p.id}</td><td class="mono">${p.contract}</td><td class="n">${fmt(p.amount)}</td><td>${esc(userName(p.decided.by))}${p.decided.via ? `<div class="sub">${L("แทน", "for")} ${esc(userName(p.decided.holder))}</div>` : ""}</td>
           <td>${stTag(RECON_ST, st)}${p.recon && p.recon.doc ? `<div class="sub mono">${esc(p.recon.doc)}</div>` : ""}${p.recon && p.recon.note ? `<div class="sub">${esc(p.recon.note)}</div>` : ""}</td>
-          <td><div class="row" style="flex-wrap:nowrap">${isFin && st === "diff" ? rowBtn("rn:" + p.id, L("ชี้แจง", "Explain")) : ""}${historyBtn(p.id, p.id)}</div></td></tr>
-          ${isFin && st === "diff" && FIN_ROW === "rn:" + p.id ? rowForm(6, `<b style="font-weight:600">${L("คำชี้แจงผลต่าง", "Explain the difference")} ${p.id}</b><input type="text" id="rn-${p.id}" placeholder="${L("คำชี้แจงผลต่าง", "Explain the difference")}" style="min-width:260px;flex:1" aria-label="${L("คำชี้แจงผลต่าง", "Explain the difference")}"><button class="btn primary" type="button" data-rexp="${p.id}">${L("บันทึกคำชี้แจง", "Save")}</button>`) : ""}`; }).join("")
+          <td><div class="row" style="flex-wrap:nowrap">${isFin && st === "diff" ? rowBtn("rn:" + p.id, L("ชี้แจง", "Explain")) : isFin && st === "explained" && !pfClosed(p.recon.t) ? rowBtn("rn:" + p.id, L("แก้คำชี้แจง", "Edit the explanation")) : ""}${historyBtn(p.id, p.id)}</div></td></tr>
+          ${isFin && (st === "diff" || (st === "explained" && !pfClosed(p.recon.t))) && FIN_ROW === "rn:" + p.id ? rowForm(6, `<b style="font-weight:600">${L("คำชี้แจงผลต่าง", "Explain the difference")} ${p.id}</b><input type="text" id="rn-${p.id}" placeholder="${L("คำชี้แจงผลต่าง", "Explain the difference")}" style="min-width:260px;flex:1" aria-label="${L("คำชี้แจงผลต่าง", "Explain the difference")}"><button class="btn primary" type="button" data-rexp="${p.id}">${L("บันทึกคำชี้แจง", "Save")}</button>`) : ""}`; }).join("")
         || `<tr><td colspan="6" class="sub">${L("ยังไม่มีรายการที่อนุมัติเบิกจ่าย", "No approved payments yet")}</td></tr>`}</tbody></table></div></section>
   ${files.length ? `<section class="panel"><header><h2>${L("ประวัติการนำเข้าไฟล์", "File import log")}</h2></header><div class="tbl-wrap"><table><thead><tr><th>${L("ไฟล์", "File")}</th><th>${L("เวลา", "Time")}</th><th>${L("ผู้นำเข้า", "By")}</th><th class="n">${L("แถว", "Rows")}</th><th class="n">${L("ไม่ตรง", "Not matching")}</th></tr></thead>
-    <tbody>${files.map(g => `<tr><td class="mono">${g.id}</td><td class="sub">${fdate(g.t, true)}</td><td>${esc(userName(g.by))}</td><td class="n">${g.rows.length}</td><td class="n">${g.rows.filter(r => r.state !== "matched").length}</td></tr>`).join("")}</tbody></table></div></section>` : ""}`;
+    <tbody>${files.map(g => `<tr${g.undone ? ' style="opacity:.55"' : ""}><td class="mono">${g.id}</td><td class="sub">${fdate(g.t, true)}</td><td>${esc(userName(g.by))}${g.undone ? `<div class="sub">${L("ยกเลิกการนำเข้า", "Import undone")} · ${esc(g.undone.why)}</div>` : ""}</td><td class="n">${g.rows.length}</td><td class="n">${g.rows.filter(r => !["matched", "manual"].includes(r.state)).length}</td>
+      <td>${isFin && pfCanUndo(g) ? rowBtn("pfu:" + g.id, L("ยกเลิกการนำเข้า…", "Undo the import…")) : ""}</td></tr>
+      ${isFin && pfCanUndo(g) && FIN_ROW === "pfu:" + g.id ? rowForm(6, `<b style="font-weight:600">${L("ยกเลิกการนำเข้า", "Undo the import")} ${g.id}</b><span class="sub">${L("ผลกระทบยอดของรายการในไฟล์กลับเป็นก่อนนำเข้า", "The results of its rows go back to before the import")}</span><input type="text" id="pfu-why" placeholder="${L("เหตุผล", "Reason")}" aria-label="${L("เหตุผล", "Reason")}" style="min-width:220px;flex:1"><button class="btn danger" type="button" data-pfundo="${g.id}">${L("ยกเลิกการนำเข้า", "Undo")}</button>`) : ""}
+      ${!g.undone ? g.rows.map((r, i) => r.state === "extra" ? `<tr><td></td><td colspan="4" class="sub">${dotI("warn")}${L("ไม่พบใน Fisko", "Not in Fisko")} · <span class="mono">${esc(r.doc)}</span> · ${fmt(r.amount)} ${L("บาท", "baht")}</td><td>${isFin && !pfClosed(g.t) ? rowBtn(`pfm:${g.id}:${i}`, L("จับคู่เอง…", "Match by hand…")) : ""}</td></tr>
+        ${isFin && FIN_ROW === `pfm:${g.id}:${i}` ? rowForm(6, `<label class="sub" for="pfm-p">${L("คำขอที่ตรงกัน", "Matching payment")}</label><select id="pfm-p">${S.payreqs.filter(p => p.status === "approved" && ["none", "diff"].includes(reconState(p))).map(p => `<option value="${p.id}">${p.id} · ${p.contract} · ${fmt(p.amount)}</option>`).join("")}</select><input type="text" id="pfm-why" placeholder="${L("เหตุผลที่จับคู่เอง", "Why it matches")}" aria-label="${L("เหตุผล", "Reason")}" style="min-width:200px;flex:1"><button class="btn primary" type="button" data-pfmatch="${g.id}:${i}">${L("จับคู่", "Match")}</button>`) : ""}` : r.state === "manual" ? `<tr><td></td><td colspan="5" class="sub">${dotI("ok")}${L("จับคู่เอง", "Matched by hand")} · <span class="mono">${esc(r.doc)}</span> → <span class="mono">${esc(r.pay)}</span></td></tr>` : "").join("") : ""}`).join("")}</tbody></table></div></section>` : ""}`;
 };
+// FR-FC-35: a month that is closed keeps its matching as it is (R-FC-02).
+const pfClosed = t => ((S.periods || []).find(p => p.month === String(t).slice(0, 7)) || {}).status === "closed";
+// Only the latest import still in force can be undone, and only while its month is open.
+const pfCanUndo = g => !g.undone && !pfClosed(g.t) && (S.gfmisFiles || []).find(x => !x.undone) === g;
 
 FIN_BINDS.push(() => {
   const sample = $("#gf-sample");
@@ -130,17 +138,31 @@ FIN_BINDS.push(() => {
   const go_ = $("#gf-go");
   if (go_) go_.onclick = () => {
     const g = { id: `GF-${FAM_FY}-${String(S.gfmisFiles.length + 1).padStart(2, "0")}`, t: nowIso(), by: me().id, rows: GF_ROWS.map(r => ({ pay: r.pay, doc: r.doc, amount: r.amount, date: r.date, state: r.state })) };
-    GF_ROWS.filter(r => r.pay).forEach(r => { const p = S.payreqs.find(x => x.id === r.pay); p.recon = { state: r.state === "matched" ? "matched" : "diff", doc: r.doc, file: g.id, t: g.t, diff: r.amount - r.expect }; });
+    g.prev = {}; GF_ROWS.filter(r => r.pay).forEach(r => { const p = S.payreqs.find(x => x.id === r.pay); g.prev[p.id] = p.recon || null; p.recon = { state: r.state === "matched" ? "matched" : "diff", doc: r.doc, file: g.id, t: g.t, diff: r.amount - r.expect }; });
     S.gfmisFiles.unshift(g); GF_ROWS = null;
     audit(["นำเข้าไฟล์ GFMIS และกระทบยอด", "Imported a GFMIS file and reconciled"], `${g.id} · ${g.rows.length}`);
     commit(); renderShell(); route(); toast(L("นำเข้าไฟล์แล้ว", "File imported"));
   };
   const clr = $("#gf-clear"); if (clr) clr.onclick = () => { GF_ROWS = null; route(); };
+  const pfWhy = id => { const w = ($(id) || { value: "" }).value.trim(); if (w.length < CR_WHY_MIN) { toast(L(`ระบุเหตุผลอย่างน้อย ${CR_WHY_MIN} ตัวอักษร`, `Give a reason of at least ${CR_WHY_MIN} characters`)); return null; } return w; };
+  $$("[data-pfundo]").forEach(b => (b.onclick = () => {
+    const g = S.gfmisFiles.find(x => x.id === b.dataset.pfundo), w = pfWhy("#pfu-why"); if (!w) return;
+    g.rows.filter(r => r.pay).forEach(r => { const p = S.payreqs.find(x => x.id === r.pay); if (p) p.recon = (g.prev || {})[r.pay] || null; });
+    g.undone = { by: me().id, t: nowIso(), why: w }; FIN_ROW = null;
+    audit(["ยกเลิกการนำเข้าไฟล์ผลการจ่าย", "Undid a payment-result file import"], `${g.id} · ${w}`); commit(); renderShell(); route(); toast(L("ยกเลิกการนำเข้าแล้ว", "Import undone"));
+  }));
+  $$("[data-pfmatch]").forEach(b => (b.onclick = () => {
+    const [gid, i] = b.dataset.pfmatch.split(":"), g = S.gfmisFiles.find(x => x.id === gid), r = g.rows[Number(i)], p = S.payreqs.find(x => x.id === ($("#pfm-p") || {}).value), w = pfWhy("#pfm-why"); if (!w || !p) return;
+    if (!sodCheck("SD-05", [me().id], [p.decided.by, p.decided.holder], p.id)) return;
+    (g.prev = g.prev || {})[p.id] = p.recon || null;
+    p.recon = { state: r.amount === p.amount ? "matched" : "diff", doc: r.doc, file: g.id, t: nowIso(), diff: r.amount - p.amount, manual: { by: me().id, why: w } }; r.state = "manual"; r.pay = p.id; FIN_ROW = null;
+    audit(["จับคู่รายการผลการจ่ายเอง", "Matched a payment-result row by hand"], `${g.id} · ${r.doc} → ${p.id} · ${w}`); commit(); renderShell(); route(); toast(r.amount === p.amount ? L("จับคู่แล้ว ยอดตรงกัน", "Matched · amounts agree") : L("จับคู่แล้ว มีผลต่าง ต้องชี้แจง", "Matched · there is a difference to explain"));
+  }));
   $$("[data-rexp]").forEach(b => (b.onclick = () => {
     const p = S.payreqs.find(x => x.id === b.dataset.rexp), note = $("#rn-" + p.id).value.trim();
     if (!note) { toast(L("พิมพ์คำชี้แจงก่อน", "Type an explanation first")); return; }
     if (!sodCheck("SD-05", [me().id], [p.decided.by, p.decided.holder], p.id)) return;
-    p.recon = Object.assign({}, p.recon, { state: "explained", note, by: me().id });
+    const was = p.recon.state === "explained" ? p.recon.note : null; p.recon = Object.assign({}, p.recon, { state: "explained", note, by: me().id, edits: was ? [...(p.recon.edits || []), { note: was, t: nowIso() }] : p.recon.edits }); FIN_ROW = null;
     audit(["ชี้แจงผลต่างจากการกระทบยอด", "Explained a reconciliation difference"], `${p.id} · ${note}`);
     commit(); route(); toast(L("บันทึกคำชี้แจงแล้ว", "Explanation saved"));
   }));

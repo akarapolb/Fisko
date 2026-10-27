@@ -68,13 +68,17 @@ function advDetail(a, where) {
   if (where === "fin" && ROLE === "fin" && a.state === "approved") act.push(["pay", L("จ่ายเงินยืม (e-Payment)", "Pay the advance (e-Payment)"), "primary", false]);
   if (where === "fin" && fin && a.state === "clearing") act.push(["accept", L("ตรวจผ่าน รับใบสำคัญ", "Accept the clearing"), "primary", false], ["object", L("ทักท้วง", "Object"), "danger", true]);
   if (where === "fin" && ROLE === "finhead" && advOverdue(a) && !a.demand) act.push(["demand", L("ออกหนังสือเรียกชดใช้ (ข้อ 68)", "Issue a demand (clause 68)"), "primary", false]);
+  if (where === "fin" && ROLE === "finhead" && a.demand && !a.reported && OPEN_ADV.includes(a.state)) act.push(["ddue", L("เปลี่ยนวันครบกำหนดเรียกชดใช้", "Change the demand's due date"), "", true]);
   if (where === "fin" && ROLE === "finhead" && a.demand && !a.reported && OPEN_ADV.includes(a.state) && daysUntil(a.demand.due) < 0) act.push(["report", L("รายงานหัวหน้าส่วนราชการ", "Report to the head of the agency"), "danger", false]);
   if ((mine || (where === "fin" && ROLE === "fin" && a.enteredBy)) && a.state === "request") act.push(["edit", L("แก้ไขคำขอ", "Edit the request"), "", false]);
   if (mine && ["request", "approved"].includes(a.state)) act.push(["cancel", a.state === "request" ? L("ยกเลิกคำขอ", "Cancel the request") : L("ยกเลิกเงินยืม (ยังไม่ได้รับเงิน)", "Cancel (not paid yet)"), "ghost", true]);
   else if (where === "fin" && ROLE === "fin" && a.state === "approved") act.push(["cancel", L("ยกเลิกเงินยืมที่ยังไม่จ่าย", "Cancel before payment"), "danger", true]);
   if (mine && a.state === "clearing") act.push(["crecall", L("ดึงใบสำคัญกลับมาแก้ไข", "Take the clearing back to fix"), "", true]);
   const ask = FIN_ASK && FIN_ASK.key === "adv" && act.find(x => x[0] === FIN_ASK.act);
-  const askHtml = ask ? finAskForm("adv", ask[0], ask[1], ask[0] === "approve"
+  const dmax = a.demand && advDue(a) ? addDays(advDue(a), fcfg().demandDays) : null;
+  const askHtml = ask && ask[0] === "ddue" ? finAskForm("adv", "ddue", ask[1], { impact: L(`ไม่เกิน ${fcfg().demandDays} วันนับจากวันครบกำหนดส่งใช้ (ข้อ 68) คือไม่เกิน ${fdate(dmax)}`, `At most ${fcfg().demandDays} days after the clear-by date (clause 68), so by ${fdate(dmax)}`),
+      extra: `<label for="adv-ddue">${L("วันครบกำหนดใหม่", "New due date")}</label><input type="date" id="adv-ddue" value="${a.demand.due}" min="${TODAY}" max="${dmax}" style="max-width:200px">` })
+    : ask ? finAskForm("adv", ask[0], ask[1], ask[0] === "approve"
       ? { need: false, whyLabel: L("เหตุผล (เมื่ออนุมัติน้อยกว่ายอดขอ ข้อ 59)", "Reason (when approving less than asked, clause 59)"), extra: `<label for="adv-amt">${L("ยอดอนุมัติ (บาท)", "Amount approved (baht)")}</label><input type="number" id="adv-amt" value="${a.amount}" min="1" max="${a.amount}" step="1" style="max-width:180px">` }
       : { danger: ask[2] === "danger", impact: ask[0] === "cancel" && a.state === "approved" ? L("คืนวงเงินที่อนุมัติให้รายการจัดสรร ผู้ยืมได้รับแจ้ง", "Gives the approved amount back to the line; the borrower is told") : ask[0] === "crecall" ? L("กลับไปแก้ใบสำคัญแล้วส่งใหม่ นาฬิกาส่งใช้เดินต่อ", "Fix the clearing and send it again; the clearing clock keeps running") : ask[0] === "object" ? L(`ผู้ยืมต้องแก้ภายใน ${fcfg().advFix} วัน`, `The borrower fixes it within ${fcfg().advFix} days`) : ask[0] === "cancel" ? L("คำขอนี้ยกเลิก ยังยื่นใหม่ได้", "This request is cancelled; you can ask again") : "" }) : "";
   const cl = a.clearing;
@@ -87,7 +91,7 @@ function advDetail(a, where) {
           <p class="sub" style="margin:0">${L("สัญญายืมเงิน", "Loan contract")} <span class="mono">${a.contract ? a.contract.no : "—"}</span> ${L("(2 ฉบับ ข้อ 61)", "(2 copies, clause 61)")}${a.paid ? ` · ${L("จ่าย", "paid")} ${fdate(a.paid.t)} <span class="mono">${esc(a.paid.ref)}</span>` : ""}</p>
           ${due && OPEN_ADV.includes(a.state) ? `<p style="margin:6px 0 0">${L("ส่งใช้ภายใน", "Clear by")} ${advDueTxt(a)} <span class="sub">(${a.type === "travel" ? L("15 วันนับจากวันกลับ", "15 days from return") : L("30 วันนับจากวันรับเงิน", "30 days from payment")}, ${L("ข้อ 65", "clause 65")})</span></p>` : ""}
           ${a.objection && a.state === "objected" ? `<p style="margin:6px 0 0;color:var(--bad)">${L("ข้อทักท้วง", "Objection")}: ${esc(a.objection.why)} · ${L("แก้ภายใน", "fix by")} ${clockTxt(a.objection.due)}</p>` : ""}
-          ${a.demand ? `<p class="sub" style="margin:6px 0 0">${L("หนังสือเรียกชดใช้", "Demand")} ${fdate(a.demand.t)} · ${L("ชดใช้ภายใน", "repay by")} ${fdate(a.demand.due)}${a.reported ? ` · ${L("รายงานหัวหน้าส่วนราชการแล้ว", "reported to the head of the agency")} ${fdate(a.reported.t)}` : ""}</p>` : ""}
+          ${a.demand ? `<p class="sub" style="margin:6px 0 0">${L("หนังสือเรียกชดใช้", "Demand")} ${fdate(a.demand.t)} · ${L("ชดใช้ภายใน", "repay by")} ${fdate(a.demand.due)}${a.reported ? ` · ${L("รายงานหัวหน้าส่วนราชการแล้ว", "reported to the head of the agency")} ${fdate(a.reported.t)}` : ""}</p>` + (a.demand.moves || []).map(x => `<p class="sub" style="margin:2px 0 0">${L("เลื่อนวันครบกำหนด", "Due date moved")} ${fdate(x.from)} → ${fdate(x.to)} · ${esc(x.why)}</p>`).join("") + (a.demand.closed ? `<p class="sub" style="margin:2px 0 0">${dotI("ok")}${L("ปิดหนังสือเรียกชดใช้แล้ว ส่งใช้ครบ", "Demand closed: cleared in full")}</p>` : "") : ""}
         </div>
         <div>
           <table style="width:100%"><tbody>${a.items.map(i => `<tr><td>${tx(ADV_ITEMS[i.k][0])}</td><td class="n">${fmt(i.amt)}</td></tr>`).join("")}
@@ -254,7 +258,7 @@ FIN_ASK_RUN.adv = (k, why) => { const a = ADV_OPEN && advOf(ADV_OPEN); return a 
 function advAct(a, k, why0) {
   const why = String(why0 || "").trim(), done = (msg, roles, text, link) => { if (roles) notify(roles, text, link || "fnc-adv"); commit(); renderShell(); route(); toast(msg); };
   if (k === "edit") { ADV_EDIT = a.id; route(); const f = $("#adv-form input, #adv-form select"); if (f) f.focus(); return; }
-  if (["reject", "object", "cancel", "crecall"].includes(k) && why.length < CR_WHY_MIN) return L(`ใส่เหตุผลอย่างน้อย ${CR_WHY_MIN} ตัวอักษร`, `Give a reason of at least ${CR_WHY_MIN} characters`);
+  if (["reject", "object", "cancel", "crecall", "ddue"].includes(k) && why.length < CR_WHY_MIN) return L(`ใส่เหตุผลอย่างน้อย ${CR_WHY_MIN} ตัวอักษร`, `Give a reason of at least ${CR_WHY_MIN} characters`);
   if (k === "approve") {
     if (!sodCheck("SD-12", sodActors("exec", "spend"), [a.borrower], a.id)) return;
     const bad = advChecks(a).filter(c => !c.ok); if (bad.length) { toast(`${L("ยังอนุมัติไม่ได้", "Can't approve yet")}: ${bad.map(c => c.id).join(", ")}`); return; }
@@ -300,6 +304,7 @@ function advAct(a, k, why0) {
       vLog(v, ["สร้างจากการส่งใช้เงินยืม", "Created from an advance clearing"], a.id); S.vouchers.push(v); a.topup = v.id;
     } else if (cl.spent < amt) a.cashBack = { amount: amt - cl.spent, t: nowIso(), receipt: a.receipt.no };
     a.state = "cleared"; advLog(a, ["ตรวจผ่าน รับใบสำคัญ", "Clearing accepted"], a.receipt.no);
+    if (a.demand && !a.demand.closed) { a.demand.closed = { t: nowIso(), by: me().id, why: "cleared" }; advLog(a, ["ปิดหนังสือเรียกชดใช้ ส่งใช้ครบแล้ว", "Demand closed: cleared in full"]); } // FR-FC-25
     audit(["รับใบสำคัญส่งใช้เงินยืม", "Accepted an advance clearing"], `${a.id} · ${a.receipt.no}${a.topup ? ` · ${a.topup}` : ""}`);
     return done(a.topup ? L(`รับใบสำคัญแล้ว · สร้างใบขอเบิกจ่ายเพิ่ม ${a.topup}`, `Accepted · top-up voucher ${a.topup} created`) : a.cashBack ? L(`รับใบสำคัญและเงินเหลือคืน ${fmt(a.cashBack.amount)} บาทแล้ว`, `Accepted with ${fmt(a.cashBack.amount)} baht returned`) : L("รับใบสำคัญแล้ว", "Clearing accepted"),
       [S.users.find(u => u.id === a.borrower).role], [`เงินยืม ${a.id} ส่งใช้ครบแล้ว ใบรับใบสำคัญ ${a.receipt.no}`, `Advance ${a.id} is cleared; evidence receipt ${a.receipt.no}`], "advances");
@@ -308,6 +313,14 @@ function advAct(a, k, why0) {
     a.demand = { t: nowIso(), by: me().id, due: addDays(advDue(a), fcfg().demandDays) };
     advLog(a, ["ออกหนังสือเรียกชดใช้", "Demand issued"], fdate(a.demand.due)); audit(["ออกหนังสือเรียกชดใช้เงินยืม", "Issued an advance repayment demand"], `${a.id} · ${a.demand.due}`);
     return done(L("ออกหนังสือเรียกชดใช้แล้ว", "Demand issued"), [S.users.find(u => u.id === a.borrower).role], [`หนังสือเรียกชดใช้เงินยืม ${a.id} ภายใน ${fdate(a.demand.due)}`, `Repayment demand for ${a.id}: repay by ${fdate(a.demand.due)}`], "advances");
+  }
+  // FR-FC-25: the finance head moves the demand's due date with a reason, within 30 days of the clear-by date (clause 68).
+  if (k === "ddue") {
+    const d = ($("#adv-ddue") || { value: "" }).value, max = addDays(advDue(a), fcfg().demandDays);
+    if (!d || d < TODAY || d > max) return L(`วันที่ต้องไม่ก่อนวันนี้และไม่เกิน ${fdate(max)}`, `The date must be from today to ${fdate(max)}`);
+    const old = a.demand.due; (a.demand.moves = a.demand.moves || []).push({ from: old, to: d, by: me().id, t: nowIso(), why }); a.demand.due = d;
+    advLog(a, ["เปลี่ยนวันครบกำหนดเรียกชดใช้", "Moved the demand's due date"], `${fdate(old)} → ${fdate(d)} · ${why}`); audit(["เปลี่ยนวันครบกำหนดเรียกชดใช้", "Moved a demand's due date"], `${a.id} · ${old} → ${d} · ${why}`);
+    return done(L("เปลี่ยนวันแล้ว", "Date changed"), [S.users.find(u => u.id === a.borrower).role], [`หนังสือเรียกชดใช้ ${a.id} ครบกำหนดใหม่ ${fdate(d)}`, `The demand on ${a.id} is now due ${fdate(d)}`], "advances");
   }
   if (k === "report") {
     a.reported = { t: nowIso(), by: me().id }; advLog(a, ["รายงานหัวหน้าส่วนราชการ", "Reported to the head of the agency"]); audit(["รายงานเงินยืมค้างต่อหัวหน้าส่วนราชการ", "Reported an unpaid advance to the head of the agency"], a.id);
