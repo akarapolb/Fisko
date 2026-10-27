@@ -14,7 +14,7 @@ const famReserved = lineId => sumv(S.reqn.filter(r => r.status === "approved" &&
 // Advances drawn from the budget count as spending of the line (clause 62): the amount lent until cleared, then what was spent (round FN3).
 const famAdv = lineId => sumv((S.advances || []).filter(a => a.line === lineId && a.source === "budget" && ["approved", "paid", "clearing", "objected", "cleared"].includes(a.state)).map(a => (a.state === "cleared" ? Math.min(a.clearing.spent, a.approvedAmt || a.amount) : a.approvedAmt || a.amount)));
 // Approved vouchers with no contract or commitment behind them (round FN2) spend the line directly.
-const famVc = lineId => sumv((S.vouchers || []).filter(v => v.line === lineId && !v.contract && !v.commit && ["ready", "posted", "paid"].includes(v.state)).map(v => v.gross - (v.penalty || 0)));
+const famVc = lineId => sumv((S.vouchers || []).filter(v => v.line === lineId && !v.contract && !v.commit && ["ready", "posted", "paid"].includes(v.state)).map(v => v.gross - (v.penalty || 0) - (v.lineBack || 0))); // lineBack: paid back within the year (Finance CRUD R-FC-07)
 const famOther = lineId => sumv((S.fcommit || []).filter(c => c.line === lineId).map(c => c.amount - (c.released || 0))) + famAdv(lineId) + famVc(lineId);
 const famHeadroom = lineId => famLine(lineId).amount - famCommitted(lineId) - famReserved(lineId) - famOther(lineId);
 const phaseAccepted = ph => ph.signs.length >= PHASE_SIGNS;

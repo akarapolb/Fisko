@@ -787,3 +787,208 @@ The round-44 follow-ups. No rule or data change; `DATA_V` stays 35. `main` was f
   - **M10 business rules (`adRule`):** list; edit (on or off, setting, block or warn) with a reason, or switch on/off from the drawer. Rules can't be added or deleted: each is tied to a check in the code.
 - **Budget types** stay a fixed read-only table: they come from the budget law and the system's checks, transfers and reports depend on the five codes.
 - **Tests:** the sweep covers the three new M10 lists. A seed object key (`{ CUR_FY: A }`) broke seeding until it was made computed; every source file is now parse-checked after scripted edits. Full sweep 11,585 checks passing.
+
+## 55F. Finance CRUD design and round FC1: shared list extras, Finance drawer alignment, F10 registers (round 55, Finance)
+
+- **Design:** `Fisko_Finance_CRUD_Design.html` v0.1 (Thai), approved. Decisions: hybrid use of the shared list + drawer (small registers move onto `CRUD.def`; the voucher and advance drawers, the cash count, bank matching and close checklists stay and are aligned); vouchers editable in draft or returned, cancellable with a reason up to "ready", a paid voucher is corrected by a refund receipt, never edited; GFMIS and bank steps pick rows, record results in a form with a Simulate button, and files and batches have history and undo until posted; the audit's non-CRUD bugs are folded in (authority limits, over-commitment, hard-coded years, rule ids). Requirements FR-FC-01 to 53, rules R-FC-01 to 07, FL-F01 to 10, SIM-F01 to 07, fixes FX-01 to 09, demo E-F01 to E-F15, rounds FC1 to FC6. SD-11 to 16 and R-FN-01 to 07 unchanged. Published at https://claude.ai/artifact/WqUrwy2yryGPUqXbmRnwgZ (private).
+- **76-crud.js (shared with Budget):** `crDone` and undo now call `renderShell()` too, so menu badges and Finance clocks follow a change (UI-F1); a column with `sort: r => value` gets a sort button in its header, ascending, descending, off, with `aria-sort` (UI-F2); one reason minimum `CR_WHY_MIN = 10` (UI-F5). Multi-row picking (UI-F3) moved to FC3, where the GFMIS files use it.
+- **66h (Finance pages):** switching a Finance page or tab closes an open shared-list drawer (`finSet`, `data-fsub`; UI-F4). The Finance drawer is labelled by its heading (`aria-labelledby="fn-dr-title"`), and the scrim and Escape close it through any button whose id ends in `-close`, skipping `.cr-drawer` (UI-F8). Finance form rows (`rowForm`): Enter in an input runs the row's first action, Escape closes the row and returns focus to its button (UI-F7); Procurement's rows (`data-prow`) are left alone.
+- **New file `src/js/84-fin-crud.js`, F10 registers on the shared list:**
+  - **GFMIS assignments (`fnGfu`, FR-FC-44):** records get ids (`GU-nn`; older saved data is given ids on read); assign (user, duties, order, until), edit with a reason, revoke with a reason by id (the old index-based revoke could hit the wrong person, FX-08). Status in force, expired, revoked.
+  - **Supplier bank changes (`fnVend`, FR-FC-45):** request (account must be 10 digits, evidence ticked), the requester edits or withdraws while pending, someone else confirms or refuses with a reason, both under SD-14. Confirming keeps the supplier's previous account in `vendor.bankHist`. Executives now see the tab (it used to be empty).
+  - **Cash committee orders (`fnCmte`, FR-FC-46):** `S.cashOrders` are dated orders; `cashC(d)` (66e) returns the order in force on a date, so the daily count and SD-13 read the order of that day. New orders can't start in the past; an order not yet in force can be edited or cancelled with a reason. Older saved `S.cashCmte` becomes order `CO-01`.
+  - **Receipt books (`fnBook`, FR-FC-47):** issue a book for this or next fiscal year (number `n/FY` from the highest used), hand it over with a reason, void the unused tail with a reason, take it back. `rcIssue` (66e) now uses the first book the officer holds that still has numbers (`rbUsed`, `rbCap`), so voiding or filling a book moves receipts to the next one. The yearly report button stays under the list.
+- **P-F05** (maker can't check their own voucher) is now a duty rule through `sodCheck`, logged and switchable in M10 like SD-11 (FX-05).
+- **Removed:** the old F10 renderers and handlers (`vendorPanel`, `#vd-chg`, `data-vdok`, `#gfu-form`, `data-gfdel`, `#cm-form`, the table in `FS.rbooks`). Seed hook `seedFinCrud`; `DATA_V` is 39.
+- **Tests:** the sweep opens every F10 record (details, history, edit, new) for fin, finhead, exec and audit, and walks the four registers (create, edit, revoke, refuse and confirm under SD-14, a later committee order edited and cancelled, a book issued, handed over, returned, a voided book moving receipts to the new one, P-F05 logged). Full sweep 11,755 checks passing. By hand: the receipt-book drawer and the void reason box, F10 at 375 px with no overflow. Not checked by hand: dark mode, English wording beyond the sweep.
+
+## 56F. Finance CRUD round FC2: vouchers and the two Finance drawers (round 56, Finance)
+
+- **Reason box and History tab for both Finance drawers (UI-F6, UI-F9, `62-finance.js`):** an action that needs a reason opens one box (`finAskForm`, same markup as the shared `.cr-ask`: impact text, a textarea, Confirm and Back, the error under the box) instead of the old shared reason input (`#vc-why`, `#adv-why`). `FIN_ASK_RUN[key](act, why)` runs it and returns an error text to keep the box open. Delegated listeners, so it works on F3, F4 and My advances. `finDrTabs` gives a drawer Details and History tabs; `finLogHtml` shows the record's own steps with the audit History button under them. Escape closes an open reason box first.
+- **Vouchers (`66c-fin-fn2.js`):**
+  - **List (FR-FC-07, UI-F10):** the status groups stay; a toolbar adds search (number, payee, item, commitment, contract), type and route filters, "Show cancelled and rejected" on the All group, a count and "+ Other voucher". Number, net and clock sort from their headers. Rows open the drawer on click or Enter.
+  - **Create and edit in the drawer (FR-FC-08, 09):** one form (`vcForm`, `vcSave`, `vcApply`, `vcCheck`) for a new voucher and for a draft or returned one; a procurement voucher only changes its penalty, other deductions, due date and payment method. Picking a commitment or a supplier from the register fills the payee (so SG-F03 now works for manual vouchers). A live check under the form runs R-FN-01 to 03 and 07 on what is typed. Edits are logged with old → new values. Closing an edited form asks once.
+  - **Recall (FR-FC-10):** the maker takes a voucher back from checking or approval to draft with a reason; checker and approver are cleared.
+  - **Cancel (FR-FC-11):** the maker in draft or returned; the finance head up to "ready" before a GFMIS file (or `nbready`), with a reason. A procurement voucher's payment approval (`S.payreqs`) is cancelled with it, and a cancelled top-up voucher clears the advance's `topup`.
+  - **Return and reject (FR-FC-12):** checker and approver can return; a third return notifies the finance head (`v.returns`). Reject is now final (`rejected`, hidden by default, no longer counted).
+  - **Authority (FR-FC-13, FX-01):** `vcAuth(spend, role)` picks the lowest level of that role covering the amount (max 0 = no limit), so A2 and A3 now apply. The finance head can approve within A3 (1 million) unless they checked it (SD-11); the executive within A2, then A1. The drawer shows the level needed; badges and My work list A3 approvals for the finance head.
+  - **Reservation (R-FC-03, FX-02):** vouchers from checking to posted hold their amount (`VC_RESV`, `vcReserved`, `fcFree`), so R-FN-01 checks the commitment's free amount, and line vouchers in check or approval also count against the line. Approval re-runs the rules. F2 shows "held by vouchers" under the remaining amount.
+- **Advances (`66d-fin-fn3.js`):** approve, reject, object and cancel use the reason box (approve carries the amount, and a reason only when approving less); Details and History tabs. Editing and cancelling advances is round FC4.
+- **Removed:** the inline "Other voucher" form, `VC_NEW`, the per-drawer reason inputs. The 66i wrapper of `vcAct` passes the reason through.
+- **Tests:** the sweep opens every voucher and advance drawer for fin, finhead, exec and audit (Details, History, every reason box, the edit form), the new-voucher form and the list with search, show-cancelled and sort; and walks a voucher through save checks, edit, submit, a second voucher stopped by the reservation, recall, check, SD-11 stopping the checker's approval, A2 approval, the finance head's cancel freeing the commitment, three returns, and a final reject.  Full sweep 12,237 checks passing. By hand: the new-voucher form with a commitment picked (payee filled, live check), a draft voucher's Details and History tabs and its cancel reason box. Not checked by hand: phone width and dark mode for the new form, English wording beyond the sweep. Prototype for this branch: https://claude.ai/artifact/8ZSzN2o5CVN6hj5Gh3MKyK (private, version 2).
+
+## 57F. Finance CRUD round FC3: GFMIS files, e-Payment batches, daily check, 50 Tawi and refunds (round 57, Finance)
+
+- **New file `src/js/85-fin-pay-crud.js`.** Picking rows is done inside each record's create form, with one checkbox per voucher, ticked by default. The generic multi-row pick (UI-F3) was not needed.
+- **GFMIS request files (`fnGfo`, FR-FC-15, FR-FC-16):**
+  - **Create:** pick the ready vouchers to send. `gfOk("record")` is still checked.
+  - **Status:** derived by `gfoSt`. A file is "sent" while vouchers wait for posting, "posted" while they wait for payment, then "done".
+  - **Results form:** the record's form takes the result, one row per voucher. Its button reads "Record the GFMIS result", then "Record the payment result".
+    - Posting: passed (GFMIS document number) or rejected (reason). A rejected voucher goes back to "ready".
+    - Payment: paid (reference), or money reached the agency account, or failed. A failed voucher goes back to "ready" with its reason.
+  - **Simulate:** "Simulate" fills the form so it can be checked before saving (SIM-F01, SIM-F02). Simulated results are tagged in the voucher log.
+  - **Undo before a result:** take one voucher out of a file with a reason, or cancel the whole file with a reason.
+  - **Record view:** a file tab shows the CSV.
+- **e-Payment batches (`fnEp`, FR-FC-17, SIM-F03):**
+  - **Create:** pick the payments waiting in the agency account. A batch is "waiting for the bank" (`v.epay`) until its result is recorded.
+  - **Bank result:** transferred, or returned with a reason. A returned payment waits in the account again.
+  - **Simulate and cancel:** "Simulate" fills the form. A batch can be cancelled with a reason.
+  - **Older batches:** batches from before this round count as done.
+- **F3 tab "GFMIS and payment":** the two lists are stacked. The page drawer stays hidden while a shared-list drawer is open.
+- **Daily payment check (FR-FC-18):** the finance head ticks each payment that matches its evidence, or notes one with a reason. A noted payment stays unchecked and Finance is told. Signing needs every unticked payment to carry a note (`dckFlag`, `dckSign`). `S.payChecks` records the notes too.
+- **50 Tawi (FR-FC-19):** "Cancel and reissue the 50 Tawi", with a reason. The old certificate is kept in `v.certs` and the next number is issued.
+- **Money paid back (FR-FC-14, R-FC-07):** "Record money paid back" on a paid voucher.
+  - It takes an amount and a reason, and issues a receipt of kind "money paid out and returned" that points to the voucher (`r.voucher`). The voucher itself is not changed.
+  - The drawer shows the refunds and the net after them.
+  - Returned within the year (clause 100), the amount goes back to the commitment (`m.paid`) or to the line (`v.lineBack`, which `famVc` in 60-procurement subtracts).
+  - Contract vouchers don't give back to Procurement's payment totals yet.
+- **76-crud.js:** `edit.label(r)` renames the Edit button.
+- **Removed:** the batch buttons and their handlers (`#gf-make`, `#gf-post`, `#gf-paid`, `#ep-batch`, `#day-check`), `GF_OUT`, and the old renderers of `gfSend`, `agencyPay` and `dayCheck` in 66c.
+- **Tests:**
+  - **Sweep coverage:** every file and batch is opened for fin, finhead, exec and audit: details, history, the file tab, and the result and new forms. The daily check is rendered.
+  - **Walk:** three vouchers go to "ready". In the file, one is taken out, the posting is simulated, a failed row without a reason is refused, the posting and payment results are recorded, and a second file is cancelled. An e-Payment batch has its bank result simulated. In the daily check, signing with an unnoted unticked row is refused, then one payment is noted and the rest signed. A refund gives the line back. A refund above the net is refused, and a certificate is reissued.
+  - **Results:** the full sweep passes, 12,281 checks.
+  - **By hand:** the seeded file's drawer.
+  - **Not checked by hand:** the result forms at phone width, dark mode, and English wording beyond the sweep.
+  - **Prototype for this branch:** https://claude.ai/artifact/8ZSzN2o5CVN6hj5Gh3MKyK (private).
+
+## 58F. Finance CRUD round FC4: commitments, PO correction, carry-over withdrawal, advances (round 58, Finance)
+
+- **New file `src/js/86-fin-commit-crud.js` — commitments outside procurement (`fnCm`, FR-FC-02):**
+  - **Create:** the form adds an English name, and the amount is checked against the line's headroom (clause 18).
+  - **Edit:** everything can change while no voucher uses the commitment. Once one does, only the last payment date changes, and that needs a reason.
+  - **Release part:** you are asked how much, up to the amount no voucher holds.
+  - **Cancel what is left:** refused while a voucher still holds part of it (R-FC-04).
+  - **Delete:** allowed only for a commitment never used and with no PO. Numbers come from `S.fcSeq`, so they are never reused.
+  - **Drawer:** lists its vouchers and releases.
+  - The old inline form and the release form row are gone from 66b.
+- **76-crud.js:** an action can ask for an amount in the same reason box (`num: { label, max, value }`, passed as `run(r, why, num)` and checked against its range).
+- **PO correction (FR-FC-03, 66b):** a saved GFMIS PO number can be corrected or cleared, with a reason, until a voucher that relies on it is in a GFMIS file (`poLocked`). The old numbers are kept in `gfPoHist`.
+- **Carry-over (FR-FC-05, 66b):**
+  - A pending proposal shows its number and status, and can be withdrawn with a reason (status `withdrawn`, which Budget's carry-over list already hides).
+  - A withdrawn or rejected proposal can be proposed again (`carryReq`).
+  - `CF-` numbers come from the highest used.
+- **Advances (66d):**
+  - **One request form (`advForm`, `advSave`, `bindAdvForm`)** for a new request, the borrower's edit while it waits for approval, and Finance entering a request for someone from F4 (FR-FC-21). An entered request records `enteredBy`, and that person can't approve it.
+  - **Expense rows:** add or remove any number of rows (no longer fixed at three).
+  - **Cancel after approval:** the borrower, or Finance, can cancel an approved advance that isn't paid yet, with a reason.
+  - **Pay:** checked against SD-12, so the borrower can't pay themselves (FR-FC-23). A clock (clause 57) asks for an approved advance to be paid before its start date.
+  - **Take back a clearing:** the borrower can pull a clearing back to fix it before Finance checks it (FR-FC-24).
+  - **F4 register:** gets search, a unit filter, a sort by clear-by date, and "Enter a request for someone".
+  - Demand date edits (FR-FC-25) are not built.
+- **Years (FX-03):** ids and loan contracts already read the year after round 54. The year-end list now computes its last two lines from the records: next year's receipt books and the yearly receipt report, and the September trial balance (FR-FC-38).
+- **Tests:**
+  - **Render pass:** every commitment opens for fin, finhead, exec and audit, with its details, history, edit form and each action box, plus the new-commitment form. Fin also gets the PO correction rows, the on-behalf advance form, and the advance register with search and sort.
+  - **Walk:**
+    - Commitments: a commitment above the line is refused; an edit goes through; a voucher locks the amount; a release is capped by what vouchers hold; cancelling is refused while a voucher holds part of it; a delete goes through and its number isn't reused.
+    - PO and carry-over: a PO is corrected, then cleared; a carry-over is proposed, then withdrawn.
+    - Advances: one is edited on My advances, then cancelled after approval (a missing reason is refused). Finance enters one for someone. One is paid with its clock showing, has its clearing taken back, and SD-12 stops the borrower paying themselves.
+    - Year-end list renders.
+  - **Results:** the full sweep passes, 12,385 checks.
+  - **By hand:** the release box with its amount.
+  - **Not checked by hand:** phone width, dark mode, and English wording beyond the sweep.
+
+## 59F. Finance CRUD round FC5: receipts, remittances, daily cash, reconciliation, closing, audit queries (round 59, Finance)
+
+- **New file `src/js/87-fin-recv-crud.js`.**
+  - **Receipts (`fnRc`, FR-FC-26, FR-FC-27):**
+    - The list has search plus type, method and status filters, and sorts by number, date and amount. A new receipt is issued in the drawer (the same `rcIssue`).
+    - Receipts are never edited (clause 76). The drawer offers three actions:
+      - "Record in GFMIS" for one receipt: the box holds the document number, simulated and filled in (SIM-F04).
+      - "Cancel".
+      - "Cancel and reissue": opens a new-receipt form filled from the old one, and the new receipt records `replaces`.
+    - The bulk "record all" stays as a simulate button. Issuing a receipt for an advance's cash back stays under the list.
+  - **Remittances (`fnRm`, FR-FC-28):** each type of money with waiting receipts has "Remit…". It opens a form with that type's receipts to pick from: recorded ones are ticked, unrecorded ones are shown but can't go. The bank reference is filled in. Until GFMIS shows a remittance, its reference and date can be corrected with a reason, or the whole remittance reversed with a reason; the receipts then wait again and their clocks keep running.
+  - **Audit queries (`fnAq`, FR-FC-39):**
+    - The answer is kept as a draft in the record's form, then "Send the answer" fixes it. After that only "Add a further explanation" is allowed.
+    - A query entered by mistake can be deleted with a reason, but only while it has no draft.
+    - The answer clock is the new M10 setting `aqDays` (15 days, clause 109; FX-09). Daily cash differences still show under the list.
+- **76-crud.js:** an action that opens a new-record form keeps the drawer open. `crRun` only closes it when an existing record is gone.
+- **Daily cash (66e, FR-FC-29, FR-FC-30):** before the executive acknowledges, the finance head can ask the committee to count again, with a reason. The earlier counts are kept in `r.recounts`, shown on the report, and the members are told. A member can change their own count until everyone has counted, and the change is audited. Back-dated reports are not built.
+- **Reconciliation (66f, FR-FC-31 to 33):**
+  - Before signing, the officer can delete a statement import and import it again. Deleted imports are kept in `S.bankStmtsOld`.
+  - A bank-only adjustment can be reversed with a reason. Reversed adjustments are kept in `S.bookAdjOld`.
+  - A signed reconciliation can be reopened by a finance head other than the signer (SD-16) while the month is open. Its log shows on the panel.
+  - Re-importing the GFMIS reports and undoing payment-file imports (FR-FC-34, 35) are not built.
+- **Daily close (FR-FC-36):** a closed day can be reopened while its month is open, with a reason, by a finance head other than the closer or by the executive (SD-16). Reopens are kept in `S.dayReopens`.
+- **FX-06:** comments now name "R-FN-06 remittance" (66e, 87) and "R-FN-06 month-close checklist" (66f).
+- **Removed:** the old renderers of `receipts`, `remit` and `auditQ`, the inline receipt form (`RC_NEW`), the per-class remit button and the audit-query form and answer rows.
+- **Tests:**
+  - **Rendering:** the sweep opens every receipt, remittance and audit query for fin, finhead, exec and audit: details, history, edit and new forms, and every action box. It also renders the F6, F7 and F8 day tabs.
+  - **The walk covers:**
+    - Receipts: issue, record in GFMIS, then cancel-and-reissue keeps the new form open and the reissue records what it replaces.
+    - Remittances: a remittance with no receipts is refused; one is corrected, reversed and remitted again.
+    - Daily cash: a recount keeps the earlier count.
+    - Bank: an import is deleted and re-imported, and an adjustment is reversed.
+    - Reopening: SD-16 stops the signer reopening a reconciliation and the closer reopening the day, and someone else can do both.
+    - Audit queries: one is drafted, sent and given a further explanation; another is deleted. The clock follows the M10 setting.
+  - **Found while testing:** a recorded bank-only item shows as a matched book line. So the reverse button now goes on any line whose reference is a book adjustment (`isAdj`).
+  - **Results:** the full sweep passes with 12,557 checks.
+  - **Checked by hand:** an audit query drawer.
+  - **Not checked by hand:** phone width, dark mode, and the English wording beyond the sweep.
+
+## 60F. Finance CRUD round FC6: non-budget money, F9 records, dead code, the Finance demo (round 60, Finance)
+
+- **New file `src/js/88-fin-nb-crud.js`. F11 moves to the shared list.**
+  - **Funds (`fnFund`, FR-FC-48):**
+    - Add a fund. Edit its name and basis at any time.
+    - Brought-forward balances can be changed only until money moves.
+    - Delete only a fund that was never used. Close one only when its balance is zero.
+    - The drawer's Movements tab shows the existing `nbStatement`.
+  - **Plans (`fnPlan`, FR-FC-49):**
+    - Start a plan for a fund that has none this year.
+    - Edit the income and lines while the plan is a draft or returned. Each line's amount can't go below what is used. Unused lines can be deleted, and a new line can be added in the same form.
+    - Send the plan for approval, or withdraw it while it waits. A draft that was never sent can be deleted.
+    - An approved plan is amended as a separate version (`p.amend`). The approved lines stay in force for R-FN-07 until the amendment is approved; the earlier versions are kept in `p.versions`.
+    - Approving or returning (with a reason) goes through `sodCheck` SD-11 (FC-P5), replacing the old ad-hoc maker check.
+  - **Withdrawals (`fnWd`, FR-FC-50):**
+    - A request can be edited or withdrawn while it is pending. Rejecting needs a reason and passes SD-11.
+    - Unspent money can be deposited back at any time, not only in the last days.
+  - `nbPlan` and `nbFunds` ignore deleted records. The old renderers and their handlers in 66i are gone.
+- **F9 (66g, and `fnWi` in 88):**
+  - **Agent runs (FR-FC-41):** rejecting an agent step needs a reason in the shared reason box. A run can be stopped with a reason (`r.stopped`).
+  - **What-ifs (FR-FC-42):** saved what-ifs are a shared list with ids `WI-nn`. "Save a scenario" starts from the current levers. A scenario can be opened back into the levers, renamed, have its levers changed, or deleted.
+  - **Signals (FR-FC-43):** "issue" and "false positive" need a reason. A decided signal can be reopened, and each decision is logged on the signal.
+- **Dead code (FX-07):** the round-11 payment-request form, `decide()`, the `data-pyok`/`data-pyno` handlers, `PAY_FORM` and `PAY_ST` are gone from 62. `S.payreqs` stays for three-way matching.
+- **Demo (chapter 11):** the in-app demo guide has a "Finance, E-F01 to E-F15" filter (82) with fifteen steps (`FE2E` in 88), running from the registers to the spending seen in Fisko Budget. The demo suite walks every step.
+- **Tests:**
+  - **Sweep coverage:** opens every fund, plan, withdrawal and saved what-if, and every one of its tabs and action boxes, for fin, finhead, exec, plan and audit. It also renders the F9 reason boxes.
+  - **Walk:**
+    - A fund is deleted; another is made and edited.
+    - A plan gets lines, is sent, withdrawn, sent again and approved. It is then amended, with the approved lines kept in force until the amendment is approved.
+    - A withdrawal is edited, rejected with a reason, approved and deposited back.
+    - A what-if is saved, edited, opened into the levers and deleted.
+    - An agent run is stopped. A signal is confirmed, then reopened.
+    - The demo has fifteen Finance steps.
+  - **Result:** the full sweep passes with 12,756 checks.
+  - **By hand:** a plan drawer.
+  - **Seen, not changed:** the F11 KPI tile wraps a large number at this width; it was like this before this round.
+- **Finance CRUD design complete:** rounds FC1 to FC6 are built.
+  - **Not built:** FR-FC-25 (demand date edits), FR-FC-34 (GFMIS report re-import), FR-FC-35 (payment-file undo and manual match), and the back-dated daily cash report.
+  - **Branch prototype:** https://claude.ai/artifact/8ZSzN2o5CVN6hj5Gh3MKyK (private).
+
+## 61F. Finance CRUD leftovers: demand date, GFMIS re-import, payment-file undo and match, late daily cash (round 61, Finance)
+
+- **FR-FC-25: demand due date (66d)**
+  - While a demand is open, the finance head can change its due date from the drawer's reason box. The box has a date field, and the new date must fall between today and 30 days after the clear-by date (clause 68).
+  - Each move is kept in `a.demand.moves`, and the borrower is notified.
+  - When the advance is cleared, the demand closes on its own (`a.demand.closed`). The drawer shows the moves and the closing.
+- **FR-FC-34: re-import GFMIS reports (66f)**
+  - Both the GFMIS revenue report and the month's trial balance can be imported again, with a reason.
+  - The earlier import is kept: `S.gfrOld` holds the remittance document numbers, and `S.tbsOld` holds the trial balance with who replaced it and why.
+  - Re-importing a closed month's trial balance isn't offered (R-FC-02).
+- **FR-FC-35: payment-result file (62)**
+  - **Undo an import.** Only the latest import still in force can be undone, with a reason, while its month is open. Each import now records every payment's previous result (`g.prev`), and undo restores it.
+  - **Match by hand.** A row "not in Fisko" can be matched by hand to an approved payment that is waiting, with a reason. This checks SD-05, and the result is matched or a difference according to the amounts.
+  - **Edit an explanation.** An explanation can be changed while its month is open; earlier wordings are kept in `recon.edits`.
+- **Late daily cash report (66e, part of FR-FC-29)**
+  - F6 lists the working days in the last two weeks that had cash or cheques but no report. For each one, Finance can make a late report with a reason (`r.late`), and the committee is notified.
+  - A day picker on F6 and on the committee's count page shows open late reports. Counting, recounting, changing a count and acknowledging all work on the day shown (`dcDay()`), and SD-13 checks the people who handled money on that day.
+- **Tests:** a new sweep walk covers each item:
+  - moving a demand date (a date past 30 days is refused), then closing the demand on clearing;
+  - re-importing both GFMIS reports;
+  - importing a payment file, matching its extra row by hand, editing an explanation, and undoing the import;
+  - making a late daily cash report.
+- **Found while testing:** the "month is closed" check for the trial-balance re-import had an operator-precedence bug (`!x.status === "closed"`), so the button never appeared. It now reads `!== "closed"`.
+- **Full sweep:** 12,760 checks pass.
+- **Not checked by hand:** phone width, dark mode, and English wording beyond the sweep.

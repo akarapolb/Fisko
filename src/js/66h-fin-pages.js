@@ -19,7 +19,7 @@ const FIN_PAGES = [
     sub: ["ใบขอเบิกทุกประเภท การส่ง GFMIS การจ่าย และภาษีหัก ณ ที่จ่าย", "Vouchers of every type, sending to GFMIS, payment and withholding tax"],
     tabs: [
       { id: "vouchers", label: ["ใบขอเบิก", "Vouchers"], secs: ["vcAccepted", "vouchers"] },
-      { id: "gfmis", label: ["ส่ง GFMIS และจ่าย", "GFMIS and payment"], secs: [["gfSend", "agencyPay"]] },
+      { id: "gfmis", label: ["ส่ง GFMIS และจ่าย", "GFMIS and payment"], secs: ["gfSend", "agencyPay"] },
       { id: "check", label: ["ตรวจการจ่ายประจำวัน", "Daily payment check"], secs: ["dayCheck"], roles: ["finhead", "audit"] },
       { id: "tax", label: ["ภาษีและค่าปรับ", "Tax and penalties"], secs: ["wht"] }] },
   { id: "adv", code: "F4", group: "spend", label: ["เงินยืม", "Advances"], drawer: "advDetail",
@@ -78,6 +78,7 @@ function finSet(v, keep) {
   const [id, t] = String(v).split(":"), p = finPage(id);
   if (!p) return (FIN_TAB = "home");
   FIN_TAB = id;
+  if (typeof crClose === "function") crClose(); // a shared-list drawer never stays open on another page or tab
   const sub = t || (keep ? null : finTabs(p)[0].id);
   if (sub) p.set ? p.set(sub) : (FIN_ST[id] = sub);
   return FIN_TAB;
@@ -113,20 +114,29 @@ VIEWS.finance = () => {
   ${(p.top || []).map(finBlock).join("")}
   ${T.length > 1 ? `<div class="tabs fn-tabs" role="tablist" aria-label="${esc(tx(p.label))}">${T.map(t => `<button class="tab ${t.id === cur ? "on" : ""}" type="button" role="tab" aria-selected="${t.id === cur}" data-fsub="${t.id}">${tx(t.label)}${finTabBadge(p.id, t.id)}</button>`).join("")}</div>` : ""}
   ${body.trim() ? body : `<section class="panel"><div class="body sub">${L("ไม่มีรายการสำหรับบทบาทนี้", "Nothing here for this role")}</div></section>`}
-  ${dr.trim() ? `<div class="fn-scrim" data-fdclose></div><aside class="fn-drawer" role="dialog" aria-modal="true" aria-label="${L("รายละเอียด", "Details")}">${dr}</aside>` : ""}`;
+  ${dr.trim() ? `<div class="fn-scrim" data-fdclose></div><aside class="fn-drawer" role="dialog" aria-modal="true" aria-labelledby="fn-dr-title">${dr}</aside>` : ""}`;
 };
 BIND.finance = () => {
   FIN_BINDS.forEach(f => f());
-  $$("[data-fsub]").forEach(b => (b.onclick = () => { const p = finPage(FIN_TAB); p.set ? p.set(b.dataset.fsub) : (FIN_ST[p.id] = b.dataset.fsub); route(); }));
+  $$("[data-fsub]").forEach(b => (b.onclick = () => { const p = finPage(FIN_TAB); p.set ? p.set(b.dataset.fsub) : (FIN_ST[p.id] = b.dataset.fsub); if (typeof crClose === "function") crClose(); route(); }));
   $$("[data-jump]").forEach(b => (b.onclick = () => jump(b.dataset.jump)));
   $$("[data-frow]").forEach(b => (b.onclick = () => { FIN_ROW = b.dataset.frow && FIN_ROW !== b.dataset.frow ? b.dataset.frow : null; route(); const f = FIN_ROW && $(".fn-rowform input"); if (f) f.focus(); }));
-  // The scrim and Escape close the side panel through its own close button, so each page keeps its close logic.
-  const shut = () => { const c = $(".fn-drawer #vc-close, .fn-drawer #adv-close"); if (c) c.click(); };
-  $$("[data-fdclose]").forEach(b => (b.onclick = shut));
-  const dr = $(".fn-drawer");
-  if (dr) { const h = dr.querySelector("h2"); if (h) { h.tabIndex = -1; h.focus({ preventScroll: true }); } }
+  // The scrim and Escape close the side panel through its own close button (any button whose id ends in -close),
+  // so each page keeps its close logic. Drawers of the shared list (.cr-drawer) close themselves.
+  $$("[data-fdclose]").forEach(b => (b.onclick = finShut));
+  const dr = $(".fn-drawer:not(.cr-drawer)");
+  if (dr) { const h = dr.querySelector("h2"); if (h) { h.id = "fn-dr-title"; h.tabIndex = -1; h.focus({ preventScroll: true }); } }
 };
-document.addEventListener("keydown", e => { if (e.key === "Escape" && CUR === "finance" && $(".fn-drawer")) { const c = $(".fn-drawer #vc-close, .fn-drawer #adv-close"); if (c) c.click(); } });
+const finShut = () => { const c = $('.fn-drawer:not(.cr-drawer) [id$="-close"]'); if (c) c.click(); };
+document.addEventListener("keydown", e => {
+  // A form row under a table row (rowForm): Enter runs its first action, Escape closes it and returns to its button.
+  const row = e.target.closest && e.target.closest(".fn-rowform"), fr = row && row.querySelector("[data-frow]") ? row : null; // Finance rows only (Procurement has its own)
+  if (fr && e.key === "Escape") { e.stopPropagation(); const k = FIN_ROW; FIN_ROW = null; route(); const b = k && $(`[data-frow="${CSS.escape(k)}"]`); if (b) b.focus(); return; }
+  if (fr && e.key === "Enter" && e.target.tagName === "INPUT") { e.preventDefault(); const go = fr.querySelector("button:not([data-frow])"); if (go) go.click(); return; }
+  if (e.key === "Enter" && e.target.tagName === "TR" && e.target.dataset.vcopen) { e.target.click(); return; } // voucher rows open like shared-list rows
+  if (e.key === "Escape" && FIN_ASK) { FIN_ASK = null; route(); return; } // a reason box closes before its drawer
+  if (e.key === "Escape" && CUR === "finance" && $(".fn-drawer:not(.cr-drawer)")) finShut();
+});
 
 // Counts on the tabs inside a page: work waiting for this role.
 function finTabBadge(pid, tid) {

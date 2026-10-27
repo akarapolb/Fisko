@@ -5,13 +5,14 @@
 // spec: {
 //   noun: [th, en], list: () => records, id: r => id, title: r => text, sub: r => text,
 //   st: { key: [[th, en], pillClass] }, status: r => key, gone: r => true when cancelled/withdrawn (hidden by default),
-//   cols: [{ h: label, c: r => html, n: true for numbers }], search: r => text,
+//   cols: [{ h: label, c: r => html, n: true for numbers, sort: r => value (the header sorts the list) }], search: r => text,
 //   filters: [{ id, label, opts: () => [[value, label]], get: r => value }],
 //   fields: (r | null, vals) => [{ id, label, type: text|money|number|select|date|textarea|check|info, opts, req, min, max, lock, hint, wide }],
 //   check: (vals, r | null) => [{ f: fieldId | null, m: message }],
 //   create: { can: () => bool, label: [th, en], run: vals => record },   // run returns the new record
-//   edit: { can: r => bool, run: (r, vals, why) => void, why: r => bool },  // why: ask for a reason when saving
-//   acts: r => [{ id, label, kind: primary|danger|ghost, why: bool, whyLabel, whyMin, confirm: text, impact: () => text, undo: false, run: (r, why) => toastText }],
+//   edit: { can: r => bool, run: (r, vals, why) => void, why: r => bool, label: r => [th, en] },  // why: ask for a reason when saving; label: the button (default Edit)
+//   acts: r => [{ id, label, kind: primary|danger|ghost, why: bool, whyLabel, whyMin, confirm: text, impact: () => text, undo: false, num: { label, min, max, value }, run: (r, why, num) => toastText }],
+//         num asks for an amount in the same box (for example how much of a commitment to release)
 //   view: r => html (the details tab), tabs: r => [[id, label, html]], hist: r => history key,
 //   prefill: () => vals (for a new record),
 // }
@@ -20,6 +21,7 @@ const CRUD = { defs: {}, def(key, spec) { this.defs[key] = spec; return spec; } 
 let CR_OPEN = null;
 const CR_F = {}; // per list: { q, show, filters }
 let CR_UNDO = null; // { snap, label, timer }
+const CR_WHY_MIN = 10; // one minimum reason length for Budget and Finance (Finance CRUD design FC-P4)
 
 const crSpec = k => CRUD.defs[k];
 const crRec = (k, id) => (crSpec(k).list() || []).find(r => String(crSpec(k).id(r)) === String(id));
@@ -31,12 +33,14 @@ function crClose() { CR_OPEN = null; }
 
 // ---------- list ----------
 function crudList(key, opts = {}) {
-  const sp = crSpec(key), F = (CR_F[key] = CR_F[key] || { q: "", show: false, f: {} });
+  const sp = crSpec(key), F = (CR_F[key] = CR_F[key] || { q: "", show: false, f: {}, sort: null });
   let rows = (sp.list() || []).slice();
   const goneN = sp.gone ? rows.filter(sp.gone).length : 0;
   if (sp.gone && !F.show) rows = rows.filter(r => !sp.gone(r));
   (sp.filters || []).forEach(f => { const v = F.f[f.id]; if (v) rows = rows.filter(r => String(f.get(r)) === v); });
   if (F.q && sp.search) { const q = F.q.toLowerCase(); rows = rows.filter(r => sp.search(r).toLowerCase().includes(q)); }
+  const sc = F.sort && sp.cols[F.sort.i];
+  if (sc && sc.sort) rows.sort((a, b) => { const x = sc.sort(a), y = sc.sort(b); return (x < y ? -1 : x > y ? 1 : 0) * F.sort.d; });
   const canNew = sp.create && sp.create.can();
   const bar = `<div class="cr-bar">
     ${sp.search ? `<input type="search" class="cr-q" id="crq-${key}" data-crq="${key}" value="${esc(F.q)}" placeholder="${L("ค้นหา", "Search")}" aria-label="${L("ค้นหา", "Search")} ${esc(tx(sp.noun))}">` : ""}
@@ -44,7 +48,8 @@ function crudList(key, opts = {}) {
     ${goneN ? `<label class="field-inline" for="crs-${key}"><input type="checkbox" id="crs-${key}" data-crs="${key}" ${F.show ? "checked" : ""}> ${L("แสดงที่ยกเลิก", "Show cancelled")} (${goneN})</label>` : ""}
     <span class="sp"></span><span class="sub">${rows.length} ${L("รายการ", "records")}</span>
     ${canNew ? `<button class="btn primary" type="button" data-crnew="${key}">+ ${tx(sp.create.label)}</button>` : ""}</div>`;
-  const table = rows.length ? `<div class="tbl-wrap"><table class="cr-tbl"><thead><tr>${sp.cols.map(c => `<th${c.n ? ` class="n"` : ""}>${tx(c.h)}</th>`).join("")}${sp.st ? `<th>${L("สถานะ", "Status")}</th>` : ""}</tr></thead>
+  const table = rows.length ? `<div class="tbl-wrap"><table class="cr-tbl"><thead><tr>${sp.cols.map((c, i) => { const on = F.sort && F.sort.i === i;
+      return `<th${c.n ? ` class="n"` : ""}${c.sort ? ` aria-sort="${on ? (F.sort.d > 0 ? "ascending" : "descending") : "none"}"` : ""}>${c.sort ? `<button class="cr-sort" type="button" data-crsort="${key}|${i}">${tx(c.h)}<span aria-hidden="true">${on ? (F.sort.d > 0 ? " ▲" : " ▼") : " ↕"}</span></button>` : tx(c.h)}</th>`; }).join("")}${sp.st ? `<th>${L("สถานะ", "Status")}</th>` : ""}</tr></thead>
     <tbody>${rows.map(r => { const id = sp.id(r), on = CR_OPEN && CR_OPEN.key === key && String(CR_OPEN.id) === String(id);
       return `<tr class="click ${sp.gone && sp.gone(r) ? "cr-gone" : ""} ${on ? "cr-on" : ""}" data-cropen="${key}|${esc(id)}" tabindex="0" aria-label="${L("เปิด", "Open")} ${esc(id)}">${sp.cols.map(c => `<td${c.n ? ` class="n"` : ""}>${c.c(r)}</td>`).join("")}${sp.st ? `<td>${crPill(sp, r)}</td>` : ""}</tr>`; }).join("")}</tbody>
     ${opts.foot ? `<tfoot>${opts.foot}</tfoot>` : ""}</table></div>`
@@ -76,11 +81,12 @@ function crActBar(sp, r) {
   if (o.ask) {
     const a = acts.find(x => x.id === o.ask);
     if (a) return `<form class="cr-ask" id="cr-ask"><b>${a.label}</b>${a.impact ? `<div class="sub">${a.impact()}</div>` : ""}${a.confirm ? `<div>${a.confirm}</div>` : ""}
-      ${a.why ? `<label for="cr-why">${a.whyLabel || L("เหตุผล (อย่างน้อย 10 ตัวอักษร)", "Reason (at least 10 characters)")}</label><textarea id="cr-why" rows="2" required minlength="${a.whyMin || 10}"></textarea>${o.err ? `<div class="cr-err">${esc(o.err)}</div>` : ""}` : ""}
+      ${a.num ? `<label for="cr-num">${tx(a.num.label)}</label><input type="number" id="cr-num" step="any" min="${a.num.min ?? 0}" max="${a.num.max}" value="${a.num.value ?? a.num.max}" inputmode="decimal" style="max-width:200px">` : ""}
+      ${a.why ? `<label for="cr-why">${a.whyLabel || L("เหตุผล (อย่างน้อย 10 ตัวอักษร)", "Reason (at least 10 characters)")}</label><textarea id="cr-why" rows="2" required minlength="${a.whyMin || CR_WHY_MIN}"></textarea>${o.err ? `<div class="cr-err">${esc(o.err)}</div>` : ""}` : ""}
       <div class="row"><button class="btn ${a.kind === "danger" ? "danger" : "primary"}" type="submit">${L("ยืนยัน", "Confirm")}</button><button class="btn ghost" type="button" data-crask="">${L("ยกเลิก", "Back")}</button></div></form>`;
   }
   if (!acts.length && !canEd) return "";
-  return `<div class="cr-acts">${canEd ? `<button class="btn" type="button" data-credit>${L("แก้ไข", "Edit")}</button>` : ""}${acts.map(a => `<button class="btn ${a.kind || ""}" type="button" data-crask="${a.id}">${a.label}</button>`).join("")}</div>`;
+  return `<div class="cr-acts">${canEd ? `<button class="btn" type="button" data-credit>${sp.edit.label ? tx(sp.edit.label(r)) : L("แก้ไข", "Edit")}</button>` : ""}${acts.map(a => `<button class="btn ${a.kind || ""}" type="button" data-crask="${a.id}">${a.label}</button>`).join("")}</div>`;
 }
 function crHist(sp, r) {
   const key = sp.hist ? sp.hist(r) : String(sp.id(r)), items = typeof historyItems === "function" ? historyItems(key) : [];
@@ -135,15 +141,17 @@ function crUndoOffer(snap, label) {
   $("#cr-undo-btn").onclick = () => {
     if (!CR_UNDO) return;
     S = JSON.parse(CR_UNDO.snap); clearTimeout(CR_UNDO.timer);
-    audit(["เลิกทำการเปลี่ยนแปลง", "Undid a change"], CR_UNDO.label); CR_UNDO = null; el.hidden = true; commit(); route(); toast(L("เลิกทำแล้ว", "Undone"));
+    audit(["เลิกทำการเปลี่ยนแปลง", "Undid a change"], CR_UNDO.label); CR_UNDO = null; el.hidden = true; commit(); renderShell(); route(); toast(L("เลิกทำแล้ว", "Undone"));
   };
 }
 
 // ---------- events (one set for every page) ----------
-function crDone(msg, snap) { commit(); route(); if (snap) crUndoOffer(snap, msg); else if (msg) toast(msg); const t = $("#cr-title"); if (t) t.focus(); }
+// renderShell redraws the menu badges and the Finance clocks that read the records just changed.
+function crDone(msg, snap) { commit(); renderShell(); route(); if (snap) crUndoOffer(snap, msg); else if (msg) toast(msg); const t = $("#cr-title"); if (t) t.focus(); }
 document.addEventListener("click", e => {
-  const t = e.target.closest("[data-cropen],[data-crnew],[data-crclose],[data-crtab],[data-credit],[data-crcancel],[data-crask]");
+  const t = e.target.closest("[data-crsort],[data-cropen],[data-crnew],[data-crclose],[data-crtab],[data-credit],[data-crcancel],[data-crask]");
   if (!t || !$("#view").contains(t)) return;
+  if (t.dataset.crsort) { const [k, i] = t.dataset.crsort.split("|"), F = CR_F[k], n = Number(i); F.sort = F.sort && F.sort.i === n ? (F.sort.d > 0 ? { i: n, d: -1 } : null) : { i: n, d: 1 }; route(); const b = $(`[data-crsort="${k}|${i}"]`); if (b) b.focus(); return; }
   if (t.dataset.cropen) { const [k, id] = t.dataset.cropen.split("|"); crOpen(k, id); route(); $("#cr-title") && $("#cr-title").focus(); return; }
   if (t.dataset.crnew) { crOpen(t.dataset.crnew, "", "edit"); route(); const f = $("#cr-form input, #cr-form select"); if (f) f.focus(); return; }
   if (t.hasAttribute("data-crclose")) { if (CR_OPEN && CR_OPEN.mode === "edit" && CR_OPEN.dirty && !CR_OPEN.leave) { CR_OPEN.leave = true; CR_OPEN.draft = crRead(crSpec(CR_OPEN.key), CR_OPEN.id ? crRec(CR_OPEN.key, CR_OPEN.id) : null); CR_OPEN.err = [{ f: null, m: L("ยังไม่ได้บันทึกการแก้ไข กดปิดอีกครั้งเพื่อทิ้ง หรือกดบันทึก", "Your changes aren't saved. Close again to discard them, or save.") }]; route(); return; } crClose(); route(); return; }
@@ -152,14 +160,14 @@ document.addEventListener("click", e => {
   if (t.hasAttribute("data-crcancel")) { if (CR_OPEN.id) { CR_OPEN.mode = "view"; CR_OPEN.draft = null; CR_OPEN.err = null; CR_OPEN.dirty = false; } else crClose(); route(); return; }
   if (t.dataset.crask !== undefined) {
     const sp = crSpec(CR_OPEN.key), r = crRec(CR_OPEN.key, CR_OPEN.id), a = t.dataset.crask && (sp.acts(r) || []).find(x => x && x.id === t.dataset.crask);
-    if (a && !a.why && !a.confirm && !a.impact) return crRun(sp, r, a, "");
+    if (a && !a.why && !a.confirm && !a.impact && !a.num) return crRun(sp, r, a, "");
     CR_OPEN.ask = t.dataset.crask || null; CR_OPEN.err = null; route(); const w = $("#cr-why"); if (w) w.focus();
   }
 });
-function crRun(sp, r, a, why) {
-  const snap = crSnap(), msg = a.run(r, why);
+function crRun(sp, r, a, why, num) {
+  const snap = crSnap(), msg = a.run(r, why, num);
   if (CR_OPEN) { CR_OPEN.ask = null; CR_OPEN.err = null; }
-  if (CR_OPEN && !crRec(CR_OPEN.key, CR_OPEN.id)) crClose();
+  if (CR_OPEN && CR_OPEN.id && !crRec(CR_OPEN.key, CR_OPEN.id)) crClose(); // an action may open a new-record form (no id yet)
   crDone(msg, a.undo === false ? null : snap);
 }
 document.addEventListener("submit", e => {
@@ -168,8 +176,10 @@ document.addEventListener("submit", e => {
     e.preventDefault();
     const sp = crSpec(CR_OPEN.key), r = crRec(CR_OPEN.key, CR_OPEN.id), a = (sp.acts(r) || []).find(x => x && x.id === CR_OPEN.ask), w = $("#cr-why"), why = w ? w.value.trim() : "";
     if (!a) return;
-    if (a.why && why.length < (a.whyMin || 10)) { CR_OPEN.err = a.whyMin ? L("กรอกข้อความก่อนยืนยัน", "Fill this in before confirming") : L("ใส่เหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters"); route(); const x = $("#cr-why"); if (x) { x.value = why; x.focus(); } return; }
-    return crRun(sp, r, a, why);
+    if (a.why && why.length < (a.whyMin || CR_WHY_MIN)) { CR_OPEN.err = a.whyMin ? L("กรอกข้อความก่อนยืนยัน", "Fill this in before confirming") : L("ใส่เหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters"); route(); const x = $("#cr-why"); if (x) { x.value = why; x.focus(); } return; }
+    let num;
+    if (a.num) { num = Number(($("#cr-num") || { value: "" }).value); if (!(num > (a.num.min ?? 0)) || num > a.num.max) { CR_OPEN.err = L(`ใส่จำนวนที่มากกว่า ${fmt(a.num.min ?? 0)} และไม่เกิน ${fmt(a.num.max)}`, `Enter an amount above ${fmt(a.num.min ?? 0)} and at most ${fmt(a.num.max)}`); route(); const x = $("#cr-num"); if (x) x.focus(); return; } }
+    return crRun(sp, r, a, why, num);
   }
   if (e.target.id !== "cr-form") return;
   e.preventDefault();
@@ -177,7 +187,7 @@ document.addEventListener("submit", e => {
   const F = sp.fields(r, vals), errs = [];
   F.forEach(f => { if (f.req && !f.lock && f.type !== "info" && f.type !== "check" && (vals[f.id] === "" || vals[f.id] == null)) errs.push({ f: f.id, m: L("ต้องกรอก", "Required") });
     if (f.type === "money" && vals[f.id] !== "" && vals[f.id] != null && !f.lock) { if (f.min != null && vals[f.id] < f.min) errs.push({ f: f.id, m: `${L("ไม่น้อยกว่า", "At least")} ${mb(f.min)} ${L("ลบ.", "M")}` }); if (f.max != null && vals[f.id] > f.max) errs.push({ f: f.id, m: `${L("ไม่เกิน", "At most")} ${mb(f.max)} ${L("ลบ.", "M")}` }); } });
-  if (r && sp.edit && sp.edit.why && sp.edit.why(r) && (vals._why || "").length < 10) errs.push({ f: "_why", m: L("ใส่เหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters") });
+  if (r && sp.edit && sp.edit.why && sp.edit.why(r) && (vals._why || "").length < CR_WHY_MIN) errs.push({ f: "_why", m: L("ใส่เหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters") });
   if (!errs.length && sp.check) errs.push(...sp.check(vals, r));
   if (errs.length) { CR_OPEN.draft = vals; CR_OPEN.err = errs; route(); const b = $('#cr-form [aria-invalid="true"]') || $(".cr-errsum"); if (b) b.focus && b.focus(); return; }
   const snap = crSnap();
