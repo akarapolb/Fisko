@@ -491,6 +491,199 @@
         if (miss.length) { const d = miss[0]; FIN_ROW = "dcl:" + d; route(); $(`#dcl-why-${d}`).value = why; document.querySelector(`[data-dclate="${d}"]`).click(); const r = dcOf(d); if (!r || !r.late) E("late report"); else { if (dcDay() !== d) E("the late day isn't shown"); chk(`${org}/FC7/late report`); } }
         BK_MONTH = null; FIN_ROW = null; DC_D = null;
       }); S = JSON.parse(keep); FIN_ASK = null; FIN_ROW = null; ADV_OPEN = null; DC_D = null; BK_MONTH = null; ROLE = "fin"; await tick(); }
+      // Procurement CRUD round PC1: a walk from a new plan item to an approved and cancelled requisition, then every
+      // plan item, plan version and requisition drawer (both plan years) for the procurement roles
+      if (o.suites.includes("render") && typeof CRUD !== "undefined" && CRUD.defs.pcReq) {
+        safe(`${org}/PC1 walk`, () => {
+          const D = CRUD.defs, why = "เหตุผลสำหรับการทดสอบ", as = r => { ROLE = r; LANG = o.langs[0]; renderShell(); };
+          const act = (k, r, id, w) => { const a = (D[k].acts(r) || []).find(x => x && x.id === id); if (!a) { errs.push(`${org}/PC1: no ${k} action ${id} for ${ROLE}`); return; } a.run(r, w || why); };
+          as("proc"); PP_FY = FAM_FY;
+          const div = S.users.find(u => u.role === "div" && u.primary), line = famLines().find(l => l.unit === div.unit && (l.type === "inv" || l.type === "ope"));
+          if (!line) { errs.push(`${org}/PC1: no allocation line for the division`); return; }
+          const base = { line: line.id, month: addDays(TODAY, 30), cat: S.pcat[0].id, method: "specific" };
+          const p = D.ppItem.create.run(Object.assign({ name: "ทดสอบ PC1", est: 200000 }, base));
+          D.ppItem.edit.run(p, Object.assign({ name: "ทดสอบ PC1 แก้", est: 250000 }, base));
+          const junk = D.ppItem.create.run(Object.assign({ name: "รายการผิด", est: 100000 }, base)); act("ppItem", junk, "del");
+          if (S.pplan.includes(junk) || S.cases.some(c => c.plan === junk.id)) errs.push(`${org}/PC1: draft item not deleted`);
+          if (D.ppItem.create.run(Object.assign({ name: "x", est: 1000 }, base)).id === junk.id) errs.push(`${org}/PC1: a deleted number was reused`);
+          S.pplan = S.pplan.filter(x => x.name[0] !== "x");
+          const v = D.pvVer.create.run({ why }); as("exec"); act("pvVer", v, "ok"); as("proc"); act("pvVer", v, "pub", "EGP-TEST-0001");
+          if (!inPublishedPlan(p)) errs.push(`${org}/PC1: the item is not in the published plan`);
+          as("div"); const r = D.pcReq.create.run({ plan: p.id, amount: 250000, need: p.month, why, splitWhy: "ทดสอบคำชี้แจงการแบ่งซื้อ" });
+          act("pcReq", r, "send"); act("pcReq", r, "wd"); act("pcReq", r, "send");
+          as("exec"); act("pcReq", r, "ret"); as("div"); D.pcReq.edit.run(r, { amount: 240000, need: r.need, why, splitWhy: r.splitWhy }); act("pcReq", r, "send");
+          as("exec"); act("pcReq", r, "ok");
+          if (r.status !== "approved" || caseState(caseByPlan(p.id)) !== 3) errs.push(`${org}/PC1: approval left ${r.status} at step ${caseState(caseByPlan(p.id))}`);
+          for (const [k, x, pg] of [["ppItem", p, "plan:plan"], ["pcReq", r, "reqn"]]) safe(`${org}/PC1/${k}`, () => { procSet(pg); crOpen(k, D[k].id(x)); go2("procurement"); chk(`${org}/PC1/${k}`); });
+          act("pcReq", r, "cancel");
+          if (p.status !== "planned" || !caseByPlan(p.id).cancelled) errs.push(`${org}/PC1: cancelling the requisition did not free the plan item`);
+          as("proc"); act("ppItem", p, "cancel");
+          if (inPublishedPlan(p) || !planDiff(planApproved(), planLive().map(snap)).removed.some(x => x.id === p.id)) errs.push(`${org}/PC1: a cancelled item still counts in the plan`);
+          procSet("plan:demand"); go2("procurement"); const b = document.querySelector("#view [data-ppnext]"); if (b) b.click();
+          PP_FY = FORM_FY; procSet("plan:plan"); go2("procurement"); chk(`${org}/PC1/next year`); PP_FY = FAM_FY; crClose();
+        });
+        for (const role of ["proc", "prochead", "div", "divhead", "plan", "exec", "audit"].filter(r => o.roles.includes(r))) {
+          ROLE = role; LANG = o.langs[0]; safe("shell", renderShell);
+          for (const [k, pg, fys] of [["ppItem", "plan:plan", [FAM_FY, FORM_FY]], ["pvVer", "plan:plan", [FAM_FY]], ["pcReq", "reqn", [FAM_FY]]]) for (const fy of fys) {
+            if (!prSees(prPage(pg.split(":")[0]))) continue;
+            PP_FY = fy; const sp = CRUD.defs[k];
+            const open = (id, mode, t) => safe(`${org}/${role}/${k}/${fy}/${id || "new"}/${mode}${t ? "/" + t : ""}`, () => { procSet(pg); crOpen(k, id, mode); if (t) CR_OPEN.tab = t; go2("procurement"); chk(`${org}/${role}/${k}/${id || "new"}/${mode}${t || ""}`); if (!document.querySelector(".cr-drawer")) errs.push(`${org}/${role}/${k}/${id}: no drawer`); });
+            for (const r of sp.list() || []) { const id = sp.id(r); open(id, "view"); open(id, "view", "hist"); if (sp.edit && sp.edit.can(r)) open(id, "edit"); }
+            if (sp.create && sp.create.can()) open("", "edit");
+          }
+          PP_FY = FAM_FY; crClose(); await tick();
+        }
+      }
+      // Procurement CRUD round PC2: bids added, corrected, deleted and simulated; a rerun that keeps them in the round
+      // history and starts clean; a cancelled case that forgets its method; then every case drawer and every row list
+      // (market research, bids, quotations, committees) inside every case for the procurement roles
+      if (o.suites.includes("render") && typeof CRUD !== "undefined" && CRUD.defs.pcCase) {
+        safe(`${org}/PC2 walk`, () => {
+          const D = CRUD.defs, why = "เหตุผลสำหรับการทดสอบ"; ROLE = "proc"; LANG = o.langs[0]; renderShell();
+          const act = (k, r, id) => { const a = (D[k].acts(r) || []).filter(Boolean).find(x => x.id === id); if (!a) { errs.push(`${org}/PC2: no ${k} action ${id}`); return; } a.run(r, why); };
+          const c = S.cases.find(x => caseState(x) === 5 && needsCompetition(x));
+          if (c) {
+            CASE_OPEN = c.id; c.egp.bidders = 2; setState(c, 6, "bidders", "2"); c.bids = []; c.scores = {};
+            const b1 = D.csBid.create.run({ vendor: csVendors()[0].name, other: "", price: 900000 });
+            D.csBid.create.run({ vendor: "", other: "บริษัท ทดสอบ จำกัด", price: 950000 });
+            D.csBid.edit.run(b1, { vendor: b1.name, other: "", price: 910000 });
+            act("csBid", c.bids[1], "del"); if (c.bids.length !== 1 || c.bids[0].price !== 910000) errs.push(`${org}/PC2: bid edit or delete failed`);
+            csBidSim(c); if (c.bids.length !== 2) errs.push(`${org}/PC2: simulated bids gave ${c.bids.length}`);
+            procSet("cases"); go2("procurement"); chk(`${org}/PC2/case ${c.id}`);
+            CASE_OPEN = null; act("pcCase", c, "fail");
+            const last = (c.rounds || [])[(c.rounds || []).length - 1];
+            if (caseState(c) !== 4 || c.bids.length || c.egp || !last || last.bids.length !== 2) errs.push(`${org}/PC2: the rerun did not start clean`);
+            crOpen("pcCase", c.id); CR_OPEN.tab = "rounds"; procSet("cases"); go2("procurement"); chk(`${org}/PC2/rounds`);
+          } else errs.push(`${org}/PC2: no competitive case at step 5`);
+          const d = S.cases.find(x => [2, 3].includes(caseState(x)));
+          if (d) { d.method = "specific"; act("pcCase", d, "cancel"); if (d.method || !d.cancelled || !(d.rounds || []).length) errs.push(`${org}/PC2: a cancelled case kept its method`); }
+          crClose(); CASE_OPEN = null;
+        });
+        for (const role of ["proc", "prochead", "div", "exec", "audit"].filter(r => o.roles.includes(r))) {
+          ROLE = role; LANG = o.langs[0]; safe("shell", renderShell);
+          if (!prSees(prPage("cases"))) continue;
+          const open = (k, id, mode, t, cid) => safe(`${org}/${role}/${k}/${cid || ""}/${id || "new"}/${mode}${t ? "/" + t : ""}`, () => {
+            CASE_OPEN = cid || null; procSet("cases"); crOpen(k, id, mode); if (t) CR_OPEN.tab = t; go2("procurement"); chk(`${org}/${role}/${k}/${cid || ""}/${id || "new"}/${mode}${t || ""}`);
+            if (document.querySelector(`[data-crlist="${k}"]`) && !document.querySelector(".cr-drawer")) errs.push(`${org}/${role}/${k}/${id}: no drawer`); });
+          for (const c of S.cases) {
+            open("pcCase", c.id, "view"); if ((c.rounds || []).length) open("pcCase", c.id, "view", "rounds");
+            for (const k of ["csMkt", "csBid", "csQuote", "csCm"]) { CASE_OPEN = c.id; const sp = CRUD.defs[k];
+              for (const r of sp.list()) { const id = sp.id(r); open(k, id, "view", null, c.id); CASE_OPEN = c.id; if (sp.edit && sp.edit.can(r)) open(k, id, "edit", null, c.id); CASE_OPEN = c.id; }
+              if (sp.create && sp.create.can()) open(k, "", "edit", null, c.id); }
+          }
+          CASE_OPEN = null; crClose(); await tick();
+        }
+      }
+      // Procurement CRUD round PC3: a draft contract from a case at the contracting step (deleted, drafted again, phases
+      // rescheduled, a wrong total refused), signed (the line is committed only then, the case moves to step 9); then
+      // every contract drawer, edit form and new form for the procurement, finance and audit roles
+      if (o.suites.includes("render") && typeof CRUD !== "undefined" && CRUD.defs.pcCon) {
+        safe(`${org}/PC3 walk`, () => {
+          const D = CRUD.defs.pcCon; ROLE = "proc"; LANG = o.langs[0]; renderShell(); CON_OPEN = null; CASE_OPEN = null;
+          const c = S.cases.find(x => !x.cancelled && caseReq(x) && caseState(x) >= 3 && caseState(x) < 9);
+          if (!c) { errs.push(`${org}/PC3: no case to contract`); return; }
+          const rq = caseReq(c), price = Math.round(rq.amount * 0.9 / 1e3) * 1e3, v0 = csVendors()[1] || csVendors()[0];
+          c.award = { winner: [v0.name, v0.name], price, date: TODAY, appealEnd: null, minutes: "ทดสอบ", why: "" }; c.appealElapsed = true; setState(c, 8, "contracting");
+          const insp = famPeople().filter(u => u.id !== me().id && !caseJudges(c).includes(u.id)).slice(0, 2).map(u => u.id), half = Math.round(price / 2 / 1e3) * 1e3;
+          const v = { cs: c.id, no: "T/001", signed: TODAY, amount: price, war: 12, n: "2", a0: half, a1: price - half, d0: addDays(TODAY, 30), d1: addDays(TODAY, 60) };
+          insp.forEach(id => (v["i_" + id] = true));
+          const bad = D.check(v, null); if (bad.length) errs.push(`${org}/PC3: a valid draft was refused: ${bad.map(e => e.m).join("; ")}`);
+          if (!D.check(Object.assign({}, v, { a1: 1000 }), null).length) errs.push(`${org}/PC3: a wrong phase total was accepted`);
+          const before = famCommitted(c.line);
+          let k = D.create.run(v); const del = D.acts(k).find(a => a.id === "del"); del.run(k);
+          if (S.contracts.includes(k) || c.draftCon) errs.push(`${org}/PC3: the draft was not deleted`);
+          k = D.create.run(v);
+          if (k.status !== "draft" || famCommitted(c.line) !== before || caseState(c) !== 8) errs.push(`${org}/PC3: a draft committed the line or moved the case`);
+          const third = price - 2 * Math.round(price / 3 / 1e3) * 1e3;
+          D.edit.run(k, Object.assign({}, v, { n: "3", a0: Math.round(price / 3 / 1e3) * 1e3, a1: Math.round(price / 3 / 1e3) * 1e3, a2: third, d2: addDays(TODAY, 90) }));
+          if (k.phases.length !== 3 || sumv(k.phases.map(p => p.amount)) !== price) errs.push(`${org}/PC3: the phase schedule was not saved`);
+          procSet("contracts"); crOpen("pcCon", k.id); go2("procurement"); chk(`${org}/PC3/draft`);
+          D.acts(k).find(a => a.id === "sign").run(k);
+          if (k.status !== "active" || caseState(c) !== 9 || famCommitted(c.line) !== before + price) errs.push(`${org}/PC3: signing left ${k.status}, step ${caseState(c)}, committed ${famCommitted(c.line) - before}`);
+          if (!phaseAccepted({ signs: [{ by: "x" }], need: 1 }) || phaseAccepted({ signs: [{ by: "x" }] })) errs.push(`${org}/PC3: signatures needed are wrong`);
+          crOpen("pcCon", k.id); go2("procurement"); chk(`${org}/PC3/signed`); CON_OPEN = k.id; crClose(); go2("procurement"); chk(`${org}/PC3/contract page`); CON_OPEN = null;
+        });
+        for (const role of ["proc", "prochead", "div", "fin", "audit"].filter(r => o.roles.includes(r))) {
+          ROLE = role; LANG = o.langs[0]; safe("shell", renderShell); CON_OPEN = null;
+          if (!prSees(prPage("contracts"))) continue;
+          const sp = CRUD.defs.pcCon, open = (id, mode) => safe(`${org}/${role}/pcCon/${id || "new"}/${mode}`, () => { procSet("contracts"); crOpen("pcCon", id, mode); go2("procurement"); chk(`${org}/${role}/pcCon/${id || "new"}/${mode}`); if (!document.querySelector(".cr-drawer")) errs.push(`${org}/${role}/pcCon/${id}: no drawer`); });
+          for (const r of sp.list()) { open(r.id, "view"); if (sp.edit.can(r)) open(r.id, "edit"); }
+          if (sp.create.can()) open("", "edit");
+          crClose(); await tick();
+        }
+      }
+      // Procurement CRUD round PC4: a penalty waiver proposed, approved (the net payable rises) and cancelled; an acceptance
+      // signature withdrawn from the phase row; an invoice returned before payment; then every waiver drawer
+      if (o.suites.includes("render") && typeof CRUD !== "undefined" && CRUD.defs.pcWaive) {
+        safe(`${org}/PC4 walk`, () => {
+          const D = CRUD.defs.pcWaive, as = r => { ROLE = r; LANG = o.langs[0]; renderShell(); };
+          const c = S.contracts.find(x => x.status === "active" && x.phases.some(ph => !phaseAccepted(ph) && !ph.cancelled));
+          if (!c) { errs.push(`${org}/PC4: no active contract`); return; }
+          const ph = c.phases.find(p => !phaseAccepted(p) && !p.cancelled); ph.delivered = addDays(phDue(ph), 10);
+          const raw = phPenaltyRaw(c, ph), net0 = phNet(c, ph); CON_OPEN = c.id; CON_TAB = "phases";
+          if (!(raw > 0)) errs.push(`${org}/PC4: a late delivery has no penalty`);
+          as("proc"); D.edit.run(ph, { amount: Math.round(raw / 2), doc: "หนังสือทดสอบ", why: "ความล่าช้าเกิดจากหน่วยงาน ทดสอบ" });
+          procSet("contracts"); crOpen("pcWaive", "P" + ph.n); go2("procurement"); chk(`${org}/PC4/waiver pending`);
+          as("exec"); const ok = D.acts(ph).find(a => a.id === "ok"); if (!ok) errs.push(`${org}/PC4: the executive can't approve the waiver`); else ok.run(ph);
+          if (phPenalty(c, ph) !== raw - Math.round(raw / 2) || phNet(c, ph) !== net0 + Math.round(raw / 2)) errs.push(`${org}/PC4: the waiver didn't reach the net payable`);
+          const cancel = D.acts(ph).find(a => a.id === "cancel"); if (cancel) cancel.run(ph, "ทดสอบการยกเลิกการงด"); if (phPenalty(c, ph) !== raw) errs.push(`${org}/PC4: a cancelled waiver still counts`);
+          crClose();
+          const insp = S.users.find(u => c.inspectors.includes(u.id)); as(insp.role);
+          if (me().id === insp.id) {
+            ph.signs.push({ by: me().id, t: nowIso() }); procSet("contracts"); go2("procurement");
+            const b = document.querySelector(`#view [data-sgwd="${c.id}|${ph.n}"]`); if (b) b.click(); else errs.push(`${org}/PC4: no withdraw-signature button`);
+            if (ph.signs.some(s => s.by === insp.id)) errs.push(`${org}/PC4: the signature was not withdrawn`);
+          }
+          const c2 = S.contracts.find(x => x.phases.some(p => phaseAccepted(p) && !phPayStarted(x, p)));
+          if (c2) { const p2 = c2.phases.find(p => phaseAccepted(p) && !phPayStarted(c2, p)); as("proc"); CON_OPEN = c2.id; p2.invoice = { no: "INV-TEST", amount: p2.amount, contract: c2.no, vendor: tx(c2.vendor) };
+            procSet("contracts"); go2("procurement"); const i = document.querySelector(`#ivr-${c2.id}-${p2.n}`), b = document.querySelector(`#view [data-ivret="${c2.id}|${p2.n}"]`);
+            if (i && b) { i.value = "เลขที่ใบแจ้งหนี้ไม่ตรงกับสัญญา"; b.click(); if (p2.invoice) errs.push(`${org}/PC4: the invoice was not returned`); } else errs.push(`${org}/PC4: no return-invoice control`); }
+          CON_OPEN = null;
+        });
+        for (const role of ["proc", "prochead", "exec", "fin", "audit"].filter(r => o.roles.includes(r))) {
+          ROLE = role; LANG = o.langs[0]; safe("shell", renderShell);
+          if (!prSees(prPage("contracts"))) continue;
+          for (const c of S.contracts.filter(x => x.status !== "draft")) { CON_OPEN = c.id; CON_TAB = "phases"; const sp = CRUD.defs.pcWaive;
+            for (const ph of sp.list()) for (const mode of ["view", ...(sp.edit.can(ph) ? ["edit"] : [])]) safe(`${org}/${role}/pcWaive/${c.id}/${ph.n}/${mode}`, () => {
+              CON_OPEN = c.id; procSet("contracts"); crOpen("pcWaive", sp.id(ph), mode); go2("procurement"); chk(`${org}/${role}/pcWaive/${c.id}/${ph.n}/${mode}`); if (!document.querySelector(".cr-drawer")) errs.push(`${org}/${role}/pcWaive/${c.id}: no drawer`); }); }
+          CON_OPEN = null; crClose(); await tick();
+        }
+      }
+      // Round 59: criteria rows, correcting the e-GP notice, replacing a committee member after declarations, the
+      // cumulative change ladder and delivery notice numbers
+      if (o.suites.includes("render") && typeof CRUD !== "undefined" && CRUD.defs.csCrit) {
+        safe(`${org}/R59 walk`, () => {
+          ROLE = "proc"; LANG = o.langs[0]; renderShell(); CON_OPEN = null; crClose();
+          const c = S.cases.find(x => !x.cancelled && !x.draftCon && caseState(x) >= 1 && caseState(x) <= 7);
+          if (!c) { errs.push(`${org}/R59: no case`); return; }
+          CASE_OPEN = c.id; c.method = "ebid"; setState(c, 4, "specifying"); c.criteria = CRIT_PRESET.pp.map(k => ({ ...k }));
+          const K = CRUD.defs.csCrit, q = c.criteria.find(k => k.k === "quality");
+          if (!K.check({ th: "ทดสอบ", w: 5 }, null).length) errs.push(`${org}/R59: a criterion pushing the total past 100 was accepted`);
+          K.edit.run(q, { th: tx(q.name), en: q.name[1], w: 15 }); const nk = K.create.run({ th: "ความยั่งยืน", en: "Sustainability", w: 5 });
+          if (!critOk(c)) errs.push(`${org}/R59: criteria don't add to 100 after adding a row`);
+          K.acts(nk).find(a => a.id === "del").run(nk); if (c.criteria.includes(nk)) errs.push(`${org}/R59: the criterion was not deleted`);
+          procSet("cases"); go2("procurement"); chk(`${org}/R59/criteria`);
+          const P = famPeople().filter(u => u.role !== "vendor" && u.id !== me().id).map(u => u.id);
+          c.committees.tor = { order: "1/2570", date: TODAY, chair: P[0], members: [P[1], P[2]], t: nowIso() }; c.coi = { tor: { [P[1]]: { conflict: false, with: "", t: nowIso(), by: P[1] } } };
+          const M = CRUD.defs.csCm, r = M.list().find(x => x.key === "tor"), v = { order: "1/2570", date: TODAY, chair: P[0], ["m_" + P[1]]: true, ["m_" + P[3]]: true };
+          if (!M.edit.can(r) || !M.edit.why(r)) errs.push(`${org}/R59: a started committee can't be changed with a reason`);
+          c.scores = { [P[2]]: { 0: { quality: 80 } } }; if (!M.check(v, r).length) errs.push(`${org}/R59: a member who scored could leave`);
+          c.scores = {}; M.edit.run(r, v, "กรรมการลาออกจากราชการ ทดสอบ"); if (!c.committees.tor.members.includes(P[3]) || c.committees.tor.members.includes(P[2])) errs.push(`${org}/R59: the member was not replaced`);
+          c.egp = { no: "EGP-T-1", announce: TODAY, close: addDays(TODAY, 10), bidders: null }; setState(c, 5, "sourcing"); procSet("cases"); go2("procurement");
+          const f = document.getElementById("egp-edit"); if (f) { $("#ege-close").value = addDays(TODAY, 15); $("#ege-why").value = "แก้ไขตามคำถามของผู้ซื้อเอกสาร"; f.requestSubmit(); } else errs.push(`${org}/R59: no e-GP correction form`);
+          if (!(c.egp.amends || []).length || c.egp.close !== addDays(TODAY, 15)) errs.push(`${org}/R59: the e-GP correction was not saved`);
+          CASE_OPEN = null;
+          const k = S.contracts.find(x => x.status === "active"); if (k) {
+            const step = Math.round(k.base * S.pcfg.ladderPct / 100 * 0.6);
+            k.vars = (k.vars || []).concat([{ id: `${k.id}-VT`, kind: "amount", delta: step, status: "approved", by: me().id, t: nowIso() }]);
+            if (varWho(k, { kind: "amount", delta: step }) !== "exec") errs.push(`${org}/R59: the change ladder is not cumulative`);
+            k.vars = k.vars.filter(x => x.id !== `${k.id}-VT`);
+            const ph = k.phases.find(p => !p.delivered && !phaseAccepted(p) && !p.cancelled && (p.n === 1 || phaseAccepted(k.phases[p.n - 2])));
+            if (ph) { CON_OPEN = k.id; CON_TAB = "phases"; procSet("contracts"); go2("procurement"); const b = document.querySelector(`#view [data-dlsim="${k.id}|${ph.n}"]`);
+              if (b) { b.click(); b.closest("form").requestSubmit(); if (!ph.dRef) errs.push(`${org}/R59: the delivery notice number was not saved`); } else errs.push(`${org}/R59: no delivery Simulate button`); CON_OPEN = null; }
+          }
+        });
+      }
       // Round C4: every B8 and B9 tab with the demo date moved to March and to September (simulated GFMIS imports)
       if (o.suites.includes("render") && typeof simDisb === "function" && S.y2569) for (const mi of [5, 11]) {
         S.asOf = FY_MONTH_ENDS()[mi]; TODAY = S.asOf; simDisb(mi);

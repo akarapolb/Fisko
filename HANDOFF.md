@@ -788,6 +788,112 @@ The round-44 follow-ups. No rule or data change; `DATA_V` stays 35. `main` was f
 - **Budget types** stay a fixed read-only table: they come from the budget law and the system's checks, transfers and reports depend on the five codes.
 - **Tests:** the sweep covers the three new M10 lists. A seed object key (`{ CUR_FY: A }`) broke seeding until it was made computed; every source file is now parse-checked after scripted edits. Full sweep 11,585 checks passing.
 
+## 55. Procurement CRUD round PC1: plan items, plan versions and requisitions (round 55)
+
+First round of `Fisko_Procurement_CRUD_Design.html` (v0.1, Thai). Scope agreed with the user: the core lifecycle only (P2 plan → P3 requisitions → P4 case files → P7 contracts → payment hand-off); list + drawer, keeping the case file and the open contract as full pages; a form plus a Simulate button for anything that comes from outside. `DATA_V` is 39.
+
+- **New file `src/js/84-proc-crud.js`:**
+  - **P2 plan items (`ppItem`, FR-PC-01):** the plan table is now a list + drawer. Procurement adds an item (allocation line, name, estimate, date, category, planned method; the suggested method uses `S.pcfg.specificMax` instead of a fixed 500,000) and edits it until it is requisitioned. A draft that was never in a proposed version and has no requisition can be deleted together with its case file. Anything else is cancelled with a reason: the case file and any live requisition are cancelled, and the item counts as "removed" in the next version (`planLive()` in 61c leaves cancelled items out). Status shown: draft (not in the published plan), planned, requisitioned, contracted, cancelled. The drawer has "Raise a requisition", which opens P3 with a new requisition for that item.
+  - **P2 plan versions (`pvVer`, FR-PC-02, FR-PC-03):** proposing a version is the list's create form (it shows the changes and asks why); the executive (or a spend delegate, never the proposer) approves or rejects with a reason; procurement can withdraw a pending version; the latest approved version records its e-GP notice number, with a Simulate button that fills a number to check first.
+  - **Next year's draft plan (FR-PC-04, FL-PC-02):** the "Needs not in the plan" tab lists items of reviewed budget requests (not personnel) with "Add to next year's plan". These go to `S.pplanNext` as FY`FORM_FY` drafts (no allocation line yet, no case file). P2 has a year picker (`PP_FY`); next year's list can be edited and deleted only.
+  - **P3 requisitions (`pcReq`, FR-PC-05 to 07):** a requisition is created as a draft by the owning unit (`div` or `divhead`) or by procurement on its behalf (`forUnit`), for a published plan item with nothing live on it. Edit while draft or returned; send (the published plan, room on the line and the split-purchase explanation are checked first; the drawer says why it can't be sent); delete a draft that was never sent; withdraw while pending (back to draft, case back to step 1); the approver approves (SD-01), returns for changes or rejects, both with a reason; an approved requisition with no contract can be cancelled by the approver or the head of procurement (case cancelled, reservation released, item back to planned). A returned requisition is a task for whoever raised it.
+- **Changes elsewhere:**
+  - `76-crud.js`: an action can offer `sim: r => value`, a Simulate button that fills the reason box. An action that refuses (returns "") no longer offers Undo.
+  - `60-procurement.js`: `nextId` never reuses a number (deleted ids are kept in `S.delIds`, R-C-05) and takes a year. Pending requisitions now reserve room on the line, as approved ones do. New statuses `draft`, `returned`, `closed`, `cancelled`. The approval notice now says the case moves to choosing the method (BUG-PC-07). The division task "Raise a requisition" only lists items that can be raised.
+  - `61-cases.js`: case ids come from `nextId("PC", …)`. Draft requisitions don't count in the split-purchase check.
+  - Seed (`61c`, `06`): plan v1 is approved on 15 July 2026 and published on 20 July, before the first requisitions (BUG-PC-08). The FY texts read `FAM_FY` or `CUR_FY`.
+- **Tests:** the sweep adds a PC1 walk: add, edit and delete a plan item (and check the number isn't reused); propose, approve and publish a version; raise a requisition as the division; send, withdraw, send, return, edit, send, approve (case at step 3); cancel it (item back to planned, case cancelled); cancel the item (it shows as removed in the next version); add a next-year item from a budget request. Then every plan item, plan version and requisition drawer (view, history, edit, new) in both plan years for proc, prochead, div, divhead, plan, exec and audit.
+
+## 56. Procurement CRUD round PC2: case files (round 56)
+
+Second round of `Fisko_Procurement_CRUD_Design.html` (chapter 6.3). The case file stays a full page (UI-PC1); the P4 list and the rows inside a case move onto the shared list + drawer. No seed change, so `DATA_V` stays 39.
+
+- **New file `src/js/85-case-crud.js`:**
+  - **P4 case list (`pcCase`, FR-PC-08):** replaces `caseList` (group and unit filters; cancelled cases hidden by default). The drawer shows the step, the requisition, reference price, e-GP number, winner, contract and the checks for the current step, with "Open the case". Actions for procurement: Failed, rerun (steps 4 to 7), Cancel procurement (steps 2 to 8), and for the head of procurement Withdraw the award (step 7, before the appeal period ends and with no open appeal; back to step 6, scores kept). All need a reason. An "Earlier rounds" tab lists past rounds.
+  - **Row lists inside a case:** market research (`csMkt`, FR-PC-10; editable at steps 3 and 4), bids (`csBid`, FR-PC-16; at step 6 until a member has scored; the bidder is picked from the supplier register, leaving out the abandoned-work list, or typed), quotations (`csQuote`, FR-PC-17; step 4 until one is chosen; choose and unchoose are drawer actions) and committees (`csCm`, FR-PC-12; appoint, change or cancel an order, with a reason, until a member has declared).
+  - **Simulate:** "Simulate the remaining bids" (SIM-PC-03) adds bids from the register, priced 85 to 99% of the reference price, with Undo; they can be edited or deleted before scoring. As with the C3 cut simulation, the rows are recorded straight away instead of filling a form.
+  - "Declare again" clears a member's own declaration before they score, with Undo (FR-PC-13).
+- **Changes in `61-cases.js`:**
+  - **Clean reruns (PC-P2, BUG-PC-04):** `caseArchive` moves the round's e-GP notice, bids, scores, quotations, award, appeal and evaluation-committee declarations into `c.rounds`, then clears them. `caseFail` uses it. `caseCancel` also clears the method, reference price, TOR, market research, criteria and committees, so a new requisition starts clean.
+  - **Method approval (FR-PC-09, BUG-PC-09):** whoever chose the method can't approve it, and a rejection needs a reason.
+  - **Other fixes:** "Open the contract" now opens the contract itself (BUG-PC-03). The TOR can be detached before the announcement, with Undo (FR-PC-11). The e-GP form has a Simulate button (number, today, closing after the minimum announcement days; SIM-PC-02). The award form has a date that can't be in the future (FR-PC-19). Quotations use `csQuote`, and the committee section uses `csCm`.
+  - **Appeal (FR-PC-20, SIM-PC-04):** the "Demo: an appeal is filed" button is now a form (appellant from the losing bidders, date, grounds) with Simulate. "The period ended with no appeal (simulated)" stays. Only the head of procurement decides, with a reason, and the appeal notice goes to them.
+- **`61b-sourcing.js`:** the market research panel and the bid form are replaced by `csMkt` and `csBid`. The criteria form id is now `crit-form`: the old id `cr-form` clashed with the drawer form of `76-crud.js`. The demo guide wording follows the new appeal buttons (`52-demo.js`).
+- **Not done (left for later):** custom criteria rows (FR-PC-14; the two presets stay), editing the e-GP notice after it is announced (the Q&A amendment still moves the closing date), and replacing a committee member with a reason once declarations have started (only conflicted members can be swapped, as before).
+- **Tests:** a PC2 walk adds, corrects and deletes bids, simulates the rest, reruns the case (round history kept, case clean) and cancels a case (method cleared). Then for proc, prochead, div, exec and audit it opens every case drawer (and its earlier rounds), and every market research, bid, quotation and committee row in every case (view and edit), plus the new forms. Full sweep 12,299 checks passing. Checked by hand: the bids list and drawer on a case at step 6, with simulated bids.
+
+## 57. Procurement CRUD round PC3: contracts (round 57)
+
+Third round of `Fisko_Procurement_CRUD_Design.html` (chapter 6.4). The open contract stays a full page (UI-PC2); the P7 list and contract creation move onto the shared list + drawer. No seed change, so `DATA_V` stays 39.
+
+- **New file `src/js/86-con-crud.js`, `pcCon` (FR-PC-21 to 23):**
+  - **List and drafting:** the P7 list replaces `conList` and the old "Create a contract" panel (`PROC.conCreate` is now empty). "Draft a contract" takes a case at the contracting step. The supplier is fixed to the winner (R-PC-04), and the amount can't exceed the winning price or the requisition. The form also has the number, signing date, warranty, number of phases and the acceptance committee (SD-02, SD-06 and the abandoned-work list are checked in the form).
+  - **Phase schedule:** each phase has an amount and a due date, defaulting to an equal split 45 days apart. The phases must add up to the contract amount, and the due dates must follow the signing date and each other (R-PC-05).
+  - **Draft actions:** a draft can be edited (phases are rebuilt), deleted (the number is not reused and the case goes back to step 8), or signed. Signing doesn't accept a future date; it commits the line, marks the requisition and plan item as contracted, and moves the case to step 9.
+  - **Signed contracts:** a signed contract can only have its acceptance committee changed, and only before anyone has signed an acceptance. The case page's contract button opens the draft drawer (`case-tocon`).
+- **Drafts are not live:** `conLive(c)` (60) leaves out terminated and draft contracts. It replaces the `status !== "terminated"` filters in 63b, 65b, 66g, 67b and 74, and the inspector tasks use it too. `famCommitted` leaves out drafts (FL-PC-06).
+- **Fixes:**
+  - **BUG-PC-01:** a phase needs as many acceptance signatures as the committee has members, at most two (`ph.need`, set when the contract is drafted or its committee changes). Older phases without `need` still need two.
+  - **BUG-PC-02:** payment gate check 3 compares the invoice with the accepted amount when acceptance is partial (R-PC-07).
+  - **BUG-PC-05:** closing the case file now also closes the contract (`status: "closed"`) and marks the plan item closed (FR-PC-31, FL-PC-09).
+  - **BUG-PC-06:** a forfeited guarantee shows as "Forfeited".
+- **Guarantee (FR-PC-27):** a document number field; a Simulate button (SIM-PC-06: bank guarantee, number, 5% and an expiry that covers the warranty); the amount can't be below `guaranteePct`, and the expiry must cover the last phase. A guarantee still in force can be extended to a later date, and extensions are kept in `ext`.
+- **Contract changes (FR-PC-26):** whoever proposed a change can withdraw it while it is pending (new status `withdrawn`, with Undo).
+- **FR-PC-34:** the unused payment-request form binders in `62-finance.js` (`#py-form`, `data-pyok`, `data-pyno`) are removed.
+- **Pickers:** the acceptance-committee and committee-order pickers leave out supplier accounts (`vendor`).
+- **Left for later:** withdrawing one's own acceptance signature (FR-PC-25), penalty waivers (FR-PC-28), editing or returning an invoice on a phase (FR-PC-30), Simulate for delivery notices and invoices (SIM-PC-05), and payment status on phase rows (FR-PC-33). The cumulative change ladder is not done either.
+- **Tests:** a PC3 walk drafts a contract from a case at step 8 and checks that a wrong phase total is refused. It deletes the draft and drafts again, checking that a draft commits nothing and keeps the case at step 8. It reschedules to three phases, then signs, checking that the line is committed and the case is at step 9. It also checks the signatures needed and renders the drawer and the contract page. Then every contract drawer, edit form and new form is opened for proc, prochead, div, fin and audit. Full sweep 12,333 checks passing. Checked by hand: the draft form with three phases and the acceptance committee picker.
+
+## 58. Procurement CRUD round PC4: waivers, signatures, invoices and the end-to-end demo (round 58)
+
+Last round of `Fisko_Procurement_CRUD_Design.html`. It finishes the contract pieces left from PC3 that the demo needs, and adds the demo script (chapter 11). No seed change, so `DATA_V` stays 39.
+
+- **New file `src/js/87-proc-e2e.js`:**
+  - **Penalty waivers (`pcWaive`, FR-PC-28, FL-PC-08):** a list under the phases tab of an open contract, for phases that are late or already have a waiver.
+    - Procurement proposes an amount up to the contract penalty, with a reason and a supporting document.
+    - The executive or a spend delegate approves it (SD-08: never the proposer) or rejects it with a reason.
+    - The proposer can withdraw it while it is pending.
+    - An approved waiver can be cancelled until the phase goes to payment (`phPayStarted`: a live voucher or payment request).
+    - `phPenalty` now subtracts an approved waiver, and `phPenaltyRaw` keeps the contract penalty, so the waiver flows into `phNet`, the payment gate and the Finance voucher.
+  - **Phase rows (63):**
+    - "Withdraw my signature" lets a member take back their own acceptance signature until the acceptance is complete, with Undo (FR-PC-25).
+    - The invoice form starts at the accepted amount and has a Simulate button that fills a supplier-portal invoice (SIM-PC-05).
+    - A recorded invoice can be returned with a reason before payment starts; earlier invoices are kept in `invReturned` (FR-PC-30).
+  - **The procurement end-to-end demo:** fifteen steps, P-E01 to P-E15, in the in-app demo guide (`DEMO`, `part: "pe2e"`), each with the role, the page, what to say and what to click. They run from the plan item to closing the case, with the fail-and-cancel alternative last. The guide's filter has a new choice, "Procurement end to end". "The original storyline" now means steps with no `part` (82).
+- **Still not done:** delivery-notice numbers with Simulate (deliveries keep a date only), payment status beyond what `phVoucher` already shows on phase rows (FR-PC-33), custom criteria rows (FR-PC-14), editing an e-GP notice after it is announced, replacing a committee member with a reason after declarations start, and the cumulative change ladder.
+- **Tests:**
+  - **PC4 walk:** proposes, approves and cancels a waiver on a late phase, checking that the net payable rises by the waiver and drops back when it is cancelled. It withdraws an inspector's signature through the button on the phase row, and returns an invoice through its control.
+  - **Drawers:** every waiver drawer is opened for proc, prochead, exec, fin and audit.
+  - **Demo:** the demo suite visits P-E01 to P-E15.
+  - **Result:** full sweep 12,378 checks passing. Checked by hand: the waiver list on a late phase, and the guide filters (15 procurement, 16 budget and 55 original steps).
+
+## 59. Procurement CRUD: the open items after PC4 (round 59)
+
+The five items left open in section 58. No seed change, so `DATA_V` stays 39.
+
+- **Custom evaluation criteria (FR-PC-14, new file `src/js/88-proc-more.js`, `csCrit`):** at step 4 of a competitive case, below the preset form (61b), the criteria are a list.
+  - Rows can be added, renamed, reweighted (0 to 100, and the running total can't pass 100) or deleted.
+  - Price is always a row: its name is fixed and it can't be deleted.
+  - The list head shows whether the total is 100; `critOk` still blocks moving on until it is.
+- **Correcting the e-GP notice (FR-PC-15, `88`):** at step 5, before bids close, a panel changes the project number and the closing date with a reason (at least 10 characters).
+  - Each correction keeps the old and new values in `c.egp.amends` and is listed in the panel.
+  - The plan item's e-GP number follows.
+  - The Q&A amendment that moves the closing date is unchanged.
+- **Replacing a committee member after declarations (FR-PC-12, `85`, `csCm`):** a committee order can now be edited after members start declaring, up to step 6.
+  - The edit needs a reason. The order number and date are locked.
+  - Members who have scored can't leave (the form says who).
+  - Members who leave lose their declaration (event `coi_swap` with the reason); new members must declare before they score.
+  - Cancelling the order still works only before anyone declares.
+- **Cumulative approval ladder (`63`, `varCum`):** a contract change goes to the executive once all approved changes of the same kind, including this one, pass the head's limit: `ladderPct` of the base amount, or `extDaysHead` days. The cumulative figure is stored on the change (`v.cum`) and shown next to it.
+- **Delivery notice numbers (SIM-PC-05, `63`, `88`):** the delivery form has a notice number and a Simulate button (number `DN-<yy>-<contract><phase>`, today's date or the due date). The number is shown on the phase row (`ph.dRef`).
+- **Tests:** an R59 walk runs every item on a case and a contract:
+  - **Criteria:** a total past 100 is refused, a row is reweighted, added and deleted, and `critOk` holds.
+  - **Committee:** a started committee is changed with a reason; a member who scored can't leave; another member is replaced.
+  - **e-GP notice:** corrected through the panel, and the correction is kept.
+  - **Change ladder:** a second small change goes to the executive.
+  - **Delivery:** recorded through Simulate, and the number is saved.
+  - **Result:** full sweep 12,390 checks passing. Checked by hand: the criteria list with a total that is not 100.
+
 ## 55F. Finance CRUD design and round FC1: shared list extras, Finance drawer alignment, F10 registers (round 55, Finance)
 
 - **Design:** `Fisko_Finance_CRUD_Design.html` v0.1 (Thai), approved. Decisions: hybrid use of the shared list + drawer (small registers move onto `CRUD.def`; the voucher and advance drawers, the cash count, bank matching and close checklists stay and are aligned); vouchers editable in draft or returned, cancellable with a reason up to "ready", a paid voucher is corrected by a refund receipt, never edited; GFMIS and bank steps pick rows, record results in a form with a Simulate button, and files and batches have history and undo until posted; the audit's non-CRUD bugs are folded in (authority limits, over-commitment, hard-coded years, rule ids). Requirements FR-FC-01 to 53, rules R-FC-01 to 07, FL-F01 to 10, SIM-F01 to 07, fixes FX-01 to 09, demo E-F01 to E-F15, rounds FC1 to FC6. SD-11 to 16 and R-FN-01 to 07 unchanged. Published at https://claude.ai/artifact/WqUrwy2yryGPUqXbmRnwgZ (private).
@@ -992,3 +1098,16 @@ The round-44 follow-ups. No rule or data change; `DATA_V` stays 35. `main` was f
 - **Found while testing:** the "month is closed" check for the trial-balance re-import had an operator-precedence bug (`!x.status === "closed"`), so the button never appeared. It now reads `!== "closed"`.
 - **Full sweep:** 12,760 checks pass.
 - **Not checked by hand:** phone width, dark mode, and English wording beyond the sweep.
+
+## 62. Merge of the Procurement and Finance CRUD branches (27 October 2026)
+
+- **What was merged into `main`:** `claude/charming-shirley-7b0006` (Finance, design `88cffc4` to round 61F `6ee2782`), then `claude/brave-haslett-3b0854` (Procurement, design `5af03db` to round 59 `b734210`), on top of round 54.
+- **Conflicts and how they were resolved (kept both sides everywhere):**
+  - `src/js/76-crud.js`: Finance's number field (`a.num`), row sorting (`data-crsort`) and the shared reason minimum (`CR_WHY_MIN`) together with Procurement's Simulate button (`a.sim`, `data-crsim`) and its rule that an action that refuses (returns "") offers no Undo; the id guard for actions that open a new-record form stays.
+  - `src/js/82-intel-crud.js`: the demo guide filter now has every step, Budget E-01..E-16 (`e2e`), Procurement P-E01..P-E15 (`pe2e`), Finance E-F01..E-F15 (`fin`) and the original storyline (`old`); the filter shows steps whose `part` matches, and "old" shows steps with no `part`.
+  - `tests/sweep.js`: Finance's FC1..FC6 sections and Procurement's PC walks sit one after the other.
+  - `HANDOFF.md`, `NEXT_SESSION.md`: Procurement sections 55 to 59 then Finance sections 55F to 61F, then this section; the handoff was rewritten for the merged state.
+  - The two built HTML files were rebuilt from `src/`.
+- **Checks:** every source file parses and the merged build declares no duplicate top-level names. The full sweep on the merged build: **13,565 checks, 0 errors** (render, chat, agents and the demo walk, including every Budget, Procurement and Finance E-script step and each branch's own walk).
+- **Next round number on `main`:** 62.
+

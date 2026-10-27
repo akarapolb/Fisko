@@ -240,7 +240,7 @@ function buildOrg(cfg) {
   });
   // The last two items are small, same kind, same unit: raising both in a row trips the split-purchase check (R-02).
   [[s.pplan.length - 2, 4e5], [s.pplan.length - 1, 3.5e5]].forEach(([i, est]) => Object.assign(s.pplan[i], { est, method: "specific", kind: "goods" }));
-  const why = [`จำเป็นต่อการดำเนินงานตามแผนปีงบประมาณ 2570`, `Needed to deliver the FY2570 work plan`];
+  const why = [`จำเป็นต่อการดำเนินงานตามแผนปีงบประมาณ ${CUR_FY}`, `Needed to deliver the FY${CUR_FY} work plan`];
   const mkReq = (i, st, t) => ({ id: `RQ-2570-` + String(i + 1).padStart(3, "0"), plan: s.pplan[i].id, by: reqBy(FL[i].unit), amount: s.pplan[i].est, why, status: st, t,
     decided: st === "pending" ? null : { by: EX, holder: EX, via: null, t: t.slice(0, 10) + "T16:00" } });
   s.reqn = [mkReq(0, "contracted", "2026-08-03T09:00"), mkReq(1, "contracted", "2026-08-04T09:00"), mkReq(2, "approved", "2026-09-01T09:00"), mkReq(3, "pending", "2026-10-15T09:00")];

@@ -97,7 +97,7 @@ function paidByMonth() {
 function fcMonths(o = {}) {
   const M = FY_MONTHS_F(), cur = curMonth(), pb = paidByMonth(), P = bcfg().fc.p, lag = o.lag != null ? o.lag : 7, slip = o.slip || 0;
   const exp = {}, put = (d, a) => { const k = d.slice(0, 7); if (k > M[11]) return; const key = k < cur ? cur : k; exp[key] = (exp[key] || 0) + a; };
-  S.contracts.filter(c => c.status !== "terminated").forEach(c => c.phases.filter(ph => !ph.cancelled && !phPaid(c, ph)).forEach(ph => put(addDays(ph.due, lag + slip), ph.amount)));
+  S.contracts.filter(conLive).forEach(c => c.phases.filter(ph => !ph.cancelled && !phPaid(c, ph)).forEach(ph => put(addDays(ph.due, lag + slip), ph.amount)));
   (S.fcommit || []).forEach(m => { const left = Math.max(0, m.amount - (m.released || 0) - (m.paid || 0)), ms = M.filter(k => k >= cur && k <= m.due.slice(0, 7)); ms.forEach(k => (exp[k] = (exp[k] || 0) + left / (ms.length || 1))); });
   const lines = famLines().map(l => { const com = famCommitted(l.id) + famOther(l.id) + famReserved(l.id), free = Math.max(0, l.amount - com), p = (P[l.type] != null ? P[l.type] : 85) / 100;
     return { l, free, p, paid: linePaid(l.id), expFree: free * p }; });
@@ -121,7 +121,7 @@ function fcAdvRisk(share) {
 // F-FN-03: money likely carried into next year.
 function fcCarry(slip = 0) {
   const items = [];
-  S.contracts.filter(c => c.status !== "terminated").forEach(c => { const late = c.phases.filter(ph => !ph.cancelled && !phPaid(c, ph) && addDays(ph.due, slip) > FY_END); if (late.length) items.push({ id: c.id, name: famPlan(c.plan).name, amt: sumv(late.map(ph => ph.amount)) }); });
+  S.contracts.filter(conLive).forEach(c => { const late = c.phases.filter(ph => !ph.cancelled && !phPaid(c, ph) && addDays(ph.due, slip) > FY_END); if (late.length) items.push({ id: c.id, name: famPlan(c.plan).name, amt: sumv(late.map(ph => ph.amount)) }); });
   (S.fcommit || []).filter(m => m.due > FY_END).forEach(m => items.push({ id: m.id, name: m.name, amt: Math.max(0, m.amount - (m.released || 0) - (m.paid || 0)) }));
   return { items, total: sumv(items.map(x => x.amt)) };
 }

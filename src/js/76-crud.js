@@ -82,7 +82,7 @@ function crActBar(sp, r) {
     const a = acts.find(x => x.id === o.ask);
     if (a) return `<form class="cr-ask" id="cr-ask"><b>${a.label}</b>${a.impact ? `<div class="sub">${a.impact()}</div>` : ""}${a.confirm ? `<div>${a.confirm}</div>` : ""}
       ${a.num ? `<label for="cr-num">${tx(a.num.label)}</label><input type="number" id="cr-num" step="any" min="${a.num.min ?? 0}" max="${a.num.max}" value="${a.num.value ?? a.num.max}" inputmode="decimal" style="max-width:200px">` : ""}
-      ${a.why ? `<label for="cr-why">${a.whyLabel || L("เหตุผล (อย่างน้อย 10 ตัวอักษร)", "Reason (at least 10 characters)")}</label><textarea id="cr-why" rows="2" required minlength="${a.whyMin || CR_WHY_MIN}"></textarea>${o.err ? `<div class="cr-err">${esc(o.err)}</div>` : ""}` : ""}
+      ${a.why ? `<label for="cr-why">${a.whyLabel || L("เหตุผล (อย่างน้อย 10 ตัวอักษร)", "Reason (at least 10 characters)")}</label><textarea id="cr-why" rows="2" required minlength="${a.whyMin || CR_WHY_MIN}"></textarea>${a.sim ? `<button class="btn ghost" type="button" data-crsim="${a.id}">${L("จำลอง", "Simulate")}</button>` : ""}${o.err ? `<div class="cr-err">${esc(o.err)}</div>` : ""}` : ""}
       <div class="row"><button class="btn ${a.kind === "danger" ? "danger" : "primary"}" type="submit">${L("ยืนยัน", "Confirm")}</button><button class="btn ghost" type="button" data-crask="">${L("ยกเลิก", "Back")}</button></div></form>`;
   }
   if (!acts.length && !canEd) return "";
@@ -149,9 +149,11 @@ function crUndoOffer(snap, label) {
 // renderShell redraws the menu badges and the Finance clocks that read the records just changed.
 function crDone(msg, snap) { commit(); renderShell(); route(); if (snap) crUndoOffer(snap, msg); else if (msg) toast(msg); const t = $("#cr-title"); if (t) t.focus(); }
 document.addEventListener("click", e => {
-  const t = e.target.closest("[data-crsort],[data-cropen],[data-crnew],[data-crclose],[data-crtab],[data-credit],[data-crcancel],[data-crask]");
+  const t = e.target.closest("[data-crsort],[data-cropen],[data-crnew],[data-crclose],[data-crtab],[data-credit],[data-crcancel],[data-crask],[data-crsim]");
   if (!t || !$("#view").contains(t)) return;
   if (t.dataset.crsort) { const [k, i] = t.dataset.crsort.split("|"), F = CR_F[k], n = Number(i); F.sort = F.sort && F.sort.i === n ? (F.sort.d > 0 ? { i: n, d: -1 } : null) : { i: n, d: 1 }; route(); const b = $(`[data-crsort="${k}|${i}"]`); if (b) b.focus(); return; }
+  // An action whose value comes from outside (a notice number, a reference) can offer a simulated value to check before confirming.
+  if (t.dataset.crsim) { const sp = crSpec(CR_OPEN.key), r = crRec(CR_OPEN.key, CR_OPEN.id), a = (sp.acts(r) || []).find(x => x && x.id === t.dataset.crsim), w = $("#cr-why"); if (a && w) { w.value = a.sim(r); w.focus(); } return; }
   if (t.dataset.cropen) { const [k, id] = t.dataset.cropen.split("|"); crOpen(k, id); route(); $("#cr-title") && $("#cr-title").focus(); return; }
   if (t.dataset.crnew) { crOpen(t.dataset.crnew, "", "edit"); route(); const f = $("#cr-form input, #cr-form select"); if (f) f.focus(); return; }
   if (t.hasAttribute("data-crclose")) { if (CR_OPEN && CR_OPEN.mode === "edit" && CR_OPEN.dirty && !CR_OPEN.leave) { CR_OPEN.leave = true; CR_OPEN.draft = crRead(crSpec(CR_OPEN.key), CR_OPEN.id ? crRec(CR_OPEN.key, CR_OPEN.id) : null); CR_OPEN.err = [{ f: null, m: L("ยังไม่ได้บันทึกการแก้ไข กดปิดอีกครั้งเพื่อทิ้ง หรือกดบันทึก", "Your changes aren't saved. Close again to discard them, or save.") }]; route(); return; } crClose(); route(); return; }
@@ -168,7 +170,7 @@ function crRun(sp, r, a, why, num) {
   const snap = crSnap(), msg = a.run(r, why, num);
   if (CR_OPEN) { CR_OPEN.ask = null; CR_OPEN.err = null; }
   if (CR_OPEN && CR_OPEN.id && !crRec(CR_OPEN.key, CR_OPEN.id)) crClose(); // an action may open a new-record form (no id yet)
-  crDone(msg, a.undo === false ? null : snap);
+  crDone(msg, a.undo === false || !msg ? null : snap); // an action that refuses returns "" (it has already said why)
 }
 document.addEventListener("submit", e => {
   if (!CR_OPEN || !e.target.closest("#view")) return;
