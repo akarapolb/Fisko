@@ -174,3 +174,7 @@ P7 contracts are a list + drawer: a contract is drafted from a case at step 8 wi
 ## Round 58 (Procurement CRUD round PC4)
 
 The Procurement CRUD design is fully built (rounds 55 to 58). PC4 added penalty waivers, withdrawing an acceptance signature, returning an invoice, an invoice Simulate button, and the procurement end-to-end demo P-E01 to P-E15 in the in-app guide (`87-proc-e2e.js`, `HANDOFF.md` section 58). Open items: delivery-notice numbers, FR-PC-14 custom criteria, e-GP notice edits after announcement, committee replacement with a reason, the cumulative change ladder, and publishing this branch to the shared prototype link once merged with Finance's work.
+
+## Round 59 (Procurement CRUD open items)
+
+Custom criteria rows, e-GP notice corrections, committee replacement with a reason after declarations, the cumulative change ladder and delivery notice numbers (`88-proc-more.js`, `HANDOFF.md` section 59). What remains for Procurement is payment status on phase rows beyond `phVoucher` (FR-PC-33), and publishing this branch to the shared prototype link once it is merged with Finance's work.

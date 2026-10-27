@@ -8818,7 +8818,7 @@ CASE_PANELS.push(c => {
     <div class="body">${C.length ? `<div class="row">${C.map(k => `<span class="pill p-info">${tx(k.name)} ${k.w}</span>`).join("")}<span class="sub">${L("รวม", "total")} ${sumv(C.map(k => k.w))}</span></div>` : `<span class="sub">${L("ยังไม่ได้กำหนด", "Not set yet")}</span>`}
     ${ed ? `<form class="inline-form" id="crit-form" style="margin-top:8px"><div class="f" style="flex:0 1 230px"><label for="cr-pre">${L("รูปแบบ", "Basis")}</label><select id="cr-pre"><option value="lowest">${L("ราคาต่ำสุด", "Lowest price")}</option><option value="pp" ${C.length > 1 ? "selected" : ""}>${L("ราคาประกอบเกณฑ์อื่น", "Price and performance")}</option></select></div>
       ${CRIT_PRESET.pp.map(k => `<div class="f" style="flex:0 1 110px"><label for="cr-${k.k}">${tx(k.name)}</label><input type="number" id="cr-${k.k}" min="0" max="100" step="1" value="${(C.find(x => x.k === k.k) || k).w}"></div>`).join("")}
-      <button class="btn" type="submit">${L("บันทึกเกณฑ์", "Save the criteria")}</button></form><div class="sub">${L("แบบราคาต่ำสุดใช้ราคาอย่างเดียว น้ำหนัก 100 · สูตรคะแนนราคา = ราคาต่ำสุด ÷ ราคาที่เสนอ × 100 (ค่าตั้ง ระดับ C)", "Lowest price uses price only, weight 100 · price score = lowest price ÷ offered price × 100 (a setting, level C)")}</div>` : ""}</div></section>`;
+      <button class="btn" type="submit">${L("บันทึกเกณฑ์", "Save the criteria")}</button></form><div class="sub">${L("แบบราคาต่ำสุดใช้ราคาอย่างเดียว น้ำหนัก 100 · สูตรคะแนนราคา = ราคาต่ำสุด ÷ ราคาที่เสนอ × 100 (ค่าตั้ง ระดับ C)", "Lowest price uses price only, weight 100 · price score = lowest price ÷ offered price × 100 (a setting, level C)")}</div>` : ""}</div>${ed && C.length ? crudList("csCrit", { head: `<h2>${L("แก้เกณฑ์รายข้อ", "Edit the criteria")}</h2><span class="sp"></span>${sumv(C.map(k => k.w)) === 100 ? tag(`${L("รวม", "Total")} 100`, "p-ok") : tag(`${L("รวม", "Total")} ${sumv(C.map(k => k.w))} ${L("ต้องเท่ากับ 100", "must be 100")}`, "p-bad")}` }) : ""}</section>`;
 });
 CASE_PANELS.push(c => {
   const keys = ["tor", "eval", "buy"].filter(k => c.committees[k]); if (!keys.length || caseState(c) < 4) return "";
@@ -9402,7 +9402,9 @@ const gateBox = (c, ph) => {
 
 // ---------- the contract panel ----------
 const canVary = () => isProcRole();
-const varWho = (c, v) => (v.kind === "time" ? (v.days <= S.pcfg.extDaysHead ? "prochead" : "exec") : (Math.abs(v.delta) / c.base <= S.pcfg.ladderPct / 100 ? "prochead" : "exec"));
+// The ladder is cumulative: approved changes of the same kind add up, so a series of small changes still reaches the executive.
+const varCum = (c, v) => { const done = (c.vars || []).filter(x => x !== v && x.status === "approved" && x.kind === v.kind); return v.kind === "time" ? sumv(done.map(x => x.days)) + v.days : sumv(done.map(x => Math.abs(x.delta))) + Math.abs(v.delta); };
+const varWho = (c, v) => (v.kind === "time" ? (varCum(c, v) <= S.pcfg.extDaysHead ? "prochead" : "exec") : (varCum(c, v) / c.base <= S.pcfg.ladderPct / 100 ? "prochead" : "exec"));
 const canDecideVar = v => (v.who === "exec" ? canSpend() : ROLE === "prochead");
 function conPanel(c, part) {
   const l = famLine(c.line), locked = phaseSigners(c).length > 0, me_ = me().id, people = famPeople().filter(u => u.id !== me_), isProc = isProcRole(), cs = conCase(c);
@@ -9432,9 +9434,9 @@ function conPanel(c, part) {
         const mySign = c.inspectors.includes(me_) && !acc && prevOk(ph) && !ph.signs.some(s => s.by === me_) && ph.delivered && !od && !ph.cancelled;
         return `<tr><td>${tx(ph.name)}${ph.cancelled ? ` ${tag(L("ยกเลิกจากการบอกเลิก", "Cancelled by termination"), "p-mute")}` : ""}</td>
           <td>${fdate(phDue(ph))}${(ph.ext || 0) + (ph.extV || 0) ? `<div class="sub">${L("เดิม", "was")} ${fdate(ph.due)} · +${(ph.ext || 0) + (ph.extV || 0)} ${L("วัน", "d")}</div>` : ""}${!ph.delivered && !acc && phDue(ph) < TODAY ? ` ${tag(L("เลยกำหนด", "Overdue"), "p-bad")}` : ""}</td><td class="n">${mb(ph.amount)}</td>
-          <td>${ph.delivered ? `${L("ส่งมอบ", "Delivered")} ${fdate(ph.delivered)}` : `<span class="sub">${L("ยังไม่แจ้งส่งมอบ", "No delivery notice")}</span>`}
+          <td>${ph.delivered ? `${L("ส่งมอบ", "Delivered")} ${fdate(ph.delivered)}${ph.dRef ? ` · <span class="mono sub">${esc(ph.dRef)}</span>` : ""}` : `<span class="sub">${L("ยังไม่แจ้งส่งมอบ", "No delivery notice")}</span>`}
             ${late ? `<div>${tag(`${late} ${L("วันล่าช้า", "days late")} · ${L("ค่าปรับ", "penalty")} ${fmt(pn)}`, "p-warn")}</div>` : ""}
-            ${isProc && !ph.delivered && !acc && prevOk(ph) && !ph.cancelled ? `<form class="inline-form" data-dlform="${c.id}|${ph.n}" style="margin-top:6px"><div class="f" style="flex:0 1 150px"><input type="date" name="d" value="${TODAY}" aria-label="${L("วันส่งมอบ", "Delivery date")}" required></div><button class="btn" type="submit">${L("บันทึกแจ้งส่งมอบ", "Record delivery")}</button></form>` : ""}</td>
+            ${isProc && !ph.delivered && !acc && prevOk(ph) && !ph.cancelled ? `<form class="inline-form" data-dlform="${c.id}|${ph.n}" style="margin-top:6px"><div class="f" style="flex:0 1 150px"><input type="date" name="d" value="${TODAY}" aria-label="${L("วันส่งมอบ", "Delivery date")}" required></div><div class="f" style="flex:1 1 130px"><input type="text" name="ref" placeholder="${L("เลขที่หนังสือส่งมอบ", "Delivery notice no.")}" aria-label="${L("เลขที่หนังสือส่งมอบ", "Delivery notice no.")}"></div><button class="btn ghost" type="button" data-dlsim="${c.id}|${ph.n}">${L("จำลอง", "Simulate")}</button><button class="btn" type="submit">${L("บันทึกแจ้งส่งมอบ", "Record delivery")}</button></form>` : ""}</td>
           <td>${phaseSignText(c, ph)}${!acc && ph.signs.some(s => s.by === me_) ? ` <button class="btn ghost" type="button" data-sgwd="${c.id}|${ph.n}">${L("ถอนลายมือชื่อ", "Withdraw my signature")}</button>` : ""} ${acc ? tag(ph.result === "partial" ? L("รับบางส่วน", "Partly accepted") : L("ตรวจรับแล้ว", "Accepted"), ph.result === "partial" ? "p-warn" : "p-ok") : ""}
             ${ph.result === "partial" ? `<div class="sub">${L("รับ", "accepted")} ${fmt(ph.okAmount)} ${L("บาท", "baht")}</div>` : ""}${ad ? `<div class="sub">${L("ตรวจรับภายใน", "Accept by")} ${fdate(ad)}${!acc && ad < TODAY ? ` ${tag(L("เกินกำหนด", "Late"), "p-bad")}` : ""}</div>` : ""}${ph.cert ? `<div class="sub">${L("ใบตรวจรับ", "Certificates")} ${ph.cert.n} ${L("ฉบับ", "copies")}</div>` : ""}
             ${(ph.dissent || []).map((d, i) => `<div class="sub" style="color:var(--${d.resolved ? "muted" : "bad"})">${L("ความเห็นแย้ง", "Dissent")}: ${esc(userName(d.by))} · ${esc(d.note)}${d.resolved ? ` · ${L("สั่งการแล้ว", "resolved")}: ${esc(d.resolved.note)}` : ""}</div>${!d.resolved && head ? `<div class="row" style="flex-wrap:nowrap;margin-top:4px"><input type="text" id="dsn-${c.id}-${ph.n}-${i}" placeholder="${L("คำสั่งการ", "Instruction")}" style="min-width:140px"><button class="btn" type="button" data-dsres="${c.id}|${ph.n}|${i}">${L("สั่งการ", "Resolve")}</button></div>` : ""}`).join("")}
@@ -9450,7 +9452,7 @@ function conPanel(c, part) {
     <div class="body"><div class="row"><b style="font-weight:600">${L("การแก้ไขสัญญา", "Contract changes")}</b><span class="sub">${L("ทุกการแก้ไขสร้างฉบับใหม่ ฉบับเดิมยังเรียกดูได้ ระดับอนุมัติตามสัดส่วนที่เปลี่ยน (R-08)", "Each change makes a new version and keeps the old one. The approval level follows the size of the change (R-08).")}</span></div>
       ${(c.versions || []).length > 1 ? `<div class="sub">${c.versions.map(v => `v${v.v}: ${mb(v.amount)} ${L("ลบ.", "M")} (${fdate(v.t)})`).join(" → ")}</div>` : ""}
       ${vars.length ? `<div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("การแก้ไข", "Change")}</th><th>${L("เหตุผล", "Reason")}</th><th>${L("ผู้อนุมัติ", "Approver")}</th><th>${L("สถานะ", "Status")}</th></tr></thead><tbody>${vars.map(v => `<tr><td class="mono">${v.id}</td>
-        <td>${v.kind === "time" ? `${L("ขยายเวลา", "Extension")} +${v.days} ${L("วัน", "d")} · ${tx(c.phases.find(p => p.n === v.phase).name)} · ${tx(EXT_CODE[v.code])}` : `${L("เปลี่ยนวงเงิน", "Amount")} ${v.delta > 0 ? "+" : ""}${fmt(v.delta)} ${L("บาท", "baht")} (${fmt(Math.abs(v.delta) / c.base * 100, 1)}%)`}<div class="sub">${esc(userName(v.by))} · ${fdate(v.t, true)}</div></td>
+        <td>${v.kind === "time" ? `${L("ขยายเวลา", "Extension")} +${v.days} ${L("วัน", "d")}${v.cum != null ? ` (${L("สะสม", "cumulative")} ${v.cum})` : ""} · ${tx(c.phases.find(p => p.n === v.phase).name)} · ${tx(EXT_CODE[v.code])}` : `${L("เปลี่ยนวงเงิน", "Amount")} ${v.delta > 0 ? "+" : ""}${fmt(v.delta)} ${L("บาท", "baht")} (${fmt(Math.abs(v.delta) / c.base * 100, 1)}%${v.cum != null ? ` · ${L("สะสม", "cumulative")} ${fmt(v.cum / c.base * 100, 1)}%` : ""})`}<div class="sub">${esc(userName(v.by))} · ${fdate(v.t, true)}</div></td>
         <td class="sub">${esc(v.why)}</td><td class="sub">${v.who === "exec" ? L("ผู้บริหาร", "Executive") : L("หัวหน้าพัสดุ", "Head of procurement")}${v.decided ? `<div>${esc(userName(v.decided.by))}</div>` : ""}</td>
         <td>${stTag(VAR_ST, v.status)}${v.status === "pending" && v.by === me().id ? `<div class="row" style="margin-top:4px"><button class="btn ghost" type="button" data-vwd="${c.id}|${v.id}">${L("ถอน", "Withdraw")}</button></div>` : ""}${v.status === "pending" && canDecideVar(v) ? `<div class="row" style="margin-top:4px"><button class="btn primary" type="button" data-vok="${c.id}|${v.id}">${L("อนุมัติ", "Approve")}</button><button class="btn danger" type="button" data-vno="${c.id}|${v.id}">${L("ไม่อนุมัติ", "Reject")}</button></div>` : ""}</td></tr>`).join("")}</tbody></table></div>` : ""}
       ${canVary() ? `<form class="inline-form" data-vform="${c.id}" style="margin-top:8px"><div class="f" style="flex:0 1 160px"><label>${L("ชนิด", "Kind")}</label><select name="kind"><option value="amount">${L("เปลี่ยนวงเงิน", "Change amount")}</option><option value="time">${L("ขยายเวลา", "Extend time")}</option></select></div>
@@ -9497,7 +9499,7 @@ function bindContracts() {
   $$("[data-gret]").forEach(b => (b.onclick = () => { const c = famCon(b.dataset.gret); c.guarantee.status = "returned"; audit(["คืนหลักประกันสัญญา", "Returned a contract guarantee"], c.id); done(L("บันทึกการคืนหลักประกันแล้ว", "Return recorded")); }));
   $$("[data-dlform]").forEach(f => (f.onsubmit = e => { e.preventDefault(); const [cid, n] = two(f.dataset.dlform), c = famCon(cid), ph = ph_(cid, n), d = new FormData(f).get("d");
     if (d < c.signed) { toast(L("วันส่งมอบต้องไม่ก่อนวันลงนามสัญญา", "Delivery can't be before the contract was signed")); return; }
-    ph.delivered = d; const late = phLate(ph);
+    ph.delivered = d; ph.dRef = String(new FormData(f).get("ref") || "").trim() || null; const late = phLate(ph);
     audit(["บันทึกการแจ้งส่งมอบ", "Recorded a delivery notice"], `${c.id} ${tx(ph.name)}${late ? ` · ${late} วัน` : ""}`);
     notify(c.inspectors, [`${c.id} ${ph.name[0]} แจ้งส่งมอบแล้ว ตรวจรับภายใน ${fdate(acceptDue(c, ph))}`, `${c.id} ${ph.name[1]} was delivered; accept by ${fdate(acceptDue(c, ph))}`], "prc-contracts");
     if (penaltyWarn(c)) notify(["exec", "prochead"], [`สัญญา ${c.id} ค่าปรับสะสมเกินเกณฑ์เตือน พิจารณาบอกเลิกสัญญา`, `Contract ${c.id}: penalties passed the warning limit; consider termination`], "prc-contracts");
@@ -9544,7 +9546,7 @@ function bindContracts() {
     else { v.delta = Math.round(Number(fd.get("delta"))); if (!v.delta) { toast(L("ระบุส่วนต่างวงเงิน", "Give the amount change")); return; }
       if (c.amount + v.delta <= 0) { toast(L("วงเงินใหม่ต้องมากกว่าศูนย์", "The new amount must be above zero")); return; }
       if (v.delta > 0 && v.delta > famHeadroom(c.line)) { toast(L(`เกินวงเงินคงเหลือของรายการจัดสรร (${mb(famHeadroom(c.line))} ลบ.)`, `More than the room left on the line (${mb(famHeadroom(c.line))} M)`)); return; } }
-    v.who = varWho(c, v); (c.vars = c.vars || []).push(v);
+    v.cum = varCum(c, v); v.who = varWho(c, v); (c.vars = c.vars || []).push(v);
     audit(["เสนอแก้ไขสัญญา", "Proposed a contract change"], `${c.id} ${v.id}`);
     notify([v.who], [`${c.id} มีการเสนอแก้ไขสัญญา รออนุมัติ`, `${c.id} has a proposed change waiting for approval`], "prc-contracts"); done(L("ส่งขออนุมัติแล้ว", "Sent for approval")); }));
   const vdec = (cid, vid, ok) => {
@@ -17940,20 +17942,27 @@ CRUD.def("csCm", {
   cols: [{ h: ["คณะกรรมการ", "Committee"], c: r => esc(tx(COMMITTEES[r.key])) }, { h: ["คำสั่ง", "Order"], c: r => (r.x ? `${esc(r.x.order)} <span class="sub">${fdate(r.x.date)}</span>` : "—") },
     { h: ["ประธานและกรรมการ", "Chair and members"], c: r => (r.x ? `<span class="sub">${committeeMembers(r.x).map(u => esc(userName(u))).join(", ")}</span>` : "—") }],
   fields: r => { const x = r && r.x, P = people().filter(u => u.role !== "vendor"), sel = x ? x.members : [];
-    return [{ id: "order", label: ["เลขที่คำสั่ง", "Order no."], req: true, value: x ? x.order : "" }, { id: "date", label: ["วันที่", "Date"], type: "date", req: true, max: TODAY, value: x ? x.date : TODAY },
+    const st = !!x && csCmStarted(csCase(), r.key);
+    return [{ id: "order", label: ["เลขที่คำสั่ง", "Order no."], req: true, lock: st, value: x ? x.order : "" }, { id: "date", label: ["วันที่", "Date"], type: "date", req: true, max: TODAY, lock: st, show: x && fdate(x.date), value: x ? x.date : TODAY },
+      ...(st ? [{ id: "_st", label: ["หมายเหตุ", "Note"], type: "info", wide: true, html: L("กรรมการเริ่มแจ้งส่วนได้เสียแล้ว เปลี่ยนตัวได้พร้อมเหตุผล ผู้ที่ให้คะแนนแล้วออกไม่ได้ ผู้ที่เข้าใหม่ต้องแจ้งส่วนได้เสียก่อนพิจารณา", "Members have started declaring: changes need a reason, members who have scored can't leave, and new members must declare first") }] : []),
       { id: "chair", label: ["ประธาน", "Chair"], type: "select", req: true, wide: true, value: x ? x.chair : (P[0] || {}).id, opts: P.map(u => [u.id, `${tx(u.name)} · ${tx(ROLES[u.role])}`]) },
       { id: "_m", label: ["กรรมการ", "Members"], type: "info", wide: true, html: `${L("อย่างน้อย", "At least")} ${S.pcfg.minMembers - 1} ${L("คนนอกจากประธาน", "besides the chair")}` },
       ...P.map(u => ({ id: "m_" + u.id, label: [`${u.name[0]} · ${ROLES[u.role][0]}`, `${u.name[1]} · ${ROLES[u.role][1]}`], type: "check", value: sel.includes(u.id) }))]; },
-  check: v => { const n = Object.keys(v).filter(k => k.startsWith("m_") && v[k] && k.slice(2) !== v.chair).length;
-    return n < S.pcfg.minMembers - 1 ? [{ f: null, m: L(`ต้องมีกรรมการอย่างน้อย ${S.pcfg.minMembers - 1} คนนอกจากประธาน`, `At least ${S.pcfg.minMembers - 1} members besides the chair`) }] : []; },
-  edit: { can: r => { const c = csCase(); return !!c && canEditCase(c) && !csCmStarted(c, r.key); }, run: (r, v) => {
-    const c = csCase(), members = Object.keys(v).filter(k => k.startsWith("m_") && v[k]).map(k => k.slice(2)).filter(id => id !== v.chair), was = !!r.x;
-    c.committees[r.key] = { order: v.order, date: v.date, chair: v.chair, members, t: nowIso() };
+  check: (v, r) => { const n = Object.keys(v).filter(k => k.startsWith("m_") && v[k] && k.slice(2) !== v.chair).length, c = csCase(), e = [];
+    if (n < S.pcfg.minMembers - 1) e.push({ f: null, m: L(`ต้องมีกรรมการอย่างน้อย ${S.pcfg.minMembers - 1} คนนอกจากประธาน`, `At least ${S.pcfg.minMembers - 1} members besides the chair`) });
+    if (r && r.x && c) { const keep = new Set([v.chair, ...Object.keys(v).filter(k => k.startsWith("m_") && v[k]).map(k => k.slice(2))]);
+      committeeMembers(r.x).filter(u => !keep.has(u) && c.scores && c.scores[u] && Object.keys(c.scores[u]).length).forEach(u => e.push({ f: null, m: L(`${userName(u)} ให้คะแนนแล้ว จึงออกจากคณะกรรมการไม่ได้`, `${userName(u)} has scored and can't leave the committee`) })); }
+    return e; },
+  edit: { can: r => { const c = csCase(); return !!c && canEditCase(c) && caseState(c) <= 6; }, why: r => { const c = csCase(); return !!r.x && csCmStarted(c, r.key); }, run: (r, v, why) => {
+    const c = csCase(), members = Object.keys(v).filter(k => k.startsWith("m_") && v[k]).map(k => k.slice(2)).filter(id => id !== v.chair), was = !!r.x, st = was && csCmStarted(c, r.key);
+    const keep = new Set([v.chair, ...members]), gone = was ? committeeMembers(r.x).filter(u => !keep.has(u)) : [];
+    if (st) gone.forEach(u => { delete c.coi[r.key][u]; caseLog(c, "coi_swap", `${userName(u)} · ${why}`); });
+    c.committees[r.key] = { order: st ? r.x.order : v.order, date: st ? r.x.date : v.date, chair: v.chair, members, t: nowIso() };
     audit([was ? "แก้ไขคำสั่งแต่งตั้งคณะกรรมการ" : "แต่งตั้งคณะกรรมการ", was ? "Changed a committee order" : "Appointed a committee"], `${c.id} ${tx(COMMITTEES[r.key])} · ${v.order}`); caseLog(c, "committee", `${tx(COMMITTEES[r.key])} · ${v.order}`); } },
   acts: r => { const c = csCase(); return r.x && c && canEditCase(c) && !csCmStarted(c, r.key) ? [{ id: "del", label: L("ยกเลิกคำสั่ง", "Cancel the order"), kind: "danger", why: true, run: (_, why) => {
     delete c.committees[r.key]; audit(["ยกเลิกคำสั่งแต่งตั้งคณะกรรมการ", "Cancelled a committee order"], `${c.id} ${tx(COMMITTEES[r.key])} · ${why}`); caseLog(c, "committee_off", `${tx(COMMITTEES[r.key])} · ${why}`); return L("ยกเลิกคำสั่งแล้ว", "Order cancelled"); } }] : []; },
   view: r => { const c = csCase(); return r.x ? kv([[L("คำสั่งที่", "Order"), `${esc(r.x.order)} · ${fdate(r.x.date)}`], [L("ประธาน", "Chair"), esc(userName(r.x.chair))], [L("กรรมการ", "Members"), r.x.members.map(u => esc(userName(u))).join(", ")],
-      [L("การแจ้งส่วนได้เสีย", "Declarations"), `${Object.keys((c.coi || {})[r.key] || {}).length}/${committeeMembers(r.x).length}`]]) + (csCmStarted(c, r.key) ? `<p class="sub">${L("กรรมการเริ่มแจ้งส่วนได้เสียแล้ว เปลี่ยนตัวได้เฉพาะผู้ที่มีส่วนได้เสีย", "Members have started declaring; only a conflicted member can be replaced")}</p>` : "")
+      [L("การแจ้งส่วนได้เสีย", "Declarations"), `${Object.keys((c.coi || {})[r.key] || {}).length}/${committeeMembers(r.x).length}`]]) + (csCmStarted(c, r.key) ? `<p class="sub">${L("กรรมการเริ่มแจ้งส่วนได้เสียแล้ว เปลี่ยนตัวได้พร้อมเหตุผล และยกเลิกคำสั่งไม่ได้", "Members have started declaring; members can be replaced with a reason, and the order can't be cancelled")}</p>` : "")
       : `<p class="sub">${L("ยังไม่แต่งตั้ง กด “แก้ไข” เพื่อบันทึกคำสั่ง", "Not appointed yet; use Edit to record the order")}</p>`; },
   hist: () => (csCase() ? csCase().id : ""),
 });
@@ -18189,6 +18198,63 @@ const PE2E = [
     ["แฟ้มที่ไม่มีผู้ยื่น → ลิ้นชัก “ล้มแล้วเริ่มใหม่” → แท็บรอบก่อนหน้า → “ยกเลิกการจัดซื้อ” ใส่เหตุผล → ดูใบขอเป็นยกเลิกและรายการกลับเป็นอยู่ในแผน", "A case with no bidders → Failed, rerun from its drawer → the earlier rounds tab → cancel with a reason → the requisition is cancelled and the item is planned again"]],
 ];
 PE2E.forEach(([role, link, title, say, doo], i) => DEMO.push({ t: `P-E${String(i + 1).padStart(2, "0")}`, part: "pe2e", role, link, title, say, do: doo }));
+
+/* ---- 88-proc-more.js ---- */
+// Round 59: the Procurement CRUD items left open after round PC4. Evaluation criteria become editable rows (FR-PC-14);
+// the e-GP notice can be corrected after it is announced, with a reason, until bids close (FR-PC-15); delivery
+// notices get a number with Simulate (SIM-PC-05). The cumulative change ladder is in 63-contracts.js (varCum) and
+// replacing committee members with a reason after declarations start is in 85-case-crud.js (csCm).
+Object.assign(CASE_EV, { egp_edit: ["แก้ไขประกาศ e-GP", "e-GP notice corrected"], criteria_row: ["แก้เกณฑ์พิจารณา", "Criteria changed"] });
+
+// ---------- evaluation criteria rows (FR-PC-14) ----------
+// Price is always one of the criteria (critOk); other rows can be added, renamed, reweighted and removed until the
+// announcement. The total must be 100 before the case can move on, as before.
+const ctEd = c => !!c && canEditCase(c) && caseState(c) === 4 && needsCompetition(c);
+CRUD.def("csCrit", {
+  noun: ["เกณฑ์พิจารณา", "Criterion"], list: () => { const c = csCase(); return c && c.criteria ? c.criteria : []; }, id: k => k.k, title: k => tx(k.name), sub: k => `${L("น้ำหนัก", "weight")} ${k.w}`,
+  cols: [{ h: ["เกณฑ์", "Criterion"], c: k => `${esc(tx(k.name))}${k.k === "price" ? ` <span class="sub">(${L("บังคับ", "required")})</span>` : ""}` }, { h: ["น้ำหนัก", "Weight"], n: true, c: k => k.w }],
+  fields: k => [k && k.k === "price" ? { id: "th", label: ["ชื่อเกณฑ์", "Name"], lock: true, value: tx(k.name) } : { id: "th", label: ["ชื่อเกณฑ์ (ไทย)", "Name (Thai)"], req: true, wide: true, value: k ? k.name[0] : "" },
+    ...(k && k.k === "price" ? [] : [{ id: "en", label: ["ชื่อเกณฑ์ (อังกฤษ)", "Name (English)"], wide: true, value: k ? k.name[1] : "" }]),
+    { id: "w", label: ["น้ำหนัก (0 ถึง 100)", "Weight (0 to 100)"], type: "number", req: true, min: 0, max: 100, value: k ? k.w : 10, hint: L("น้ำหนักรวมทุกเกณฑ์ต้องเท่ากับ 100 ก่อนประกาศ", "All weights must add up to 100 before the announcement") }],
+  check: (v, k) => { const c = csCase(), others = sumv(c.criteria.filter(x => x !== k).map(x => x.w)), e = [];
+    if (!(v.w >= 0 && v.w <= 100)) e.push({ f: "w", m: L("ใส่ 0 ถึง 100", "Enter 0 to 100") }); else if (others + v.w > 100) e.push({ f: "w", m: L(`รวมแล้วเกิน 100 (เกณฑ์อื่นรวม ${others})`, `The total would pass 100 (the others add up to ${others})`) });
+    if (!k && c.criteria.some(x => tx(x.name) === v.th)) e.push({ f: "th", m: L("มีเกณฑ์ชื่อนี้แล้ว", "Already a criterion") }); return e; },
+  create: { can: () => ctEd(csCase()) && (csCase().criteria || []).length > 0, label: ["เพิ่มเกณฑ์", "Add a criterion"], run: v => {
+    const c = csCase(), k = { k: "c" + (maxNo(c.criteria.map(x => x.k), /^c(\d+)/) + 1), name: [v.th, v.en || v.th], w: Math.round(v.w) }; c.criteria.push(k); caseLog(c, "criteria_row", `+ ${v.th} ${k.w}`); return k; } },
+  edit: { can: () => ctEd(csCase()), run: (k, v) => { const c = csCase(); if (k.k !== "price") k.name = [v.th, v.en || v.th]; k.w = Math.round(v.w); caseLog(c, "criteria_row", `${tx(k.name)} ${k.w}`); } },
+  acts: k => (ctEd(csCase()) && k.k !== "price" ? [{ id: "del", label: L("ลบเกณฑ์", "Delete"), kind: "danger", confirm: L("ลบเกณฑ์นี้ แล้วปรับน้ำหนักเกณฑ์อื่นให้รวมเป็น 100", "Delete this criterion, then reweight the others to 100"),
+    run: () => { const c = csCase(); c.criteria = c.criteria.filter(x => x !== k); caseLog(c, "criteria_row", `− ${tx(k.name)}`); return L("ลบแล้ว", "Deleted"); } }] : []),
+  view: k => kv([[L("น้ำหนัก", "Weight"), k.w], [L("รวมทุกเกณฑ์", "All criteria"), sumv(((csCase() || {}).criteria || []).map(x => x.w))]]),
+  hist: () => (csCase() ? csCase().id : ""),
+});
+
+// ---------- correcting the e-GP notice after the announcement (FR-PC-15) ----------
+CASE_PANELS.push(c => {
+  if (!canEditCase(c) || caseState(c) !== 5 || !c.egp || c.closeElapsed || c.egp.close <= TODAY) return "";
+  const A = c.egp.amends || [];
+  return `<section class="panel"><header><h2>${L("แก้ไขประกาศ e-GP", "Correct the e-GP notice")}</h2><span class="sp"></span><span class="sub">${L("ก่อนปิดรับข้อเสนอ ทุกครั้งต้องมีเหตุผลและเก็บค่าเดิมไว้", "Before bids close; every change needs a reason and keeps the old values")}</span></header>
+    ${A.length ? `<div class="body sub">${A.map(a => `${fdate(a.t, true)} · ${esc(userName(a.by))} · ${esc(a.from.no)} ${fdate(a.from.close)} → ${esc(a.to.no)} ${fdate(a.to.close)} · ${esc(a.why)}`).join("<br>")}</div>` : ""}
+    <div class="body"><form class="inline-form" id="egp-edit"><div class="f" style="flex:1 1 180px"><label for="ege-no">${L("รหัสโครงการ e-GP", "e-GP project no.")}</label><input type="text" id="ege-no" value="${esc(c.egp.no)}" required></div>
+      <div class="f" style="flex:0 1 170px"><label for="ege-close">${L("วันสุดท้ายยื่นข้อเสนอ", "Closing date")}</label><input type="date" id="ege-close" value="${c.egp.close}" min="${TODAY}" required></div>
+      <div class="f" style="flex:2 1 240px"><label for="ege-why">${L("เหตุผลที่แก้ไข", "Why it changes")}</label><input type="text" id="ege-why" required></div>
+      <button class="btn" type="submit">${L("บันทึกการแก้ไข", "Save the correction")}</button></form></div></section>`;
+});
+CASE_BINDS.push((c, done) => {
+  const f = $("#egp-edit"); if (!f) return;
+  f.onsubmit = e => { e.preventDefault(); const no = $("#ege-no").value.trim(), close = $("#ege-close").value, why = $("#ege-why").value.trim();
+    if (why.length < 10) { toast(L("ระบุเหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return; }
+    if (!no || !close || close < c.egp.announce) { toast(L("วันปิดรับต้องไม่ก่อนวันประกาศ", "The closing date can't be before the announcement")); return; }
+    if (no === c.egp.no && close === c.egp.close) { toast(L("ยังไม่มีอะไรเปลี่ยน", "Nothing changed")); return; }
+    (c.egp.amends = c.egp.amends || []).push({ from: { no: c.egp.no, close: c.egp.close }, to: { no, close }, why, by: me().id, t: nowIso() });
+    c.egp.no = no; c.egp.close = close; c.closeElapsed = false; const p = famPlan(c.plan); if (p.egp) p.egp.no = no;
+    audit(["แก้ไขประกาศ e-GP", "Corrected the e-GP notice"], `${c.id} ${no} · ${why}`); caseLog(c, "egp_edit", `${no} · ${fdate(close)} · ${why}`); done(L("บันทึกการแก้ไขแล้ว", "Correction saved")); };
+});
+
+// ---------- delivery notice numbers (SIM-PC-05) ----------
+CON_BINDS.push(() => {
+  $$("[data-dlsim]").forEach(b => (b.onclick = () => { const [cid, n] = b.dataset.dlsim.split("|"), c = famCon(cid), ph = c.phases.find(x => x.n === Number(n)), f = b.closest("form");
+    f.ref.value = `DN-${FAM_FY % 100}-${c.id.slice(-3)}${ph.n}`; f.d.value = TODAY < phDue(ph) ? TODAY : phDue(ph) < c.signed ? c.signed : TODAY; f.ref.focus(); toast(L("เติมหนังสือส่งมอบจำลองจากผู้ขายแล้ว ตรวจก่อนบันทึก", "Simulated delivery notice from the supplier filled in; check it before saving")); }));
+});
 
 /* ---- 99-boot.js ---- */
 // Boot: pick the saved organization, load its state, draw the shell and the current page.

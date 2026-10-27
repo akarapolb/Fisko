@@ -866,3 +866,30 @@ Last round of `Fisko_Procurement_CRUD_Design.html`. It finishes the contract pie
   - **Drawers:** every waiver drawer is opened for proc, prochead, exec, fin and audit.
   - **Demo:** the demo suite visits P-E01 to P-E15.
   - **Result:** full sweep 12,378 checks passing. Checked by hand: the waiver list on a late phase, and the guide filters (15 procurement, 16 budget and 55 original steps).
+
+## 59. Procurement CRUD: the open items after PC4 (round 59)
+
+The five items left open in section 58. No seed change, so `DATA_V` stays 39.
+
+- **Custom evaluation criteria (FR-PC-14, new file `src/js/88-proc-more.js`, `csCrit`):** at step 4 of a competitive case, below the preset form (61b), the criteria are a list.
+  - Rows can be added, renamed, reweighted (0 to 100, and the running total can't pass 100) or deleted.
+  - Price is always a row: its name is fixed and it can't be deleted.
+  - The list head shows whether the total is 100; `critOk` still blocks moving on until it is.
+- **Correcting the e-GP notice (FR-PC-15, `88`):** at step 5, before bids close, a panel changes the project number and the closing date with a reason (at least 10 characters).
+  - Each correction keeps the old and new values in `c.egp.amends` and is listed in the panel.
+  - The plan item's e-GP number follows.
+  - The Q&A amendment that moves the closing date is unchanged.
+- **Replacing a committee member after declarations (FR-PC-12, `85`, `csCm`):** a committee order can now be edited after members start declaring, up to step 6.
+  - The edit needs a reason. The order number and date are locked.
+  - Members who have scored can't leave (the form says who).
+  - Members who leave lose their declaration (event `coi_swap` with the reason); new members must declare before they score.
+  - Cancelling the order still works only before anyone declares.
+- **Cumulative approval ladder (`63`, `varCum`):** a contract change goes to the executive once all approved changes of the same kind, including this one, pass the head's limit: `ladderPct` of the base amount, or `extDaysHead` days. The cumulative figure is stored on the change (`v.cum`) and shown next to it.
+- **Delivery notice numbers (SIM-PC-05, `63`, `88`):** the delivery form has a notice number and a Simulate button (number `DN-<yy>-<contract><phase>`, today's date or the due date). The number is shown on the phase row (`ph.dRef`).
+- **Tests:** an R59 walk runs every item on a case and a contract:
+  - **Criteria:** a total past 100 is refused, a row is reweighted, added and deleted, and `critOk` holds.
+  - **Committee:** a started committee is changed with a reason; a member who scored can't leave; another member is replaced.
+  - **e-GP notice:** corrected through the panel, and the correction is kept.
+  - **Change ladder:** a second small change goes to the executive.
+  - **Delivery:** recorded through Simulate, and the number is saved.
+  - **Result:** full sweep 12,390 checks passing. Checked by hand: the criteria list with a total that is not 100.

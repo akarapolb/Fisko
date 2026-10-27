@@ -252,6 +252,41 @@
           CON_OPEN = null; crClose(); await tick();
         }
       }
+      // Round 59: criteria rows, correcting the e-GP notice, replacing a committee member after declarations, the
+      // cumulative change ladder and delivery notice numbers
+      if (o.suites.includes("render") && typeof CRUD !== "undefined" && CRUD.defs.csCrit) {
+        safe(`${org}/R59 walk`, () => {
+          ROLE = "proc"; LANG = o.langs[0]; renderShell(); CON_OPEN = null; crClose();
+          const c = S.cases.find(x => !x.cancelled && !x.draftCon && caseState(x) >= 1 && caseState(x) <= 7);
+          if (!c) { errs.push(`${org}/R59: no case`); return; }
+          CASE_OPEN = c.id; c.method = "ebid"; setState(c, 4, "specifying"); c.criteria = CRIT_PRESET.pp.map(k => ({ ...k }));
+          const K = CRUD.defs.csCrit, q = c.criteria.find(k => k.k === "quality");
+          if (!K.check({ th: "ทดสอบ", w: 5 }, null).length) errs.push(`${org}/R59: a criterion pushing the total past 100 was accepted`);
+          K.edit.run(q, { th: tx(q.name), en: q.name[1], w: 15 }); const nk = K.create.run({ th: "ความยั่งยืน", en: "Sustainability", w: 5 });
+          if (!critOk(c)) errs.push(`${org}/R59: criteria don't add to 100 after adding a row`);
+          K.acts(nk).find(a => a.id === "del").run(nk); if (c.criteria.includes(nk)) errs.push(`${org}/R59: the criterion was not deleted`);
+          procSet("cases"); go2("procurement"); chk(`${org}/R59/criteria`);
+          const P = famPeople().filter(u => u.role !== "vendor" && u.id !== me().id).map(u => u.id);
+          c.committees.tor = { order: "1/2570", date: TODAY, chair: P[0], members: [P[1], P[2]], t: nowIso() }; c.coi = { tor: { [P[1]]: { conflict: false, with: "", t: nowIso(), by: P[1] } } };
+          const M = CRUD.defs.csCm, r = M.list().find(x => x.key === "tor"), v = { order: "1/2570", date: TODAY, chair: P[0], ["m_" + P[1]]: true, ["m_" + P[3]]: true };
+          if (!M.edit.can(r) || !M.edit.why(r)) errs.push(`${org}/R59: a started committee can't be changed with a reason`);
+          c.scores = { [P[2]]: { 0: { quality: 80 } } }; if (!M.check(v, r).length) errs.push(`${org}/R59: a member who scored could leave`);
+          c.scores = {}; M.edit.run(r, v, "กรรมการลาออกจากราชการ ทดสอบ"); if (!c.committees.tor.members.includes(P[3]) || c.committees.tor.members.includes(P[2])) errs.push(`${org}/R59: the member was not replaced`);
+          c.egp = { no: "EGP-T-1", announce: TODAY, close: addDays(TODAY, 10), bidders: null }; setState(c, 5, "sourcing"); procSet("cases"); go2("procurement");
+          const f = document.getElementById("egp-edit"); if (f) { $("#ege-close").value = addDays(TODAY, 15); $("#ege-why").value = "แก้ไขตามคำถามของผู้ซื้อเอกสาร"; f.requestSubmit(); } else errs.push(`${org}/R59: no e-GP correction form`);
+          if (!(c.egp.amends || []).length || c.egp.close !== addDays(TODAY, 15)) errs.push(`${org}/R59: the e-GP correction was not saved`);
+          CASE_OPEN = null;
+          const k = S.contracts.find(x => x.status === "active"); if (k) {
+            const step = Math.round(k.base * S.pcfg.ladderPct / 100 * 0.6);
+            k.vars = (k.vars || []).concat([{ id: `${k.id}-VT`, kind: "amount", delta: step, status: "approved", by: me().id, t: nowIso() }]);
+            if (varWho(k, { kind: "amount", delta: step }) !== "exec") errs.push(`${org}/R59: the change ladder is not cumulative`);
+            k.vars = k.vars.filter(x => x.id !== `${k.id}-VT`);
+            const ph = k.phases.find(p => !p.delivered && !phaseAccepted(p) && !p.cancelled && (p.n === 1 || phaseAccepted(k.phases[p.n - 2])));
+            if (ph) { CON_OPEN = k.id; CON_TAB = "phases"; procSet("contracts"); go2("procurement"); const b = document.querySelector(`#view [data-dlsim="${k.id}|${ph.n}"]`);
+              if (b) { b.click(); b.closest("form").requestSubmit(); if (!ph.dRef) errs.push(`${org}/R59: the delivery notice number was not saved`); } else errs.push(`${org}/R59: no delivery Simulate button`); CON_OPEN = null; }
+          }
+        });
+      }
       // Round C4: every B8 and B9 tab with the demo date moved to March and to September (simulated GFMIS imports)
       if (o.suites.includes("render") && typeof simDisb === "function" && S.y2569) for (const mi of [5, 11]) {
         S.asOf = FY_MONTH_ENDS()[mi]; TODAY = S.asOf; simDisb(mi);

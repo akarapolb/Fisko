@@ -128,20 +128,27 @@ CRUD.def("csCm", {
   cols: [{ h: ["คณะกรรมการ", "Committee"], c: r => esc(tx(COMMITTEES[r.key])) }, { h: ["คำสั่ง", "Order"], c: r => (r.x ? `${esc(r.x.order)} <span class="sub">${fdate(r.x.date)}</span>` : "—") },
     { h: ["ประธานและกรรมการ", "Chair and members"], c: r => (r.x ? `<span class="sub">${committeeMembers(r.x).map(u => esc(userName(u))).join(", ")}</span>` : "—") }],
   fields: r => { const x = r && r.x, P = people().filter(u => u.role !== "vendor"), sel = x ? x.members : [];
-    return [{ id: "order", label: ["เลขที่คำสั่ง", "Order no."], req: true, value: x ? x.order : "" }, { id: "date", label: ["วันที่", "Date"], type: "date", req: true, max: TODAY, value: x ? x.date : TODAY },
+    const st = !!x && csCmStarted(csCase(), r.key);
+    return [{ id: "order", label: ["เลขที่คำสั่ง", "Order no."], req: true, lock: st, value: x ? x.order : "" }, { id: "date", label: ["วันที่", "Date"], type: "date", req: true, max: TODAY, lock: st, show: x && fdate(x.date), value: x ? x.date : TODAY },
+      ...(st ? [{ id: "_st", label: ["หมายเหตุ", "Note"], type: "info", wide: true, html: L("กรรมการเริ่มแจ้งส่วนได้เสียแล้ว เปลี่ยนตัวได้พร้อมเหตุผล ผู้ที่ให้คะแนนแล้วออกไม่ได้ ผู้ที่เข้าใหม่ต้องแจ้งส่วนได้เสียก่อนพิจารณา", "Members have started declaring: changes need a reason, members who have scored can't leave, and new members must declare first") }] : []),
       { id: "chair", label: ["ประธาน", "Chair"], type: "select", req: true, wide: true, value: x ? x.chair : (P[0] || {}).id, opts: P.map(u => [u.id, `${tx(u.name)} · ${tx(ROLES[u.role])}`]) },
       { id: "_m", label: ["กรรมการ", "Members"], type: "info", wide: true, html: `${L("อย่างน้อย", "At least")} ${S.pcfg.minMembers - 1} ${L("คนนอกจากประธาน", "besides the chair")}` },
       ...P.map(u => ({ id: "m_" + u.id, label: [`${u.name[0]} · ${ROLES[u.role][0]}`, `${u.name[1]} · ${ROLES[u.role][1]}`], type: "check", value: sel.includes(u.id) }))]; },
-  check: v => { const n = Object.keys(v).filter(k => k.startsWith("m_") && v[k] && k.slice(2) !== v.chair).length;
-    return n < S.pcfg.minMembers - 1 ? [{ f: null, m: L(`ต้องมีกรรมการอย่างน้อย ${S.pcfg.minMembers - 1} คนนอกจากประธาน`, `At least ${S.pcfg.minMembers - 1} members besides the chair`) }] : []; },
-  edit: { can: r => { const c = csCase(); return !!c && canEditCase(c) && !csCmStarted(c, r.key); }, run: (r, v) => {
-    const c = csCase(), members = Object.keys(v).filter(k => k.startsWith("m_") && v[k]).map(k => k.slice(2)).filter(id => id !== v.chair), was = !!r.x;
-    c.committees[r.key] = { order: v.order, date: v.date, chair: v.chair, members, t: nowIso() };
+  check: (v, r) => { const n = Object.keys(v).filter(k => k.startsWith("m_") && v[k] && k.slice(2) !== v.chair).length, c = csCase(), e = [];
+    if (n < S.pcfg.minMembers - 1) e.push({ f: null, m: L(`ต้องมีกรรมการอย่างน้อย ${S.pcfg.minMembers - 1} คนนอกจากประธาน`, `At least ${S.pcfg.minMembers - 1} members besides the chair`) });
+    if (r && r.x && c) { const keep = new Set([v.chair, ...Object.keys(v).filter(k => k.startsWith("m_") && v[k]).map(k => k.slice(2))]);
+      committeeMembers(r.x).filter(u => !keep.has(u) && c.scores && c.scores[u] && Object.keys(c.scores[u]).length).forEach(u => e.push({ f: null, m: L(`${userName(u)} ให้คะแนนแล้ว จึงออกจากคณะกรรมการไม่ได้`, `${userName(u)} has scored and can't leave the committee`) })); }
+    return e; },
+  edit: { can: r => { const c = csCase(); return !!c && canEditCase(c) && caseState(c) <= 6; }, why: r => { const c = csCase(); return !!r.x && csCmStarted(c, r.key); }, run: (r, v, why) => {
+    const c = csCase(), members = Object.keys(v).filter(k => k.startsWith("m_") && v[k]).map(k => k.slice(2)).filter(id => id !== v.chair), was = !!r.x, st = was && csCmStarted(c, r.key);
+    const keep = new Set([v.chair, ...members]), gone = was ? committeeMembers(r.x).filter(u => !keep.has(u)) : [];
+    if (st) gone.forEach(u => { delete c.coi[r.key][u]; caseLog(c, "coi_swap", `${userName(u)} · ${why}`); });
+    c.committees[r.key] = { order: st ? r.x.order : v.order, date: st ? r.x.date : v.date, chair: v.chair, members, t: nowIso() };
     audit([was ? "แก้ไขคำสั่งแต่งตั้งคณะกรรมการ" : "แต่งตั้งคณะกรรมการ", was ? "Changed a committee order" : "Appointed a committee"], `${c.id} ${tx(COMMITTEES[r.key])} · ${v.order}`); caseLog(c, "committee", `${tx(COMMITTEES[r.key])} · ${v.order}`); } },
   acts: r => { const c = csCase(); return r.x && c && canEditCase(c) && !csCmStarted(c, r.key) ? [{ id: "del", label: L("ยกเลิกคำสั่ง", "Cancel the order"), kind: "danger", why: true, run: (_, why) => {
     delete c.committees[r.key]; audit(["ยกเลิกคำสั่งแต่งตั้งคณะกรรมการ", "Cancelled a committee order"], `${c.id} ${tx(COMMITTEES[r.key])} · ${why}`); caseLog(c, "committee_off", `${tx(COMMITTEES[r.key])} · ${why}`); return L("ยกเลิกคำสั่งแล้ว", "Order cancelled"); } }] : []; },
   view: r => { const c = csCase(); return r.x ? kv([[L("คำสั่งที่", "Order"), `${esc(r.x.order)} · ${fdate(r.x.date)}`], [L("ประธาน", "Chair"), esc(userName(r.x.chair))], [L("กรรมการ", "Members"), r.x.members.map(u => esc(userName(u))).join(", ")],
-      [L("การแจ้งส่วนได้เสีย", "Declarations"), `${Object.keys((c.coi || {})[r.key] || {}).length}/${committeeMembers(r.x).length}`]]) + (csCmStarted(c, r.key) ? `<p class="sub">${L("กรรมการเริ่มแจ้งส่วนได้เสียแล้ว เปลี่ยนตัวได้เฉพาะผู้ที่มีส่วนได้เสีย", "Members have started declaring; only a conflicted member can be replaced")}</p>` : "")
+      [L("การแจ้งส่วนได้เสีย", "Declarations"), `${Object.keys((c.coi || {})[r.key] || {}).length}/${committeeMembers(r.x).length}`]]) + (csCmStarted(c, r.key) ? `<p class="sub">${L("กรรมการเริ่มแจ้งส่วนได้เสียแล้ว เปลี่ยนตัวได้พร้อมเหตุผล และยกเลิกคำสั่งไม่ได้", "Members have started declaring; members can be replaced with a reason, and the order can't be cancelled")}</p>` : "")
       : `<p class="sub">${L("ยังไม่แต่งตั้ง กด “แก้ไข” เพื่อบันทึกคำสั่ง", "Not appointed yet; use Edit to record the order")}</p>`; },
   hist: () => (csCase() ? csCase().id : ""),
 });
