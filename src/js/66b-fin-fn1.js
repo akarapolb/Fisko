@@ -14,7 +14,7 @@ let FN_PO = null;
 const FCFG_DEFAULT = () => ({
   poMin: 5000, whtMin: 10000, whtPct: 1, carryMin: 100000, carryBy: "2027-09-30", aheadDays: 10,
   perDiem: 240, hotel: 1500, kmRate: 4,
-  reqDays: 5, monthlyDay: 15, advTravel: 15, advOther: 30, advFix: 15, demandDays: 30, remitCash: 10000, remitDays: 3, refundDays: 15,
+  reqDays: 5, monthlyDay: 15, advTravel: 15, advOther: 30, advFix: 15, demandDays: 30, remitCash: 10000, remitDays: 3, refundDays: 15, aqDays: 15,
   auth: [
     { id: "A1", pos: ["หัวหน้าส่วนราชการระดับกรม", "Head of the department"], role: "exec", max: 0 },
     { id: "A2", pos: ["รองหัวหน้าส่วนราชการ (ได้รับมอบหมาย)", "Deputy head (by assignment)"], role: "exec", max: 10000000 },
@@ -49,6 +49,7 @@ const FCFG_ROWS = {
     ["demandDays", ["เรียกชดใช้เงินยืมภายใน นับจากวันครบกำหนด", "Demand repayment within, from the due date"], ["วัน", "days"], "A", "ข้อ 68"],
     ["remitDays", ["นำส่งรายได้เงินสดที่เกินเกณฑ์ภายใน", "Remit cash revenue above the limit within"], ["วันทำการ", "working days"], "A", "ข้อ 101 (2)"],
     ["refundDays", ["ส่งคืนเงินที่เบิกมาแต่ไม่ได้จ่ายภายใน", "Return money drawn but not paid within"], ["วันทำการ", "working days"], "A", "ข้อ 99, 101 (4)"],
+    ["aqDays", ["ชี้แจงข้อทักท้วงของ สตง. ภายใน นับจากวันได้รับแจ้ง", "Answer a State Audit query within, from the day received"], ["วัน", "days"], "A", "ข้อ 109"],
   ],
 };
 ADMIN_TABS.push({ id: "fcfg", label: ["กฎการเงิน", "Finance rules"], roles: ["admin", "fin", "finhead", "audit"] });

@@ -167,7 +167,7 @@ document.addEventListener("click", e => {
 function crRun(sp, r, a, why, num) {
   const snap = crSnap(), msg = a.run(r, why, num);
   if (CR_OPEN) { CR_OPEN.ask = null; CR_OPEN.err = null; }
-  if (CR_OPEN && !crRec(CR_OPEN.key, CR_OPEN.id)) crClose();
+  if (CR_OPEN && CR_OPEN.id && !crRec(CR_OPEN.key, CR_OPEN.id)) crClose(); // an action may open a new-record form (no id yet)
   crDone(msg, a.undo === false ? null : snap);
 }
 document.addEventListener("submit", e => {

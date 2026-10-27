@@ -887,3 +887,42 @@ The round-44 follow-ups. No rule or data change; `DATA_V` stays 35. `main` was f
   - **Results:** the full sweep passes, 12,385 checks.
   - **By hand:** the release box with its amount.
   - **Not checked by hand:** phone width, dark mode, and English wording beyond the sweep.
+
+## 59F. Finance CRUD round FC5: receipts, remittances, daily cash, reconciliation, closing, audit queries (round 59, Finance)
+
+- **New file `src/js/87-fin-recv-crud.js`.**
+  - **Receipts (`fnRc`, FR-FC-26, FR-FC-27):**
+    - The list has search plus type, method and status filters, and sorts by number, date and amount. A new receipt is issued in the drawer (the same `rcIssue`).
+    - Receipts are never edited (clause 76). The drawer offers three actions:
+      - "Record in GFMIS" for one receipt: the box holds the document number, simulated and filled in (SIM-F04).
+      - "Cancel".
+      - "Cancel and reissue": opens a new-receipt form filled from the old one, and the new receipt records `replaces`.
+    - The bulk "record all" stays as a simulate button. Issuing a receipt for an advance's cash back stays under the list.
+  - **Remittances (`fnRm`, FR-FC-28):** each type of money with waiting receipts has "Remit…". It opens a form with that type's receipts to pick from: recorded ones are ticked, unrecorded ones are shown but can't go. The bank reference is filled in. Until GFMIS shows a remittance, its reference and date can be corrected with a reason, or the whole remittance reversed with a reason; the receipts then wait again and their clocks keep running.
+  - **Audit queries (`fnAq`, FR-FC-39):**
+    - The answer is kept as a draft in the record's form, then "Send the answer" fixes it. After that only "Add a further explanation" is allowed.
+    - A query entered by mistake can be deleted with a reason, but only while it has no draft.
+    - The answer clock is the new M10 setting `aqDays` (15 days, clause 109; FX-09). Daily cash differences still show under the list.
+- **76-crud.js:** an action that opens a new-record form keeps the drawer open. `crRun` only closes it when an existing record is gone.
+- **Daily cash (66e, FR-FC-29, FR-FC-30):** before the executive acknowledges, the finance head can ask the committee to count again, with a reason. The earlier counts are kept in `r.recounts`, shown on the report, and the members are told. A member can change their own count until everyone has counted, and the change is audited. Back-dated reports are not built.
+- **Reconciliation (66f, FR-FC-31 to 33):**
+  - Before signing, the officer can delete a statement import and import it again. Deleted imports are kept in `S.bankStmtsOld`.
+  - A bank-only adjustment can be reversed with a reason. Reversed adjustments are kept in `S.bookAdjOld`.
+  - A signed reconciliation can be reopened by a finance head other than the signer (SD-16) while the month is open. Its log shows on the panel.
+  - Re-importing the GFMIS reports and undoing payment-file imports (FR-FC-34, 35) are not built.
+- **Daily close (FR-FC-36):** a closed day can be reopened while its month is open, with a reason, by a finance head other than the closer or by the executive (SD-16). Reopens are kept in `S.dayReopens`.
+- **FX-06:** comments now name "R-FN-06 remittance" (66e, 87) and "R-FN-06 month-close checklist" (66f).
+- **Removed:** the old renderers of `receipts`, `remit` and `auditQ`, the inline receipt form (`RC_NEW`), the per-class remit button and the audit-query form and answer rows.
+- **Tests:**
+  - **Rendering:** the sweep opens every receipt, remittance and audit query for fin, finhead, exec and audit: details, history, edit and new forms, and every action box. It also renders the F6, F7 and F8 day tabs.
+  - **The walk covers:**
+    - Receipts: issue, record in GFMIS, then cancel-and-reissue keeps the new form open and the reissue records what it replaces.
+    - Remittances: a remittance with no receipts is refused; one is corrected, reversed and remitted again.
+    - Daily cash: a recount keeps the earlier count.
+    - Bank: an import is deleted and re-imported, and an adjustment is reversed.
+    - Reopening: SD-16 stops the signer reopening a reconciliation and the closer reopening the day, and someone else can do both.
+    - Audit queries: one is drafted, sent and given a further explanation; another is deleted. The clock follows the M10 setting.
+  - **Found while testing:** a recorded bank-only item shows as a matched book line. So the reverse button now goes on any line whose reference is a book adjustment (`isAdj`).
+  - **Results:** the full sweep passes with 12,557 checks.
+  - **Checked by hand:** an audit query drawer.
+  - **Not checked by hand:** phone width, dark mode, and the English wording beyond the sweep.

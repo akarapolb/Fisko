@@ -333,6 +333,75 @@
           finSet("close:year"); go2("finance"); chk(`${org}/FC4/yearend`);
         }); S = JSON.parse(keep); crClose(); FIN_ROW = null; ADV_OPEN = null; ADV_EDIT = null; ROLE = "fin"; await tick(); }
       }
+      // Finance CRUD round FC5: receipts, remittances and audit queries on the shared list, then a walk through cash, bank and closing
+      if (o.suites.includes("render") && CRUD.defs && CRUD.defs.fnRc) {
+        const where = { fnRc: "recv:receipts", fnRm: "recv:remit", fnAq: "close:audit" };
+        for (const role of ["fin", "finhead", "exec", "audit"].filter(r => o.roles.includes(r))) {
+          ROLE = role; LANG = o.langs[0]; safe("shell", renderShell);
+          for (const [k, tab] of Object.entries(where)) {
+            const sp = CRUD.defs[k], open = (id, mode, t, ask) => safe(`${org}/${role}/${k}/${id || "new"}/${mode}${t ? "/" + t : ""}${ask ? "/" + ask : ""}`, () => { finSet(tab); crOpen(k, id, mode); if (t) CR_OPEN.tab = t; if (ask) CR_OPEN.ask = ask; go2("finance"); chk(`${org}/${role}/${k}/${id || "new"}/${mode}${t || ""}${ask || ""}`); if (!document.querySelector(".cr-drawer")) errs.push(`${org}/${role}/${k}/${id}: no drawer`); });
+            for (const r of sp.list() || []) { const id = sp.id(r); open(id, "view"); open(id, "view", "hist"); if (sp.edit && sp.edit.can(r)) open(id, "edit"); for (const a of sp.acts ? sp.acts(r) : []) if (a.why || a.num || a.confirm) open(id, "view", null, a.id); }
+            if (sp.create.can()) open("", "edit");
+          }
+          for (const t of ["cash", "recon:bank", "close:day"]) safe(`${org}/${role}/${t}`, () => { crClose(); finSet(t); go2("finance"); chk(`${org}/${role}/${t}`); });
+          crClose(); await tick();
+        }
+        if (["fin", "finhead", "exec"].every(r => o.roles.includes(r))) { const keep = JSON.stringify(S); safe(`${org}/FC5 walk`, () => {
+          const as = r => { ROLE = r; LANG = o.langs[0]; renderShell(); }, E = m => errs.push(`${org}/FC5: ${m}`), D = CRUD.defs;
+          const act = (k, r, id, why, n) => { const a = (D[k].acts(r) || []).find(x => x && x.id === id); if (!a) { E(`no action ${k}/${id} for ${ROLE}`); return; } return a.run(r, why, n); };
+          // receipts: issue, record in GFMIS, cancel and reissue (the new form stays open), cancel
+          as("fin"); finSet("recv:receipts");
+          if (!D.fnRc.check({ kind: "revenue", amount: 0 }).length) E("a zero receipt passed");
+          const r1 = D.fnRc.create.run({ kind: "revenue", payer: "ผู้ชำระทดสอบ", desc: "ค่าขายเอกสารทดสอบ", amount: 500, method: "cash" });
+          if (!r1) { E("receipt not issued"); return; }
+          act("fnRc", r1, "rec", "", 3600099901); if (!r1.recorded || r1.recorded.doc !== "3600099901") E("record in GFMIS");
+          const r2 = D.fnRc.create.run({ kind: "revenue", payer: "ผู้ชำระผิดชื่อ", desc: "ค่าปรับทดสอบ", amount: 300, method: "cash" });
+          crOpen("fnRc", r2.id); act("fnRc", r2, "re", "ชื่อผู้ชำระสะกดผิด");
+          if (!r2.cancelled || !CR_OPEN || CR_OPEN.id !== "" || (RC_DRAFT || {}).replaces !== rcNo(r2)) E("cancel and reissue did not open the new form");
+          go2("finance"); chk(`${org}/FC5/reissue form`);
+          const r3 = D.fnRc.create.run({ kind: "revenue", payer: "ผู้ชำระถูกชื่อ", desc: "ค่าปรับทดสอบ", amount: 300, method: "cash" }); if (!r3 || r3.replaces !== rcNo(r2)) E("reissued receipt");
+          crClose();
+          // remittance: pick receipts of one type, correct the reference, reverse, remit again
+          act("fnRc", r3, "rec", "", 3600099902);
+          if (!D.fnRm.check({ cls: "revenue" }, null).length) E("a remittance with no receipts passed");
+          const m1 = D.fnRm.create.run({ cls: "revenue", ["r_" + r1.id]: true, ["r_" + r3.id]: true, ref: "KTB-TEST-1" });
+          if (!m1 || r1.remit !== m1.id) { E("remittance"); return; }
+          D.fnRm.edit.run(m1, { ref: "KTB-TEST-2", date: TODAY }, "พิมพ์เลขอ้างอิงผิด"); if (m1.ref !== "KTB-TEST-2") E("remittance correction");
+          act("fnRm", m1, "rev", "ธนาคารแจ้งยอดไม่ครบ"); if (r1.remit || !m1.reversed) E("reverse");
+          const m2 = D.fnRm.create.run({ cls: "revenue", ["r_" + r1.id]: true, ref: "KTB-TEST-3" }); if (r1.remit !== m2.id || m2.id === m1.id) E("remit again");
+          // daily cash: a recount keeps the earlier count
+          const dc = (S.dailyCash = S.dailyCash || []); let today = dcOf(TODAY);
+          if (!today) { today = { date: TODAY, by: me().id, t: nowIso(), sys: dcSys(TODAY), counts: {}, status: "diff", ack: null }; dc.push(today); }
+          today.status = "diff"; today.ack = null; today.counts = { x: { cash: 1, cheque: 0, t: nowIso() } };
+          as("finhead"); finSet("cash"); go2("finance"); document.querySelector('[data-frow="dcre"]').click(); $("#dcre-why").value = "ยอดเงินสดไม่ตรงกับรายงาน";
+          $("#dc-recount").click(); if (today.status !== "counting" || !(today.recounts || []).length || Object.keys(today.counts).length) E("recount");
+          // bank: delete an import, reverse an adjustment, reopen a signed reconciliation (someone else)
+          as("fin"); const mo = curMonth(); BK_MONTH = mo; (S.periods = S.periods || []).filter(p => p.month === mo).forEach(p => (p.status = "open")); BK_ACCT = "budget"; finSet("recon:bank"); go2("finance");
+          if (!stmtOf("budget", mo) && $("#bk-imp")) $("#bk-imp").click();
+          const st = stmtOf("budget", mo);
+          if (st) {
+            const only = bkMatch("budget", mo).bankOnly[0];
+            if (only) { const b = document.querySelector(`[data-bkadj="${only.ref}"]`); if (b) b.click(); FIN_ROW = `bku:${only.ref}`; route(); $("#bku-why").value = "บันทึกซ้ำกับรายการเดิม"; document.querySelector(`[data-bkunadj="${only.ref}"]`).click(); if ((S.bookAdj || []).some(a => a.ref === only.ref)) E("adjustment not reversed"); }
+            FIN_ROW = "bkdel"; route(); $("#bkdel-why").value = "นำเข้าไฟล์ผิดเดือน"; $("#bk-del").click(); if (stmtOf("budget", mo)) E("import not deleted");
+            route(); if ($("#bk-imp")) $("#bk-imp").click(); if (!stmtOf("budget", mo)) E("import again after deleting");
+            S.bankRecs = (S.bankRecs || []).filter(x => !(x.acct === "budget" && x.month === mo)); S.bankRecs.push({ acct: "budget", month: mo, status: "signed", by: S.users.find(u => u.role === "finhead" && u.primary).id, t: nowIso(), diff: 0 });
+            as("finhead"); finSet("recon:bank"); FIN_ROW = "bkre"; go2("finance"); $("#bkre-why").value = "ต้องแก้รายการระหว่างทาง"; $("#bk-reopen").click(); if (recOf("budget", mo).status !== "signed") E("SD-16 let the signer reopen");
+            recOf("budget", mo).by = "someone-else"; FIN_ROW = "bkre"; route(); $("#bkre-why").value = "ต้องแก้รายการระหว่างทาง"; $("#bk-reopen").click(); if (recOf("budget", mo).status !== "reopened") E("reopen the reconciliation");
+          }
+          // a closed day reopens (not by whoever closed it)
+          as("finhead"); (S.dayCloses = S.dayCloses || []).push({ date: TODAY, by: me().id, t: nowIso(), why: "" });
+          (S.periods = S.periods || []).filter(p => p.month === TODAY.slice(0, 7)).forEach(p => (p.status = "open"));
+          finSet("close:day"); FIN_ROW = "dclre"; go2("finance"); $("#dclre-why").value = "ลืมบันทึกใบเสร็จหนึ่งใบ"; $("#dcl-reopen").click(); if (!(S.dayCloses || []).some(x => x.date === TODAY)) E("SD-16 let the closer reopen the day");
+          as("exec"); FIN_ROW = "dclre"; route(); $("#dclre-why").value = "ลืมบันทึกใบเสร็จหนึ่งใบ"; $("#dcl-reopen").click(); if ((S.dayCloses || []).some(x => x.date === TODAY)) E("day not reopened");
+          // audit queries: draft, send, add more; delete one entered by mistake
+          as("finhead"); const q = D.fnAq.create.run({ from: "สตง.", th: "ทดสอบการจ่ายเงินยืม", date: TODAY }); if (q.due !== addDays(TODAY, fcfg().aqDays)) E("audit clock from M10");
+          D.fnAq.edit.run(q, { from: "สตง.", th: q.subject[0], date: TODAY, draft: "ร่างคำชี้แจงสำหรับการทดสอบ" });
+          act("fnAq", q, "send"); if (!q.answer || q.draft) E("send the answer"); if (D.fnAq.edit.can(q)) E("an answered query can still be edited");
+          act("fnAq", q, "more", "ส่งเอกสารเพิ่มเติมตามที่ขอ"); if (!(q.more || []).length) E("further explanation");
+          const q2 = D.fnAq.create.run({ from: "สตง.", th: "บันทึกผิด", date: TODAY }); act("fnAq", q2, "del", "บันทึกซ้ำกับข้อเดิม"); if (!q2.deleted) E("delete a query");
+          finSet("close:audit"); crOpen("fnAq", q.id); go2("finance"); chk(`${org}/FC5/audit query`); crClose();
+        }); S = JSON.parse(keep); crClose(); FIN_ROW = null; RC_DRAFT = null; BK_MONTH = null; ROLE = "fin"; await tick(); }
+      }
       // Round C4: every B8 and B9 tab with the demo date moved to March and to September (simulated GFMIS imports)
       if (o.suites.includes("render") && typeof simDisb === "function" && S.y2569) for (const mi of [5, 11]) {
         S.asOf = FY_MONTH_ENDS()[mi]; TODAY = S.asOf; simDisb(mi);
