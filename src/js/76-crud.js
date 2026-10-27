@@ -10,7 +10,7 @@
 //   fields: (r | null, vals) => [{ id, label, type: text|money|number|select|date|textarea|check|info, opts, req, min, max, lock, hint, wide }],
 //   check: (vals, r | null) => [{ f: fieldId | null, m: message }],
 //   create: { can: () => bool, label: [th, en], run: vals => record },   // run returns the new record
-//   edit: { can: r => bool, run: (r, vals, why) => void, why: r => bool },  // why: ask for a reason when saving
+//   edit: { can: r => bool, run: (r, vals, why) => void, why: r => bool, label: r => [th, en] },  // why: ask for a reason when saving; label: the button (default Edit)
 //   acts: r => [{ id, label, kind: primary|danger|ghost, why: bool, whyLabel, whyMin, confirm: text, impact: () => text, undo: false, run: (r, why) => toastText }],
 //   view: r => html (the details tab), tabs: r => [[id, label, html]], hist: r => history key,
 //   prefill: () => vals (for a new record),
@@ -84,7 +84,7 @@ function crActBar(sp, r) {
       <div class="row"><button class="btn ${a.kind === "danger" ? "danger" : "primary"}" type="submit">${L("ยืนยัน", "Confirm")}</button><button class="btn ghost" type="button" data-crask="">${L("ยกเลิก", "Back")}</button></div></form>`;
   }
   if (!acts.length && !canEd) return "";
-  return `<div class="cr-acts">${canEd ? `<button class="btn" type="button" data-credit>${L("แก้ไข", "Edit")}</button>` : ""}${acts.map(a => `<button class="btn ${a.kind || ""}" type="button" data-crask="${a.id}">${a.label}</button>`).join("")}</div>`;
+  return `<div class="cr-acts">${canEd ? `<button class="btn" type="button" data-credit>${sp.edit.label ? tx(sp.edit.label(r)) : L("แก้ไข", "Edit")}</button>` : ""}${acts.map(a => `<button class="btn ${a.kind || ""}" type="button" data-crask="${a.id}">${a.label}</button>`).join("")}</div>`;
 }
 function crHist(sp, r) {
   const key = sp.hist ? sp.hist(r) : String(sp.id(r)), items = typeof historyItems === "function" ? historyItems(key) : [];

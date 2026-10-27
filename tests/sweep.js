@@ -215,6 +215,61 @@
           const ad = (S.advances || []).find(a => a.state === "request"); if (ad) { as("exec"); if (!advAct(ad, "reject", "สั้น")) E("advance reject without a reason went through"); }
         }); S = JSON.parse(keep); VC_OPEN = null; VC_EDIT = null; FIN_ASK = null; VC_F = "open"; VC_Q.show = false; ROLE = "fin"; await tick(); }
       }
+      // Finance CRUD round FC3: GFMIS files and e-Payment batches on the shared list, the daily check, then a payment walk
+      if (o.suites.includes("render") && CRUD.defs && CRUD.defs.fnGfo) {
+        for (const role of ["fin", "finhead", "exec", "audit"].filter(r => o.roles.includes(r))) {
+          ROLE = role; LANG = o.langs[0]; safe("shell", renderShell);
+          for (const k of ["fnGfo", "fnEp"]) {
+            const sp = CRUD.defs[k], open = (id, mode, t) => safe(`${org}/${role}/${k}/${id || "new"}/${mode}${t ? "/" + t : ""}`, () => { finSet("pay:gfmis"); VC_OPEN = null; crOpen(k, id, mode); if (t) CR_OPEN.tab = t; go2("finance"); chk(`${org}/${role}/${k}/${id || "new"}/${mode}${t || ""}`); if (!document.querySelector(".cr-drawer")) errs.push(`${org}/${role}/${k}/${id}: no drawer`); });
+            for (const r of sp.list() || []) { const id = sp.id(r); open(id, "view"); open(id, "view", "hist"); for (const [t] of sp.tabs ? sp.tabs(r) : []) open(id, "view", t); if (sp.edit.can(r)) open(id, "edit"); }
+            if (sp.create.can()) open("", "edit");
+          }
+          if (role === "finhead" || role === "audit") safe(`${org}/${role}/daycheck`, () => { crClose(); finSet("pay:check"); go2("finance"); chk(`${org}/${role}/daycheck`); });
+          crClose(); await tick();
+        }
+        if (["fin", "finhead", "exec"].every(r => o.roles.includes(r))) { const keep = JSON.stringify(S); safe(`${org}/FC3 walk`, () => {
+          const as = r => { ROLE = r; LANG = o.langs[0]; renderShell(); }, E = m => errs.push(`${org}/FC3: ${m}`), G = CRUD.defs.fnGfo, P = CRUD.defs.fnEp;
+          const line = famLines().find(l => (l.type === "ope" || l.type === "inv") && famHeadroom(l.id) > 200000);
+          if (!line) { E("no allocation line with room"); return; }
+          // three vouchers to "ready": two utilities paid straight to the payee, one compensation paid through the agency account
+          const mk = (o2, ev) => { as("fin"); const v = vcSave(Object.assign({ type: "utility", commit: "", nb: "", line: line.id, desc: "ทดสอบการจ่าย", vendor: "", payee: "ผู้รับทดสอบ", kind: "gov", tax: "", gross: 20000, vat: false, contrib: false, due: addDays(TODAY, 5), method: "epay", mwhy: "" }, o2)).v;
+            v.ev = ev; vcAct(v, "submit"); as("finhead"); vcAct(v, "checked"); as("exec"); vcAct(v, "approve"); if (v.state !== "ready") E(`${v.id} did not reach ready (${v.state})`); return v; };
+          const va = mk({}, { bill: true }), vb = mk({ gross: 15000 }, { bill: true }), vc = mk({ type: "comp", payee: "นายทดสอบ", kind: "person", gross: 9000 }, { order: true, sign: true });
+          as("fin");
+          if (!G.check({}, null).length) E("a file with no vouchers passed the check");
+          const f = G.create.run({ ["v_" + va.id]: true, ["v_" + vb.id]: true, ["v_" + vc.id]: true });
+          if (!f || va.gfFile !== f.id) { E("file not made"); return; }
+          crOpen("fnGfo", f.id); const rm = G.acts(f).find(a => a.id === "rm_" + vb.id); rm.run(f, "ยังไม่ถึงกำหนดจ่าย ส่งรอบหน้า");
+          if (vb.gfFile || f.rows.includes(vb.id)) E("take out of a file");
+          G.acts(f).find(a => a.id === "sim").run(f); if (CR_OPEN.mode !== "edit" || CR_OPEN.draft["r_" + va.id] !== "ok") E("simulate posting");
+          if (!G.check({ ["r_" + va.id]: "fail", ["w_" + va.id]: "" }, f).length) E("a failed row without a reason passed");
+          G.edit.run(f, CR_OPEN.draft); if (va.state !== "posted" || vc.state !== "posted" || gfoSt(f) !== "posted") E(`posting gave ${va.state}/${vc.state}/${gfoSt(f)}`);
+          G.edit.run(f, { ["r_" + va.id]: "paid", ["d_" + va.id]: "CGD-TEST-1", ["r_" + vc.id]: "funded", ["d_" + vc.id]: "" });
+          if (va.state !== "paid" || !vc.funded || gfoSt(f) !== "done") E(`payment result gave ${va.state}/${!!vc.funded}/${gfoSt(f)}`);
+          crClose(); finSet("pay:gfmis"); crOpen("fnGfo", f.id); go2("finance"); chk(`${org}/FC3/file`);
+          // a second file, cancelled
+          const f2 = G.create.run({ ["v_" + vb.id]: true }); crOpen("fnGfo", f2.id); G.acts(f2).find(a => a.id === "cancel").run(f2, "แก้ไขข้อมูลผู้รับก่อนส่ง"); if (vb.gfFile || f2.state !== "cancelled") E("cancel a file");
+          // e-Payment: a batch, the bank returns nothing; a second batch cancelled
+          if (!epReady().includes(vc)) E("funded voucher not ready for e-Payment");
+          const b = P.create.run({ ["v_" + vc.id]: true }); if (vc.epay !== b.id || epReady().includes(vc)) E("batch");
+          crOpen("fnEp", b.id); P.acts(b).find(a => a.id === "sim").run(b); P.edit.run(b, CR_OPEN.draft); if (vc.state !== "paid" || epSt(b) !== "done") E(`bank result gave ${vc.state}/${epSt(b)}`);
+          crClose();
+          // daily check: one noted, one signed
+          as("finhead"); const today = dckToday();
+          if (today.length >= 2) { if (!dckSign(today.slice(1).map(v => v.id)) || today[1].dayCheck) E("signed with an unticked payment that has no note");
+            dckFlag(today[0], "ใบสำคัญไม่ครบ"); const err = dckSign(today.slice(1).map(v => v.id)); if (err) E(`sign: ${err}`); if (today[0].dayCheck || !today[1].dayCheck) E("daily check per voucher"); }
+          if (!dckSign([])) E("signing nothing went through");
+          finSet("pay:check"); go2("finance"); chk(`${org}/FC3/daycheck`);
+          // money paid back and a reissued certificate
+          as("fin"); const before = famHeadroom(line.id);
+          const err = vcRefund(va, 5000, "ผู้รับแจ้งได้รับเงินเกิน"); if (err) E(`refund: ${err}`);
+          else { if (va.refunded !== 5000 || !(S.receipts || []).some(r => r.voucher === va.id && r.kind === "refund")) E("refund receipt"); if (va.refunds[0].inYear && famHeadroom(line.id) !== before + 5000) E(`refund did not give the line back (${famHeadroom(line.id) - before})`); }
+          if (!vcRefund(va, 1e9, "เกินยอดที่จ่าย")) E("refund above the net went through");
+          const wv = (S.vouchers || []).find(v => v.cert);
+          if (wv) { const no = wv.cert.no; vcReissue(wv, "ชื่อผู้รับเงินผิด"); if (wv.cert.no === no || wv.certs[0].no !== no) E("reissue"); }
+          VC_OPEN = va.id; finSet("pay:vouchers"); go2("finance"); chk(`${org}/FC3/refund`);
+        }); S = JSON.parse(keep); crClose(); VC_OPEN = null; FIN_ASK = null; ROLE = "fin"; await tick(); }
+      }
       // Round C4: every B8 and B9 tab with the demo date moved to March and to September (simulated GFMIS imports)
       if (o.suites.includes("render") && typeof simDisb === "function" && S.y2569) for (const mi of [5, 11]) {
         S.asOf = FY_MONTH_ENDS()[mi]; TODAY = S.asOf; simDisb(mi);

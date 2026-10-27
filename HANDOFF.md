@@ -816,3 +816,38 @@ The round-44 follow-ups. No rule or data change; `DATA_V` stays 35. `main` was f
 - **Advances (`66d-fin-fn3.js`):** approve, reject, object and cancel use the reason box (approve carries the amount, and a reason only when approving less); Details and History tabs. Editing and cancelling advances is round FC4.
 - **Removed:** the inline "Other voucher" form, `VC_NEW`, the per-drawer reason inputs. The 66i wrapper of `vcAct` passes the reason through.
 - **Tests:** the sweep opens every voucher and advance drawer for fin, finhead, exec and audit (Details, History, every reason box, the edit form), the new-voucher form and the list with search, show-cancelled and sort; and walks a voucher through save checks, edit, submit, a second voucher stopped by the reservation, recall, check, SD-11 stopping the checker's approval, A2 approval, the finance head's cancel freeing the commitment, three returns, and a final reject.  Full sweep 12,237 checks passing. By hand: the new-voucher form with a commitment picked (payee filled, live check), a draft voucher's Details and History tabs and its cancel reason box. Not checked by hand: phone width and dark mode for the new form, English wording beyond the sweep. Prototype for this branch: https://claude.ai/artifact/8ZSzN2o5CVN6hj5Gh3MKyK (private, version 2).
+
+## 57F. Finance CRUD round FC3: GFMIS files, e-Payment batches, daily check, 50 Tawi and refunds (round 57, Finance)
+
+- **New file `src/js/85-fin-pay-crud.js`.** Picking rows is done inside each record's create form, with one checkbox per voucher, ticked by default. The generic multi-row pick (UI-F3) was not needed.
+- **GFMIS request files (`fnGfo`, FR-FC-15, FR-FC-16):**
+  - **Create:** pick the ready vouchers to send. `gfOk("record")` is still checked.
+  - **Status:** derived by `gfoSt`. A file is "sent" while vouchers wait for posting, "posted" while they wait for payment, then "done".
+  - **Results form:** the record's form takes the result, one row per voucher. Its button reads "Record the GFMIS result", then "Record the payment result".
+    - Posting: passed (GFMIS document number) or rejected (reason). A rejected voucher goes back to "ready".
+    - Payment: paid (reference), or money reached the agency account, or failed. A failed voucher goes back to "ready" with its reason.
+  - **Simulate:** "Simulate" fills the form so it can be checked before saving (SIM-F01, SIM-F02). Simulated results are tagged in the voucher log.
+  - **Undo before a result:** take one voucher out of a file with a reason, or cancel the whole file with a reason.
+  - **Record view:** a file tab shows the CSV.
+- **e-Payment batches (`fnEp`, FR-FC-17, SIM-F03):**
+  - **Create:** pick the payments waiting in the agency account. A batch is "waiting for the bank" (`v.epay`) until its result is recorded.
+  - **Bank result:** transferred, or returned with a reason. A returned payment waits in the account again.
+  - **Simulate and cancel:** "Simulate" fills the form. A batch can be cancelled with a reason.
+  - **Older batches:** batches from before this round count as done.
+- **F3 tab "GFMIS and payment":** the two lists are stacked. The page drawer stays hidden while a shared-list drawer is open.
+- **Daily payment check (FR-FC-18):** the finance head ticks each payment that matches its evidence, or notes one with a reason. A noted payment stays unchecked and Finance is told. Signing needs every unticked payment to carry a note (`dckFlag`, `dckSign`). `S.payChecks` records the notes too.
+- **50 Tawi (FR-FC-19):** "Cancel and reissue the 50 Tawi", with a reason. The old certificate is kept in `v.certs` and the next number is issued.
+- **Money paid back (FR-FC-14, R-FC-07):** "Record money paid back" on a paid voucher.
+  - It takes an amount and a reason, and issues a receipt of kind "money paid out and returned" that points to the voucher (`r.voucher`). The voucher itself is not changed.
+  - The drawer shows the refunds and the net after them.
+  - Returned within the year (clause 100), the amount goes back to the commitment (`m.paid`) or to the line (`v.lineBack`, which `famVc` in 60-procurement subtracts).
+  - Contract vouchers don't give back to Procurement's payment totals yet.
+- **76-crud.js:** `edit.label(r)` renames the Edit button.
+- **Removed:** the batch buttons and their handlers (`#gf-make`, `#gf-post`, `#gf-paid`, `#ep-batch`, `#day-check`), `GF_OUT`, and the old renderers of `gfSend`, `agencyPay` and `dayCheck` in 66c.
+- **Tests:**
+  - **Sweep coverage:** every file and batch is opened for fin, finhead, exec and audit: details, history, the file tab, and the result and new forms. The daily check is rendered.
+  - **Walk:** three vouchers go to "ready". In the file, one is taken out, the posting is simulated, a failed row without a reason is refused, the posting and payment results are recorded, and a second file is cancelled. An e-Payment batch has its bank result simulated. In the daily check, signing with an unnoted unticked row is refused, then one payment is noted and the rest signed. A refund gives the line back. A refund above the net is refused, and a certificate is reissued.
+  - **Results:** the full sweep passes, 12,281 checks.
+  - **By hand:** the seeded file's drawer.
+  - **Not checked by hand:** the result forms at phone width, dark mode, and English wording beyond the sweep.
+  - **Prototype for this branch:** https://claude.ai/artifact/8ZSzN2o5CVN6hj5Gh3MKyK (private).

@@ -19,7 +19,7 @@ const FIN_PAGES = [
     sub: ["ใบขอเบิกทุกประเภท การส่ง GFMIS การจ่าย และภาษีหัก ณ ที่จ่าย", "Vouchers of every type, sending to GFMIS, payment and withholding tax"],
     tabs: [
       { id: "vouchers", label: ["ใบขอเบิก", "Vouchers"], secs: ["vcAccepted", "vouchers"] },
-      { id: "gfmis", label: ["ส่ง GFMIS และจ่าย", "GFMIS and payment"], secs: [["gfSend", "agencyPay"]] },
+      { id: "gfmis", label: ["ส่ง GFMIS และจ่าย", "GFMIS and payment"], secs: ["gfSend", "agencyPay"] },
       { id: "check", label: ["ตรวจการจ่ายประจำวัน", "Daily payment check"], secs: ["dayCheck"], roles: ["finhead", "audit"] },
       { id: "tax", label: ["ภาษีและค่าปรับ", "Tax and penalties"], secs: ["wht"] }] },
   { id: "adv", code: "F4", group: "spend", label: ["เงินยืม", "Advances"], drawer: "advDetail",
