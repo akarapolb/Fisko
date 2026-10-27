@@ -843,3 +843,26 @@ Third round of `Fisko_Procurement_CRUD_Design.html` (chapter 6.4). The open cont
 - **Pickers:** the acceptance-committee and committee-order pickers leave out supplier accounts (`vendor`).
 - **Left for later:** withdrawing one's own acceptance signature (FR-PC-25), penalty waivers (FR-PC-28), editing or returning an invoice on a phase (FR-PC-30), Simulate for delivery notices and invoices (SIM-PC-05), and payment status on phase rows (FR-PC-33). The cumulative change ladder is not done either.
 - **Tests:** a PC3 walk drafts a contract from a case at step 8 and checks that a wrong phase total is refused. It deletes the draft and drafts again, checking that a draft commits nothing and keeps the case at step 8. It reschedules to three phases, then signs, checking that the line is committed and the case is at step 9. It also checks the signatures needed and renders the drawer and the contract page. Then every contract drawer, edit form and new form is opened for proc, prochead, div, fin and audit. Full sweep 12,333 checks passing. Checked by hand: the draft form with three phases and the acceptance committee picker.
+
+## 58. Procurement CRUD round PC4: waivers, signatures, invoices and the end-to-end demo (round 58)
+
+Last round of `Fisko_Procurement_CRUD_Design.html`. It finishes the contract pieces left from PC3 that the demo needs, and adds the demo script (chapter 11). No seed change, so `DATA_V` stays 39.
+
+- **New file `src/js/87-proc-e2e.js`:**
+  - **Penalty waivers (`pcWaive`, FR-PC-28, FL-PC-08):** a list under the phases tab of an open contract, for phases that are late or already have a waiver.
+    - Procurement proposes an amount up to the contract penalty, with a reason and a supporting document.
+    - The executive or a spend delegate approves it (SD-08: never the proposer) or rejects it with a reason.
+    - The proposer can withdraw it while it is pending.
+    - An approved waiver can be cancelled until the phase goes to payment (`phPayStarted`: a live voucher or payment request).
+    - `phPenalty` now subtracts an approved waiver, and `phPenaltyRaw` keeps the contract penalty, so the waiver flows into `phNet`, the payment gate and the Finance voucher.
+  - **Phase rows (63):**
+    - "Withdraw my signature" lets a member take back their own acceptance signature until the acceptance is complete, with Undo (FR-PC-25).
+    - The invoice form starts at the accepted amount and has a Simulate button that fills a supplier-portal invoice (SIM-PC-05).
+    - A recorded invoice can be returned with a reason before payment starts; earlier invoices are kept in `invReturned` (FR-PC-30).
+  - **The procurement end-to-end demo:** fifteen steps, P-E01 to P-E15, in the in-app demo guide (`DEMO`, `part: "pe2e"`), each with the role, the page, what to say and what to click. They run from the plan item to closing the case, with the fail-and-cancel alternative last. The guide's filter has a new choice, "Procurement end to end". "The original storyline" now means steps with no `part` (82).
+- **Still not done:** delivery-notice numbers with Simulate (deliveries keep a date only), payment status beyond what `phVoucher` already shows on phase rows (FR-PC-33), custom criteria rows (FR-PC-14), editing an e-GP notice after it is announced, replacing a committee member with a reason after declarations start, and the cumulative change ladder.
+- **Tests:**
+  - **PC4 walk:** proposes, approves and cancels a waiver on a late phase, checking that the net payable rises by the waiver and drops back when it is cancelled. It withdraws an inspector's signature through the button on the phase row, and returns an invoice through its control.
+  - **Drawers:** every waiver drawer is opened for proc, prochead, exec, fin and audit.
+  - **Demo:** the demo suite visits P-E01 to P-E15.
+  - **Result:** full sweep 12,378 checks passing. Checked by hand: the waiver list on a late phase, and the guide filters (15 procurement, 16 budget and 55 original steps).

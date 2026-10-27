@@ -215,6 +215,43 @@
           crClose(); await tick();
         }
       }
+      // Procurement CRUD round PC4: a penalty waiver proposed, approved (the net payable rises) and cancelled; an acceptance
+      // signature withdrawn from the phase row; an invoice returned before payment; then every waiver drawer
+      if (o.suites.includes("render") && typeof CRUD !== "undefined" && CRUD.defs.pcWaive) {
+        safe(`${org}/PC4 walk`, () => {
+          const D = CRUD.defs.pcWaive, as = r => { ROLE = r; LANG = o.langs[0]; renderShell(); };
+          const c = S.contracts.find(x => x.status === "active" && x.phases.some(ph => !phaseAccepted(ph) && !ph.cancelled));
+          if (!c) { errs.push(`${org}/PC4: no active contract`); return; }
+          const ph = c.phases.find(p => !phaseAccepted(p) && !p.cancelled); ph.delivered = addDays(phDue(ph), 10);
+          const raw = phPenaltyRaw(c, ph), net0 = phNet(c, ph); CON_OPEN = c.id; CON_TAB = "phases";
+          if (!(raw > 0)) errs.push(`${org}/PC4: a late delivery has no penalty`);
+          as("proc"); D.edit.run(ph, { amount: Math.round(raw / 2), doc: "หนังสือทดสอบ", why: "ความล่าช้าเกิดจากหน่วยงาน ทดสอบ" });
+          procSet("contracts"); crOpen("pcWaive", "P" + ph.n); go2("procurement"); chk(`${org}/PC4/waiver pending`);
+          as("exec"); const ok = D.acts(ph).find(a => a.id === "ok"); if (!ok) errs.push(`${org}/PC4: the executive can't approve the waiver`); else ok.run(ph);
+          if (phPenalty(c, ph) !== raw - Math.round(raw / 2) || phNet(c, ph) !== net0 + Math.round(raw / 2)) errs.push(`${org}/PC4: the waiver didn't reach the net payable`);
+          const cancel = D.acts(ph).find(a => a.id === "cancel"); if (cancel) cancel.run(ph, "ทดสอบการยกเลิกการงด"); if (phPenalty(c, ph) !== raw) errs.push(`${org}/PC4: a cancelled waiver still counts`);
+          crClose();
+          const insp = S.users.find(u => c.inspectors.includes(u.id)); as(insp.role);
+          if (me().id === insp.id) {
+            ph.signs.push({ by: me().id, t: nowIso() }); procSet("contracts"); go2("procurement");
+            const b = document.querySelector(`#view [data-sgwd="${c.id}|${ph.n}"]`); if (b) b.click(); else errs.push(`${org}/PC4: no withdraw-signature button`);
+            if (ph.signs.some(s => s.by === insp.id)) errs.push(`${org}/PC4: the signature was not withdrawn`);
+          }
+          const c2 = S.contracts.find(x => x.phases.some(p => phaseAccepted(p) && !phPayStarted(x, p)));
+          if (c2) { const p2 = c2.phases.find(p => phaseAccepted(p) && !phPayStarted(c2, p)); as("proc"); CON_OPEN = c2.id; p2.invoice = { no: "INV-TEST", amount: p2.amount, contract: c2.no, vendor: tx(c2.vendor) };
+            procSet("contracts"); go2("procurement"); const i = document.querySelector(`#ivr-${c2.id}-${p2.n}`), b = document.querySelector(`#view [data-ivret="${c2.id}|${p2.n}"]`);
+            if (i && b) { i.value = "เลขที่ใบแจ้งหนี้ไม่ตรงกับสัญญา"; b.click(); if (p2.invoice) errs.push(`${org}/PC4: the invoice was not returned`); } else errs.push(`${org}/PC4: no return-invoice control`); }
+          CON_OPEN = null;
+        });
+        for (const role of ["proc", "prochead", "exec", "fin", "audit"].filter(r => o.roles.includes(r))) {
+          ROLE = role; LANG = o.langs[0]; safe("shell", renderShell);
+          if (!prSees(prPage("contracts"))) continue;
+          for (const c of S.contracts.filter(x => x.status !== "draft")) { CON_OPEN = c.id; CON_TAB = "phases"; const sp = CRUD.defs.pcWaive;
+            for (const ph of sp.list()) for (const mode of ["view", ...(sp.edit.can(ph) ? ["edit"] : [])]) safe(`${org}/${role}/pcWaive/${c.id}/${ph.n}/${mode}`, () => {
+              CON_OPEN = c.id; procSet("contracts"); crOpen("pcWaive", sp.id(ph), mode); go2("procurement"); chk(`${org}/${role}/pcWaive/${c.id}/${ph.n}/${mode}`); if (!document.querySelector(".cr-drawer")) errs.push(`${org}/${role}/pcWaive/${c.id}: no drawer`); }); }
+          CON_OPEN = null; crClose(); await tick();
+        }
+      }
       // Round C4: every B8 and B9 tab with the demo date moved to March and to September (simulated GFMIS imports)
       if (o.suites.includes("render") && typeof simDisb === "function" && S.y2569) for (const mi of [5, 11]) {
         S.asOf = FY_MONTH_ENDS()[mi]; TODAY = S.asOf; simDisb(mi);
