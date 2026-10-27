@@ -20,8 +20,8 @@ The demo guide (`#demo`) has a filter: every step, Budget end to end (E-01..E-16
 |---|---|
 | Checkout | `D:\Claude\Fisko-proc`, branch `main` (the old `D:\Claude\Fisko` checkout is on a stale branch; the two session worktrees under `D:\Claude\Fisko\.claude\worktrees\` are leftovers and can be archived) |
 | Remote | `https://github.com/akarapolb/Fisko.git` |
-| Published prototype | https://claude.ai/artifact/STW3X8Ytx3VVLV7VHLXse9 (private; republished from the merged `main`) |
-| Designs | Budget CRUD https://claude.ai/artifact/3NigvMP1qa4DpvQrjN84Zz · Procurement CRUD https://claude.ai/artifact/H1Vc2G84m87vS9QrZRZSn5 · Finance design (older) https://claude.ai/artifact/G4Sx84KthvJWcLJMAWPKD1 |
+| Published prototype | https://claude.ai/artifact/STW3X8Ytx3VVLV7VHLXse9 (private; version 16, the merged `main`) |
+| Designs | Budget CRUD https://claude.ai/artifact/3NigvMP1qa4DpvQrjN84Zz · Procurement CRUD https://claude.ai/artifact/H1Vc2G84m87vS9QrZRZSn5 · Finance CRUD https://claude.ai/artifact/WqUrwy2yryGPUqXbmRnwgZ · Finance design (older) https://claude.ai/artifact/G4Sx84KthvJWcLJMAWPKD1 |
 | Branch previews (now superseded) | Procurement https://claude.ai/artifact/MuAxUNbvtXHCgbvutoTcVE · Finance https://claude.ai/artifact/8ZSzN2o5CVN6hj5Gh3MKyK |
 | Data version | `DATA_V = 39` in `src/js/00-core.js` (bump it whenever the seed shape changes) |
 
