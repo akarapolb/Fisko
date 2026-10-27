@@ -14,6 +14,8 @@ Fisko is a discussion prototype of a Thai government budgeting platform with thr
 | Procurement | `Fisko_Procurement_CRUD_Design.html` | rounds 55 to 59 (`84-proc-crud`, `85-case-crud`, `86-con-crud`, `87-proc-e2e`, `88-proc-more`) | plan items and versions, requisitions, case files (market research, bids, quotations, committees, custom criteria, e-GP corrections), contracts (drafts, phase schedule, signing), penalty waivers, signatures, invoices; demo script P-E01 to P-E15 |
 | Finance | `Fisko_Finance_CRUD_Design.html` v0.1 | rounds 55F to 61F (`84-fin-crud`, `85-fin-pay-crud`, `86-fin-commit-crud`, `87-fin-recv-crud`, `88-fin-nb-crud`) | F10 registers, vouchers and advances, GFMIS files and e-Payment batches, 50 ทวิ, commitments and POs, receipts and remittances, daily cash, reconciliation and closing, non-budget money; demo script E-F01 to E-F15 |
 
+**Round 62 added a multi-system shell** taken from the Fabor console prototype (`D:\Claude\Fabor\docs\design\console-prototype`): a system rail, a launcher with the five planned systems (Assets, HR, e-Saraban, Audit, Revenue), a sidebar per system, breadcrumbs, pinned and recent pages, an Approvals inbox and an Exception centre across systems, enter-review-confirm on every drawer action, and presenter mode with a 7-step executive cut. See `HANDOFF.md` section 62R.
+
 The demo guide (`#demo`) has a filter: every step, Budget end to end (E-01..E-16), Procurement end to end (P-E01..P-E15), Finance (E-F01..E-F15), or the original storyline.
 
 | Item | Where |
@@ -64,7 +66,8 @@ python -m http.server 8788 --bind 127.0.0.1
 - **Merging parallel branches:** the conflicts are always the same few files: `76-crud.js` (keep both sets of options), `82-intel-crud.js` (the demo guide's filter list), `tests/sweep.js` (keep both walks), `HANDOFF.md` / `NEXT_SESSION.md` / `README.md` (keep both sections), and the two built HTML files (take either side, then rebuild). Parse-check and run the full sweep after the merge.
 - **Routing in tests:** set `window.FISKO_ROUTE = "#page"` and call `route()`; the browser ignores bursts of hash changes. The sweep's `tick` uses a MessageChannel because background tabs throttle `setTimeout(0)`.
 - **Shell:** heredocs with Thai text break bash here; write Python scripts to the scratchpad and run them (`PYTHONIOENCODING=utf-8` when printing Thai). Long scans (a `grep` per name over every file) can pass the 2-minute tool limit; run them in the background.
-- **Round numbers:** the two branches both used 55 to 59; Finance's sections are suffixed `F` (55F to 61F) in `HANDOFF.md`. The next round on `main` is **62**.
+- **Round numbers:** the two branches both used 55 to 59; Finance's sections are suffixed `F` (55F to 61F) in `HANDOFF.md`. Round 62 (the shell) is section 62R. The next round on `main` is **63**.
+- **The shell wraps late:** `90-systems.js` to `93-presenter.js` load after every app file and wrap `route`, `renderShell`, `renderNav`, `crActBar`, `VIEWS.home` and `VIEWS.demo`. A new file that changes those should sort before `90` or wrap the wrapped version. New Workspace pages are NAV entries with `app: "all"` and group `ws`, and belong in `WS_PAGES` so the rail knows their system.
 
 ## 5. Map of the newer code (rounds 43 to 61F)
 
@@ -76,6 +79,7 @@ python -m http.server 8788 --bind 127.0.0.1
 | `84-proc-crud.js` to `88-proc-more.js` | Procurement CRUD: plan, requisitions, case files, contracts, waivers, signatures, invoices, demo P-E01..15, custom criteria |
 | `84-fin-crud.js` to `88-fin-nb-crud.js` | Finance CRUD: registers, vouchers, payments, commitments, receipts, non-budget; Finance demo E-F01..15 |
 | `calm.css` | `cr-*` list and drawer styles, as-of bar |
+| `90-systems.js` to `93-presenter.js`, `systems.css` | Multi-system shell: rail, launcher, planned systems, crumbs, pins; inbox, exceptions, Today strip; review step; presenter |
 | `tests/run.html`, `tests/sweep.js` | Test runner and sweep (the sweep holds the walks) |
 | `Fisko_*_CRUD_Design.html` | The three CRUD designs (Thai) with build status |
 
@@ -90,8 +94,9 @@ Both branches were merged into `main` on 27 October 2026 (`claude/charming-shirl
 1. **Finance:** FR-FN-33 and Excel/PDF exports (the CRUD design covered records, not file exports).
 2. **A full demo rehearsal** of the three end-to-end scripts (Budget, Procurement, Finance), then fix anything that reads badly aloud.
 3. **Cross-app links in the demo:** a single story that runs Budget → Procurement → Finance on the same project, instead of three separate scripts.
-4. **Fisko Assets design** (D-P11): stock and assets, fed by Procurement acceptances.
+4. **Fisko Assets design** (D-P11): stock and assets, fed by Procurement acceptances. It already has a planned-system page in the launcher (`#sys-assets`).
 5. **Simulated to real AI:** a plan to swap the planner and answer writer for a real model, keeping the same tools, approvals and audit log.
 6. **Budget design leftovers** (chapter 13.4 of the Budget design): real e-Budgeting file formats, strategy-level risk register, divisions proposing KPI changes, central fund and supplementary requests, a five-level structure, BR-11 exception flags.
+7. **Shell follow-ups:** a Thai design note for the shell (round 62 was built straight from the Fabor console at the user's request); pins and recents per user on the server rather than per browser; the review step for the older non-drawer actions (the Budget workflow buttons).
 
 Start the next session by reading this file, then `HANDOFF.md` sections 47 to 61F, then run the full sweep on `main` to confirm a clean start.

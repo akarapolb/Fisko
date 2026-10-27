@@ -1402,6 +1402,137 @@ ul.plain { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-di
   .cw-launch span { display: none; }
 }
 .cw-side .btn { justify-content: center; gap: 6px; } .cw-side .btn svg { width: 15px; height: 15px; }
+/* ==========================================================================
+   Multi-system shell (round 62, after the Fabor console): a narrow system rail
+   on the far left, the launcher, breadcrumbs, the pin button, the workspace
+   strip, the review step in the record drawer and the presenter bar.
+   Loaded after calm.css; uses the calm tokens.
+   ========================================================================== */
+:root { --sr: #1B2440; --sr-ink: #AEB6CC; --sr-hover: rgba(255, 255, 255, .08); --sr-on: rgba(255, 255, 255, .14); --sr-mark: #34498C; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --sr: #0A0C11; --sr-ink: #8F96A3; --sr-hover: rgba(255, 255, 255, .06); --sr-on: rgba(255, 255, 255, .1); --sr-mark: #4A5FA3; } }
+:root[data-theme="dark"] { --sr: #0A0C11; --sr-ink: #8F96A3; --sr-hover: rgba(255, 255, 255, .06); --sr-on: rgba(255, 255, 255, .1); --sr-mark: #4A5FA3; }
+
+.app { grid-template-columns: 60px 248px minmax(0, 1fr); }
+.sysrail { background: var(--sr); position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 0; z-index: 6; }
+.sr-mark { width: 36px; height: 36px; border-radius: 10px; background: var(--sr-mark); color: #fff; display: grid; place-items: center; font: 700 13px var(--mono); margin-bottom: 10px; }
+.sr-btn { position: relative; width: 40px; height: 40px; border-radius: 10px; border: 0; background: transparent; color: var(--sr-ink); display: grid; place-items: center; cursor: pointer; padding: 0; }
+.sr-btn svg { width: 20px; height: 20px; }
+.sr-btn:hover { background: var(--sr-hover); color: #fff; }
+.sr-btn.on { background: var(--sr-on); color: #fff; }
+.sr-btn.on::before { content: ""; position: absolute; left: -10px; top: 9px; bottom: 9px; width: 3px; border-radius: 0 3px 3px 0; background: #9DB0E3; }
+.sr-btn:focus-visible { outline: 2px solid #9DB0E3; outline-offset: 1px; }
+.sr-cnt { position: absolute; top: 2px; right: 0; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 99px; background: #E5E7EB; color: #1B2440; font: 700 10px/16px var(--sans, inherit); text-align: center; }
+.sr-sep { width: 24px; height: 1px; background: rgba(255, 255, 255, .1); margin: 4px 0; }
+.sr-sp { flex: 1; }
+
+/* the sidebar's system button opens the launcher */
+.brand-mark.sys { background: var(--accent-soft); color: var(--accent); }
+.brand-mark.sys svg { width: 18px; height: 18px; }
+
+/* breadcrumbs and the pin button */
+.top .crumb { display: flex; align-items: center; gap: 0; flex: 1 1 200px; }
+.cr-sep { color: var(--faint); margin: 0 8px; }
+.cr-org { color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
+.cr-sys { border: 0; background: none; padding: 2px 4px; margin: 0 -4px; border-radius: 6px; color: var(--ink-2); font: inherit; cursor: pointer; white-space: nowrap; }
+.cr-sys:hover { background: var(--surface-2); color: var(--ink); }
+.top .crumb b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pinbtn.on { color: var(--accent); }
+.pinbtn.on svg { fill: currentColor; }
+
+/* the launcher */
+.launcher { position: fixed; inset: 0; z-index: 60; }
+.ln-scrim { position: absolute; inset: 0; background: rgba(17, 24, 39, .42); }
+.ln-panel { position: relative; margin: 7vh auto 0; width: min(900px, calc(100vw - 32px)); max-height: 84vh; display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--sh-3); overflow: hidden; }
+.ln-search { display: flex; align-items: center; gap: 10px; padding: 12px 14px 12px 18px; border-bottom: 1px solid var(--line); color: var(--muted); }
+.ln-search svg { width: 18px; height: 18px; flex: none; }
+.ln-search input { flex: 1; border: 0; background: transparent; font-size: 16px; padding: 6px 0; box-shadow: none; color: var(--ink); min-width: 0; }
+.ln-search input:focus { outline: none; box-shadow: none; }
+.ln-body { overflow-y: auto; padding: 6px 18px 18px; }
+.ln-h { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 16px 0 8px; }
+.ln-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+.ln-card { position: relative; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.ln-card:hover { border-color: var(--line-2); background: var(--surface-2); }
+.ln-card.on { border-color: var(--accent); background: var(--accent-soft); }
+.ln-card.planned { border-style: dashed; }
+.ln-card.off { opacity: .55; }
+.ln-open { display: flex; gap: 12px; align-items: flex-start; width: 100%; text-align: left; border: 0; background: none; padding: 12px 36px 12px 12px; cursor: pointer; color: inherit; font: inherit; border-radius: 10px; }
+.ln-open:disabled { cursor: not-allowed; }
+.ln-ico { width: 34px; height: 34px; border-radius: 9px; background: var(--surface-2); color: var(--accent); display: grid; place-items: center; flex: none; }
+.ln-card.planned .ln-ico { color: var(--muted); }
+.ln-ico svg { width: 18px; height: 18px; }
+.ln-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ln-t b { font-weight: 600; font-size: 14px; color: var(--ink); }
+.ln-t small { color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+.ln-t .pill { align-self: flex-start; margin-top: 4px; }
+.ln-n { font-size: 12px; color: var(--accent); font-weight: 600; margin-top: 4px; }
+.ln-pin { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; border: 0; border-radius: 7px; background: none; color: var(--faint); display: grid; place-items: center; cursor: pointer; padding: 0; }
+.ln-pin svg { width: 15px; height: 15px; }
+.ln-pin:hover { background: var(--surface-3); color: var(--ink-2); }
+.ln-pin.on { color: var(--accent); }
+.ln-pin.on svg { fill: currentColor; }
+.ln-foot { border-top: 1px solid var(--line); padding: 10px 18px; font-size: 12.5px; color: var(--muted); }
+
+/* My Workspace: today across systems */
+.sysdeck { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.sdcard { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; cursor: pointer; color: inherit; font: inherit; min-width: 0; }
+.sdcard:hover { border-color: var(--line-2); box-shadow: var(--sh-2); }
+.sdcard:focus-visible { box-shadow: var(--ring); outline: none; }
+.sd-sys { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); }
+.sd-sys svg { width: 15px; height: 15px; }
+.sd-n { font-size: 26px; font-weight: 650; line-height: 1.2; margin-top: 6px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.sd-n.warn { color: var(--warn); } .sd-n.bad { color: var(--bad); }
+.sd-l { font-weight: 600; font-size: 13.5px; }
+.sdcard .sub { font-size: 12.5px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sd-go { margin-top: 8px; font-size: 13px; color: var(--accent); font-weight: 600; display: inline-flex; align-items: center; gap: 4px; }
+
+/* enter, review, confirm in the record drawer */
+.cr-steps { display: flex; gap: 6px; list-style: none; margin: 0 0 4px; padding: 0; font-size: 12.5px; color: var(--muted); flex-wrap: wrap; }
+.cr-steps li { display: inline-flex; align-items: center; gap: 6px; }
+.cr-steps li + li::before { content: ""; width: 18px; height: 1px; background: var(--line-2); margin-right: 2px; }
+.cr-steps span { width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--line-2); display: grid; place-items: center; font-size: 11px; font-weight: 600; }
+.cr-steps li.on { color: var(--ink); font-weight: 600; } .cr-steps li.on span { background: var(--accent); border-color: var(--accent); color: #fff; }
+.cr-steps li.done span { background: var(--accent-soft); border-color: var(--accent-soft); color: var(--accent); }
+.cr-rv { display: grid; grid-template-columns: minmax(96px, max-content) minmax(0, 1fr); gap: 6px 14px; margin: 4px 0; font-size: 13.5px; }
+.cr-rv dt { color: var(--muted); } .cr-rv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+
+/* presenter bar */
+.presbar { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); z-index: 50; width: min(820px, calc(100vw - 32px)); background: var(--surface); border: 1px solid var(--line-2); border-radius: 12px; box-shadow: var(--sh-3); padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+body.presenting .view { padding-bottom: 220px; }
+.pb-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pb-top .sp { flex: 1; }
+.pb-top .btn { padding: 5px 10px; display: inline-flex; align-items: center; gap: 4px; }
+.pb-top .btn svg { width: 15px; height: 15px; }
+.pb-top select { padding: 4px 8px; font-size: 13px; max-width: 220px; }
+.pb-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--accent); background: var(--accent-soft); border-radius: 99px; padding: 3px 10px; }
+.pb-tag svg { width: 14px; height: 14px; }
+.pb-n { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pb-dots { display: flex; gap: 3px; flex-wrap: wrap; max-width: 260px; }
+.pb-dots i { width: 6px; height: 6px; border-radius: 50%; background: var(--line-2); }
+.pb-dots i.done { background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); } .pb-dots i.on { background: var(--accent); }
+.pb-step { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; font-size: 14.5px; }
+.pb-say { border-top: 1px solid var(--line); padding-top: 8px; font-size: 13.5px; max-height: 120px; overflow-y: auto; }
+.pb-say p { margin: 0 0 4px; }
+
+/* between 860 and 1180 px the two side columns would squeeze the page: the rail stays, the sidebar narrows */
+@media (max-width: 1180px) and (min-width: 861px) { .app { grid-template-columns: 56px 220px minmax(0, 1fr); } }
+/* phone: the rail becomes a row of systems above the app menu */
+@media (max-width: 860px) {
+  .app { grid-template-columns: minmax(0, 1fr); }
+  .sysrail { position: static; height: auto; flex-direction: row; justify-content: flex-start; overflow-x: auto; padding: 8px max(12px, env(safe-area-inset-left, 0px)); gap: 4px; }
+  .sr-mark { margin: 0 6px 0 0; width: 32px; height: 32px; flex: none; }
+  .sr-btn { flex: none; }
+  .sr-btn.on::before { left: 9px; right: 9px; top: auto; bottom: -6px; width: auto; height: 3px; border-radius: 3px 3px 0 0; }
+  .sr-sep { width: 1px; height: 24px; margin: 0 4px; flex: none; }
+  .sr-sp { display: none; }
+  .ln-panel { margin-top: 12px; max-height: calc(100vh - 24px); }
+  .ln-grid { grid-template-columns: minmax(0, 1fr); }
+  .presbar { bottom: 8px; padding: 8px; }
+  .pb-dots, .pb-n { display: none; }
+  .top .crumb { flex-wrap: wrap; }
+}
+/* the top bar carries the crumb, so the selectors give up some width */
+@media (min-width: 861px) { #org, #role { max-width: 160px; text-overflow: ellipsis; } .top .crumb { min-width: 140px; } }
+@media (max-width: 1280px) and (min-width: 861px) { #sample-tag { display: none; } }
 </style>
 </head>
 <body>
@@ -19219,6 +19350,556 @@ CON_BINDS.push(() => {
   $$("[data-dlsim]").forEach(b => (b.onclick = () => { const [cid, n] = b.dataset.dlsim.split("|"), c = famCon(cid), ph = c.phases.find(x => x.n === Number(n)), f = b.closest("form");
     f.ref.value = `DN-${FAM_FY % 100}-${c.id.slice(-3)}${ph.n}`; f.d.value = TODAY < phDue(ph) ? TODAY : phDue(ph) < c.signed ? c.signed : TODAY; f.ref.focus(); toast(L("เติมหนังสือส่งมอบจำลองจากผู้ขายแล้ว ตรวจก่อนบันทึก", "Simulated delivery notice from the supplier filled in; check it before saving")); }));
 });
+
+/* ---- 90-systems.js ---- */
+// Multi-system shell (round 62, after the Fabor console design): a system rail on the far left, a launcher that lists
+// every system (live and planned) with pinning, a short sidebar per system, breadcrumbs Organization / System / Page,
+// a pin button for the current page and a recently viewed list. Budget, Procurement and Finance keep their own menus
+// (66-apps.js); this file adds Workspace, Administration and the planned systems around them.
+Object.assign(ICONS, {
+  grid: '<rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/>',
+  star: '<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>',
+  play: '<rect x="3" y="4" width="18" height="13" rx="2"/><path d="m10 8 5 2.5-5 2.5z"/><path d="M8 21h8M12 17v4"/>',
+  history: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v4h4"/><path d="M12 8v4l3 2"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  chevL: '<path d="m15 6-6 6 6 6"/>',
+  chevR: '<path d="m9 6 6 6-6 6"/>',
+  x: '<path d="M6 6l12 12M18 6 6 18"/>',
+});
+
+// Every system on the platform. "planned" systems are not built in this prototype: the launcher shows them and each
+// has one page saying what it will cover and how it joins the live systems.
+const SYSTEMS = {
+  workspace: { grp: "everyday", icon: "home", name: ["พื้นที่ทำงาน", "Workspace"], desc: ["งานของคุณจากทุกระบบ", "Your work across every system"] },
+  budget: { grp: "core", icon: "pie", app: true },
+  procurement: { grp: "core", icon: "folder", app: true },
+  finance: { grp: "core", icon: "wallet", app: true },
+  admin: { grp: "platform", icon: "settings", name: ["ผู้ดูแลระบบ", "Administration"], desc: ["ผู้ใช้ สิทธิ์ Workflow กฎ และการเชื่อมต่อ", "Users, roles, workflow, rules and interfaces"] },
+  assets: { grp: "planned", icon: "building", planned: true, name: ["Fisko Assets", "Fisko Assets"], desc: ["พัสดุ ครุภัณฑ์ และค่าเสื่อมราคา", "Stock, equipment and depreciation"],
+    covers: [["ทะเบียนพัสดุและครุภัณฑ์ รับเข้าจากการตรวจรับใน Fisko Procurement", "Stock and equipment register, fed by acceptance in Fisko Procurement"], ["เบิกจ่ายพัสดุ โอนย้าย ตรวจนับประจำปี และจำหน่าย", "Issues, transfers, the annual count and disposal"], ["ค่าเสื่อมราคาและรายงานสินทรัพย์ส่ง GFMIS", "Depreciation and asset reports for GFMIS"]],
+    joins: [["รับรายการจากใบตรวจรับของ Procurement", "Takes items from Procurement's acceptance certificates"], ["ส่งค่าเสื่อมราคาให้ Finance ลงบัญชี", "Sends depreciation to Finance for the books"]] },
+  hr: { grp: "planned", icon: "users", planned: true, name: ["Fisko HR", "Fisko HR"], desc: ["อัตรากำลัง เงินเดือน และค่าตอบแทน", "Positions, payroll and allowances"],
+    covers: [["กรอบอัตรากำลังและตำแหน่งว่าง", "Establishment and vacant posts"], ["เงินเดือน ค่าจ้าง และเงินเพิ่ม", "Salaries, wages and allowances"], ["ค่าใช้จ่ายบุคลากรรายปีเพื่อจัดทำคำขอ", "Personnel cost per year for budget requests"]],
+    joins: [["ส่งงบบุคลากรเข้าคำขอใน Budget (แท็บเงินเดือน)", "Feeds personnel cost into Budget requests (payroll tab)"], ["ส่งรายการจ่ายเงินเดือนให้ Finance", "Sends the payroll run to Finance"]] },
+  saraban: { grp: "planned", icon: "send", planned: true, name: ["Fisko e-Saraban", "Fisko e-Saraban"], desc: ["หนังสือราชการและการลงนามอิเล็กทรอนิกส์", "Official letters and e-signing"],
+    covers: [["รับ ส่ง และลงทะเบียนหนังสือราชการ", "Receive, send and register official letters"], ["เสนอแฟ้มและลงนามอิเล็กทรอนิกส์", "Route files for e-signature"], ["เลขที่หนังสือและการเก็บรักษาตามระเบียบงานสารบรรณ", "Letter numbers and retention under the records rules"]],
+    joins: [["ใช้เลขหนังสือและลายมือชื่อเดียวกับบันทึกใน Budget Procurement และ Finance", "One numbering and signature for memos in Budget, Procurement and Finance"]] },
+  audit: { grp: "planned", icon: "shield", planned: true, name: ["Fisko Audit", "Fisko Audit"], desc: ["ตรวจสอบภายในและบริหารความเสี่ยง", "Internal audit and risk"],
+    covers: [["แผนการตรวจสอบตามความเสี่ยง", "Risk-based audit plan"], ["กระดาษทำการ ข้อตรวจพบ และการติดตามแก้ไข", "Working papers, findings and follow-up"], ["ทะเบียนความเสี่ยงและการควบคุมภายใน", "Risk register and internal control"]],
+    joins: [["อ่านบันทึกการใช้งานและข้อสังเกตจาก AI ของทุกระบบ", "Reads the audit log and AI flags of every system"]] },
+  revenue: { grp: "planned", icon: "coins", planned: true, name: ["Fisko Revenue", "Fisko Revenue"], desc: ["รายได้แผ่นดินและค่าธรรมเนียม", "Government revenue and fees"],
+    covers: [["อัตราค่าธรรมเนียมและการออกใบแจ้งหนี้", "Fee schedules and invoices"], ["ชำระผ่าน QR และ e-Payment", "Payment by QR and e-Payment"], ["ประมาณการรายได้และรายงานการจัดเก็บ", "Revenue estimates and collection reports"]],
+    joins: [["ส่งใบเสร็จให้ Finance บันทึกรับและนำส่ง", "Sends receipts to Finance for recording and remittance"]] },
+};
+const SYS_GROUPS = [["everyday", ["ทุกวัน", "Everyday"]], ["core", ["ระบบหลัก", "Core systems"]], ["platform", ["แพลตฟอร์ม", "Platform"]], ["planned", ["อยู่ในแผน", "Planned"]]];
+const SYS_IDS = Object.keys(SYSTEMS);
+const sysName = id => (SYSTEMS[id].app ? APPS[id].name : SYSTEMS[id].name);
+const sysDesc = id => (SYSTEMS[id].app ? APPS[id].desc : SYSTEMS[id].desc);
+let SYS = "workspace";
+
+// Workspace and planned-system pages are NAV entries shared by every app ("all"), in groups the app menus do not show,
+// so the router, search, permissions and the test sweep treat them like any other page.
+const WS_ROLES = Object.keys(ROLES).filter(r => r !== "vendor");
+NAV.push(
+  { id: "inbox", code: "", group: "ws", app: "all", roles: WS_ROLES, label: ["รออนุมัติ", "Approvals"] },
+  { id: "exceptions", code: "", group: "ws", app: "all", roles: WS_ROLES, label: ["ศูนย์รายการผิดปกติ", "Exception centre"] },
+  { id: "pins", code: "", group: "ws", app: "all", roles: WS_ROLES, label: ["ปักหมุดและล่าสุด", "Pinned and recent"] },
+  ...SYS_IDS.filter(id => SYSTEMS[id].planned).map(id => ({ id: "sys-" + id, code: "", group: "planned", app: "all", roles: WS_ROLES, label: SYSTEMS[id].name })),
+);
+Object.assign(NAV_ICON, { inbox: "checksq", exceptions: "alert", pins: "star", demo: "play", delegation: "users" });
+
+const WS_PAGES = new Set(["home", "inbox", "exceptions", "pins", "demo", "delegation", "profile"]);
+function sysOfView(v) {
+  if (v.startsWith("sys-") && SYSTEMS[v.slice(4)]) return v.slice(4);
+  if (v === "admin" || v.startsWith("admin-")) return "admin";
+  if (WS_PAGES.has(v)) return "workspace";
+  if (v === "cashcount") return "finance";
+  const n = NAV.find(x => x.id === v);
+  if (n && APPS[n.app]) return n.app;
+  return APPS[APP] ? APP : "workspace";
+}
+const sysAllowed = id => {
+  const s = SYSTEMS[id];
+  if (s.app) return appAllowed(id);
+  if (id === "admin") return allowed("admin") && NAV.some(n => n.id === "admin");
+  return id === "workspace" || WS_ROLES.includes(ROLE);
+};
+// Tasks for the current role that belong to a system (Workspace counts the ones that belong to no app).
+const sysTasks = (id, all) => (all || (typeof myTasks === "function" ? myTasks() : [])).filter(t => { const a = appOfLink(t.link); return id === "workspace" ? a === "all" : a === id; });
+
+// ---------- pins and recents (kept per browser) ----------
+const jget = (k, d) => { try { const v = JSON.parse(store.get(k) || "null"); return v == null ? d : v; } catch (e) { return d; } };
+const jset = (k, v) => store.set(k, JSON.stringify(v));
+const SYS_PIN_DEF = ["workspace", "budget", "procurement", "finance", "admin"];
+const sysPins = () => jget("fisko-sys-pins", SYS_PIN_DEF).filter(id => SYSTEMS[id]);
+function toggleSysPin(id) { const p = sysPins(), i = p.indexOf(id); if (i >= 0) p.splice(i, 1); else p.push(id); jset("fisko-sys-pins", p); renderSysRail(); }
+const pagePins = () => jget("fisko-pins", []);
+const recents = () => jget("fisko-recent", []);
+// The current page as a jump link and a bilingual label: "fnc-pay", "req:RQ-1", "admin-users" or a plain route.
+function curPage() {
+  const v = CUR, n = NAV.find(x => x.id === v);
+  if (v === "request" && typeof CUR_REQ !== "undefined" && CUR_REQ) { const r = S.requests.find(x => x.id === CUR_REQ); return { link: "req:" + CUR_REQ, label: r ? r.name : [CUR_REQ, CUR_REQ], sys: "budget", id: CUR_REQ }; }
+  if (v === "admin") { const t = (typeof ADMIN_TABS !== "undefined" ? ADMIN_TABS : []).find(x => x.id === ADMIN_TAB); return { link: t ? "admin-" + t.id : "admin", label: t ? t.label : n.label, sys: "admin" }; }
+  if (n && n.tabs && n.jumpPrefix) { const t = n.tabs.find(x => x[0] === n.tabGet()); if (t) return { link: `${n.jumpPrefix}-${t[0]}`, label: t[1], sys: sysOfView(v) }; }
+  const extra = { demo: ["คู่มือการสาธิต", "Demo guide"], delegation: ["การมอบอำนาจ", "Delegation of authority"], cashcount: ["ตรวจนับเงินประจำวัน", "Daily cash count"], home: ["วันนี้", "Today"] };
+  return { link: v, label: extra[v] || (n ? n.label : [v, v]), sys: sysOfView(v) };
+}
+const isPinned = link => pagePins().some(p => p.link === link);
+function togglePagePin() {
+  const c = curPage(), p = pagePins(), i = p.findIndex(x => x.link === c.link);
+  if (i >= 0) { p.splice(i, 1); toast(L("เลิกปักหมุดแล้ว", "Unpinned")); } else { p.unshift({ link: c.link, label: c.label, sys: c.sys }); toast(`${L("ปักหมุดแล้ว", "Pinned")}: ${tx(c.label)}`); }
+  jset("fisko-pins", p.slice(0, 24)); paintPinBtn();
+}
+function noteRecent() {
+  if (window.FISKO_ROUTE || !SESSION) return; // the test sweep routes thousands of times; keep its visits out
+  const c = curPage(), r = recents().filter(x => x.link !== c.link);
+  r.unshift({ link: c.link, label: c.label, sys: c.sys, t: nowIso() });
+  jset("fisko-recent", r.slice(0, 12));
+}
+
+// ---------- the system rail ----------
+function renderSysRail() {
+  let el = $("#sysrail");
+  if (!el) { el = document.createElement("nav"); el.id = "sysrail"; el.className = "sysrail"; $(".app").prepend(el); }
+  el.setAttribute("aria-label", L("ระบบ", "Systems"));
+  const ids = sysPins().filter(sysAllowed), all = typeof myTasks === "function" ? myTasks() : [];
+  if (!ids.includes(SYS) && SYSTEMS[SYS]) ids.push(SYS); // the system you are in always shows
+  const btn = id => { const n = id === "workspace" ? 0 : sysTasks(id, all).length, cur = id === SYS;
+    return `<button type="button" class="sr-btn ${cur ? "on" : ""}" data-sys="${id}" title="${esc(tx(sysName(id)))}" aria-label="${esc(tx(sysName(id)))}${n ? ` · ${n} ${L("งาน", "tasks")}` : ""}" ${cur ? 'aria-current="true"' : ""}>${svgI(SYSTEMS[id].icon)}${n ? `<span class="sr-cnt">${n > 99 ? "99+" : n}</span>` : ""}</button>`; };
+  el.innerHTML = `<div class="sr-mark" aria-hidden="true">Fk</div>${ids.filter(id => !SYSTEMS[id].planned).map(btn).join("")}${ids.some(id => SYSTEMS[id].planned) ? `<span class="sr-sep"></span>${ids.filter(id => SYSTEMS[id].planned).map(btn).join("")}` : ""}
+    <span class="sr-sp"></span><span class="sr-sep"></span>
+    <button type="button" class="sr-btn" id="sr-launch" title="${L("ทุกระบบ", "All systems")}" aria-label="${L("ทุกระบบ", "All systems")}" aria-haspopup="dialog">${svgI("grid")}</button>`;
+  $$("#sysrail [data-sys]").forEach(b => (b.onclick = () => switchSys(b.dataset.sys)));
+  $("#sr-launch").onclick = e => { e.stopPropagation(); openLauncher(); };
+}
+function switchSys(id) {
+  closeLauncher();
+  if (!sysAllowed(id)) return toast(L("บทบาทนี้ไม่มีสิทธิ์ใช้ระบบนี้", "This role has no access to this system"));
+  if (SYSTEMS[id].app) return switchApp(id);
+  if (id === "admin") return go("admin");
+  if (SYSTEMS[id].planned) return go("sys-" + id);
+  go("home");
+}
+
+// ---------- the launcher (replaces the old app menu) ----------
+let LAUNCH_Q = "";
+function openLauncher() {
+  let el = $("#launcher");
+  if (!el) { el = document.createElement("div"); el.id = "launcher"; el.className = "launcher"; el.hidden = true; document.body.appendChild(el); }
+  LAUNCH_Q = ""; el.hidden = false; renderLauncher();
+  $("#appsw").setAttribute("aria-expanded", "true");
+  const q = $("#ln-q"); if (q) q.focus();
+}
+function closeLauncher() { const el = $("#launcher"); if (el && !el.hidden) { el.hidden = true; $("#appsw").setAttribute("aria-expanded", "false"); } }
+function renderLauncher() {
+  const el = $("#launcher"), q = LAUNCH_Q.trim().toLowerCase(), pins = sysPins(), all = typeof myTasks === "function" ? myTasks() : [];
+  const hit = id => !q || (sysName(id).join(" ") + " " + sysDesc(id).join(" ")).toLowerCase().includes(q);
+  const card = id => { const s = SYSTEMS[id], ok = sysAllowed(id), n = s.planned || id === "workspace" ? 0 : sysTasks(id, all).length, pin = pins.includes(id);
+    return `<div class="ln-card ${s.planned ? "planned" : ""} ${id === SYS ? "on" : ""} ${ok ? "" : "off"}">
+      <button type="button" class="ln-open" data-lsys="${id}" ${ok ? "" : "disabled"}><span class="ln-ico">${svgI(s.icon)}</span><span class="ln-t"><b>${esc(tx(sysName(id)))}</b><small>${ok ? esc(tx(sysDesc(id))) : L("บทบาทนี้ไม่มีสิทธิ์ใช้ระบบนี้", "This role has no access")}</small>
+        ${s.planned ? `<span class="pill p-mute">${L("อยู่ในแผน", "Planned")}</span>` : n ? `<span class="ln-n">${n} ${L("งานรอคุณ", "waiting for you")}</span>` : ""}</span></button>
+      ${ok ? `<button type="button" class="ln-pin ${pin ? "on" : ""}" data-lpin="${id}" aria-pressed="${pin}" title="${pin ? L("เอาออกจากแถบระบบ", "Remove from the rail") : L("ปักไว้ที่แถบระบบ", "Pin to the rail")}" aria-label="${pin ? L("เอาออกจากแถบระบบ", "Remove from the rail") : L("ปักไว้ที่แถบระบบ", "Pin to the rail")}: ${esc(tx(sysName(id)))}">${svgI("star")}</button>` : ""}</div>`; };
+  const groups = SYS_GROUPS.map(([g, gl]) => { const ids = SYS_IDS.filter(id => SYSTEMS[id].grp === g && hit(id)); return ids.length ? `<div class="ln-h">${tx(gl)}</div><div class="ln-grid">${ids.map(card).join("")}</div>` : ""; }).join("");
+  el.innerHTML = `<div class="ln-scrim" data-lclose></div><div class="ln-panel" role="dialog" aria-modal="true" aria-label="${L("ทุกระบบ", "All systems")}">
+    <div class="ln-search">${svgI("search")}<input type="search" id="ln-q" value="${esc(LAUNCH_Q)}" placeholder="${L("ไปที่ระบบ… งบประมาณ จัดซื้อ การเงิน พัสดุ", "Switch to… Budget, Procurement, Finance, Assets")}" aria-label="${L("ค้นหาระบบ", "Find a system")}" autocomplete="off"><button type="button" class="btn ghost" data-lclose aria-label="${L("ปิด", "Close")}">✕</button></div>
+    <div class="ln-body">${groups || `<div class="empty">${L("ไม่พบระบบที่ตรงกับคำค้น", "No system matches")}</div>`}</div>
+    <div class="ln-foot">${L("ระบบที่ปักหมุดจะแสดงบนแถบด้านซ้าย · งานของฉันและผู้ดูแลระบบใช้ร่วมกันทุกระบบ · ระบบที่อยู่ในแผนยังไม่ได้สร้างในต้นแบบนี้", "Pinned systems show on the left rail · Workspace and Administration are shared by every system · Planned systems are not built in this prototype")}</div></div>`;
+  $$("#launcher [data-lclose]").forEach(b => (b.onclick = closeLauncher));
+  $$("#launcher [data-lsys]").forEach(b => (b.onclick = () => switchSys(b.dataset.lsys)));
+  $$("#launcher [data-lpin]").forEach(b => (b.onclick = () => { toggleSysPin(b.dataset.lpin); renderLauncher(); const x = $(`#launcher [data-lpin="${b.dataset.lpin}"]`); if (x) x.focus(); }));
+  const qi = $("#ln-q");
+  qi.oninput = () => { const pos = qi.selectionStart; LAUNCH_Q = qi.value; renderLauncher(); const n = $("#ln-q"); n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} };
+  qi.onkeydown = e => { if (e.key === "Enter") { const f = $("#launcher [data-lsys]:not([disabled])"); if (f) f.click(); } };
+}
+document.addEventListener("keydown", e => {
+  const el = $("#launcher");
+  if (!el || el.hidden) return;
+  if (e.key === "Escape") { closeLauncher(); $("#appsw").focus(); return; }
+  if (e.key === "Tab") { const f = $$("#launcher button:not([disabled]), #launcher input"); if (!f.length) return; const i = f.indexOf(document.activeElement); if (e.shiftKey && i <= 0) { e.preventDefault(); f[f.length - 1].focus(); } else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); } }
+});
+// The sidebar's system button now opens the launcher.
+toggleAppMenu = function (show) { const el = $("#launcher"), open = el && !el.hidden; if (show === false || (show === undefined && open)) closeLauncher(); else openLauncher(); };
+
+// ---------- the sidebar for the current system ----------
+{
+  const baseNav = renderNav, baseBrand = renderAppBrand;
+  renderAppBrand = function () {
+    if (SYSTEMS[SYS] && !SYSTEMS[SYS].app) {
+      $("#brand-app").textContent = tx(sysName(SYS)); $("#brand-sub").textContent = tx(sysDesc(SYS));
+      $("#brand-mark").style.background = ""; $("#brand-mark").innerHTML = svgI(SYSTEMS[SYS].icon); $("#brand-mark").classList.add("sys");
+      document.body.dataset.app = SYS;
+    } else { $("#brand-mark").classList.remove("sys"); baseBrand(); $("#brand-mark").textContent = APPS[APP] ? APPS[APP].mark : "Fk"; }
+    $("#appsw").setAttribute("aria-label", `${L("ทุกระบบ", "All systems")}: ${tx(sysName(SYS))}`);
+    $("#appsw").setAttribute("aria-haspopup", "dialog");
+  };
+  const link = (href, v, ico, label, badge = "") => `<a href="#${href}" data-v="${v}" data-href="${href}"><span class="ni">${svgI(ico)}</span><span class="nl">${label}</span>${badge}</a>`;
+  const cnt = n => (n ? `<span class="badge">${n}</span>` : "");
+  renderNav = function () {
+    if (SYSTEMS[SYS] && SYSTEMS[SYS].app) {
+      baseNav();
+      // In an app the rail already leads to My Workspace and Administration, so the app menu shows only its own pages.
+      $$("#nav a[data-v=home], #nav a[data-v=admin]").forEach(a => { const h = a.previousElementSibling; a.remove(); if (h && h.classList.contains("nav-h") && (!h.nextElementSibling || h.nextElementSibling.classList.contains("nav-h"))) h.remove(); });
+    } else {
+      let h = "";
+      if (SYS === "workspace") {
+        const okp = id => allowed(id);
+        h += `<div class="nav-h">${L("พื้นที่ทำงาน", "Workspace")}</div>` + link("home", "home", "home", L("วันนี้", "Today"), cnt(typeof myTasks === "function" ? myTasks().length : 0));
+        if (okp("inbox")) h += link("inbox", "inbox", "checksq", L("รออนุมัติ", "Approvals"), cnt(inboxItems().length));
+        if (okp("exceptions")) h += link("exceptions", "exceptions", "alert", L("รายการผิดปกติ", "Exceptions"), cnt(exceptionItems().filter(x => x.sev === "bad").length));
+        if (okp("pins")) h += link("pins", "pins", "star", L("ปักหมุดและล่าสุด", "Pinned and recent"));
+        if (WS_ROLES.includes(ROLE)) h += link("delegation", "delegation", "users", L("การมอบอำนาจ", "Delegation"));
+        const pp = pagePins().slice(0, 6);
+        if (pp.length) h += `<div class="nav-h">${L("ปักหมุด", "Pinned")}</div>` + pp.map(p => `<a href="#" data-pinlink="${esc(p.link)}"><span class="ni">${svgI(SYSTEMS[p.sys] ? SYSTEMS[p.sys].icon : "star")}</span><span class="nl">${esc(tx(p.label))}</span></a>`).join("");
+        h += `<div class="nav-h">${L("การสาธิต", "Demo")}</div>` + link("demo", "demo", "book", L("คู่มือการสาธิต", "Demo guide")) + `<a href="#" data-presstart><span class="ni">${svgI("play")}</span><span class="nl">${L("โหมดนำเสนอ", "Presenter mode")}</span></a>`;
+      } else if (SYS === "admin") {
+        h += `<div class="nav-h">${L("ผู้ดูแลระบบ", "Administration")}</div>` + (typeof ADMIN_TABS !== "undefined" ? ADMIN_TABS.filter(t => !t.roles || t.roles.includes(ROLE)) : []).map(t => link("admin-" + t.id, "admin", NAV_ICON["admin-" + t.id] || "settings", tx(t.label))).join("");
+      } else if (SYSTEMS[SYS] && SYSTEMS[SYS].planned) {
+        h += `<div class="nav-h">${L("อยู่ในแผน", "Planned")}</div>` + link("sys-" + SYS, "sys-" + SYS, SYSTEMS[SYS].icon, L("ภาพรวมของระบบ", "What it will cover")) + link("home", "home", "home", L("กลับพื้นที่ทำงาน", "Back to Workspace"));
+      }
+      $("#nav").innerHTML = h;
+      $$("#nav [data-pinlink]").forEach(a => (a.onclick = e => { e.preventDefault(); jump(a.dataset.pinlink); }));
+      $$("#nav [data-presstart]").forEach(a => (a.onclick = e => { e.preventDefault(); if (typeof presStart === "function") presStart(); }));
+      renderAppBrand();
+    }
+    markSysNav();
+  };
+}
+function markSysNav() {
+  if (!$("#nav") || (SYSTEMS[SYS] && SYSTEMS[SYS].app)) return;
+  const want = CUR === "admin" ? "admin-" + ADMIN_TAB : CUR;
+  $$("#nav a[data-href]").forEach(a => a.classList.toggle("on", a.dataset.href === want));
+}
+
+// ---------- breadcrumbs and the pin button ----------
+function renderCrumb() {
+  const c = curPage(), s = SYSTEMS[SYS] ? sysName(SYS) : null;
+  // The organization is already in the selector beside it, so the crumb starts at the system.
+  $("#crumb").innerHTML = `${s ? `<button type="button" class="cr-sys" data-crumbsys="${SYS}">${esc(tx(s))}</button><span class="cr-sep" aria-hidden="true">/</span>` : ""}<b title="${esc(tx(S.org))}">${esc(tx(c.label))}</b>`;
+  const b = $("#crumb [data-crumbsys]"); if (b) b.onclick = () => switchSys(b.dataset.crumbsys);
+}
+function paintPinBtn() {
+  let b = $("#pinbtn");
+  if (!b) { b = document.createElement("button"); b.type = "button"; b.id = "pinbtn"; b.className = "iconbtn pinbtn"; $("#bell").before(b); b.onclick = togglePagePin; }
+  const on = isPinned(curPage().link);
+  b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on));
+  b.innerHTML = icon("star", 18); b.title = b.ariaLabel = on ? L("เลิกปักหมุดหน้านี้", "Unpin this page") : L("ปักหมุดหน้านี้", "Pin this page");
+}
+
+// ---------- hooks into the shell and the router ----------
+{
+  const baseShell = renderShell;
+  renderShell = function () { baseShell.apply(this, arguments); renderSysRail(); paintPinBtn(); };
+  const baseRoute = route;
+  route = function () {
+    const r = baseRoute.apply(this, arguments);
+    closeLauncher(); // a page change (a link, a task, the presenter) always closes the launcher
+    const s = sysOfView(CUR), changed = s !== SYS;
+    SYS = s;
+    if (changed) renderNav(); else markSysNav();
+    renderSysRail(); renderCrumb(); paintPinBtn(); noteRecent();
+    setTimeout(() => { if (sysOfView(CUR) === SYS) renderCrumb(); }); // pages that set the crumb a tick later (Budget) get it back
+    return r;
+  };
+}
+
+// ---------- the page of a planned system ----------
+SYS_IDS.filter(id => SYSTEMS[id].planned).forEach(id => {
+  const s = SYSTEMS[id];
+  VIEWS["sys-" + id] = () => `<div class="head"><div><div class="eyebrow">${L("ระบบที่อยู่ในแผน", "Planned system")}</div><h1>${esc(tx(s.name))}</h1><p>${esc(tx(s.desc))}</p></div><span class="sp"></span><span class="pill p-mute">${L("ยังไม่ได้สร้างในต้นแบบนี้", "Not built in this prototype")}</span></div>
+    <div class="grid2">
+      <section class="panel"><header>${chipIco(s.icon)}<h2>${L("สิ่งที่ระบบจะครอบคลุม", "What it will cover")}</h2></header><ul class="tlist">${s.covers.map(c => `<li><span class="prio p-mute"></span><div>${esc(tx(c))}</div><span></span></li>`).join("")}</ul></section>
+      <section class="panel"><header>${chipIco("link")}<h2>${L("เชื่อมกับระบบที่มีอยู่", "How it joins the live systems")}</h2></header><ul class="tlist">${s.joins.map(c => `<li><span class="prio p-info"></span><div>${esc(tx(c))}</div><span></span></li>`).join("")}</ul>
+        <div class="body sub">${L("ใช้ผู้ใช้ สิทธิ์ บันทึกการใช้งาน และพื้นที่ทำงานเดียวกับทุกระบบ งานที่รอคุณจะเข้าหน้ารออนุมัติ และรายการผิดปกติเข้าศูนย์รายการผิดปกติ", "It uses the same users, roles, audit log and Workspace as every system: its approvals join the Approvals inbox and its exceptions join the Exception centre.")}</div></section>
+    </div>`;
+  BIND["sys-" + id] = () => {};
+});
+
+/* ---- 91-workbench.js ---- */
+// Workspace across systems (round 62, after the Fabor console's workbench): one approvals inbox for every system,
+// an exception centre that lists what is late, failing or behind plan anywhere on the platform, a page of pinned and
+// recently viewed pages, and a strip on My Workspace with what each system needs from you today.
+// Fisko never decides for anyone: every row opens the record where a person acts.
+const APPROVAL_RE = /อนุมัติ|เห็นชอบ|พิจารณา|ตัดสิน|ลงนาม|ตรวจรับ|approve|decide|decision|review|sign|accept|committee/i;
+const inboxItems = () => (typeof myTasks === "function" ? myTasks() : []).filter(t => t.link && APPROVAL_RE.test(t.title));
+// The page a jump link lands on, so a row can say whether this role may open it.
+function linkPage(l) {
+  if (!l) return null;
+  if (l.startsWith("req:")) return "requests";
+  if (l.startsWith("case:")) return "procurement";
+  if (l.startsWith("admin-")) return "admin";
+  const [a, t] = l.split("-");
+  if (t && typeof JUMP_TABS !== "undefined" && JUMP_TABS[a]) return JUMP_TABS[a][0];
+  return l;
+}
+const linkOk = l => { const p = linkPage(l); if (!p) return false; if (p === "admin" && l.startsWith("admin-")) { const t = ADMIN_TABS.find(x => x.id === l.slice(6)); return allowed("admin") && (!t || !t.roles || t.roles.includes(ROLE)); } return allowed(p); };
+const sysChip = id => (SYSTEMS[id] ? `<span class="appdot" style="--c:${SYSTEMS[id].app ? APPS[id].color : "var(--muted)"}">${esc(tx(sysName(id)))}</span>` : "");
+const sysOfLink = l => { const a = appOfLink(l); return a === "all" ? (l && l.startsWith("admin") ? "admin" : "workspace") : a; };
+
+// ---------- exceptions ----------
+// Each item: { sev: "bad" | "warn", sys, what, sub, since (ISO date), link, owner (role key) }
+function exceptionItems() {
+  const out = [], add = o => out.push(o), tryAdd = fn => { try { fn(); } catch (e) { /* a source missing in this organization's data adds nothing */ } };
+  tryAdd(() => (typeof myTasks === "function" ? myTasks() : []).filter(t => t.due && daysUntil(t.due) < 0 && t.link).forEach(t =>
+    add({ sev: "bad", sys: sysOfLink(t.link), what: t.title, sub: `${L("งานของคุณเลยกำหนด", "Your task is overdue")}${t.sub ? " · " + t.sub : ""}`, since: t.due, link: t.link, owner: ROLE })));
+  tryAdd(() => S.integrations.filter(g => g.status === "error" || g.status === "warn").forEach(g =>
+    add({ sev: g.status === "error" ? "bad" : "warn", sys: "admin", what: `${g.sys} · ${g.id}`, sub: `${tx(g.msg)} · ${tx(g.dir)} · ${tx(g.freq)}`, since: g.last ? g.last.slice(0, 10) : TODAY, link: "admin-integrations", owner: "admin" })));
+  tryAdd(() => (S.dash.units || []).forEach(u => { const st = unitState(u); if (st[1] !== "p-bad") return;
+    add({ sev: "warn", sys: "budget", what: `${L("เบิกจ่ายต่ำกว่าแผน", "Spending behind plan")}: ${unitName(u.unit)}`, sub: `${L("จ่ายแล้ว", "Paid")} ${fmt(u.actual, 1)} ${L("จากแผน", "of planned")} ${fmt(u.plan, 1)} ${L("ลบ.", "M")} (${Math.round(st[2])}%)${u.reason ? " · " + tx(u.reason) : ""}`, since: TODAY, link: "mon-alerts", owner: "exec" }); }));
+  tryAdd(() => (S.contracts || []).filter(c => c.status === "active").forEach(c => (c.phases || []).filter(p => p.due < TODAY && !p.delivered).forEach(p =>
+    add({ sev: "bad", sys: "procurement", what: `${c.id} · ${tx(p.name)} ${L("ส่งมอบล่าช้า", "delivery late")}`, sub: `${esc(tx(c.vendor))} · ${L("กำหนดส่ง", "due")} ${fdate(p.due)} · ${L("ล่าช้า", "late by")} ${-daysUntil(p.due)} ${L("วัน", "days")}`, since: p.due, link: "prc-contracts", owner: "proc" }))));
+  tryAdd(() => { if (typeof dayChecks !== "function") return; dayChecks(TODAY).filter(c => c.ok === false && !c.soft).forEach(c =>
+    add({ sev: "warn", sys: "finance", what: c.t, sub: L("การตรวจประจำวันยังไม่ผ่าน", "Today's daily check has not passed"), since: TODAY, link: "fnc-cash", owner: "fin" })); });
+  tryAdd(() => ((S.carry && S.carry.prev) || []).filter(c => c.status === "open" && c.paid < c.amount && daysUntil(c.due) <= 180).forEach(c =>
+    add({ sev: daysUntil(c.due) <= 60 ? "bad" : "warn", sys: "finance", what: `${c.id} · ${tx(c.name)}`, sub: `${L("กันเงินเหลื่อมปีเหลือ", "Carry-over left")} ${mb(c.amount - c.paid)} ${L("ลบ.", "M")} · ${L("สิ้นสุด", "ends")} ${fdate(c.due)}`, since: c.t ? c.t.slice(0, 10) : TODAY, link: allowed("allocation") ? "alloc-carry" : "fnc-chain", owner: "fin" })));
+  return out.sort((a, b) => (a.sev === b.sev ? (a.since < b.since ? -1 : 1) : a.sev === "bad" ? -1 : 1));
+}
+
+// ---------- shared row ----------
+const wsRow = (dot, title, sub, sys, link, right) => `<li><span class="prio ${dot}"></span><div style="min-width:0">${link && linkOk(link) ? `<a href="#" data-wslink="${esc(link)}">${esc(title)}</a>` : `<b style="font-weight:600">${esc(title)}</b>`}
+  <div class="meta">${sysChip(sys)}${sub ? `<span class="sub">${sub}</span>` : ""}</div></div>${right || ""}</li>`;
+const bindWsLinks = () => $$("#view [data-wslink]").forEach(a => (a.onclick = e => { e.preventDefault(); jump(a.dataset.wslink.replace("STORY", S.story)); }));
+const sysFilter = (items, cur, attr) => { const c = { all: items.length }; items.forEach(x => (c[x.sys] = (c[x.sys] || 0) + 1));
+  return `<div class="filterbar">${["all", ...SYS_IDS.filter(id => c[id])].map(id => `<button type="button" class="fchip ${cur === id ? "on" : ""}" data-${attr}="${id}">${id === "all" ? L("ทั้งหมด", "All") : esc(tx(sysName(id)).replace("Fisko ", ""))}<b>${c[id]}</b></button>`).join("")}</div>`; };
+
+// ---------- Approvals inbox ----------
+let INBOX_F = "all", INBOX_T = "appr";
+VIEWS.inbox = () => {
+  const all = (typeof myTasks === "function" ? myTasks() : []).filter(t => t.link).map(t => ({ ...t, sys: sysOfLink(t.link) }));
+  const base = INBOX_T === "appr" ? all.filter(t => APPROVAL_RE.test(t.title)) : all;
+  const shown = base.filter(t => INBOX_F === "all" || t.sys === INBOX_F).sort((a, b) => ((a.due || "9") < (b.due || "9") ? -1 : 1));
+  return `<div class="head"><div><div class="eyebrow">${L("พื้นที่ทำงาน", "Workspace")}</div><h1>${INBOX_T === "appr" ? L("รออนุมัติจากคุณ", "Approvals waiting for you") : L("งานทั้งหมดของฉัน", "All my tasks")}</h1>
+    <p>${L("เรื่องที่รอการตัดสินใจของคุณจากทุกระบบ เรียงจากที่ค้างนานที่สุด กดเพื่อเปิดเรื่องและตัดสินใจในหน้านั้น", "What waits for your decision in every system, oldest first. Open one to decide on its own page.")}</p></div></div>
+  <section class="panel"><header>${segBar([["appr", `${L("รออนุมัติ", "Approvals")} · ${all.filter(t => APPROVAL_RE.test(t.title)).length}`], ["all", `${L("งานทั้งหมด", "All tasks")} · ${all.length}`]], INBOX_T, "inboxt")}<span class="sp"></span>${sysFilter(base, INBOX_F, "inboxf")}</header>
+    <ul class="tlist">${shown.map(t => wsRow(t.cls, t.title, t.sub ? esc(t.sub) : "", t.sys, t.link, t.due ? dueText(t.due) : "<span></span>")).join("") || `<li><span></span><div class="empty" style="grid-column:2 / -1">${L("ไม่มีเรื่องรอคุณในกลุ่มนี้", "Nothing waits for you in this group")}</div></li>`}</ul>
+    <div class="body sub">${L("ผู้ช่วย AI เตรียมข้อมูลได้ แต่ไม่อนุมัติ ไม่ลงนาม และไม่จ่ายเงินแทนคุณ", "AI agents prepare the facts; they never approve, sign or pay for you.")}</div></section>`;
+};
+BIND.inbox = () => {
+  bindWsLinks();
+  $$("[data-inboxf]").forEach(b => (b.onclick = () => { INBOX_F = b.dataset.inboxf; route(); }));
+  $$("[data-inboxt]").forEach(b => (b.onclick = () => { INBOX_T = b.dataset.inboxt; INBOX_F = "all"; route(); }));
+};
+
+// ---------- Exception centre ----------
+let EXC_F = "all";
+VIEWS.exceptions = () => {
+  const all = exceptionItems(), shown = all.filter(x => EXC_F === "all" || x.sys === EXC_F), bad = all.filter(x => x.sev === "bad").length;
+  const bySys = SYS_IDS.filter(id => all.some(x => x.sys === id));
+  return `<div class="head"><div><div class="eyebrow">${L("พื้นที่ทำงาน", "Workspace")}</div><h1>${L("ศูนย์รายการผิดปกติ", "Exception centre")}</h1>
+    <p>${L("สิ่งที่ล่าช้า ล้มเหลว หรือต่ำกว่าแผนในทุกระบบ ในที่เดียว แต่ละรายการบอกว่าใครเป็นผู้ดูแลและเปิดไปยังหน้าที่แก้ไขได้", "What is late, failing or behind plan in any system, in one place. Each item names who owns it and opens the page where it is fixed.")}</p></div></div>
+  <section class="stats">${statCard({ label: L("ต้องแก้ไขทันที", "Needs action now"), value: bad, icon: "alert", tone: bad ? "bad" : "ok", sub: "" })}${statCard({ label: L("เฝ้าระวัง", "Watch"), value: all.length - bad, icon: "clock", tone: "info", sub: "" })}${statCard({ label: L("ระบบที่มีรายการ", "Systems affected"), value: bySys.length, icon: "grid", tone: "info", sub: bySys.map(id => tx(sysName(id)).replace("Fisko ", "")).join(" · ") })}</section>
+  <section class="panel"><header><h2>${L("รายการ", "Items")}</h2><span class="sp"></span>${sysFilter(all, EXC_F, "excf")}</header>
+    <ul class="tlist">${shown.map(x => wsRow(x.sev === "bad" ? "p-bad" : "p-warn", x.what, `${x.sub} · ${L("ผู้ดูแล", "Owner")}: ${tx(ROLES[x.owner] || ["–", "–"])}`, x.sys, x.link, `<span class="sub">${x.since === TODAY ? L("วันนี้", "today") : fdate(x.since)}</span>`)).join("") || `<li><span></span><div class="empty" style="grid-column:2 / -1">${L("ไม่มีรายการผิดปกติ", "No exceptions")}</div></li>`}</ul>
+    <div class="body sub">${L("รวบรวมจาก: งานที่เลยกำหนด การเชื่อมต่อระบบที่ล้มเหลว หน่วยงานที่เบิกจ่ายต่ำกว่าแผน งวดงานที่ส่งมอบล่าช้า การตรวจการเงินประจำวัน และเงินกันเหลื่อมปีที่ใกล้สิ้นสุด", "Collected from overdue tasks, failed interfaces, units behind their spending plan, late contract phases, the daily finance check and carry-over close to its end date.")}</div></section>`;
+};
+BIND.exceptions = () => { bindWsLinks(); $$("[data-excf]").forEach(b => (b.onclick = () => { EXC_F = b.dataset.excf; route(); })); };
+
+// ---------- Pinned and recent ----------
+VIEWS.pins = () => {
+  const pins = pagePins(), rec = recents(), sp = sysPins();
+  const row = (p, act) => `<li><span class="prio p-mute"></span><div style="min-width:0"><a href="#" data-wslink="${esc(p.link)}">${esc(tx(p.label))}</a><div class="meta">${sysChip(p.sys)}${p.t ? `<span class="sub">${fdate(p.t, true)}</span>` : ""}</div></div>${act}</li>`;
+  return `<div class="head"><div><div class="eyebrow">${L("พื้นที่ทำงาน", "Workspace")}</div><h1>${L("ปักหมุดและล่าสุด", "Pinned and recent")}</h1>
+    <p>${L("กดดาวที่แถบด้านบนเพื่อปักหมุดหน้าใดก็ได้ หน้าที่ปักหมุดจะแสดงในเมนูพื้นที่ทำงานด้วย", "Press the star in the top bar to pin any page. Pinned pages also show in the Workspace menu.")}</p></div></div>
+  <div class="grid2">
+    <section class="panel"><header>${chipIco("star")}<h2>${L("หน้าที่ปักหมุด", "Pinned pages")}</h2><span class="sp"></span><span class="sub">${pins.length}</span></header>
+      <ul class="tlist">${pins.map(p => row(p, `<button class="btn ghost" type="button" data-unpin="${esc(p.link)}">${L("เลิกปักหมุด", "Unpin")}</button>`)).join("") || `<li><span></span><div class="empty" style="grid-column:2 / -1">${L("ยังไม่มีหน้าที่ปักหมุด", "No pinned pages yet")}</div></li>`}</ul></section>
+    <section class="panel"><header>${chipIco("history")}<h2>${L("ดูล่าสุด", "Recently viewed")}</h2><span class="sp"></span>${rec.length ? `<button class="btn ghost" type="button" id="rec-clear">${L("ล้าง", "Clear")}</button>` : ""}</header>
+      <ul class="tlist">${rec.map(p => row(p, "")).join("") || `<li><span></span><div class="empty" style="grid-column:2 / -1">${L("ยังไม่มีหน้าที่เปิดดู", "Nothing viewed yet")}</div></li>`}</ul></section>
+  </div>
+  <section class="panel"><header>${chipIco("grid")}<h2>${L("ระบบบนแถบด้านซ้าย", "Systems on the left rail")}</h2></header>
+    <div class="body row" style="gap:8px;flex-wrap:wrap">${SYS_IDS.filter(sysAllowed).map(id => `<label class="field-inline"><input type="checkbox" data-syspin="${id}" ${sp.includes(id) ? "checked" : ""}> ${esc(tx(sysName(id)))}</label>`).join("")}</div></section>`;
+};
+BIND.pins = () => {
+  bindWsLinks();
+  $$("[data-unpin]").forEach(b => (b.onclick = () => { jset("fisko-pins", pagePins().filter(p => p.link !== b.dataset.unpin)); renderNav(); route(); }));
+  const c = $("#rec-clear"); if (c) c.onclick = () => { jset("fisko-recent", []); route(); };
+  $$("[data-syspin]").forEach(b => (b.onchange = () => { toggleSysPin(b.dataset.syspin); }));
+};
+
+// ---------- My Workspace: what each system needs today ----------
+function sysDeck() {
+  const tasks = typeof myTasks === "function" ? myTasks() : [], exc = exceptionItems(), appr = inboxItems();
+  const card = (ico, sys, n, label, sub, act, tone) => `<button type="button" class="sdcard" data-deck="${act}"><span class="sd-sys">${svgI(ico)}${esc(sys)}</span><b class="sd-n ${tone || ""}">${n}</b><span class="sd-l">${label}</span><span class="sub">${sub || "&nbsp;"}</span><span class="sd-go">${L("เปิด", "Open")} ${icon("arrow", 13)}</span></button>`;
+  const cards = [];
+  if (allowed("inbox")) cards.push(card("checksq", L("พื้นที่ทำงาน", "Workspace"), appr.length, L("เรื่องรออนุมัติจากคุณ", "approvals waiting for you"), appr[0] ? appr[0].title : L("ไม่มีเรื่องค้าง", "nothing waiting"), "go:inbox", appr.length ? "warn" : ""));
+  if (allowed("exceptions")) { const b = exc.filter(x => x.sev === "bad"); cards.push(card("alert", L("ทุกระบบ", "Every system"), b.length, L("รายการผิดปกติที่ต้องแก้", "exceptions to fix"), b[0] ? b[0].what : L("ไม่มีรายการเร่งด่วน", "nothing urgent"), "go:exceptions", b.length ? "bad" : "")); }
+  APP_IDS.filter(appAllowed).forEach(id => { const t = sysTasks(id, tasks), over = t.filter(x => x.due && daysUntil(x.due) < 0).length;
+    cards.push(card(SYSTEMS[id].icon, tx(APPS[id].name), t.length, L("งานของคุณในระบบนี้", "tasks for you here"), over ? `${over} ${L("เลยกำหนด", "overdue")}` : t[0] ? t[0].title : L("ไม่มีงานค้าง", "nothing waiting"), "sys:" + id)); });
+  return `<section class="sysdeck" aria-label="${L("วันนี้ในทุกระบบ", "Today across systems")}">${cards.join("")}</section>`;
+}
+{
+  const v = VIEWS.home, b = BIND.home;
+  VIEWS.home = () => {
+    let h = v();
+    if (ROLE === "vendor" || !h.includes('class="hero"')) return h;
+    // The app tiles at the bottom give way to the rail and the launcher; the deck goes right under the greeting.
+    const t = h.indexOf('<div class="apptiles">');
+    if (t > 0) { const s = h.lastIndexOf("<section>", t), e = h.indexOf("</section>", t); if (s >= 0 && e > t) h = h.slice(0, s) + h.slice(e + 10); }
+    const i = h.indexOf("</section>");
+    return i > 0 ? h.slice(0, i + 10) + sysDeck() + h.slice(i + 10) : h;
+  };
+  BIND.home = () => { b && b(); $$("[data-deck]").forEach(x => (x.onclick = () => { const [k, id] = x.dataset.deck.split(":"); if (k === "go") go(id); else switchSys(id); })); };
+}
+
+/* ---- 92-review.js ---- */
+// Enter, review, confirm (round 62, after the Fabor console's action rule). Every record action in the shared
+// CRUD drawer that asks for something (a reason, an amount, a confirmation) or that is a danger action now has a
+// review step between entering and confirming. The review states the consequence in plain words and figures: the
+// record, the action, the amount, the reason as it will be recorded, and whether it can be undone. An action that
+// cannot be undone asks for the record id to be typed before it runs.
+const crNeedsReview = a => a && (a.why || a.confirm || a.impact || a.num || a.kind === "danger");
+const crIrreversible = a => a && a.undo === false;
+const crSteps = n => `<ol class="cr-steps" aria-label="${L("ขั้นตอน", "Steps")}">${[L("กรอก", "Enter"), L("ตรวจทาน", "Review"), L("ยืนยัน", "Confirm")].map((s, i) => `<li class="${i < n ? "done" : i === n ? "on" : ""}" ${i === n ? 'aria-current="step"' : ""}><span>${i + 1}</span>${s}</li>`).join("")}</ol>`;
+{
+  const base = crActBar;
+  crActBar = function (sp, r) {
+    const o = CR_OPEN;
+    if (!o || !o.ask) return base(sp, r);
+    const a = (sp.acts ? sp.acts(r) : []).filter(Boolean).find(x => x.id === o.ask);
+    if (!a) return base(sp, r);
+    if (!o.rv) {
+      // the enter step: the drawer's own form, with the steps on top and Review in place of Confirm
+      const h = base(sp, r), conf = `type="submit">${L("ยืนยัน", "Confirm")}</button>`;
+      return h.replace('<form class="cr-ask" id="cr-ask">', `<form class="cr-ask" id="cr-ask">${crSteps(0)}`).replace(conf, `type="submit">${L("ตรวจทาน", "Review")} ${icon("arrow", 13)}</button>`);
+    }
+    const id = String(sp.id(r)), irr = crIrreversible(a), rows = [
+      [L("รายการ", "Record"), `${esc(tx(sp.noun))} · <span class="mono">${esc(id)}</span> · ${esc(sp.title(r))}`],
+      [L("การดำเนินการ", "Action"), `<b>${a.label}</b>`],
+      a.num ? [tx(a.num.label), `<b class="num">${fmt(o.rv.num)}</b>`] : null,
+      o.rv.why ? [a.whyLabel ? L("ข้อความที่บันทึก", "Recorded text") : L("เหตุผลที่บันทึก", "Reason recorded"), `“${esc(o.rv.why)}”`] : null,
+      a.impact || a.confirm ? [L("ผลที่จะเกิดขึ้น", "What happens"), `${a.impact ? a.impact() : ""}${a.impact && a.confirm ? "<br>" : ""}${a.confirm || ""}`] : null,
+      [L("บันทึกในประวัติ", "History"), `${esc(tx(me().name))} · ${tx(ROLES[ROLE])} · ${fdate(TODAY)}`],
+      [L("ย้อนกลับ", "Undo"), irr ? `<b style="color:var(--bad)">${L("ย้อนกลับไม่ได้", "This cannot be undone")}</b>` : L("ย้อนกลับได้ภายใน 10 วินาทีหลังยืนยัน", "You can undo for 10 seconds after confirming")],
+    ].filter(Boolean);
+    return `<form class="cr-ask cr-review" id="cr-review">${crSteps(1)}<b>${L("ตรวจทานก่อนยืนยัน", "Check before you confirm")}</b>
+      <dl class="cr-rv">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>
+      ${irr ? `<label for="cr-type">${L("พิมพ์เลขที่รายการ", "Type the record id")} <span class="mono">${esc(id)}</span> ${L("เพื่อยืนยัน", "to confirm")}</label><input type="text" id="cr-type" autocomplete="off" spellcheck="false" style="max-width:240px">` : ""}
+      ${o.err ? `<div class="cr-err" role="alert" style="color:var(--bad);font-size:13.5px">${o.err}</div>` : ""}
+      <div class="row"><button class="btn ${a.kind === "danger" ? "danger" : "primary"}" type="submit">${L("ยืนยัน", "Confirm")} · ${a.label}</button><button class="btn ghost" type="button" data-crrvback>${L("กลับไปแก้ไข", "Back to edit")}</button></div></form>`;
+  };
+}
+// A danger action with nothing to enter goes straight to the review.
+document.addEventListener("click", e => {
+  const t = e.target.closest && e.target.closest("[data-crask],[data-crrvback]");
+  if (!t || !CR_OPEN || !$("#view").contains(t)) return;
+  if (t.hasAttribute("data-crrvback")) {
+    const rv = CR_OPEN.rv; CR_OPEN.rv = null; CR_OPEN.err = null; route();
+    const w = $("#cr-why"), n = $("#cr-num"); if (w && rv) w.value = rv.why; if (n && rv && rv.num != null) n.value = rv.num; (w || n || $("#cr-ask button[type=submit]") || { focus() {} }).focus();
+    return;
+  }
+  CR_OPEN.rv = null;
+  const sp = crSpec(CR_OPEN.key), r = crRec(CR_OPEN.key, CR_OPEN.id), a = t.dataset.crask && (sp.acts(r) || []).find(x => x && x.id === t.dataset.crask);
+  if (a && a.kind === "danger" && !a.why && !a.confirm && !a.impact && !a.num) {
+    e.stopImmediatePropagation();
+    CR_OPEN.ask = a.id; CR_OPEN.rv = { why: "", num: undefined }; CR_OPEN.err = null; route(); const b = $("#cr-review button[type=submit]"); if (b) b.focus();
+  }
+}, true);
+document.addEventListener("submit", e => {
+  if (!CR_OPEN || !e.target.closest || !e.target.closest("#view")) return;
+  const sp = crSpec(CR_OPEN.key), r = crRec(CR_OPEN.key, CR_OPEN.id), a = r && (sp.acts(r) || []).find(x => x && x.id === CR_OPEN.ask);
+  if (e.target.id === "cr-ask") {
+    if (!crNeedsReview(a)) return;
+    const w = $("#cr-why"), why = w ? w.value.trim() : "";
+    if (a.why && why.length < (a.whyMin || CR_WHY_MIN)) return; // the drawer's own handler says what is missing
+    let num;
+    if (a.num) { num = Number(($("#cr-num") || { value: "" }).value); if (!(num > (a.num.min ?? 0)) || num > a.num.max) return; }
+    e.preventDefault(); e.stopImmediatePropagation();
+    CR_OPEN.rv = { why, num }; CR_OPEN.err = null; route();
+    const f = $("#cr-type") || $("#cr-review button[type=submit]"); if (f) f.focus();
+    return;
+  }
+  if (e.target.id === "cr-review") {
+    e.preventDefault(); e.stopImmediatePropagation();
+    if (!a || !CR_OPEN.rv) return;
+    if (crIrreversible(a)) { const typed = ($("#cr-type") || { value: "" }).value.trim(); if (typed !== String(sp.id(r))) { CR_OPEN.err = L("เลขที่รายการไม่ตรง ลองพิมพ์อีกครั้ง", "The id does not match. Type it again."); route(); const x = $("#cr-type"); if (x) { x.value = typed; x.focus(); } return; } }
+    const rv = CR_OPEN.rv; CR_OPEN.rv = null;
+    crRun(sp, r, a, rv.why, rv.num);
+  }
+}, true);
+window.addEventListener("hashchange", () => { if (CR_OPEN) CR_OPEN.rv = null; });
+
+/* ---- 93-presenter.js ---- */
+// Presenter mode (round 62, after the Fabor console's presenter route). The demo guide's steps play one at a time
+// from a bar at the bottom of the screen: each step sets its own role and opens its page, and the bar shows what to
+// say. Five routes: the original storyline, Budget, Procurement and Finance end to end, and a seven-step executive
+// cut across the systems. PageDown / PageUp (or Alt+→ / Alt+←) move between steps, as a presentation clicker does.
+DEMO.push(
+  { t: "W-01", part: "ws", role: "exec", link: "inbox", title: ["พื้นที่ทำงาน: รออนุมัติจากทุกระบบ", "Workspace: approvals from every system"],
+    say: ["ผู้บริหารเห็นทุกเรื่องที่รอการตัดสินใจจากงบประมาณ จัดซื้อ และการเงินในกล่องเดียว เรียงจากที่ค้างนานที่สุด", "The executive sees every decision waiting for them from Budget, Procurement and Finance in one inbox, oldest first."],
+    do: ["ชี้ตัวกรองตามระบบ → เปิดเรื่องแรก ระบบพาไปหน้าของเรื่องนั้นในแอปที่ถูกต้อง", "Point at the system filter → open the first item; it lands on its own page in the right app"] },
+  { t: "W-02", part: "ws", role: "exec", link: "exceptions", title: ["ศูนย์รายการผิดปกติ", "The exception centre"],
+    say: ["สิ่งที่ล่าช้า ล้มเหลว หรือต่ำกว่าแผนในทุกระบบอยู่ในหน้าเดียว พร้อมผู้ดูแลแต่ละเรื่อง", "What is late, failing or behind plan in every system is on one page, each with its owner."],
+    do: ["ชี้งวดงานที่ส่งมอบล่าช้าและการเชื่อมต่อ e-GP ที่ล้มเหลว → กรองเฉพาะ Finance", "Point at the late contract phase and the failed e-GP interface → filter to Finance"] },
+);
+const PRES_ROUTES = [
+  ["exec", ["ฉบับผู้บริหาร 7 ขั้น", "Executive cut · 7 steps"]],
+  ["story", ["เรื่องเล่าหลัก", "Storyline"]],
+  ["e2e", ["Budget ครบวงจร", "Budget end to end"]],
+  ["pe2e", ["Procurement ครบวงจร", "Procurement end to end"]],
+  ["fin", ["Finance ครบวงจร", "Finance end to end"]],
+];
+// The executive cut: one platform, the inbox and the exception centre, then one strong moment from each app.
+function presSteps(rt) {
+  const idx = DEMO.map((s, i) => i);
+  if (rt === "story") return idx.filter(i => !DEMO[i].part);
+  if (rt === "exec") {
+    const pick = [i => !DEMO[i].part && DEMO[i].link === "home", i => DEMO[i].t === "W-01", i => DEMO[i].t === "W-02", i => !DEMO[i].part && DEMO[i].link === "mon-forecast",
+      i => DEMO[i].part === "pe2e", i => DEMO[i].part === "fin", i => !DEMO[i].part && DEMO[i].link === "intel-anoms"];
+    return pick.map(f => idx.find(f)).filter(i => i != null);
+  }
+  return idx.filter(i => DEMO[i].part === rt);
+}
+let PRES = (() => { try { return JSON.parse(sessionStorage.getItem("fisko-pres") || "null"); } catch (e) { return null; } })(); // { rt, i, open }
+const presSave = () => { try { sessionStorage.setItem("fisko-pres", JSON.stringify(PRES)); } catch (e) {} };
+function presStart(rt) { PRES = { rt: rt || "exec", i: 0, open: true }; presSave(); presGo(0); }
+function presStop() { PRES = null; presSave(); renderPresBar(); toast(L("ออกจากโหมดนำเสนอ", "Presenter mode off")); }
+function presGo(i) {
+  const steps = presSteps(PRES.rt);
+  if (!steps.length) return;
+  PRES.i = Math.max(0, Math.min(steps.length - 1, i)); presSave();
+  const s = DEMO[steps[PRES.i]];
+  ROLE = s.role; store.set("fisko-role", ROLE);
+  if (SESSION) { SESSION.user = me().id; store.set("fisko-session", JSON.stringify(SESSION)); }
+  renderShell();
+  jump(s.link.replace("STORY", S.story));
+  renderPresBar();
+}
+function renderPresBar() {
+  let el = $("#presbar");
+  if (!PRES) { if (el) el.remove(); document.body.classList.remove("presenting"); return; }
+  if (!el) { el = document.createElement("div"); el.id = "presbar"; el.className = "presbar"; el.setAttribute("role", "region"); document.body.appendChild(el); }
+  document.body.classList.add("presenting");
+  el.setAttribute("aria-label", L("โหมดนำเสนอ", "Presenter mode"));
+  const steps = presSteps(PRES.rt), s = DEMO[steps[PRES.i]], sys = sysOfView(linkPage(s.link) || "home");
+  el.innerHTML = `<div class="pb-top"><span class="pb-tag">${svgI("play")}${L("นำเสนอ", "Presenting")}</span>
+      <select id="pb-rt" aria-label="${L("เส้นทาง", "Route")}">${PRES_ROUTES.map(([k, l]) => `<option value="${k}" ${k === PRES.rt ? "selected" : ""}>${tx(l)}</option>`).join("")}</select>
+      <span class="pb-n">${PRES.i + 1} / ${steps.length}</span>
+      <div class="pb-dots" aria-hidden="true">${steps.map((x, j) => `<i class="${j === PRES.i ? "on" : j < PRES.i ? "done" : ""}"></i>`).join("")}</div>
+      <span class="sp"></span>
+      <button type="button" class="btn ghost" id="pb-say" aria-expanded="${PRES.open}">${PRES.open ? L("ซ่อนบท", "Hide notes") : L("แสดงบท", "Show notes")}</button>
+      <button type="button" class="btn" id="pb-prev" ${PRES.i ? "" : "disabled"} aria-label="${L("ขั้นก่อนหน้า", "Previous step")}">${svgI("chevL")}</button>
+      <button type="button" class="btn primary" id="pb-next" ${PRES.i < steps.length - 1 ? "" : "disabled"}>${L("ถัดไป", "Next")} ${svgI("chevR")}</button>
+      <button type="button" class="btn ghost" id="pb-x" aria-label="${L("ออกจากโหมดนำเสนอ", "Exit presenter mode")}">${svgI("x")}</button></div>
+    <div class="pb-step"><span class="mono sub">${esc(s.t)}</span>${sysChip(sys)}<b>${esc(tx(s.title))}</b><span class="sub">· ${tx(ROLES[s.role])}</span></div>
+    ${PRES.open ? `<div class="pb-say"><p>${esc(tx(s.say))}</p>${s.do ? `<p class="sub"><b>${L("ทำ", "Do")}:</b> ${esc(tx(s.do))}</p>` : ""}</div>` : ""}`;
+  $("#pb-prev").onclick = () => presGo(PRES.i - 1);
+  $("#pb-next").onclick = () => presGo(PRES.i + 1);
+  $("#pb-x").onclick = presStop;
+  $("#pb-say").onclick = () => { PRES.open = !PRES.open; presSave(); renderPresBar(); };
+  $("#pb-rt").onchange = e => { PRES = { rt: e.target.value, i: 0, open: PRES.open }; presGo(0); };
+}
+document.addEventListener("keydown", e => {
+  if (!PRES || e.target.closest("input, textarea, select, [contenteditable]")) return;
+  if (e.key === "PageDown" || (e.altKey && e.key === "ArrowRight")) { e.preventDefault(); presGo(PRES.i + 1); }
+  if (e.key === "PageUp" || (e.altKey && e.key === "ArrowLeft")) { e.preventDefault(); presGo(PRES.i - 1); }
+});
+// The bar follows language changes and survives a reload; the demo guide gets a button to start it.
+{
+  const bs = renderShell; renderShell = function () { bs.apply(this, arguments); if (PRES && SESSION) renderPresBar(); };
+  const v = VIEWS.demo, b = BIND.demo;
+  VIEWS.demo = () => v().replace('<ol class="demo">', `<section class="panel"><header>${chipIco("play")}<h2>${L("โหมดนำเสนอ", "Presenter mode")}</h2><span class="sp"></span>${PRES_ROUTES.map(([k, l]) => `<button class="btn ${k === "exec" ? "primary" : ""}" type="button" data-presrt="${k}">${tx(l)} · ${presSteps(k).length}</button>`).join("")}</header>
+    <div class="body sub">${L("เล่นทีละขั้นจากแถบด้านล่าง แต่ละขั้นสลับบทบาทและเปิดหน้าให้เอง ใช้ PageDown / PageUp หรือรีโมตนำเสนอเพื่อเลื่อนขั้น", "Plays one step at a time from a bar at the bottom; each step switches the role and opens its page. Use PageDown / PageUp or a presentation clicker.")}</div></section><ol class="demo">`);
+  BIND.demo = () => { b && b(); $$("[data-presrt]").forEach(x => (x.onclick = () => presStart(x.dataset.presrt))); };
+}
 
 /* ---- 99-boot.js ---- */
 // Boot: pick the saved organization, load its state, draw the shell and the current page.

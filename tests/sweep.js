@@ -814,6 +814,35 @@
       }
       report("demo");
     }
+    // the multi-system shell (round 62): the rail, the launcher and the crumb for every role and language, every
+    // presenter route step by step, and the review step of a record action
+    if (o.suites.includes("render") && typeof SYSTEMS !== "undefined") {
+      const txt = el => (el ? el.innerText : ""), bad = (label, s) => { n++; const m = s.match(BAD); if (m) errs.push(`${label}: …${s.slice(Math.max(0, m.index - 40), m.index + 20)}`); };
+      for (const org of o.orgs) { ORG = org; S = SEEDS[org].seed();
+        for (const lang of o.langs) { LANG = lang; for (const role of o.roles) { ROLE = role; safe(`shell ${org}/${lang}/${role}`, () => {
+          renderShell(); go2("home");
+          bad(`rail ${org}/${lang}/${role}`, txt(document.getElementById("sysrail")) + " " + (document.getElementById("sysrail") || { innerHTML: "" }).innerHTML.replace(/<[^>]+>/g, " "));
+          openLauncher(); bad(`launcher ${org}/${lang}/${role}`, txt(document.getElementById("launcher"))); closeLauncher();
+          for (const id of SYS_IDS.filter(sysAllowed)) { switchSys(id); window.FISKO_ROUTE = location.hash; route(); bad(`crumb ${org}/${lang}/${role}/${id}`, txt(document.getElementById("crumb")) + " " + txt(document.getElementById("nav"))); }
+          window.FISKO_ROUTE = null;
+        }); await tick(); } }
+      }
+      ORG = "sample"; S = SEEDS.sample.seed(); LANG = "en";
+      for (const [rt] of PRES_ROUTES) safe(`presenter ${rt}`, () => { PRES = { rt, i: 0, open: true }; const k = presSteps(rt).length; if (!k) throw new Error("no steps");
+        for (let i = 0; i < k; i++) { presGo(i); bad(`presenter ${rt} ${i + 1}`, txt(document.getElementById("presbar")) + " " + txt(document.getElementById("view"))); } });
+      PRES = null; try { sessionStorage.removeItem("fisko-pres"); } catch (e) {} renderPresBar();
+      safe("review step", () => {
+        ROLE = "fin"; renderShell(); const nf = NAV.find(x => x.id === "finance"); nf.tabSet("chain"); window.FISKO_ROUTE = "#finance";
+        const r0 = crRec("fnCm", "CM-2570-001"); if (!r0) throw new Error("no CM-2570-001");
+        crOpen("fnCm", "CM-2570-001"); route(); const b = document.querySelector('#view [data-crask="rel"]'); if (!b) throw new Error("no release button");
+        b.click(); document.getElementById("cr-num").value = 1000; document.getElementById("cr-why").value = "Release the unused balance (sweep)";
+        document.querySelector("#cr-ask button[type=submit]").click(); const rv = document.getElementById("cr-review"); if (!rv) throw new Error("no review step");
+        bad("review step", rv.innerText); if (!/1,000/.test(rv.innerText)) errs.push("review step: amount missing");
+        rv.querySelector("button[type=submit]").click(); if (document.getElementById("cr-review")) errs.push("review step: confirm did not run");
+        n++; window.FISKO_ROUTE = null; crClose(); if (CR_UNDO && CR_UNDO.timer) clearTimeout(CR_UNDO.timer);
+      });
+      report("shell");
+    }
     window.onerror = oldErr; window.FISKO_ROUTE = null;
     Object.keys(SEEDS).forEach(org => { ORG = org; store.del(key()); });
     ORG = "sample"; S = SEEDS.sample.seed(); LANG = "th"; ROLE = "plan"; renderShell(); history.replaceState(null, "", "#home"); route();

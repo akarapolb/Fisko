@@ -113,6 +113,10 @@ This regenerates `Fisko_Prototype.html` and `fisko-prototype.html`.
 | `src/js/72-t3.js` | Drawing approval, BOQ and serials, extra contract data, committee fees, supplier bank request (round 39) |
 | `src/js/71-t2.js` | Bid security, sample tests, bids panel (SME, MiT, details), appeal forwarding, supplier role and portal (round 38) |
 | `src/js/70-profile.js` | Procurement profile and feature switches, document numbers, TOR hearing, RFQ, item details, price indices (round 37) |
+| `src/js/90-systems.js`, `src/systems.css` | Multi-system shell (round 62, after the Fabor console): system rail, launcher with live and planned systems and pinning, per-system sidebar, breadcrumbs, pin button, recently viewed, planned-system pages |
+| `src/js/91-workbench.js` | Workspace across systems: Approvals inbox, Exception centre, Pinned and recent, the Today strip on My Workspace |
+| `src/js/92-review.js` | Enter, review, confirm for record actions in the shared drawer (typed id for actions that cannot be undone) |
+| `src/js/93-presenter.js` | Presenter mode: demo routes played from a bottom bar, executive cut of 7 steps, steps W-01 and W-02 |
 | `src/js/99-boot.js` | Startup |
 
 ## Status
