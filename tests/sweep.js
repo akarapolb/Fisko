@@ -884,6 +884,14 @@
               if (!(s.t.startsWith("E-F") ? VC_OPEN : CASE_OPEN || CON_OPEN)) errs.push(`presenter ${org}/${s.t}: the step did not open its record`); });
           }
           PRES = null; presSave(); renderPresBar(); window.FISKO_ROUTE = null; n++;
+          // round 66: the penalty minimum for services, idle sign-out, and no Approve button where SD-11 would refuse it
+          const sv = S.pplan.find(p => p.kind === "service");
+          if (sv && phPenaltyRaw({ plan: sv.id }, { amount: 50000, due: "2026-10-01", delivered: "2026-10-02", n: 1 }) < (S.pcfg.penaltyMin || 0)) errs.push(`site ${org}: a service penalty is below the daily minimum`);
+          const s0 = SESSION; SITE_SEEN = Date.now() - (siteCfg().idleMin + 1) * 60000; siteIdleTick();
+          if (SESSION) errs.push(`site ${org}/${lang}: no sign-out after the idle time`);
+          SESSION = s0; document.getElementById("signin").hidden = true; SITE_SEEN = Date.now();
+          ROLE = "fin"; S.vouchers.filter(v => v.state === "approve").forEach(v => { if (vcSodClash(v) && vcActs(v).some(a => a[0] === "approve")) errs.push(`site ${org}: ${v.id} offers Approve that SD-11 refuses`); });
+          ROLE = "exec";
           go2("home"); $$("#view .head .eyebrow").forEach(e => { if (/(^|·\s*)(B|M|F|P)\d{1,2}(\s*·|$)/.test(e.textContent)) errs.push(`site ${org}/${lang}: a design code left in an eyebrow`); });
           S = SEEDS[org].seed();
         }); await tick(); }

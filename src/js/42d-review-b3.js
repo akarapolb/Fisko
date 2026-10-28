@@ -105,7 +105,8 @@ const impactText = (r, amt) => {
   const bt = myTasks;
   myTasks = function () {
     const t = bt.apply(this, arguments), m = (S.meetings || []).find(x => (x.status || "scheduled") === "scheduled");
-    if (m && cmte().members.includes(me().id)) {
+    // only members whose role can open the meetings page get the task (a member in another role votes in the meeting)
+    if (m && cmte().members.includes(me().id) && allowed("review")) {
       const open = S.requests.filter(r => r.status === "committee" && !conflicted(me().id, r) && !((m.votes || {})[r.id] || {})[me().id]);
       if (open.length) t.unshift({ title: `${L("ลงความเห็นวาระประชุม", "Vote on the agenda for")} ${tx(m.no)} (${open.length})`, sub: L("ก่อนการประชุม", "Before the meeting"), link: "rev-meetings", due: m.date, cls: "p-warn" });
     }

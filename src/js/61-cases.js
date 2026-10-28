@@ -420,7 +420,7 @@ function bindCases() {
 ADMIN_TABS.push({ id: "procrules", roles: ["admin", "audit", "proc", "prochead"], label: ["กฎจัดซื้อจัดจ้าง", "Procurement rules"] });
 const CONF_TAG = c => tag(c, c === "A" ? "p-ok" : c === "B" ? "p-info" : "p-mute");
 ADMIN.procrules = () => {
-  const ad = isAdmin(), cfg = S.pcfg, num = (k, lbl, hint) => `<div class="f" style="flex:0 1 190px"><label for="pc-${k}">${lbl}</label><input type="number" id="pc-${k}" min="0" step="any" value="${cfg[k]}" ${ad ? "" : "disabled"}><span class="sub">${hint}</span></div>`;
+  const ad = isAdmin(), cfg = Object.assign(S.pcfg, Object.assign({ penGoods: S.pcfg.penaltyPct, penService: S.pcfg.penaltyPct, penCons: S.pcfg.penaltyPct, penaltyMin: 0 }, S.pcfg)), num = (k, lbl, hint) => `<div class="f" style="flex:0 1 190px"><label for="pc-${k}">${lbl}</label><input type="number" id="pc-${k}" min="0" step="any" value="${cfg[k]}" ${ad ? "" : "disabled"}><span class="sub">${hint}</span></div>`;
   return `
   <div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("ค่าตั้งเหล่านี้ไม่ใช่คำวินิจฉัยทางกฎหมาย", "These settings are not legal advice")}</b>
     <p>${L("ระดับ A คือข้อเท็จจริงที่ยืนยันกับตัวบทแล้ว ระดับ B และ C เป็นค่าตั้งต้นที่หน่วยงานต้องยืนยันกับระเบียบและหนังสือเวียนที่ใช้อยู่ก่อนใช้จริง", "Level A is confirmed against the text. Levels B and C are starting values the agency must confirm against the current rules and circulars before real use.")}</p></div></div>
@@ -436,7 +436,10 @@ ADMIN.procrules = () => {
       ${num("minMembers", L("กรรมการอย่างน้อย (รวมประธาน)", "Committee size (with chair)"), CONF_TAG("A"))}
       ${num("appealDays", L("ช่วงอุทธรณ์ (วันทำการ)", "Appeal period (working days)"), CONF_TAG("B"))}
       ${num("splitDays", L("ช่วงตรวจการแตกซื้อ (วัน)", "Split-purchase look-back (days)"), CONF_TAG("C"))}
-      ${num("penaltyPct", L("ค่าปรับ (ร้อยละต่อวัน)", "Penalty (% per day)"), CONF_TAG("C"))}
+      ${num("penGoods", L("ค่าปรับงานซื้อ (ร้อยละต่อวัน 0.01–0.20)", "Penalty, purchases (% a day, 0.01–0.20)"), CONF_TAG("B"))}
+      ${num("penService", L("ค่าปรับงานจ้าง (ร้อยละต่อวัน 0.01–0.20)", "Penalty, services (% a day, 0.01–0.20)"), CONF_TAG("B"))}
+      ${num("penCons", L("ค่าปรับงานจ้างก่อสร้าง (ร้อยละต่อวัน 0.01–0.10)", "Penalty, construction (% a day, 0.01–0.10)"), CONF_TAG("B"))}
+      ${num("penaltyMin", L("ค่าปรับงานจ้างขั้นต่ำ (บาทต่อวัน)", "Minimum penalty, services and construction (baht a day)"), CONF_TAG("B"))}
       ${num("penaltyCapPct", L("เตือนเมื่อค่าปรับสะสมเกิน (ร้อยละของสัญญา)", "Warn when penalties pass (% of contract)"), CONF_TAG("B"))}
       ${num("guaranteePct", L("หลักประกันสัญญา (ร้อยละ)", "Contract guarantee (%)"), CONF_TAG("C"))}
       ${num("guaranteeWarnDays", L("เตือนก่อนหลักประกันหมดอายุ (วัน)", "Warn before the guarantee expires (days)"), CONF_TAG("C"))}
@@ -462,8 +465,10 @@ BIND_ADMIN.procrules = () => {
     commit(); route(); toast(L("บันทึกแล้ว", "Saved")); }; });
   const sv = $("#pc-save");
   if (sv) sv.onclick = () => {
-    const v = {}; for (const k of ["specificMax", "singleInspectorMax", "minMembers", "appealDays", "splitDays", "penaltyPct", "penaltyCapPct", "guaranteePct", "guaranteeWarnDays", "ladderPct", "extDaysHead", "acceptWd", "acceptWdLast", "invoiceTol", "rfMinAnnounce", "rfRatioPct", "rfGrowthPct", "rfRepeatWins", "rfNearPct"]) { const x = Number($("#pc-" + k).value); v[k] = k === "penaltyPct" ? x : Math.round(x); }
+    const v = {}; for (const k of ["specificMax", "singleInspectorMax", "minMembers", "appealDays", "splitDays", "penGoods", "penService", "penCons", "penaltyMin", "penaltyCapPct", "guaranteePct", "guaranteeWarnDays", "ladderPct", "extDaysHead", "acceptWd", "acceptWdLast", "invoiceTol", "rfMinAnnounce", "rfRatioPct", "rfGrowthPct", "rfRepeatWins", "rfNearPct"]) { const x = Number($("#pc-" + k).value); v[k] = k === "penaltyPct" ? x : Math.round(x); }
     if (Object.values(v).some(x => !(x >= 0)) || v.minMembers < 2 || v.specificMax < 1 || v.singleInspectorMax < 1) { toast(L("ค่าไม่ถูกต้อง", "Check the values")); return; }
+    if ([v.penGoods, v.penService].some(x => x < 0.01 || x > 0.2) || v.penCons < 0.01 || v.penCons > 0.1) { toast(L("อัตราค่าปรับต้องอยู่ในช่วงตามข้อ 162", "Penalty rates must be within the clause 162 ranges")); return; }
+    v.penaltyPct = v.penGoods;
     Object.assign(S.pcfg, v); S.mrules.filter(r => r.id === "MR-01").forEach(r => (r.max = v.specificMax));
     audit(["แก้ค่าตั้งจัดซื้อจัดจ้าง", "Changed procurement settings"], Object.entries(v).map(([k, x]) => `${k}=${x}`).join(" ")); commit(); route(); toast(L("บันทึกค่าตั้งแล้ว", "Settings saved"));
   };

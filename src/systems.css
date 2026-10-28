@@ -283,3 +283,7 @@ body.presenting .sitefoot { padding-bottom: 220px; }
 .si-pdpa summary { cursor: pointer; font-weight: 600; line-height: 1.5; }
 .si-pdpa .sitepol { max-height: 240px; overflow: auto; margin-top: 8px; font-size: 13px; }
 @media (max-width: 620px) { .sitefoot { padding-left: 16px; padding-right: 16px; } }
+
+/* ---- round 66: idle sign-out warning ---- */
+.idlewarn { position: fixed; left: 50%; top: 16px; transform: translateX(-50%); z-index: 90; background: var(--surface); color: var(--ink); border: 1px solid var(--warn); border-radius: 10px; box-shadow: var(--sh-3); padding: 10px 14px; display: flex; gap: 12px; align-items: center; max-width: calc(100vw - 32px); font-size: 14px; }
+.idlewarn[hidden] { display: none; }

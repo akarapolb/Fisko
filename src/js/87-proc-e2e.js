@@ -20,7 +20,7 @@ CRUD.def("pcWaive", {
     { h: ["ค่าปรับ (บาท)", "Penalty (baht)"], n: true, c: ph => fmt(phPenaltyRaw(wvCon(), ph)) },
     { h: ["ขอลด (บาท)", "Waiver (baht)"], n: true, c: ph => (ph.waive ? fmt(ph.waive.amount) : "–") }, { h: ["ค่าปรับสุทธิ (บาท)", "Net penalty (baht)"], n: true, c: ph => fmt(phPenalty(wvCon(), ph)) }],
   fields: ph => { const raw = phPenaltyRaw(wvCon(), ph), w = ph.waive && ph.waive.status === "pending" ? ph.waive : null;
-    return [{ id: "_r", label: ["ค่าปรับตามสัญญา", "Penalty under the contract"], type: "info", html: `${fmt(raw)} ${L("บาท", "baht")} · ${phLate(ph)} ${L("วัน", "days")} × ${S.pcfg.penaltyPct}%` },
+    return [{ id: "_r", label: ["ค่าปรับตามสัญญา", "Penalty under the contract"], type: "info", html: `${fmt(raw)} ${L("บาท", "baht")} · ${phLate(ph)} ${L("วัน", "days")} × ${penRule(wvCon())}` },
       { id: "amount", label: ["ยอดที่ของดหรือลด (บาท)", "Amount to waive (baht)"], type: "number", req: true, min: 1, max: raw, value: w ? w.amount : raw },
       { id: "doc", label: ["เอกสารประกอบ", "Supporting document"], wide: true, value: w ? w.doc : "", hint: L("เช่น หนังสือแจ้งเหตุสุดวิสัย หรือหลักฐานว่าความล่าช้าเกิดจากหน่วยงาน", "For example a force-majeure notice, or evidence the delay was the agency's") },
       { id: "why", label: ["เหตุผล", "Reason"], type: "textarea", req: true, wide: true, value: w ? w.why : "" }]; },

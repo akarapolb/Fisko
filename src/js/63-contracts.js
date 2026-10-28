@@ -16,7 +16,16 @@ function phLate(ph) {
   const from = addDays(ph.due, ph.ext || 0), to = ph.delivered || (ph.cancelled && ph.cancelled.date) || TODAY;
   return Math.max(0, dayDiff(from, to));
 }
-const phPenaltyRaw = (c, ph) => Math.round(S.pcfg.penaltyPct / 100 * ph.amount * phLate(ph));
+// Late penalty (clause 162 of the 2560 procurement regulation): a daily rate by contract kind on the value not yet
+// delivered, and for services and construction at least a minimum amount a day. The rates and the minimum are the
+// tenant's procurement settings; data saved before round 66 has only the one rate (penaltyPct) and no minimum.
+const PEN_KEY = { goods: "penGoods", service: "penService", construction: "penCons" };
+const penKind = c => ((c && c.plan && famPlan(c.plan)) || {}).kind || "goods";
+const penRate = c => { const r = S.pcfg[PEN_KEY[penKind(c)] || "penGoods"]; return r != null ? r : S.pcfg.penaltyPct; };
+const penMin = c => (penKind(c) === "goods" ? 0 : S.pcfg.penaltyMin || 0);
+const penDaily = (c, ph) => Math.max(penMin(c), Math.round(penRate(c) / 100 * ph.amount));
+const penRule = c => `${penRate(c)}%${penMin(c) ? ` · ${L("ขั้นต่ำ", "at least")} ${fmt(penMin(c))} ${L("บาท/วัน", "baht a day")}` : ""}`;
+const phPenaltyRaw = (c, ph) => { const d = phLate(ph); return d ? penDaily(c, ph) * d : 0; };
 const phPenalty = (c, ph) => Math.max(0, phPenaltyRaw(c, ph) - (ph.waive && ph.waive.status === "approved" ? ph.waive.amount : 0));
 const conPenalty = c => c.phases.reduce((a, ph) => a + phPenalty(c, ph), 0);
 const penaltyWarn = c => conPenalty(c) > S.pcfg.penaltyCapPct / 100 * c.amount;
@@ -262,7 +271,7 @@ function bindClose() {
 
 // ---------- seed ----------
 function seedContracts(s, K) {
-  Object.assign(s.pcfg, { penaltyPct: 0.1, penaltyCapPct: 10, guaranteePct: 5, guaranteeWarnDays: 30, ladderPct: 10, extDaysHead: 30, invoiceTol: 0, acceptWd: 3, acceptWdLast: 5 });
+  Object.assign(s.pcfg, { penaltyPct: 0.1, penGoods: 0.1, penService: 0.1, penCons: 0.1, penaltyMin: 100, penaltyCapPct: 10, guaranteePct: 5, guaranteeWarnDays: 30, ladderPct: 10, extDaysHead: 30, invoiceTol: 0, acceptWd: 3, acceptWdLast: 5 });
   s.contracts.forEach((c, i) => {
     c.base = c.amount; c.ver = 1; c.versions = [{ v: 1, amount: c.amount, t: c.signed + "T14:00", by: K.PO, why: "" }]; c.vars = [];
     c.guarantee = { type: "bank", amount: Math.round(c.amount * 0.05), expires: "2027-04-30", status: "held", t: c.signed + "T15:00", by: K.PO };

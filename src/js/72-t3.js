@@ -37,7 +37,7 @@ const allSerials = () => new Set(S.contracts.flatMap(k => (k.serials || []).map(
 // ---------- contract figures ----------
 function capDate(k) {
   const cap = S.pcfg.penaltyCapPct / 100 * k.amount, pen = conPenalty(k); if (pen >= cap) return { passed: true };
-  const daily = sumv(k.phases.filter(ph => !ph.delivered && !phaseAccepted(ph) && !ph.cancelled && phDue(ph) < TODAY).map(ph => S.pcfg.penaltyPct / 100 * ph.amount)); if (!daily) return null;
+  const daily = sumv(k.phases.filter(ph => !ph.delivered && !phaseAccepted(ph) && !ph.cancelled && phDue(ph) < TODAY).map(ph => penDaily(k, ph))); if (!daily) return null;
   return { date: addDays(TODAY, Math.ceil((cap - pen) / daily)), daily };
 }
 const accPct = k => Math.round(sumv(k.phases.filter(phaseAccepted).map(ph => (ph.result === "partial" ? ph.okAmount : ph.amount))) / k.amount * 100);

@@ -1171,4 +1171,16 @@ Source: the review doc "Fisko end-to-end walkthrough and UX review" (DGA Governm
 - **Presenter:** steps P-E05 to P-E15 open the case or contract the step talks about, and E-F03, E-F04, E-F05 and E-F07 open a voucher in the right state (`PRES_OPEN` in `95b-site.js`), not the list.
 - **Thai labels:** Agent, Workflow, Scorecard and Analytics on the Thai side became เอเจนต์, ขั้นตอนงาน, บัตรคะแนน and การวิเคราะห์ข้อมูล (named agents keep their names); presenter routes are in Thai; page eyebrows drop design codes (B3, M02, F1) and, in Thai, English design-document names.
 - **Footer and policies:** a footer on every page with the agency's name, address and contacts, links to six policy pages (`#policy`: privacy, cookies, security, website policy and disclaimer, accessibility, contact) and copyright with the last-updated date; the sign-in screen has a privacy notice under PDPA section 23. The texts are the product's template; the address and contacts are tenant data in `SITE_CFG[org]` (`96-data-sample-site.js`, `96-data-dpt-site.js`). Check DPT's details with DPT before a customer demo.
-- **Next round number on `main`:** 66.
+- **Next round number on `main`:** 66 (now 67; see section 66).
+
+## 66. Round 66: fixes from the DPT business test (28 October 2026)
+
+Source: the doc "Fisko business test: personas and end-to-end scenarios (DPT tenant)", 42 scenarios as 15 DPT personas against the budget, procurement and finance regulations.
+
+- **Late penalty (clause 162):** a daily rate by contract kind (`penGoods`, `penService`, `penCons`) on the value not yet delivered, with a daily minimum for services and construction (`penaltyMin`, 100 baht). All four are procurement settings, checked against the clause 162 ranges on save; data saved before round 66 falls back to the one `penaltyPct` and no minimum. `penDaily`, `penRule` in `63-contracts.js`.
+- **Idle sign-out:** a warning 5 minutes before and a sign-out after 30 minutes without a key, click or touch; never in presenter mode. Tenant settings `SITE_CFG[org].idleMin` / `warnMin` (`95b-site.js`, `siteIdleTick`).
+- **Approve hidden when SD-11 would refuse it:** `vcSodClash` in `66c-fin-fn2.js`; the voucher says why ("you made this voucher").
+- **Agenda task:** only budget-committee members whose role can open the meetings page get "vote on the agenda" (`42d-review-b3.js`).
+- **DPT demo state:** `96-data-dpt-demo.js` closes the riverbank e-bidding for bids (the procurement officer records them) and puts the online building-permit system (PP-2570-005) at the specific method with an RFQ waiting for the sample supplier.
+- **Still open from the test:** one executive authority delegated to two people for the same dates (D4); record checks that rely on the form for the transfer limit and the published plan.
+- **Next round number on `main`:** 67.

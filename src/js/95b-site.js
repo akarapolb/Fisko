@@ -179,6 +179,33 @@ WS_PAGES.add("policy");
   };
 }
 
+// ---------- idle sign-out (round 66, DGA website standard section 9) ----------
+// After idleMin minutes with no key, click or touch, the session ends; a warning comes warnMin minutes before, with a
+// button to stay. Records are saved as they change, so nothing typed into a saved record is lost. Presenter mode
+// never times out. The times are tenant settings (SITE_CFG[org].idleMin / warnMin).
+Object.assign(SITE_DEF, { idleMin: 30, warnMin: 5 });
+let SITE_SEEN = Date.now();
+["pointerdown", "keydown", "wheel", "touchstart"].forEach(ev => document.addEventListener(ev, () => { SITE_SEEN = Date.now(); const w = $("#idlewarn"); if (w && !w.hidden) w.hidden = true; }, { capture: true, passive: true }));
+function siteIdleTick(now = Date.now()) {
+  const c = siteCfg(), w = $("#idlewarn");
+  if (!SESSION || PRES || !c.idleMin || ($("#signin") && !$("#signin").hidden)) { if (w) w.hidden = true; return; }
+  const idle = (now - SITE_SEEN) / 60000, left = Math.ceil(c.idleMin - idle);
+  if (idle >= c.idleMin) {
+    if (w) w.hidden = true;
+    audit(["ออกจากระบบอัตโนมัติเมื่อไม่ได้ใช้งาน", "Signed out after a period of no use"], `${c.idleMin} ${L("นาที", "min")}`);
+    signOut(); toast(L(`ออกจากระบบแล้ว เพราะไม่ได้ใช้งาน ${c.idleMin} นาที`, `Signed out after ${c.idleMin} minutes without use`)); return;
+  }
+  if (idle >= c.idleMin - c.warnMin) {
+    let el = w;
+    if (!el) { el = document.createElement("div"); el.id = "idlewarn"; el.className = "idlewarn"; el.setAttribute("role", "alertdialog"); el.setAttribute("aria-live", "assertive"); document.body.appendChild(el); }
+    const was = !el.hidden && el.innerHTML;
+    el.innerHTML = `<span>${L(`ไม่มีการใช้งาน ระบบจะออกจากระบบใน ${left} นาที`, `No activity: you will be signed out in ${left} min`)}</span><button class="btn primary" type="button" id="idle-stay">${L("ใช้งานต่อ", "Stay signed in")}</button>`;
+    el.hidden = false; $("#idle-stay").onclick = () => { SITE_SEEN = Date.now(); el.hidden = true; };
+    if (!was) $("#idle-stay").focus();
+  }
+}
+setInterval(siteIdleTick, 30000);
+
 // ---------- the shell ----------
 {
   const bs = renderShell;

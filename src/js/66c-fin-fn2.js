@@ -109,12 +109,19 @@ SOD_STEPS.push([["จัดทำใบขอเบิก", "Prepare a voucher"]
 
 // ---------- views ----------
 // The drawer's buttons by state and role (Finance CRUD 5.1): [act, label, kind, needs a reason].
+// Who would approve (the user, and the executive they act for) already made or checked the voucher: SD-11 refuses
+// the approval, so the button is not offered and the drawer says why (round 66).
+function vcSodClash(v) {
+  if (!sodOn("SD-11")) return false;
+  const actors = canSpend() ? sodActors("exec", "spend") : [me().id];
+  return actors.some(a => a === v.maker || a === v.checker);
+}
 function vcActs(v) {
   const fin = isFinRole(), maker = ROLE === "fin" && vcIsMaker(v), out = [];
   if (maker && ["draft", "returned"].includes(v.state)) out.push(["edit", L("แก้ไข", "Edit"), "", false], ["submit", L("ส่งตรวจ", "Send for checking"), "primary", false], ["cancel", L("ยกเลิก", "Cancel"), "danger", true]);
   if (maker && ["check", "approve"].includes(v.state)) out.push(["recall", L("ดึงกลับมาแก้ไข", "Recall to edit"), "", true]);
   if (fin && v.state === "check") out.push(["checked", L("ตรวจผ่าน ส่งอนุมัติ", "Checked · send for approval"), "primary", false], ["return", L("ส่งกลับแก้ไข", "Return"), "danger", true]);
-  if (v.state === "approve" && vcCanApprove(v)) out.push(["approve", onBehalf("exec", "spend") && ROLE !== "finhead" ? L("อนุมัติจ่ายแทน", "Approve on behalf") : L("อนุมัติจ่าย", "Approve payment"), "primary", false], ["return", L("ส่งคืนแก้ไข", "Return to fix"), "", true], ["reject", L("ไม่อนุมัติ", "Reject"), "danger", true]);
+  if (v.state === "approve" && vcCanApprove(v) && !vcSodClash(v)) out.push(["approve", onBehalf("exec", "spend") && ROLE !== "finhead" ? L("อนุมัติจ่ายแทน", "Approve on behalf") : L("อนุมัติจ่าย", "Approve payment"), "primary", false], ["return", L("ส่งคืนแก้ไข", "Return to fix"), "", true], ["reject", L("ไม่อนุมัติ", "Reject"), "danger", true]);
   if (ROLE === "finhead" && (["check", "approve", "nbready"].includes(v.state) || (v.state === "ready" && !v.gfFile))) out.push(["hcancel", L("ยกเลิกใบขอเบิก", "Cancel the voucher"), "danger", true]);
   if (ROLE === "fin" && (v.state === "posted" || v.state === "nbready") && vAgency(v) && v.funded && v.method !== "epay") out.push(["paycash", `${L("บันทึกการจ่าย", "Record the payment")} (${tx(METHOD[v.method])})`, "primary", false]);
   if (fin && v.state === "paid" && v.cert && !v.cert.sent) out.push(["cert", L("ส่งหนังสือรับรองภาษีให้ผู้รับเงิน", "Send the tax certificate to the payee"), "", false]);
@@ -169,7 +176,7 @@ function vcDetail(v) {
       ${(v.certs || []).length ? `<p class="sub" style="margin:4px 0 0">${L("หนังสือรับรองที่ยกเลิก", "Cancelled certificates")}: ${v.certs.map(c => `<span class="mono">${c.no}</span> (${esc(c.cancelled.why)})`).join(", ")}</p>` : ""}
       ${v.rejected ? `<p class="sub" style="margin:8px 0 0">${dotI("bad")}${L("ไม่อนุมัติโดย", "Rejected by")} ${esc(userName(v.rejected.by))} · ${fdate(v.rejected.t, true)} · ${esc(v.rejected.why)}</p>` : ""}`;
   const bar = ask ? finAskForm("vc", ask[0], ask[1], { impact: vcImpact(v, ask[0]), danger: ask[2] === "danger", extra: vcAskExtra(v, ask[0]) })
-    : acts.length ? `<div class="row cr-acts" style="margin-top:12px;flex-wrap:wrap">${acts.map(([a, l, k, w]) => (w ? finAskBtn("vc", a, l, k) : `<button class="btn ${k}" type="button" data-vc="${a}">${l}</button>`)).join("")}</div>` : "";
+    : (v.state === "approve" && vcCanApprove(v) && vcSodClash(v) ? `<p class="sub" style="margin:12px 0 0">${dotI("warn")}${L(`คุณ${v.maker === me().id ? "จัดทำ" : "ตรวจ"}ใบนี้ จึงอนุมัติใบนี้ไม่ได้ (SD-11) ผู้มีอำนาจคนอื่นต้องอนุมัติ`, `You ${v.maker === me().id ? "made" : "checked"} this voucher, so you can't approve it (SD-11); another approver must`)}</p>` : "") + (acts.length ? `<div class="row cr-acts" style="margin-top:12px;flex-wrap:wrap">${acts.map(([a, l, k, w]) => (w ? finAskBtn("vc", a, l, k) : `<button class="btn ${k}" type="button" data-vc="${a}">${l}</button>`)).join("")}</div>` : "");
   return `<section class="panel" id="vc-detail"><header><h2><span class="mono">${v.id}</span> · ${tx(VT[v.type].name)}</h2><span class="sp"></span>${vTag(v)}<button class="btn ghost" type="button" id="vc-close">${L("ปิด", "Close")}</button></header>
     <div class="body">${finDrTabs("vc", [["view", L("รายละเอียด", "Details"), details], ["hist", `${L("ประวัติ", "History")} (${(v.log || []).length})`, finLogHtml(v.log, v.id)]])}${bar}</div></section>`;
 }

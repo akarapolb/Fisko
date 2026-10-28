@@ -1687,6 +1687,10 @@ body.presenting .sitefoot { padding-bottom: 220px; }
 .si-pdpa summary { cursor: pointer; font-weight: 600; line-height: 1.5; }
 .si-pdpa .sitepol { max-height: 240px; overflow: auto; margin-top: 8px; font-size: 13px; }
 @media (max-width: 620px) { .sitefoot { padding-left: 16px; padding-right: 16px; } }
+
+/* ---- round 66: idle sign-out warning ---- */
+.idlewarn { position: fixed; left: 50%; top: 16px; transform: translateX(-50%); z-index: 90; background: var(--surface); color: var(--ink); border: 1px solid var(--warn); border-radius: 10px; box-shadow: var(--sh-3); padding: 10px 14px; display: flex; gap: 12px; align-items: center; max-width: calc(100vw - 32px); font-size: 14px; }
+.idlewarn[hidden] { display: none; }
 </style>
 </head>
 <body>
@@ -4824,7 +4828,8 @@ const impactText = (r, amt) => {
   const bt = myTasks;
   myTasks = function () {
     const t = bt.apply(this, arguments), m = (S.meetings || []).find(x => (x.status || "scheduled") === "scheduled");
-    if (m && cmte().members.includes(me().id)) {
+    // only members whose role can open the meetings page get the task (a member in another role votes in the meeting)
+    if (m && cmte().members.includes(me().id) && allowed("review")) {
       const open = S.requests.filter(r => r.status === "committee" && !conflicted(me().id, r) && !((m.votes || {})[r.id] || {})[me().id]);
       if (open.length) t.unshift({ title: `${L("ลงความเห็นวาระประชุม", "Vote on the agenda for")} ${tx(m.no)} (${open.length})`, sub: L("ก่อนการประชุม", "Before the meeting"), link: "rev-meetings", due: m.date, cls: "p-warn" });
     }
@@ -8877,7 +8882,7 @@ function bindCases() {
 ADMIN_TABS.push({ id: "procrules", roles: ["admin", "audit", "proc", "prochead"], label: ["กฎจัดซื้อจัดจ้าง", "Procurement rules"] });
 const CONF_TAG = c => tag(c, c === "A" ? "p-ok" : c === "B" ? "p-info" : "p-mute");
 ADMIN.procrules = () => {
-  const ad = isAdmin(), cfg = S.pcfg, num = (k, lbl, hint) => `<div class="f" style="flex:0 1 190px"><label for="pc-${k}">${lbl}</label><input type="number" id="pc-${k}" min="0" step="any" value="${cfg[k]}" ${ad ? "" : "disabled"}><span class="sub">${hint}</span></div>`;
+  const ad = isAdmin(), cfg = Object.assign(S.pcfg, Object.assign({ penGoods: S.pcfg.penaltyPct, penService: S.pcfg.penaltyPct, penCons: S.pcfg.penaltyPct, penaltyMin: 0 }, S.pcfg)), num = (k, lbl, hint) => `<div class="f" style="flex:0 1 190px"><label for="pc-${k}">${lbl}</label><input type="number" id="pc-${k}" min="0" step="any" value="${cfg[k]}" ${ad ? "" : "disabled"}><span class="sub">${hint}</span></div>`;
   return `
   <div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">i</div><div><b>${L("ค่าตั้งเหล่านี้ไม่ใช่คำวินิจฉัยทางกฎหมาย", "These settings are not legal advice")}</b>
     <p>${L("ระดับ A คือข้อเท็จจริงที่ยืนยันกับตัวบทแล้ว ระดับ B และ C เป็นค่าตั้งต้นที่หน่วยงานต้องยืนยันกับระเบียบและหนังสือเวียนที่ใช้อยู่ก่อนใช้จริง", "Level A is confirmed against the text. Levels B and C are starting values the agency must confirm against the current rules and circulars before real use.")}</p></div></div>
@@ -8893,7 +8898,10 @@ ADMIN.procrules = () => {
       ${num("minMembers", L("กรรมการอย่างน้อย (รวมประธาน)", "Committee size (with chair)"), CONF_TAG("A"))}
       ${num("appealDays", L("ช่วงอุทธรณ์ (วันทำการ)", "Appeal period (working days)"), CONF_TAG("B"))}
       ${num("splitDays", L("ช่วงตรวจการแตกซื้อ (วัน)", "Split-purchase look-back (days)"), CONF_TAG("C"))}
-      ${num("penaltyPct", L("ค่าปรับ (ร้อยละต่อวัน)", "Penalty (% per day)"), CONF_TAG("C"))}
+      ${num("penGoods", L("ค่าปรับงานซื้อ (ร้อยละต่อวัน 0.01–0.20)", "Penalty, purchases (% a day, 0.01–0.20)"), CONF_TAG("B"))}
+      ${num("penService", L("ค่าปรับงานจ้าง (ร้อยละต่อวัน 0.01–0.20)", "Penalty, services (% a day, 0.01–0.20)"), CONF_TAG("B"))}
+      ${num("penCons", L("ค่าปรับงานจ้างก่อสร้าง (ร้อยละต่อวัน 0.01–0.10)", "Penalty, construction (% a day, 0.01–0.10)"), CONF_TAG("B"))}
+      ${num("penaltyMin", L("ค่าปรับงานจ้างขั้นต่ำ (บาทต่อวัน)", "Minimum penalty, services and construction (baht a day)"), CONF_TAG("B"))}
       ${num("penaltyCapPct", L("เตือนเมื่อค่าปรับสะสมเกิน (ร้อยละของสัญญา)", "Warn when penalties pass (% of contract)"), CONF_TAG("B"))}
       ${num("guaranteePct", L("หลักประกันสัญญา (ร้อยละ)", "Contract guarantee (%)"), CONF_TAG("C"))}
       ${num("guaranteeWarnDays", L("เตือนก่อนหลักประกันหมดอายุ (วัน)", "Warn before the guarantee expires (days)"), CONF_TAG("C"))}
@@ -8919,8 +8927,10 @@ BIND_ADMIN.procrules = () => {
     commit(); route(); toast(L("บันทึกแล้ว", "Saved")); }; });
   const sv = $("#pc-save");
   if (sv) sv.onclick = () => {
-    const v = {}; for (const k of ["specificMax", "singleInspectorMax", "minMembers", "appealDays", "splitDays", "penaltyPct", "penaltyCapPct", "guaranteePct", "guaranteeWarnDays", "ladderPct", "extDaysHead", "acceptWd", "acceptWdLast", "invoiceTol", "rfMinAnnounce", "rfRatioPct", "rfGrowthPct", "rfRepeatWins", "rfNearPct"]) { const x = Number($("#pc-" + k).value); v[k] = k === "penaltyPct" ? x : Math.round(x); }
+    const v = {}; for (const k of ["specificMax", "singleInspectorMax", "minMembers", "appealDays", "splitDays", "penGoods", "penService", "penCons", "penaltyMin", "penaltyCapPct", "guaranteePct", "guaranteeWarnDays", "ladderPct", "extDaysHead", "acceptWd", "acceptWdLast", "invoiceTol", "rfMinAnnounce", "rfRatioPct", "rfGrowthPct", "rfRepeatWins", "rfNearPct"]) { const x = Number($("#pc-" + k).value); v[k] = k === "penaltyPct" ? x : Math.round(x); }
     if (Object.values(v).some(x => !(x >= 0)) || v.minMembers < 2 || v.specificMax < 1 || v.singleInspectorMax < 1) { toast(L("ค่าไม่ถูกต้อง", "Check the values")); return; }
+    if ([v.penGoods, v.penService].some(x => x < 0.01 || x > 0.2) || v.penCons < 0.01 || v.penCons > 0.1) { toast(L("อัตราค่าปรับต้องอยู่ในช่วงตามข้อ 162", "Penalty rates must be within the clause 162 ranges")); return; }
+    v.penaltyPct = v.penGoods;
     Object.assign(S.pcfg, v); S.mrules.filter(r => r.id === "MR-01").forEach(r => (r.max = v.specificMax));
     audit(["แก้ค่าตั้งจัดซื้อจัดจ้าง", "Changed procurement settings"], Object.entries(v).map(([k, x]) => `${k}=${x}`).join(" ")); commit(); route(); toast(L("บันทึกค่าตั้งแล้ว", "Settings saved"));
   };
@@ -9708,7 +9718,16 @@ function phLate(ph) {
   const from = addDays(ph.due, ph.ext || 0), to = ph.delivered || (ph.cancelled && ph.cancelled.date) || TODAY;
   return Math.max(0, dayDiff(from, to));
 }
-const phPenaltyRaw = (c, ph) => Math.round(S.pcfg.penaltyPct / 100 * ph.amount * phLate(ph));
+// Late penalty (clause 162 of the 2560 procurement regulation): a daily rate by contract kind on the value not yet
+// delivered, and for services and construction at least a minimum amount a day. The rates and the minimum are the
+// tenant's procurement settings; data saved before round 66 has only the one rate (penaltyPct) and no minimum.
+const PEN_KEY = { goods: "penGoods", service: "penService", construction: "penCons" };
+const penKind = c => ((c && c.plan && famPlan(c.plan)) || {}).kind || "goods";
+const penRate = c => { const r = S.pcfg[PEN_KEY[penKind(c)] || "penGoods"]; return r != null ? r : S.pcfg.penaltyPct; };
+const penMin = c => (penKind(c) === "goods" ? 0 : S.pcfg.penaltyMin || 0);
+const penDaily = (c, ph) => Math.max(penMin(c), Math.round(penRate(c) / 100 * ph.amount));
+const penRule = c => `${penRate(c)}%${penMin(c) ? ` · ${L("ขั้นต่ำ", "at least")} ${fmt(penMin(c))} ${L("บาท/วัน", "baht a day")}` : ""}`;
+const phPenaltyRaw = (c, ph) => { const d = phLate(ph); return d ? penDaily(c, ph) * d : 0; };
 const phPenalty = (c, ph) => Math.max(0, phPenaltyRaw(c, ph) - (ph.waive && ph.waive.status === "approved" ? ph.waive.amount : 0));
 const conPenalty = c => c.phases.reduce((a, ph) => a + phPenalty(c, ph), 0);
 const penaltyWarn = c => conPenalty(c) > S.pcfg.penaltyCapPct / 100 * c.amount;
@@ -9954,7 +9973,7 @@ function bindClose() {
 
 // ---------- seed ----------
 function seedContracts(s, K) {
-  Object.assign(s.pcfg, { penaltyPct: 0.1, penaltyCapPct: 10, guaranteePct: 5, guaranteeWarnDays: 30, ladderPct: 10, extDaysHead: 30, invoiceTol: 0, acceptWd: 3, acceptWdLast: 5 });
+  Object.assign(s.pcfg, { penaltyPct: 0.1, penGoods: 0.1, penService: 0.1, penCons: 0.1, penaltyMin: 100, penaltyCapPct: 10, guaranteePct: 5, guaranteeWarnDays: 30, ladderPct: 10, extDaysHead: 30, invoiceTol: 0, acceptWd: 3, acceptWdLast: 5 });
   s.contracts.forEach((c, i) => {
     c.base = c.amount; c.ver = 1; c.versions = [{ v: 1, amount: c.amount, t: c.signed + "T14:00", by: K.PO, why: "" }]; c.vars = [];
     c.guarantee = { type: "bank", amount: Math.round(c.amount * 0.05), expires: "2027-04-30", status: "held", t: c.signed + "T15:00", by: K.PO };
@@ -11522,12 +11541,19 @@ SOD_STEPS.push([["จัดทำใบขอเบิก", "Prepare a voucher"]
 
 // ---------- views ----------
 // The drawer's buttons by state and role (Finance CRUD 5.1): [act, label, kind, needs a reason].
+// Who would approve (the user, and the executive they act for) already made or checked the voucher: SD-11 refuses
+// the approval, so the button is not offered and the drawer says why (round 66).
+function vcSodClash(v) {
+  if (!sodOn("SD-11")) return false;
+  const actors = canSpend() ? sodActors("exec", "spend") : [me().id];
+  return actors.some(a => a === v.maker || a === v.checker);
+}
 function vcActs(v) {
   const fin = isFinRole(), maker = ROLE === "fin" && vcIsMaker(v), out = [];
   if (maker && ["draft", "returned"].includes(v.state)) out.push(["edit", L("แก้ไข", "Edit"), "", false], ["submit", L("ส่งตรวจ", "Send for checking"), "primary", false], ["cancel", L("ยกเลิก", "Cancel"), "danger", true]);
   if (maker && ["check", "approve"].includes(v.state)) out.push(["recall", L("ดึงกลับมาแก้ไข", "Recall to edit"), "", true]);
   if (fin && v.state === "check") out.push(["checked", L("ตรวจผ่าน ส่งอนุมัติ", "Checked · send for approval"), "primary", false], ["return", L("ส่งกลับแก้ไข", "Return"), "danger", true]);
-  if (v.state === "approve" && vcCanApprove(v)) out.push(["approve", onBehalf("exec", "spend") && ROLE !== "finhead" ? L("อนุมัติจ่ายแทน", "Approve on behalf") : L("อนุมัติจ่าย", "Approve payment"), "primary", false], ["return", L("ส่งคืนแก้ไข", "Return to fix"), "", true], ["reject", L("ไม่อนุมัติ", "Reject"), "danger", true]);
+  if (v.state === "approve" && vcCanApprove(v) && !vcSodClash(v)) out.push(["approve", onBehalf("exec", "spend") && ROLE !== "finhead" ? L("อนุมัติจ่ายแทน", "Approve on behalf") : L("อนุมัติจ่าย", "Approve payment"), "primary", false], ["return", L("ส่งคืนแก้ไข", "Return to fix"), "", true], ["reject", L("ไม่อนุมัติ", "Reject"), "danger", true]);
   if (ROLE === "finhead" && (["check", "approve", "nbready"].includes(v.state) || (v.state === "ready" && !v.gfFile))) out.push(["hcancel", L("ยกเลิกใบขอเบิก", "Cancel the voucher"), "danger", true]);
   if (ROLE === "fin" && (v.state === "posted" || v.state === "nbready") && vAgency(v) && v.funded && v.method !== "epay") out.push(["paycash", `${L("บันทึกการจ่าย", "Record the payment")} (${tx(METHOD[v.method])})`, "primary", false]);
   if (fin && v.state === "paid" && v.cert && !v.cert.sent) out.push(["cert", L("ส่งหนังสือรับรองภาษีให้ผู้รับเงิน", "Send the tax certificate to the payee"), "", false]);
@@ -11582,7 +11608,7 @@ function vcDetail(v) {
       ${(v.certs || []).length ? `<p class="sub" style="margin:4px 0 0">${L("หนังสือรับรองที่ยกเลิก", "Cancelled certificates")}: ${v.certs.map(c => `<span class="mono">${c.no}</span> (${esc(c.cancelled.why)})`).join(", ")}</p>` : ""}
       ${v.rejected ? `<p class="sub" style="margin:8px 0 0">${dotI("bad")}${L("ไม่อนุมัติโดย", "Rejected by")} ${esc(userName(v.rejected.by))} · ${fdate(v.rejected.t, true)} · ${esc(v.rejected.why)}</p>` : ""}`;
   const bar = ask ? finAskForm("vc", ask[0], ask[1], { impact: vcImpact(v, ask[0]), danger: ask[2] === "danger", extra: vcAskExtra(v, ask[0]) })
-    : acts.length ? `<div class="row cr-acts" style="margin-top:12px;flex-wrap:wrap">${acts.map(([a, l, k, w]) => (w ? finAskBtn("vc", a, l, k) : `<button class="btn ${k}" type="button" data-vc="${a}">${l}</button>`)).join("")}</div>` : "";
+    : (v.state === "approve" && vcCanApprove(v) && vcSodClash(v) ? `<p class="sub" style="margin:12px 0 0">${dotI("warn")}${L(`คุณ${v.maker === me().id ? "จัดทำ" : "ตรวจ"}ใบนี้ จึงอนุมัติใบนี้ไม่ได้ (SD-11) ผู้มีอำนาจคนอื่นต้องอนุมัติ`, `You ${v.maker === me().id ? "made" : "checked"} this voucher, so you can't approve it (SD-11); another approver must`)}</p>` : "") + (acts.length ? `<div class="row cr-acts" style="margin-top:12px;flex-wrap:wrap">${acts.map(([a, l, k, w]) => (w ? finAskBtn("vc", a, l, k) : `<button class="btn ${k}" type="button" data-vc="${a}">${l}</button>`)).join("")}</div>` : "");
   return `<section class="panel" id="vc-detail"><header><h2><span class="mono">${v.id}</span> · ${tx(VT[v.type].name)}</h2><span class="sp"></span>${vTag(v)}<button class="btn ghost" type="button" id="vc-close">${L("ปิด", "Close")}</button></header>
     <div class="body">${finDrTabs("vc", [["view", L("รายละเอียด", "Details"), details], ["hist", `${L("ประวัติ", "History")} (${(v.log || []).length})`, finLogHtml(v.log, v.id)]])}${bar}</div></section>`;
 }
@@ -15305,7 +15331,7 @@ const allSerials = () => new Set(S.contracts.flatMap(k => (k.serials || []).map(
 // ---------- contract figures ----------
 function capDate(k) {
   const cap = S.pcfg.penaltyCapPct / 100 * k.amount, pen = conPenalty(k); if (pen >= cap) return { passed: true };
-  const daily = sumv(k.phases.filter(ph => !ph.delivered && !phaseAccepted(ph) && !ph.cancelled && phDue(ph) < TODAY).map(ph => S.pcfg.penaltyPct / 100 * ph.amount)); if (!daily) return null;
+  const daily = sumv(k.phases.filter(ph => !ph.delivered && !phaseAccepted(ph) && !ph.cancelled && phDue(ph) < TODAY).map(ph => penDaily(k, ph))); if (!daily) return null;
   return { date: addDays(TODAY, Math.ceil((cap - pen) / daily)), daily };
 }
 const accPct = k => Math.round(sumv(k.phases.filter(phaseAccepted).map(ph => (ph.result === "partial" ? ph.okAmount : ph.amount))) / k.amount * 100);
@@ -19172,7 +19198,7 @@ CRUD.def("pcWaive", {
     { h: ["ค่าปรับ (บาท)", "Penalty (baht)"], n: true, c: ph => fmt(phPenaltyRaw(wvCon(), ph)) },
     { h: ["ขอลด (บาท)", "Waiver (baht)"], n: true, c: ph => (ph.waive ? fmt(ph.waive.amount) : "–") }, { h: ["ค่าปรับสุทธิ (บาท)", "Net penalty (baht)"], n: true, c: ph => fmt(phPenalty(wvCon(), ph)) }],
   fields: ph => { const raw = phPenaltyRaw(wvCon(), ph), w = ph.waive && ph.waive.status === "pending" ? ph.waive : null;
-    return [{ id: "_r", label: ["ค่าปรับตามสัญญา", "Penalty under the contract"], type: "info", html: `${fmt(raw)} ${L("บาท", "baht")} · ${phLate(ph)} ${L("วัน", "days")} × ${S.pcfg.penaltyPct}%` },
+    return [{ id: "_r", label: ["ค่าปรับตามสัญญา", "Penalty under the contract"], type: "info", html: `${fmt(raw)} ${L("บาท", "baht")} · ${phLate(ph)} ${L("วัน", "days")} × ${penRule(wvCon())}` },
       { id: "amount", label: ["ยอดที่ของดหรือลด (บาท)", "Amount to waive (baht)"], type: "number", req: true, min: 1, max: raw, value: w ? w.amount : raw },
       { id: "doc", label: ["เอกสารประกอบ", "Supporting document"], wide: true, value: w ? w.doc : "", hint: L("เช่น หนังสือแจ้งเหตุสุดวิสัย หรือหลักฐานว่าความล่าช้าเกิดจากหน่วยงาน", "For example a force-majeure notice, or evidence the delay was the agency's") },
       { id: "why", label: ["เหตุผล", "Reason"], type: "textarea", req: true, wide: true, value: w ? w.why : "" }]; },
@@ -20761,6 +20787,33 @@ WS_PAGES.add("policy");
   };
 }
 
+// ---------- idle sign-out (round 66, DGA website standard section 9) ----------
+// After idleMin minutes with no key, click or touch, the session ends; a warning comes warnMin minutes before, with a
+// button to stay. Records are saved as they change, so nothing typed into a saved record is lost. Presenter mode
+// never times out. The times are tenant settings (SITE_CFG[org].idleMin / warnMin).
+Object.assign(SITE_DEF, { idleMin: 30, warnMin: 5 });
+let SITE_SEEN = Date.now();
+["pointerdown", "keydown", "wheel", "touchstart"].forEach(ev => document.addEventListener(ev, () => { SITE_SEEN = Date.now(); const w = $("#idlewarn"); if (w && !w.hidden) w.hidden = true; }, { capture: true, passive: true }));
+function siteIdleTick(now = Date.now()) {
+  const c = siteCfg(), w = $("#idlewarn");
+  if (!SESSION || PRES || !c.idleMin || ($("#signin") && !$("#signin").hidden)) { if (w) w.hidden = true; return; }
+  const idle = (now - SITE_SEEN) / 60000, left = Math.ceil(c.idleMin - idle);
+  if (idle >= c.idleMin) {
+    if (w) w.hidden = true;
+    audit(["ออกจากระบบอัตโนมัติเมื่อไม่ได้ใช้งาน", "Signed out after a period of no use"], `${c.idleMin} ${L("นาที", "min")}`);
+    signOut(); toast(L(`ออกจากระบบแล้ว เพราะไม่ได้ใช้งาน ${c.idleMin} นาที`, `Signed out after ${c.idleMin} minutes without use`)); return;
+  }
+  if (idle >= c.idleMin - c.warnMin) {
+    let el = w;
+    if (!el) { el = document.createElement("div"); el.id = "idlewarn"; el.className = "idlewarn"; el.setAttribute("role", "alertdialog"); el.setAttribute("aria-live", "assertive"); document.body.appendChild(el); }
+    const was = !el.hidden && el.innerHTML;
+    el.innerHTML = `<span>${L(`ไม่มีการใช้งาน ระบบจะออกจากระบบใน ${left} นาที`, `No activity: you will be signed out in ${left} min`)}</span><button class="btn primary" type="button" id="idle-stay">${L("ใช้งานต่อ", "Stay signed in")}</button>`;
+    el.hidden = false; $("#idle-stay").onclick = () => { SITE_SEEN = Date.now(); el.hidden = true; };
+    if (!was) $("#idle-stay").focus();
+  }
+}
+setInterval(siteIdleTick, 30000);
+
 // ---------- the shell ----------
 {
   const bs = renderShell;
@@ -20774,6 +20827,31 @@ WS_PAGES.add("policy");
     const r = br.apply(this, arguments);
     siteEyebrows($("#view"));
     return r;
+  };
+}
+
+/* ---- 96-data-dpt-demo.js ---- */
+// DPT demo state (round 66): from the business test, the procurement officer and the supplier had nothing to act on.
+// The riverbank e-bidding (PC-2570-003) closed for bids yesterday, so its bids wait to be recorded; the online
+// building-permit system (PP-2570-005, 400,000 baht) has an approved requisition, the specific method and an RFQ
+// waiting for the sample supplier's reply. Every value is sample data. Left out of the artifact build (*data-dpt*).
+{
+  const base = SEEDS.dpt.seed;
+  SEEDS.dpt.seed = () => {
+    const s = base(), ev = (c, t, type, by, detail) => s.caseEvents.unshift({ t, case: c.id, type, by, detail: detail || "", state: c.state });
+    const rb = s.cases.find(c => c.id === "PC-2570-003");
+    if (rb && rb.egp) { rb.egp.close = "2026-10-15"; rb.closeElapsed = true; }
+    const p = s.pplan.find(x => x.id === "PP-2570-005"), c = s.cases.find(x => x.plan === "PP-2570-005"), v = s.vendors.find(x => x.id === "V-001");
+    if (p && c && v) {
+      const rq = { id: "RQ-2570-005", plan: p.id, by: "u1", amount: p.est, why: ["เริ่มให้บริการยื่นขออนุญาตก่อสร้างออนไลน์ในจังหวัดนำร่อง", "Start online building-permit filing in the pilot provinces"],
+        need: "2026-12-01", status: "approved", t: "2026-10-08T09:00", decided: { by: "u3", holder: "u3", via: null, t: "2026-10-09T15:00" } };
+      s.reqn.push(rq); p.status = "requisitioned";
+      Object.assign(c, { reqn: rq.id, state: 4, method: "specific", methodWhy: ["ตรงกับคำแนะนำของระบบ", "Matches the system advice"], methodApproval: { status: "auto", t: "2026-10-09T16:00", by: "u10" } });
+      c.rfq = [{ no: "พด 0705/ว 112", sent: "2026-10-12", due: "2026-10-21", by: "u10", rows: [{ v: v.name, reply: null }, { v: (s.vendors.find(x => x.id === "V-003") || v).name, reply: null }] }];
+      ev(c, "2026-10-08T09:00", "requested", "u1", rq.id); ev(c, "2026-10-09T15:00", "approved", "u3", rq.id);
+      ev(c, "2026-10-09T16:00", "method", "u10", "specific"); ev(c, "2026-10-12T10:00", "rfq_sent", "u10", c.rfq[0].no);
+    }
+    return s;
   };
 }
 

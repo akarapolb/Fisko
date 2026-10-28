@@ -121,6 +121,7 @@ This regenerates `Fisko_Prototype.html` and `fisko-prototype.html`.
 | `src/js/95b-site.js` | Government-site basics (round 65, from the UX review against the DGA website standard and PDPA section 23): skip link, errors tied to their field (`toastErr`), a live region for toasts, eyebrows without design codes, presenter steps that open their record, the footer, the policy pages (`#policy`) and the sign-in privacy notice; each tenant's contacts come from `SITE_CFG[org]` |
 | `src/js/96-data-sample-site.js` | The sample organization's address and contacts for the footer and policy pages |
 | `src/js/96-data-dpt-site.js` | DPT's address and contacts for the footer and policy pages (left out of the artifact build) |
+| `src/js/96-data-dpt-demo.js` | DPT demo state from the business test (round 66): the riverbank e-bidding's bids to record and an RFQ waiting for the sample supplier (left out of the artifact build) |
 | `src/js/96-data-sample-prj.js` | The sample organization's registry setup (who receives its shared data) |
 | `src/js/96-data-dpt-na02.js` | DPT's registry setup: Nong Kor as the PM system, data consumers, the 12 ToR modules and the duties of the Finance and Planning divisions (left out of the artifact build) |
 | `src/js/94-polish.js` | Shell polish (round 63): organization and role in one context chip, one-row sidebar footer, eyebrows without the app name, two-column pages that stack when the page is narrow |
