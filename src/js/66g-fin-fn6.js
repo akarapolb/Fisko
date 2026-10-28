@@ -191,7 +191,7 @@ const FAI = {};
 FAI.agents = () => {
   const runs = (S.fRuns || []).slice().reverse(), open = runs.find(r => r.id === F_RUN_OPEN) || runs[0];
   const ST = { pending: ["–", "p-mute"], done: [L("เสร็จ", "Done"), "p-ok"], await: [L("รอคุณอนุมัติ", "Waiting for you"), "p-warn"], approved: [L("อนุมัติแล้ว", "Approved"), "p-ok"], rejected: [L("ไม่อนุมัติ", "Rejected"), "p-bad"], skipped: [L("ข้าม", "Skipped"), "p-mute"], blocked: [L("ทำต่อไม่ได้", "Blocked"), "p-bad"] };
-  return `<div class="alert"><div class="ic">i</div><div><b>${L("Agent ตรวจ จับคู่ เตือน และร่าง แต่ไม่จ่ายเงิน", "Agents check, match, remind and draft, but never pay")}</b><p>${L("จำลองตาม D-P09 · ไม่อนุมัติ ไม่สั่งจ่าย ไม่แก้ยอดเงินหรือบัญชีธนาคาร ไม่ลงนามแทนกรรมการ ไม่ปิดงวด และไม่ส่งหนังสือออก · ทุกขั้นบันทึกใน M09", "Simulated per D-P09 · never approves, pays, changes amounts or bank accounts, signs for the committee, closes periods or sends letters · every step is logged in M09")}</p></div></div>
+  return `<div class="alert"><div class="ic">i</div><div><b>${L("เอเจนต์ตรวจ จับคู่ เตือน และร่าง แต่ไม่จ่ายเงิน", "Agents check, match, remind and draft, but never pay")}</b><p>${L("จำลองตาม D-P09 · ไม่อนุมัติ ไม่สั่งจ่าย ไม่แก้ยอดเงินหรือบัญชีธนาคาร ไม่ลงนามแทนกรรมการ ไม่ปิดงวด และไม่ส่งหนังสือออก · ทุกขั้นบันทึกใน M09", "Simulated per D-P09 · never approves, pays, changes amounts or bank accounts, signs for the committee, closes periods or sends letters · every step is logged in M09")}</p></div></div>
     <div class="brief-grid">${Object.keys(F_AG).map(id => { const on = agentOn(id), g = F_AG[id];
       return `<section class="panel"><header>${chipIco("bot", "info")}<h2>${tx(g.name)}</h2><span class="sp"></span><span class="mono sub">${id}</span></header><div class="body" style="display:flex;flex-direction:column;gap:8px"><span>${tx(g.goal)}</span>
         <span class="sub">${g.plan.map(([t]) => tx(F_TOOL[t][1])).join(" → ")}</span>
@@ -200,7 +200,7 @@ FAI.agents = () => {
       <div class="body"><ol class="agsteps">${open.steps.map((s, i) => `<li class="${i === open.ptr && open.status === "waiting" ? "now" : ""}"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span><span class="mono sub">${s.tool}</span> ${tx(F_TOOL[s.tool][1])} ${tag(F_TOOL[s.tool][0], "p-mute")}</span>${tag(ST[s.status][0], ST[s.status][1])}</div>
         ${s.out ? `<div class="sub">${s.out}</div>` : ""}${s.change ? `<div class="agchange"><b>${L("สิ่งที่จะเปลี่ยน", "What will change")}</b><div>${s.change}</div></div>` : ""}
         ${s.status === "await" ? (F_AG[open.agent].who.includes(ROLE) ? `<div class="row" style="gap:6px;margin-top:6px"><button class="btn primary" type="button" data-fok="${open.id}">${L("อนุมัติขั้นนี้", "Approve this step")}</button>${finAskBtn("frun", "no", L("ไม่อนุมัติ", "Reject"))}</div>` : `<div class="sub" style="margin-top:6px">${L("รอผู้รับผิดชอบขั้นนี้", "Waiting for the person who owns this step")}: ${F_AG[open.agent].who.map(r => tx(ROLES[r])).join(", ")}</div>`) : ""}</li>`).join("")}</ol>${open.stopped ? `<p class="sub">${dotI("bad")}${L("หยุดงาน", "Stopped")} · ${esc(userName(open.stopped.by))} · ${esc(open.stopped.why)}</p>` : ""}
-      ${FIN_ASK && FIN_ASK.key === "frun" ? finAskForm("frun", FIN_ASK.act, FIN_ASK.act === "no" ? L("ไม่อนุมัติขั้นนี้", "Reject this step") : L("หยุดงาน Agent", "Stop the agent run"), { danger: true, impact: FIN_ASK.act === "no" ? L("ขั้นนี้ไม่มีผล งานทำขั้นถัดไปต่อ", "This step has no effect; the run goes on to the next step") : L("ขั้นที่เหลือไม่ทำ สิ่งที่อนุมัติไปแล้วยังอยู่", "The remaining steps don't run; what was approved stays") }) : ""}</div></section>` : ""}`;
+      ${FIN_ASK && FIN_ASK.key === "frun" ? finAskForm("frun", FIN_ASK.act, FIN_ASK.act === "no" ? L("ไม่อนุมัติขั้นนี้", "Reject this step") : L("หยุดงานเอเจนต์", "Stop the agent run"), { danger: true, impact: FIN_ASK.act === "no" ? L("ขั้นนี้ไม่มีผล งานทำขั้นถัดไปต่อ", "This step has no effect; the run goes on to the next step") : L("ขั้นที่เหลือไม่ทำ สิ่งที่อนุมัติไปแล้วยังอยู่", "The remaining steps don't run; what was approved stays") }) : ""}</div></section>` : ""}`;
 };
 FAI.fc = () => {
   const f = fcMonths(), T = spendT(), c = fcCarry(), risk = fcAdvRisk(), load = fcLoad(), mx = Math.max(...f.rows.map(r => r.act + r.exp), 1);
@@ -271,8 +271,8 @@ FAI.kpi = () => {
 // The reason boxes of F9 (Finance CRUD FR-FC-41, 43): reject an agent step or stop a run; triage a signal or reopen it.
 FIN_ASK_RUN.frun = (act, why) => {
   const runs = S.fRuns || [], r = runs.find(x => x.id === F_RUN_OPEN) || runs[runs.length - 1]; if (!r) return;
-  if (act === "no") { const s = r.steps[r.ptr]; s.status = "rejected"; s.by = me().id; s.why = why; audit(["ไม่อนุมัติขั้นตอนของ Agent", "Rejected an agent step"], `${r.id} ${s.tool} · ${why}`); r.ptr++; r.status = "running"; fAdvance(r); }
-  else { r.status = "stopped"; r.stopped = { by: me().id, t: nowIso(), why }; audit(["หยุดงาน Agent การเงิน", "Stopped a finance agent run"], `${r.id} · ${why}`); }
+  if (act === "no") { const s = r.steps[r.ptr]; s.status = "rejected"; s.by = me().id; s.why = why; audit(["ไม่อนุมัติขั้นตอนของเอเจนต์", "Rejected an agent step"], `${r.id} ${s.tool} · ${why}`); r.ptr++; r.status = "running"; fAdvance(r); }
+  else { r.status = "stopped"; r.stopped = { by: me().id, t: nowIso(), why }; audit(["หยุดงานเอเจนต์การเงิน", "Stopped a finance agent run"], `${r.id} · ${why}`); }
   commit(); renderShell(); route(); toast(act === "no" ? L("ไม่อนุมัติขั้นนี้แล้ว", "Step rejected") : L("หยุดงานแล้ว", "Run stopped"));
 };
 FIN_ASK_RUN.sig = (act, why) => {
@@ -285,9 +285,9 @@ FIN_ASK_RUN.sig = (act, why) => {
 {
   FIN_BINDS.push(() => {
     const done = msg => { commit(); renderShell(); route(); if (msg) toast(msg); };
-    $$("[data-fstart]").forEach(b => (b.onclick = () => { fStart(b.dataset.fstart); audit(["เริ่มงาน Agent การเงิน", "Started a finance agent"], b.dataset.fstart); done(); }));
+    $$("[data-fstart]").forEach(b => (b.onclick = () => { fStart(b.dataset.fstart); audit(["เริ่มงานเอเจนต์การเงิน", "Started a finance agent"], b.dataset.fstart); done(); }));
     $$("[data-fopen]").forEach(s => (s.onchange = () => { F_RUN_OPEN = s.value; route(); }));
-    $$("[data-fok]").forEach(b => (b.onclick = () => { const r = S.fRuns.find(x => x.id === b.dataset.fok), s = r.steps[r.ptr]; fApply(r, s); s.status = "approved"; s.by = me().id; audit(["อนุมัติขั้นตอนของ Agent", "Approved an agent step"], `${r.id} ${s.tool}`); r.ptr++; r.status = "running"; fAdvance(r); done(); }));
+    $$("[data-fok]").forEach(b => (b.onclick = () => { const r = S.fRuns.find(x => x.id === b.dataset.fok), s = r.steps[r.ptr]; fApply(r, s); s.status = "approved"; s.by = me().id; audit(["อนุมัติขั้นตอนของเอเจนต์", "Approved an agent step"], `${r.id} ${s.tool}`); r.ptr++; r.status = "running"; fAdvance(r); done(); }));
     const wf = $("#wi-form");
     if (wf) wf.onsubmit = e => { e.preventDefault(); FWI = { lag: Number($("#wi-lag").value), slip: Number($("#wi-slip").value), target: Number($("#wi-target").value), share: Number($("#wi-share").value) }; route(); };
     const wr = $("#wi-reset"); if (wr) wr.onclick = () => { FWI = null; route(); };
@@ -335,7 +335,7 @@ DEMO.push(
   { t: "56:00", role: "finhead", link: "fnc-recon", title: ["งบพิสูจน์ยอดเงินฝากและการปิดงวด", "Bank reconciliation and period close"],
     say: ["จับคู่สามทาง Fisko GFMIS และธนาคาร ผู้บันทึกรับจ่ายของเดือนลงนามงบพิสูจน์ยอดไม่ได้ และปิดงวดด้วยรายการตรวจ 6 ข้อ", "Three-way matching of Fisko, GFMIS and the bank. Whoever recorded the month's money can't sign the reconciliation, and the period closes on a six-point checklist."],
     do: ["(เป็นการเงิน) นำเข้ารายการเดินบัญชี → “บันทึกเข้าบัญชี” ค่าธรรมเนียม → (เป็นหัวหน้าการเงิน) ลงนาม → F8 ปิดงวดกันยายน", "(As finance) import the statement → Record the fee in the books → (as head of finance) sign → F8 close September"] },
-  { t: "57:00", role: "finhead", link: "fnc-ai", title: ["Agent การเงินและพยากรณ์", "Finance agents and forecasts"],
-    say: ["Agent ตรวจใบขอเบิก ติดตามเงินยืม เสนอคู่กระทบยอด ช่วยปิดงวด และพยากรณ์ แต่หยุดให้คนอนุมัติทุกขั้นที่เขียนข้อมูล และไม่จ่ายเงินเอง", "Agents check vouchers, chase advances, propose matches, help close and forecast, but stop for a person at every write and never pay."],
+  { t: "57:00", role: "finhead", link: "fnc-ai", title: ["เอเจนต์การเงินและพยากรณ์", "Finance agents and forecasts"],
+    say: ["เอเจนต์ตรวจใบขอเบิก ติดตามเงินยืม เสนอคู่กระทบยอด ช่วยปิดงวด และพยากรณ์ แต่หยุดให้คนอนุมัติทุกขั้นที่เขียนข้อมูล และไม่จ่ายเงินเอง", "Agents check vouchers, chase advances, propose matches, help close and forecast, but stop for a person at every write and never pay."],
     do: ["เริ่ม “ผู้ช่วยปิดงวด” → อ่านร่างบันทึก → แท็บพยากรณ์ → แท็บตัวชี้วัด “ขอคำชี้แจง” สัญญาณใบแจ้งหนี้ซ้ำ", "Start the Close Assistant → read the draft memo → Forecasts tab → KPIs tab, Ask about the duplicate invoice signal"] },
 );

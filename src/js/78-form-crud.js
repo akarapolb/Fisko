@@ -236,7 +236,7 @@ CRUD.def("csDup", {
     if (rt) rt.onclick = () => {
       const id = $("#rv-ret-req") && $("#rv-ret-req").value, why = $("#why").value.trim(), r = S.requests.find(x => x.id === id);
       if (!r) { toast(L("ไม่มีคำขอที่ส่งกลับได้", "No request to return")); return; }
-      if (why.length < 10) { toast(L("ใส่เหตุผลอย่างน้อย 10 ตัวอักษรในช่องเหตุผล", "Put a reason of at least 10 characters in the reason box")); $("#why").focus(); return; }
+      if (why.length < 10) { toastErr(L("ใส่เหตุผลอย่างน้อย 10 ตัวอักษรในช่องเหตุผล", "Put a reason of at least 10 characters in the reason box")); $("#why").focus(); return; }
       const snap = crSnap(); addComment(r, null, why); r.status = "returned"; r.updated = TODAY;
       audit(["ส่งคำขอกลับแก้ไข", "Returned a request for revision"], `${r.id} · ${why}`); notify(["div"], [`คำขอ ${r.id} ถูกส่งกลับแก้ไข: ${why}`, `Request ${r.id} was returned: ${why}`], "req:" + r.id);
       commit(); renderShell(); route(); crUndoOffer(snap, `${L("ส่งกลับ", "Returned")} ${r.id}`);

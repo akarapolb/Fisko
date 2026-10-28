@@ -1160,3 +1160,15 @@ Source: `DPT_A3_NA02_NA_khlangphaen_2026-10-14.pdf` (โครงการพั
 - **Presenter:** a new route, "Project cycle · 8 steps" (N-01 to N-05); N-05 (the ToR map) drops out for a tenant without one.
 - **Tests:** the sweep opens every project's 360° page and every cycle step in both organizations and languages, runs the PM exchange through an outage and the feed, and checks that an external share cannot be approved without a reason.
 - **Next round number on `main`:** 65.
+
+## 65. Round 65: the six "before demos" fixes from the UX review (28 October 2026)
+
+Source: the review doc "Fisko end-to-end walkthrough and UX review" (DGA Government Website Standard v3.0, มสพร. 11-2566; WCAG 2.1; PDPA section 23). All in shared styles and the shell, so every tenant gets them.
+
+- **Contrast:** `calm.css` tokens: muted text #6B7280 → #5B6270 (5.1 to 6.1:1 on every light surface), faint and sidebar labels #9CA3AF → #646B78, AI and chart green #16A34A → #15803D (5.0:1 as text on white); dark-mode faint and sidebar labels #6B7280 → #8A919E.
+- **Text size:** no `font-size` under 12 px left in CSS or inline styles; in Thai, labels that were under 12 px get 13 px and short labels get line height 1.5 (block at the end of `systems.css`). `.mono` is `max(12px, .86em)`. SVG document thumbnails keep their own sizes.
+- **Errors and focus:** a skip link ("Skip to main content") is the first tab stop; every toast is also read out through a polite live region (`#sr-live`); the 46 blocked-save toasts now call `toastErr`, which finds the text box next to the button pressed, marks it `aria-invalid`, puts the message under it with `aria-describedby` and moves focus there. CRUD forms already did this; the sign-in code error now does too.
+- **Presenter:** steps P-E05 to P-E15 open the case or contract the step talks about, and E-F03, E-F04, E-F05 and E-F07 open a voucher in the right state (`PRES_OPEN` in `95b-site.js`), not the list.
+- **Thai labels:** Agent, Workflow, Scorecard and Analytics on the Thai side became เอเจนต์, ขั้นตอนงาน, บัตรคะแนน and การวิเคราะห์ข้อมูล (named agents keep their names); presenter routes are in Thai; page eyebrows drop design codes (B3, M02, F1) and, in Thai, English design-document names.
+- **Footer and policies:** a footer on every page with the agency's name, address and contacts, links to six policy pages (`#policy`: privacy, cookies, security, website policy and disclaimer, accessibility, contact) and copyright with the last-updated date; the sign-in screen has a privacy notice under PDPA section 23. The texts are the product's template; the address and contacts are tenant data in `SITE_CFG[org]` (`96-data-sample-site.js`, `96-data-dpt-site.js`). Check DPT's details with DPT before a customer demo.
+- **Next round number on `main`:** 66.

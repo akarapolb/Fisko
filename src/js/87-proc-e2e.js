@@ -65,7 +65,7 @@ CON_BINDS.push(done => {
   $$("[data-ivsim]").forEach(b => (b.onclick = () => { const [cid, n] = two(b.dataset.ivsim), c = famCon(cid), ph = ph_(cid, n), f = b.closest("form");
     f.no.value = `INV-${FAM_FY % 100}-${c.id.slice(-3)}${ph.n}`; f.amt.value = ph.result === "partial" ? ph.okAmount : ph.amount; f.no.focus(); toast(L("เติมใบแจ้งหนี้จำลองจากพอร์ทัลผู้ขายแล้ว ตรวจก่อนบันทึก", "Simulated invoice from the supplier portal filled in; check it before saving")); }));
   $$("[data-ivret]").forEach(b => (b.onclick = () => { const [cid, n] = two(b.dataset.ivret), c = famCon(cid), ph = ph_(cid, n), why = ($("#ivr-" + cid + "-" + n) || {}).value || "";
-    if (why.trim().length < 10) { toast(L("ระบุเหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return; }
+    if (why.trim().length < 10) { toastErr(L("ระบุเหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return; }
     if (phPayStarted(c, ph)) { toast(L("งวดนี้ส่งเบิกแล้ว", "This phase has gone to payment")); return; }
     (ph.invReturned = ph.invReturned || []).push(Object.assign({}, ph.invoice, { why: why.trim(), by: me().id, at: nowIso() })); delete ph.invoice; delete ph.hold;
     audit(["ส่งคืนใบแจ้งหนี้", "Returned an invoice"], `${c.id} ${tx(ph.name)} · ${why.trim()}`); done(L("ส่งคืนแล้ว บันทึกใบแจ้งหนี้ใหม่ได้", "Returned; record a new invoice")); }));

@@ -42,7 +42,7 @@ BIND.review = () => {
     const changed = $$(".rounds input.changed");
     if (!changed.length) { toast(L("ยังไม่มีวงเงินที่เปลี่ยน", "No amounts changed yet")); return; }
     const why = $("#why").value.trim();
-    if (!why) { toast(L("ระบุเหตุผลการปรับวงเงินก่อนบันทึก", "Enter a reason before saving")); $("#why").focus(); return; }
+    if (!why) { toastErr(L("ระบุเหตุผลการปรับวงเงินก่อนบันทึก", "Enter a reason before saving")); $("#why").focus(); return; }
     changed.forEach(inp => {
       const r = S.review[inp.dataset.i], k = inp.dataset.k, old = r[k], nv = Number(inp.value), rd = k === "r1" ? 2 : 3;
       const nm = Array.isArray(r.name) ? r.name : [r.name, r.name];

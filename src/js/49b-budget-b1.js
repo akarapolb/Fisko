@@ -16,7 +16,7 @@ function waterfallSvg(steps, o = {}) {
     g += `<rect x="${x.toFixed(1)}" y="${top.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(2, bot - top).toFixed(1)}" rx="3" fill="${fill}"><title>${esc(s.label)} ${fmt(s.v, 1)}</title></rect>`;
     if (i < steps.length - 1) g += `<line x1="${(x + bw).toFixed(1)}" x2="${(x + gap).toFixed(1)}" y1="${y(run).toFixed(1)}" y2="${y(run).toFixed(1)}" stroke="var(--line-2)" stroke-dasharray="3 3"/>`;
     g += `<text x="${(x + bw / 2).toFixed(1)}" y="${(top - 6).toFixed(1)}" text-anchor="middle" style="font-size:12px;font-weight:600;fill:var(--ink)">${s.kind === "delta" ? (s.v < 0 ? "−" : "+") + fmt(Math.abs(s.v), 1) : fmt(s.v, 1)}</text>`;
-    g += `<text x="${(x + bw / 2).toFixed(1)}" y="${H - 14}" text-anchor="middle" style="font-size:11.5px;fill:var(--muted)">${esc(s.label)}</text>`;
+    g += `<text x="${(x + bw / 2).toFixed(1)}" y="${H - 14}" text-anchor="middle" style="font-size:12px;fill:var(--muted)">${esc(s.label)}</text>`;
   });
   return `<svg class="wfall" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.aria || "")}"><line x1="${pad}" x2="${W - pad}" y1="${y(0)}" y2="${y(0)}" stroke="var(--line)"/>${g}</svg>`;
 }

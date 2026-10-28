@@ -13,9 +13,9 @@ DEMO.push(
 const PRES_ROUTES = [
   ["exec", ["ฉบับผู้บริหาร 7 ขั้น", "Executive cut · 7 steps"]],
   ["story", ["เรื่องเล่าหลัก", "Storyline"]],
-  ["e2e", ["Budget ครบวงจร", "Budget end to end"]],
-  ["pe2e", ["Procurement ครบวงจร", "Procurement end to end"]],
-  ["fin", ["Finance ครบวงจร", "Finance end to end"]],
+  ["e2e", ["งบประมาณครบวงจร", "Budget end to end"]],
+  ["pe2e", ["จัดซื้อจัดจ้างครบวงจร", "Procurement end to end"]],
+  ["fin", ["การเงินครบวงจร", "Finance end to end"]],
 ];
 // The executive cut: one platform, the inbox and the exception centre, then one strong moment from each app.
 function presSteps(rt) {

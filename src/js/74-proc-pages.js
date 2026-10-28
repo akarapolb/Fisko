@@ -62,10 +62,10 @@ const PROC_PAGES = [
     sub: ["นำเข้าไฟล์สถานะจาก e-GP และส่งออกข้อมูลเปิดตามมาตรฐาน OCDS", "Import status files from e-GP and export open data in OCDS"],
     tabs: [{ id: "egp", key: "egp", label: ["ไฟล์จาก e-GP", "e-GP file"], secs: ["egp"] },
       { id: "ocds", key: "ocds", label: ["ส่งออก OCDS", "OCDS export"], secs: ["ocds"] }] },
-  { id: "ai", code: "P13", group: "more", label: ["AI และ Agent", "AI and agents"], roles: ["proc", "prochead", "exec", "audit"],
-    sub: ["ผู้ช่วย AI ทีละเครื่องมือ และ Agent ที่หยุดให้คนอนุมัติทุกขั้นที่เขียนข้อมูล (จำลอง)", "The AI assistant one tool at a time, and agents that stop for a person at every write (simulated)"],
+  { id: "ai", code: "P13", group: "more", label: ["AI และเอเจนต์", "AI and agents"], roles: ["proc", "prochead", "exec", "audit"],
+    sub: ["ผู้ช่วย AI ทีละเครื่องมือ และเอเจนต์ที่หยุดให้คนอนุมัติทุกขั้นที่เขียนข้อมูล (จำลอง)", "The AI assistant one tool at a time, and agents that stop for a person at every write (simulated)"],
     tabs: [{ id: "assist", key: "ai", label: ["ผู้ช่วย AI", "AI assistant"], secs: ["ai"] },
-      { id: "agents", key: "agents", label: ["Agent อัตโนมัติ", "Agents"], secs: ["agents"] }] },
+      { id: "agents", key: "agents", label: ["เอเจนต์อัตโนมัติ", "Agents"], secs: ["agents"] }] },
 ];
 
 // ---------- helpers ----------

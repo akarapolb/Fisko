@@ -6,7 +6,7 @@ const ADMIN_TABS = [
   { id: "fiscal", roles: ["admin"], label: ["ปีงบประมาณและปฏิทิน", "Fiscal years & calendar"] },
   { id: "structure", roles: ["admin"], label: ["โครงสร้างงบประมาณ", "Budget structure"] },
   { id: "users", roles: ["admin"], label: ["ผู้ใช้และสิทธิ์", "Users & roles"] },
-  { id: "workflow", roles: ["admin"], label: ["Workflow", "Workflow"] },
+  { id: "workflow", roles: ["admin"], label: ["ขั้นตอนงาน", "Workflow"] },
   { id: "rules", roles: ["admin"], label: ["กฎทางธุรกิจ", "Business rules"] },
   { id: "audit", roles: ["admin", "audit"], label: ["บันทึกการใช้งาน", "Audit log"] },
   { id: "integrations", roles: ["admin", "fin"], label: ["การเชื่อมต่อระบบ", "Integrations"] },
@@ -145,8 +145,8 @@ ADMIN.workflow = () => `
         ${w.cond === "amount" ? `<input type="number" min="0" step="1" data-w="${i}" data-k="amountM" value="${(w.amount || 0) / 1e6}" style="width:80px" aria-label="${L("วงเงินขั้นต่ำ ล้านบาท", "Minimum amount, million baht")}"><span class="sub">${L("ลบ.", "M")}</span>` : ""}</div>
       <div class="acts"><button class="btn ghost" type="button" data-mv="${i}" data-d="-1" ${i === 0 ? "disabled" : ""} aria-label="${L("เลื่อนขึ้น", "Move up")}">↑</button><button class="btn ghost" type="button" data-mv="${i}" data-d="1" ${i === S.workflow.length - 1 ? "disabled" : ""} aria-label="${L("เลื่อนลง", "Move down")}">↓</button><button class="btn ghost danger" type="button" data-rm="${i}" ${S.workflow.length < 3 ? "disabled" : ""} aria-label="${L("ลบขั้นตอน", "Remove step")}">×</button></div>
     </div>`).join("")}</div>
-    <div class="row" style="margin-top:14px"><button class="btn" type="button" id="w-add">+ ${L("เพิ่มขั้นตอน", "Add step")}</button><button class="btn primary" type="button" id="w-save">${L("บันทึก Workflow", "Save workflow")}</button></div></div></section>
-  <section class="panel"><header><h2>${L("ความสามารถของ Workflow", "Workflow features")}</h2></header>
+    <div class="row" style="margin-top:14px"><button class="btn" type="button" id="w-add">+ ${L("เพิ่มขั้นตอน", "Add step")}</button><button class="btn primary" type="button" id="w-save">${L("บันทึกขั้นตอนงาน", "Save workflow")}</button></div></div></section>
+  <section class="panel"><header><h2>${L("ความสามารถของขั้นตอนงาน", "Workflow features")}</h2></header>
     <div class="body chips">${[["Multi-Level Approval", "Multi-Level Approval"], ["มอบอำนาจชั่วคราว", "Delegation of Authority"], ["ส่งกลับแก้ไข", "Return for Revision"], ["Version Control", "Version Control"], ["แจ้งเตือนตามกำหนดเวลา", "Deadline reminders"], ["Audit Trail", "Audit Trail"]].map(c => `<span class="chip">${tx(c)}</span>`).join("")}</div></section>`;
 BIND_ADMIN.workflow = () => {
   $$("[data-w]").forEach(el => (el.onchange = () => {
@@ -157,7 +157,7 @@ BIND_ADMIN.workflow = () => {
   $$("[data-mv]").forEach(b => (b.onclick = () => { const i = Number(b.dataset.mv), j = i + Number(b.dataset.d); [S.workflow[i], S.workflow[j]] = [S.workflow[j], S.workflow[i]]; route(); }));
   $$("[data-rm]").forEach(b => (b.onclick = () => { S.workflow.splice(Number(b.dataset.rm), 1); route(); }));
   $("#w-add").onclick = () => { S.workflow.push({ id: "w" + Date.now(), name: L("ขั้นตอนใหม่", "New step"), role: "plan", sla: 5, cond: "always" }); route(); };
-  $("#w-save").onclick = () => { audit(["แก้ไข Workflow คำของบประมาณ", "Changed the request workflow"], `${S.workflow.length} ${L("ขั้นตอน", "steps")}`); commit(); toast(L("บันทึก Workflow แล้ว · ใช้กับคำขอทันที", "Workflow saved · applies to requests now")); };
+  $("#w-save").onclick = () => { audit(["แก้ไขขั้นตอนงานคำของบประมาณ", "Changed the request workflow"], `${S.workflow.length} ${L("ขั้นตอน", "steps")}`); commit(); toast(L("บันทึกขั้นตอนงานแล้ว · ใช้กับคำขอทันที", "Workflow saved · applies to requests now")); };
 };
 
 ADMIN.rules = () => `

@@ -143,7 +143,7 @@ VIEWS.request = () => {
       <section class="panel"><header><h2>${L("ตรวจความครบถ้วน", "Completeness check")}</h2><span class="sp"></span><span id="chk-sum"></span></header><div class="body"><ul class="check" id="checks"></ul>
         <div class="sub" style="margin-top:10px">${L("กฎตั้งค่าได้ที่ M10 · กฎทางธุรกิจ", "Rules are set in M10 · Business rules")}</div></div></section>
       <section class="panel"><header><h2>${L("เส้นทางอนุมัติ", "Approval route")}</h2></header><div class="body"><ol class="timeline" id="tl"></ol>
-        <div class="sub">${L("ตั้งค่าได้ที่ M10 · Workflow", "Set in M10 · Workflow")}</div></div></section>
+        <div class="sub">${L("ตั้งค่าได้ที่ M10 · ขั้นตอนงาน", "Set in M10 · Workflow")}</div></div></section>
     </div>
   </div>`;
 };

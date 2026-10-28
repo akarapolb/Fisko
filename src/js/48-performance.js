@@ -4,7 +4,7 @@ let PERF_TAB = "kpis", CHAIN_P = null;
 const PERF_TABS = [
   { id: "kpis", label: ["ผลตัวชี้วัด", "KPI results"] },
   { id: "chain", label: ["ห่วงโซ่ผลลัพธ์", "Results chain"] },
-  { id: "scorecard", label: ["Scorecard", "Scorecard"] },
+  { id: "scorecard", label: ["บัตรคะแนน", "Scorecard"] },
   { id: "report", label: ["รายงานประเมินผล", "Evaluation report"] },
 ];
 const achv = (r, t) => (r == null || !t ? null : r / t * 100);
@@ -89,7 +89,7 @@ PERF.scorecard = () => {
       <span>A ≥ 90 · B ≥ 75 · C ≥ 60 · D &lt; 60</span>
       <span class="sub">${L("ผลลัพธ์ (ตัวชี้วัด) แสดงประกอบ ไม่นำมาคิดคะแนน เพราะเกิดจากหลายโครงการร่วมกัน", "Outcomes (KPIs) are shown for context but not scored, since several projects share them")}</span></div></section>
   </div>
-  <section class="panel"><header><h2>${L("Scorecard รายโครงการ", "Project scorecard")}</h2></header>
+  <section class="panel"><header><h2>${L("บัตรคะแนนรายโครงการ", "Project scorecard")}</h2></header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("โครงการ", "Project")}</th><th class="n">${L("ใช้เงิน (ลบ.)", "Spent (M)")}</th><th class="n">${L("% ตามแผน", "% of plan")}</th><th>${L("ผลผลิต", "Output")}</th><th class="n">${L("% เป้า", "% target")}</th><th class="n">${L("ต้นทุนต่อหน่วย (บาท)", "Cost per unit (baht)")}</th><th>${L("ผลลัพธ์", "Outcome")}</th><th class="c">${L("ระดับ", "Grade")}</th></tr></thead>
       <tbody>${rows.map(({ p, o, s }) => `<tr><td>${esc(tx(p.name))}<div class="sub">${unitName(p.unit)}</div></td><td class="n">${fmt(p.actual, 1)}</td><td class="n">${fmt(s.spend, 0)}%</td>
         <td class="sub">${esc(tx(o.name))}: ${fmtv(o.result)}/${fmtv(o.target)} ${esc(tx(o.unit))}</td><td class="n">${s.out == null ? "—" : fmt(s.out, 0) + "%"}</td>

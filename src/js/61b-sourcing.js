@@ -38,7 +38,7 @@ PROC.tor = () => {
 function bindTor() {
   const done = m => { commit(); renderShell(); route(); if (m) toast(m); };
   $$("[data-toropen]").forEach(b => (b.onclick = () => { TOR_OPEN = TOR_OPEN === b.dataset.toropen ? null : b.dataset.toropen; route(); }));
-  const f = $("#tor-new"); if (f) f.onsubmit = e => { e.preventDefault(); const t = S.torLib.find(x => x.id === TOR_OPEN), why = $("#tor-why").value.trim(); if (why.length < 5) { toast(L("ระบุเหตุผลที่แก้", "Say why it changed")); return; }
+  const f = $("#tor-new"); if (f) f.onsubmit = e => { e.preventDefault(); const t = S.torLib.find(x => x.id === TOR_OPEN), why = $("#tor-why").value.trim(); if (why.length < 5) { toastErr(L("ระบุเหตุผลที่แก้", "Say why it changed")); return; }
     const v = Math.max(...t.versions.map(x => x.v)) + 1; t.versions.push({ v, text: $("#tor-text").value, status: "draft", by: me().id, t: nowIso(), why, appr: null });
     audit(["เสนอแม่แบบ TOR ฉบับใหม่", "Proposed a new TOR template version"], `${t.id} v${v}`); notify(["prochead"], [`แม่แบบ ${t.id} ฉบับ v${v} รออนุมัติ`, `Template ${t.id} v${v} needs approval`], "prc-tor"); done(L("ส่งให้หัวหน้าพัสดุแล้ว", "Sent to the head")); };
   $$("[data-torok]").forEach(b => (b.onclick = () => { const [id, v] = b.dataset.torok.split("|"), t = S.torLib.find(x => x.id === id), ver = t.versions.find(x => x.v === Number(v));
@@ -182,7 +182,7 @@ CASE_BINDS.push((c, done) => {
     if (sumv(C.map(k => k.w)) !== 100) { toast(L(`น้ำหนักรวมต้องเท่ากับ 100 (ตอนนี้ ${sumv(C.map(k => k.w))})`, `Weights must add to 100 (now ${sumv(C.map(k => k.w))})`)); return; }
     c.criteria = C; caseLog(c, "criteria", C.map(k => `${k.k} ${k.w}`).join(", ")); audit(["กำหนดเกณฑ์พิจารณาข้อเสนอ", "Set the evaluation criteria"], c.id); done(L("บันทึกเกณฑ์แล้ว", "Criteria saved")); };
   $$("[data-coi]").forEach(b => (b.onclick = () => { const [, k, u] = b.dataset.coi.split("|"), id = `${k}-${u}`, conflict = $("#coi-c-" + id).checked, w = $("#coi-w-" + id).value.trim();
-    if (conflict && w.length < 2) { toast(L("ระบุผู้ยื่นที่มีส่วนได้เสีย", "Name the bidder")); return; }
+    if (conflict && w.length < 2) { toastErr(L("ระบุผู้ยื่นที่มีส่วนได้เสีย", "Name the bidder")); return; }
     c.coi = c.coi || {}; c.coi[k] = c.coi[k] || {}; c.coi[k][u] = { conflict, with: w, t: nowIso(), by: me().id, paper: u !== me().id };
     caseLog(c, "coi", `${userName(u)} · ${conflict ? "มีส่วนได้เสีย " + w : "ไม่มี"}`); audit(["บันทึกแบบแจ้งผลประโยชน์ทับซ้อน", "Recorded a conflict-of-interest declaration"], `${c.id} ${userName(u)}`);
     if (conflict) notify(["prochead"], [`แฟ้ม ${c.id} มีกรรมการแจ้งส่วนได้เสีย ต้องแทนที่`, `Case ${c.id}: a member declared a conflict and must be replaced`], `case:${c.id}`);

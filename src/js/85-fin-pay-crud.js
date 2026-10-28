@@ -179,7 +179,7 @@ FS.dayCheck = () => {
 };
 FIN_BINDS.push(() => {
   $$("[data-dck]").forEach(cb => (cb.onchange = () => { cb.checked ? DCK_SKIP.delete(cb.dataset.dck) : DCK_SKIP.add(cb.dataset.dck); route(); }));
-  $$("[data-dckflag]").forEach(b => (b.onclick = () => { const v = vcOf(b.dataset.dckflag), why = ($(`#dck-${v.id}`).value || "").trim(); if (why.length < 5) { toast(L("ระบุข้อสังเกตอย่างน้อย 5 ตัวอักษร", "Write a note of at least 5 characters")); return; } dckFlag(v, why); DCK_SKIP.add(v.id); FIN_ROW = null; commit(); renderShell(); route(); toast(L("บันทึกข้อสังเกตแล้ว · แจ้งการเงิน", "Note saved · Finance is told")); }));
+  $$("[data-dckflag]").forEach(b => (b.onclick = () => { const v = vcOf(b.dataset.dckflag), why = ($(`#dck-${v.id}`).value || "").trim(); if (why.length < 5) { toastErr(L("ระบุข้อสังเกตอย่างน้อย 5 ตัวอักษร", "Write a note of at least 5 characters")); return; } dckFlag(v, why); DCK_SKIP.add(v.id); FIN_ROW = null; commit(); renderShell(); route(); toast(L("บันทึกข้อสังเกตแล้ว · แจ้งการเงิน", "Note saved · Finance is told")); }));
   const dc = $("#day-check");
   if (dc) dc.onclick = () => { const err = dckSign(dckToday().filter(v => !DCK_SKIP.has(v.id) && !v.dayFlag).map(v => v.id)); if (err) { toast(err); return; } commit(); renderShell(); route(); toast(L("ลงนามตรวจการจ่ายประจำวันแล้ว", "Daily payment check signed")); };
 });

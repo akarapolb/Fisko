@@ -29,7 +29,7 @@ ADMIN.notify = () => {
   </div>
   <section class="panel"><header><h2>${L("SLA การแจ้งเตือนล่วงหน้า และการยกระดับ", "SLA reminders and escalation")}</h2><span class="sp"></span>
       <button class="btn" type="button" id="sla-run">${L("ตรวจและส่งแจ้งเตือนตอนนี้", "Check and notify now")}</button></header>
-    <div class="tbl-wrap"><table><thead><tr><th>${L("ขั้นตอน (M10 · Workflow)", "Step (M10 · Workflow)")}</th><th class="n">${L("SLA (วัน)", "SLA (days)")}</th><th class="n">${L("เตือนก่อน (วัน)", "Remind before (days)")}</th><th>${L("ยกระดับถึง", "Escalate to")}</th><th class="n">${L("หลังเกินกำหนด (วัน)", "After overdue (days)")}</th><th class="n">${L("ใกล้ครบ / เกินกำหนด", "Due soon / overdue")}</th></tr></thead>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("ขั้นตอน (M10 · ขั้นตอนงาน)", "Step (M10 · Workflow)")}</th><th class="n">${L("SLA (วัน)", "SLA (days)")}</th><th class="n">${L("เตือนก่อน (วัน)", "Remind before (days)")}</th><th>${L("ยกระดับถึง", "Escalate to")}</th><th class="n">${L("หลังเกินกำหนด (วัน)", "After overdue (days)")}</th><th class="n">${L("ใกล้ครบ / เกินกำหนด", "Due soon / overdue")}</th></tr></thead>
       <tbody>${S.workflow.filter(w => w.sla).map(w => { const e = S.escal[w.id] || { remind: 1, to: "exec", after: 1 }, its = items.filter(x => x.w.id === w.id);
         return `<tr><td>${tx(w.name)}<div class="sub">${tx(ROLES[w.role])}</div></td><td class="n"><input type="number" min="1" max="60" data-wsla="${w.id}" value="${w.sla}" style="width:70px" aria-label="SLA"></td>
           <td class="n"><input type="number" min="0" max="30" data-esc="${w.id}|remind" value="${e.remind}" style="width:70px" aria-label="${L("เตือนก่อน", "Remind before")}"></td>

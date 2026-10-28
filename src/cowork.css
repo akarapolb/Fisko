@@ -19,7 +19,7 @@
 .cw-m { display: flex; gap: 10px; min-width: 0; }
 .cw-m.u { justify-content: flex-end; }
 .cw-bub { background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px 14px 4px 14px; padding: 9px 12px; max-width: 86%; font-size: 14px; line-height: 1.55; display: flex; flex-direction: column; gap: 6px; overflow-wrap: anywhere; }
-.cw-ctxline { font-size: 11.5px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+.cw-ctxline { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
 .cw-ctxline svg { width: 10px; height: 10px; }
 .cw-body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 1.6; }
 .cw-who { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
@@ -48,7 +48,7 @@
 .cw-tools button { border: 0; background: transparent; border-radius: 6px; padding: 3px 6px; cursor: pointer; color: var(--muted); font-size: 13px; }
 .cw-tools button svg { width: 14px; height: 14px; }
 .cw-tools button:hover, .cw-tools button.on { background: var(--surface-2); color: var(--ink); }
-.cw-tools .sub { font-size: 11.5px; margin-left: 6px; }
+.cw-tools .sub { font-size: 12px; margin-left: 6px; }
 
 .cw-empty { margin: auto; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; max-width: 360px; padding: 20px 0; }
 .cw-empty h3 { margin: 4px 0 0; font-size: 17px; font-weight: 600; }
@@ -90,8 +90,8 @@
 .cw-menu button:hover, .cw-menu button.on { background: var(--surface-2); }
 .cw-menu button svg { width: 15px; height: 15px; color: var(--muted); flex: none; }
 .cw-menu button span { display: flex; flex-direction: column; min-width: 0; }
-.cw-menu small { color: var(--muted); font-size: 11.5px; }
-.cw-mh { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 8px 8px 4px; }
+.cw-menu small { color: var(--muted); font-size: 12px; }
+.cw-mh { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 8px 8px 4px; }
 .cw-dz { position: absolute; inset: 0; border: 2px dashed var(--accent); border-radius: 12px; background: color-mix(in srgb, var(--accent-soft) 85%, transparent); display: grid; place-items: center; font-weight: 600; color: var(--accent-ink); }
 .cw-dz[hidden] { display: none; }
 
@@ -110,7 +110,7 @@
 .cw-thr > button:first-child { flex: 1; min-width: 0; border: 0; background: transparent; text-align: left; font: inherit; cursor: pointer; display: flex; gap: 8px; align-items: center; padding: 7px 6px; color: var(--ink); }
 .cw-thr > button:first-child span { display: flex; flex-direction: column; min-width: 0; }
 .cw-thr b { font-weight: 500; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cw-thr small { color: var(--muted); font-size: 11.5px; }
+.cw-thr small { color: var(--muted); font-size: 12px; }
 .cw-thr .cw-ib { width: 26px; height: 26px; font-size: 14px; opacity: 0; } .cw-thr:hover .cw-ib, .cw-thr.on .cw-ib { opacity: 1; }
 .cw-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 .cw-agents { padding: 16px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; align-content: start; grid-column: 2 / 4; }

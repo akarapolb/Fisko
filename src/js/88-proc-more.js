@@ -40,7 +40,7 @@ CASE_PANELS.push(c => {
 CASE_BINDS.push((c, done) => {
   const f = $("#egp-edit"); if (!f) return;
   f.onsubmit = e => { e.preventDefault(); const no = $("#ege-no").value.trim(), close = $("#ege-close").value, why = $("#ege-why").value.trim();
-    if (why.length < 10) { toast(L("ระบุเหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return; }
+    if (why.length < 10) { toastErr(L("ระบุเหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return; }
     if (!no || !close || close < c.egp.announce) { toast(L("วันปิดรับต้องไม่ก่อนวันประกาศ", "The closing date can't be before the announcement")); return; }
     if (no === c.egp.no && close === c.egp.close) { toast(L("ยังไม่มีอะไรเปลี่ยน", "Nothing changed")); return; }
     (c.egp.amends = c.egp.amends || []).push({ from: { no: c.egp.no, close: c.egp.close }, to: { no, close }, why, by: me().id, t: nowIso() });

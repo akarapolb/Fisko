@@ -42,22 +42,22 @@ body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 var(
 button, input, select, textarea { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--accent-2); outline-offset: 2px; }
 .num, td.n, .mono { font-variant-numeric: tabular-nums; }
-.mono { font-family: var(--mono); font-size: .86em; }
+.mono { font-family: var(--mono); font-size: max(12px, .86em); }
 
 .app { display: grid; grid-template-columns: 248px 1fr; min-height: 100%; }
 .rail { background: var(--rail); color: var(--rail-ink); padding: 22px 14px; display: flex; flex-direction: column; gap: 22px; position: sticky; top: 0; height: 100vh; }
 .brand { display: flex; gap: 10px; align-items: center; padding: 0 8px; }
 .brand-mark { width: 34px; height: 34px; border-radius: 9px; background: var(--accent-2); display: grid; place-items: center; color: #10112B; font-weight: 700; font-family: var(--mono); font-size: 13px; }
 .brand b { color: #fff; font-size: 16px; display: block; line-height: 1.2; }
-.brand small { font-size: 11.5px; letter-spacing: .02em; }
+.brand small { font-size: 12px; letter-spacing: .02em; }
 .nav { display: flex; flex-direction: column; gap: 2px; }
-.nav-h { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: #7E80A8; padding: 14px 10px 6px; }
+.nav-h { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #7E80A8; padding: 14px 10px 6px; }
 .nav a { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 8px; color: var(--rail-ink); text-decoration: none; font-size: 14.5px; }
 .nav a:hover { background: var(--rail-2); color: #fff; }
 .nav a.on { background: var(--rail-2); color: #fff; box-shadow: inset 0 0 0 1px #3A3B77; }
-.nav .code { font-family: var(--mono); font-size: 11px; color: #8A8CB5; width: 30px; }
+.nav .code { font-family: var(--mono); font-size: 12px; color: #8A8CB5; width: 30px; }
 .nav a.on .code { color: var(--accent-2); }
-.nav .badge { margin-left: auto; background: var(--accent-2); color: #10112B; border-radius: 99px; font-size: 11.5px; font-weight: 700; padding: 0 7px; }
+.nav .badge { margin-left: auto; background: var(--accent-2); color: #10112B; border-radius: 99px; font-size: 12px; font-weight: 700; padding: 0 7px; }
 .rail-foot { margin-top: auto; font-size: 12px; color: #7E80A8; padding: 0 8px; line-height: 1.5; }
 
 .main { min-width: 0; display: flex; flex-direction: column; }
@@ -131,7 +131,7 @@ tfoot td { font-weight: 700; background: var(--surface-2); }
 .bar b { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); border-radius: 2px; }
 
 .chart svg { width: 100%; height: auto; display: block; }
-.chart text { fill: var(--muted); font-size: 11px; font-family: var(--font); }
+.chart text { fill: var(--muted); font-size: 12px; font-family: var(--font); }
 .legend { display: flex; gap: 16px; font-size: 13px; color: var(--ink-2); flex-wrap: wrap; }
 .legend span { display: inline-flex; gap: 6px; align-items: center; }
 .legend i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
@@ -174,7 +174,7 @@ tfoot td { font-weight: 700; background: var(--surface-2); }
 /* Procurement case: the 12 states as a wrapping row of numbered chips */
 .stepper { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .stepper li { display: flex; align-items: center; gap: 6px; padding: 3px 10px 3px 3px; border: 1px solid var(--line); border-radius: 999px; font-size: 12.5px; color: var(--muted); background: var(--surface); }
-.stepper .dot { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; background: var(--surface-2); color: var(--ink-2); }
+.stepper .dot { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; background: var(--surface-2); color: var(--ink-2); }
 .stepper li.done { color: var(--ink-2); }
 .stepper li.done .dot, .stepper li.now .dot { background: var(--accent); color: #fff; }
 .stepper li.now { border-color: var(--accent); color: var(--ink); font-weight: 600; box-shadow: 0 0 0 3px var(--accent-soft); }
@@ -187,7 +187,7 @@ tfoot td { font-weight: 700; background: var(--surface-2); }
 .ai-box .btn:hover { border-color: var(--accent-2); }
 .ai-out { font-size: 13px; background: #0F1030; border-radius: 8px; padding: 10px 12px; color: #E8E9F6; display: flex; flex-direction: column; gap: 6px; }
 .ai-out li { margin-left: 16px; }
-.ai-note { font-size: 11.5px; color: #8E90AE; }
+.ai-note { font-size: 12px; color: #8E90AE; }
 
 .rounds input { width: 110px; text-align: right; }
 .rounds input.changed { border-color: var(--warn); }
@@ -248,7 +248,7 @@ tfoot td { font-weight: 700; background: var(--surface-2); }
 .seg button { border: 0; background: transparent; padding: 6px 10px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--muted); }
 .seg button.on { background: var(--rail); color: #fff; }
 .iconbtn { position: relative; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 6px 10px; cursor: pointer; font-weight: 600; font-size: 13px; }
-.iconbtn .cnt { position: absolute; top: -6px; right: -6px; background: var(--bad); color: #fff; border-radius: 99px; font-size: 11px; min-width: 18px; height: 18px; display: grid; place-items: center; padding: 0 4px; }
+.iconbtn .cnt { position: absolute; top: -6px; right: -6px; background: var(--bad); color: #fff; border-radius: 99px; font-size: 12px; min-width: 18px; height: 18px; display: grid; place-items: center; padding: 0 4px; }
 .npanel { position: absolute; right: max(24px, env(safe-area-inset-right, 0px)); top: 58px; width: min(380px, calc(100vw - 32px)); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 16px 40px rgba(10, 11, 34, .22); z-index: 30; max-height: 70vh; overflow: auto; }
 .npanel header { display: flex; align-items: center; padding: 12px 14px; border-bottom: 1px solid var(--line); gap: 8px; }
 .npanel header b { flex: 1; }
@@ -274,7 +274,7 @@ tfoot td { font-weight: 700; background: var(--surface-2); }
 .switch input:focus-visible + span { outline: 2px solid var(--accent-2); outline-offset: 2px; }
 
 .tree-row td:first-child { white-space: nowrap; }
-.lvl { display: inline-block; font-family: var(--mono); font-size: 11px; border-radius: 4px; padding: 1px 6px; margin-right: 6px; background: var(--surface-2); color: var(--ink-2); }
+.lvl { display: inline-block; font-family: var(--mono); font-size: 12px; border-radius: 4px; padding: 1px 6px; margin-right: 6px; background: var(--surface-2); color: var(--ink-2); }
 .lvl.program { background: var(--rail); color: #fff; } .lvl.output { background: var(--info-soft); color: var(--info); } .lvl.activity { background: var(--accent-soft); color: var(--accent); }
 
 .steps { display: flex; flex-direction: column; gap: 10px; }
@@ -301,7 +301,7 @@ tfoot td { font-weight: 700; background: var(--surface-2); }
 
 .soon-page { display: grid; gap: 16px; }
 .soon-list { columns: 2; column-gap: 28px; padding-left: 20px; margin: 0; }
-.nav .soon { margin-left: auto; font-size: 10.5px; border: 1px solid #3A3B77; color: #8A8CB5; border-radius: 99px; padding: 0 6px; }
+.nav .soon { margin-left: auto; font-size: 12px; border: 1px solid #3A3B77; color: #8A8CB5; border-radius: 99px; padding: 0 6px; }
 .rail-foot .btn { background: var(--rail-2); color: #fff; border-color: #3A3B77; font-size: 12.5px; padding: 5px 10px; margin-top: 8px; }
 .inline-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
 .inline-form .f { flex: 1 1 160px; }
@@ -390,7 +390,7 @@ input[type="file"] { max-width: 100%; min-width: 0; }
 .chain-card.ok { background: var(--accent-soft); }
 .chain-card.impact { background: var(--rail); color: #fff; }
 .chain-card.impact .sub { color: var(--rail-ink); }
-.chain-h { font-size: 11.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.chain-h { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
 .chain-card.impact .chain-h { color: var(--accent-2); }
 .chain-ar { display: grid; place-items: center; color: var(--muted); font-weight: 700; }
 .rep-h { margin: 6px 0 0; font-size: 16px; }
@@ -416,7 +416,7 @@ input[type="file"] { max-width: 100%; min-width: 0; }
 .gsearch { position: relative; flex: 0 1 260px; min-width: 0; }
 .gsearch input { width: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font: inherit; font-size: 13.5px; color: var(--ink); }
 .spanel { position: absolute; top: calc(100% + 6px); right: 0; width: min(420px, calc(100vw - 32px)); max-height: 60vh; overflow: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 16px 40px rgba(10, 11, 34, .22); z-index: 31; padding: 6px; }
-.sgroup { font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 8px 8px 4px; display: flex; gap: 6px; }
+.sgroup { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); padding: 8px 8px 4px; display: flex; gap: 6px; }
 .sitem { padding: 7px 8px; border-radius: 8px; cursor: pointer; display: flex; flex-direction: column; min-width: 0; }
 .sitem b { font-weight: 600; font-size: 14px; overflow-wrap: anywhere; }
 .sitem small { color: var(--muted); font-size: 12.5px; overflow-wrap: anywhere; }
@@ -462,7 +462,7 @@ input[type="file"] { max-width: 100%; min-width: 0; }
 td.mono { white-space: nowrap; }
 
 /* ---------- round 8: price notes, paste box, forward-estimate chart ---------- */
-.sp-note { font-size: 11.5px; color: var(--muted); text-align: right; margin-top: 2px; white-space: nowrap; }
+.sp-note { font-size: 12px; color: var(--muted); text-align: right; margin-top: 2px; white-space: nowrap; }
 .sp-note.over { color: var(--bad); font-weight: 600; }
 .paste-box { border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
 .paste-box textarea { width: 100%; box-sizing: border-box; }
@@ -501,7 +501,7 @@ button.brand:hover, button.brand[aria-expanded="true"] { background: var(--rail-
 .brand b, .brand small { overflow-wrap: anywhere; }
 .brand-caret { color: var(--rail-ink); font-size: 13px; margin-left: auto; }
 .appmenu { position: fixed; z-index: 45; width: min(340px, calc(100vw - 24px)); background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 18px 44px rgba(10, 11, 34, .28); padding: 8px; }
-.appmenu-h { font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 6px 10px 8px; }
+.appmenu-h { font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 6px 10px 8px; }
 .appmenu-f { font-size: 12.5px; color: var(--muted); padding: 10px 10px 6px; border-top: 1px solid var(--line); margin-top: 6px; }
 .appitem { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; background: none; border: 0; border-radius: 10px; padding: 10px; font: inherit; color: inherit; cursor: pointer; }
 .appitem:hover:not([disabled]), .appitem:focus-visible { background: var(--surface-2); }
@@ -513,7 +513,7 @@ button.brand:hover, button.brand[aria-expanded="true"] { background: var(--rail-
 .appt small { display: block; color: var(--muted); font-size: 12.5px; line-height: 1.4; }
 .appcnt { background: var(--accent-2); color: #10112B; border-radius: 99px; font-size: 12px; font-weight: 700; padding: 1px 8px; flex: none; }
 .appcur { color: var(--accent); font-weight: 700; flex: none; }
-.appchip { display: inline-block; font-size: 11.5px; font-weight: 600; border-radius: 6px; padding: 0 6px; margin-right: 6px; color: #10112B; background: var(--c, var(--accent-2)); vertical-align: 1px; }
+.appchip { display: inline-block; font-size: 12px; font-weight: 600; border-radius: 6px; padding: 0 6px; margin-right: 6px; color: #10112B; background: var(--c, var(--accent-2)); vertical-align: 1px; }
 @media (max-width: 860px) { button.brand { margin: 0; padding: 6px 8px; } }
 /* ==========================================================================
    Fisko design system v2 (round 24): "clean enterprise".
@@ -568,7 +568,7 @@ h1, h2, h3 { letter-spacing: -.015em; }
 .brand b { font-size: 15.5px; letter-spacing: -.01em; }
 .brand small { color: #8E92C4; }
 .nav { gap: 1px; }
-.nav-h { font-size: 10.5px; letter-spacing: .14em; color: #6F74AE; padding: 16px 12px 6px; font-weight: 600; }
+.nav-h { font-size: 12px; letter-spacing: .14em; color: #6F74AE; padding: 16px 12px 6px; font-weight: 600; }
 .nav a { padding: 8px 10px; border-radius: 10px; font-size: 14px; gap: 11px; color: #C5C8E8; position: relative; transition: background .15s var(--ease), color .15s var(--ease); }
 .nav a:hover { background: rgba(255, 255, 255, .06); color: #fff; }
 .nav a.on { background: linear-gradient(90deg, rgba(34, 197, 94, .16), rgba(34, 197, 94, .04)); color: #fff; box-shadow: none; font-weight: 600; }
@@ -577,7 +577,7 @@ h1, h2, h3 { letter-spacing: -.015em; }
 .nav .ni { width: 18px; height: 18px; flex: none; display: grid; place-items: center; color: #8E92C4; transition: color .15s var(--ease); }
 .nav a:hover .ni, .nav a.on .ni { color: var(--accent-2); }
 .nav .ni svg { width: 18px; height: 18px; }
-.nav .badge { background: rgba(34, 197, 94, .18); color: #7CF0A6; font-size: 11px; padding: 0 7px; line-height: 18px; }
+.nav .badge { background: rgba(34, 197, 94, .18); color: #7CF0A6; font-size: 12px; padding: 0 7px; line-height: 18px; }
 .rail-foot { color: #6F74AE; }
 .rail-foot .btn { background: rgba(255, 255, 255, .06); border-color: rgba(255, 255, 255, .08); color: #DDE0F7; border-radius: 9px; }
 .rail-foot .btn:hover { background: rgba(255, 255, 255, .1); }
@@ -589,7 +589,7 @@ h1, h2, h3 { letter-spacing: -.015em; }
 .gsearch input { width: 230px; height: 38px; border-radius: 10px; background: var(--surface-2); border: 1px solid transparent; padding: 0 12px 0 36px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%236A6E8C' stroke-width='2' stroke-linecap='round' viewBox='0 0 24 24'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 12px center; transition: border-color .15s, box-shadow .15s, background-color .15s; }
 .gsearch input:focus { background-color: var(--surface); border-color: var(--accent); box-shadow: var(--ring); outline: none; }
-.sample { background: var(--warn-soft); color: var(--warn); font-size: 11.5px; letter-spacing: .02em; }
+.sample { background: var(--warn-soft); color: var(--warn); font-size: 12px; letter-spacing: .02em; }
 .top select, .orgsel, #role { height: 36px; border-radius: 10px; background: var(--surface); border: 1px solid var(--line); padding: 0 28px 0 10px; font-size: 13.5px; appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%236A6E8C' stroke-width='2.2' stroke-linecap='round' viewBox='0 0 24 24'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 9px center; }
 .seg { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 3px; height: 36px; }
@@ -606,7 +606,7 @@ h1, h2, h3 { letter-spacing: -.015em; }
 .head { align-items: flex-end; gap: 14px; }
 .head h1 { font-size: 28px; font-weight: 700; letter-spacing: -.025em; line-height: 1.2; }
 .head p { color: var(--muted); font-size: 14.5px; }
-.eyebrow { font-size: 11.5px; letter-spacing: .12em; color: var(--accent); display: inline-flex; align-items: center; gap: 8px; }
+.eyebrow { font-size: 12px; letter-spacing: .12em; color: var(--accent); display: inline-flex; align-items: center; gap: 8px; }
 .eyebrow::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 20%, transparent); }
 
 /* ---------- cards and panels ---------- */
@@ -654,7 +654,7 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); width
 /* ---------- tables ---------- */
 .tbl-wrap { overflow-x: auto; }
 table { font-size: 13.5px; }
-th { background: transparent; font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--faint); font-weight: 650; padding: 11px 14px; border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 1; background: var(--surface); }
+th { background: transparent; font-size: 12px; letter-spacing: .07em; text-transform: uppercase; color: var(--faint); font-weight: 650; padding: 11px 14px; border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 1; background: var(--surface); }
 td { padding: 11px 14px; border-bottom: 1px solid var(--line); }
 tbody tr { transition: background .12s; }
 tbody tr:hover td { background: color-mix(in srgb, var(--surface-2) 70%, transparent); }
@@ -672,7 +672,7 @@ td .sub { font-size: 12.5px; }
 
 /* ---------- lists, checks, timelines ---------- */
 .check li { font-size: 13.5px; }
-.check .m { width: 20px; height: 20px; font-size: 11px; }
+.check .m { width: 20px; height: 20px; font-size: 12px; }
 .timeline li { gap: 12px; padding-bottom: 16px; }
 .timeline li::before { left: 7px; background: linear-gradient(var(--line-2), var(--line)); }
 .timeline .dot { width: 16px; height: 16px; border-width: 2px; margin-top: 3px; }
@@ -680,11 +680,11 @@ td .sub { font-size: 12.5px; }
 
 /* case stepper: a track with 12 numbered stops, labels under each */
 .stepper { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 0; position: relative; padding-top: 4px; }
-.stepper li { flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 0 2px; border: 0; background: transparent; border-radius: 0; font-size: 11px; line-height: 1.25; position: relative; color: var(--faint); box-shadow: none !important; }
+.stepper li { flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 0 2px; border: 0; background: transparent; border-radius: 0; font-size: 12px; line-height: 1.25; position: relative; color: var(--faint); box-shadow: none !important; }
 .stepper li::before { content: ""; position: absolute; top: 11px; left: -50%; right: 50%; height: 3px; background: var(--surface-3); z-index: 0; }
 .stepper li:first-child::before { display: none; }
 .stepper li.done::before, .stepper li.now::before { background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
-.stepper .dot { width: 24px; height: 24px; font-size: 11px; position: relative; z-index: 1; background: var(--surface); border: 2px solid var(--line-2); color: var(--muted); transition: transform .2s var(--ease); }
+.stepper .dot { width: 24px; height: 24px; font-size: 12px; position: relative; z-index: 1; background: var(--surface); border: 2px solid var(--line-2); color: var(--muted); transition: transform .2s var(--ease); }
 .stepper li.done .dot { background: var(--accent); border-color: var(--accent); color: #fff; }
 .stepper li.now .dot { background: var(--surface); border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 5px var(--accent-soft); transform: scale(1.12); }
 .stepper li.now { color: var(--ink); font-weight: 650; }
@@ -735,7 +735,7 @@ td .sub { font-size: 12.5px; }
 .segbar > i.ok { background: var(--accent); } .segbar > i.now { background: linear-gradient(90deg, var(--accent), var(--surface-3)); } .segbar > i.warn { background: var(--amber); } .segbar > i.bad { background: var(--bad); } .segbar > i.info { background: var(--info); }
 
 /* avatars */
-.av { width: 26px; height: 26px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 11px; font-weight: 700; color: #fff; flex: none; box-shadow: 0 0 0 2px var(--surface); }
+.av { width: 26px; height: 26px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 12px; font-weight: 700; color: #fff; flex: none; box-shadow: 0 0 0 2px var(--surface); }
 .avs { display: inline-flex; } .avs .av + .av { margin-left: -7px; }
 
 /* home: hero */
@@ -759,7 +759,7 @@ td .sub { font-size: 12.5px; }
 .tlist .prio { width: 4px; align-self: stretch; border-radius: 4px; background: var(--line-2); }
 .tlist .prio.p-bad { background: var(--bad); } .tlist .prio.p-warn { background: var(--amber); } .tlist .prio.p-info { background: var(--info); } .tlist .prio.p-ok { background: var(--accent); }
 .tlist .meta { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 2px; }
-.appdot { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 600; color: var(--muted); }
+.appdot { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--muted); }
 .appdot::before { content: ""; width: 7px; height: 7px; border-radius: 3px; background: var(--c, var(--accent)); }
 .filterbar { display: flex; gap: 6px; flex-wrap: wrap; }
 .fchip { border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 4px 12px; font-size: 12.5px; font-weight: 600; color: var(--ink-2); cursor: pointer; transition: all .15s; }
@@ -772,7 +772,7 @@ td .sub { font-size: 12.5px; }
 .cal li:last-child { border-bottom: 0; }
 .cal .d { border-radius: 10px; background: var(--surface-2); text-align: center; padding: 4px 0; line-height: 1.1; }
 .cal .d b { display: block; font-size: 18px; letter-spacing: -.02em; }
-.cal .d span { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.cal .d span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
 .cal li.mine .d { background: var(--accent-soft); color: var(--accent-ink); }
 
 /* app tiles */
@@ -808,7 +808,7 @@ td .sub { font-size: 12.5px; }
 .funnel > div { border-radius: 6px 6px 3px 3px; background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 70%, var(--info)), var(--accent)); min-height: 4px; position: relative; opacity: .9; transition: opacity .15s; }
 .funnel > div:hover { opacity: 1; }
 .funnel > div.zero { background: var(--surface-3); }
-.funnel-l { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 4px; font-size: 10.5px; color: var(--faint); text-align: center; margin-top: 6px; }
+.funnel-l { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 4px; font-size: 12px; color: var(--faint); text-align: center; margin-top: 6px; }
 
 /* case page layout */
 .case-hero { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 20px 22px; }
@@ -827,7 +827,7 @@ td .sub { font-size: 12.5px; }
 .ptrack .ph { flex: 1; min-width: 0; }
 .ptrack .ph .bar2 { height: 8px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
 .ptrack .ph .bar2 i { display: block; height: 100%; }
-.ptrack .ph span { display: block; font-size: 11px; color: var(--muted); margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ptrack .ph span { display: block; font-size: 12px; color: var(--muted); margin-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* agents trace */
 .case-side .timeline li, .timeline li { font-size: 13px; }
@@ -850,13 +850,13 @@ td .sub { font-size: 12.5px; }
   .board { grid-template-columns: repeat(4, minmax(230px, 82%)); }
   .stepper { grid-template-columns: repeat(12, minmax(18px, 1fr)); }
   .stepper .nm { display: none; }
-  .stepper li.now .nm { display: block; position: absolute; top: 32px; white-space: nowrap; font-size: 11px; }
+  .stepper li.now .nm { display: block; position: absolute; top: 32px; white-space: nowrap; font-size: 12px; }
   .stepper { padding-bottom: 18px; }
   .case-hero { grid-template-columns: auto minmax(0, 1fr); } .case-hero > :last-child { grid-column: 1 / -1; }
-  .funnel-l { font-size: 9px; }
+  .funnel-l { font-size: 12px; }
 }
 .iconbtn { display: inline-grid; place-items: center; padding: 0 8px; position: relative; color: var(--ink-2); }
-.iconbtn .cnt { position: absolute; top: -4px; right: -4px; min-width: 17px; height: 17px; border-radius: 99px; font-size: 10.5px; font-weight: 700; color: #fff; display: grid; place-items: center; padding: 0 4px; }
+.iconbtn .cnt { position: absolute; top: -4px; right: -4px; min-width: 17px; height: 17px; border-radius: 99px; font-size: 12px; font-weight: 700; color: #fff; display: grid; place-items: center; padding: 0 4px; }
 .userchip .avatar { width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, var(--info), var(--violet)); color: #fff; display: grid; place-items: center; font-size: 12px; font-weight: 700; }
 .apptile:disabled { opacity: .5; cursor: not-allowed; transform: none; }
 @media (min-width: 861px) {
@@ -870,7 +870,7 @@ td .sub { font-size: 12.5px; }
 .case-side .timeline { max-height: 520px; overflow: auto; padding-right: 4px; }
 .case-side .row .btn, .case-side input { flex: 1 1 auto; }
 .nextcard > header h2 { font-size: 14.5px; }
-.card .pill { font-size: 11px; padding: 1px 8px; }
+.card .pill { font-size: 12px; padding: 1px 8px; }
 /* callouts inside panels were dark in v1 (dark text on navy); v2 keeps them light and readable */
 .panel > .body .callout { background: var(--surface-2); color: var(--ink); }
 .panel > .body .callout b { color: var(--ink); }
@@ -985,35 +985,35 @@ details.strat > summary:hover { background: var(--surface-2); }
    ========================================================================== */
 :root {
   --bg: #F7F8FA; --surface: #FFFFFF; --surface-2: #F4F5F7; --surface-3: #E9EBEF; --line: #E5E7EB; --line-2: #D7DAE0;
-  --ink: #111827; --ink-2: #374151; --muted: #6B7280; --faint: #9CA3AF;
+  --ink: #111827; --ink-2: #374151; --muted: #5B6270; --faint: #646B78;
   --accent: #34498C; --accent-2: #4A5FA3; --accent-soft: #ECF0FA; --accent-ink: #34498C;
   --info: #4A5FA3; --info-soft: #ECF0FA; --violet: #5B6380; --sky: #4B6A88; --amber: #B7791F;
   --ok: #15803D; --ok-dot: #16A34A; --warn: #A16207; --warn-soft: #FBF6EA; --bad: #B91C1C; --bad-soft: #FBEFEF;
-  --ch-1: #16A34A; --ch-2: #34498C; --ch-3: #86CFA0; --ch-4: #D99A2B; --ch-5: #0F766E; --ch-6: #A3AAB8;
+  --ch-1: #15803D; --ch-2: #34498C; --ch-3: #86CFA0; --ch-4: #D99A2B; --ch-5: #0F766E; --ch-6: #A3AAB8;
   --c-1: var(--ch-1); --c-2: var(--ch-2); --c-3: var(--ch-3); --c-4: var(--ch-4); --c-5: var(--ch-5); --c-6: var(--ch-6);
   --app-b: #34498C; --app-p: #5A6EA8; --app-f: #5C6B7D;
-  --side: #FFFFFF; --side-ink: #374151; --side-muted: #9CA3AF; --side-hover: #F3F4F6; --side-on: #ECF0FA; --side-on-ink: #283B78; --side-line: #E5E7EB;
+  --side: #FFFFFF; --side-ink: #374151; --side-muted: #646B78; --side-hover: #F3F4F6; --side-on: #ECF0FA; --side-on-ink: #283B78; --side-line: #E5E7EB;
   --r: 10px; --r-sm: 8px; --r-xs: 7px;
   --sh-1: none; --sh-2: 0 1px 2px rgba(17, 24, 39, .05); --sh-3: 0 10px 30px rgba(17, 24, 39, .12);
   --ring: 0 0 0 3px rgba(52, 73, 140, .14);
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #0E1015; --surface: #15181F; --surface-2: #1B1F27; --surface-3: #242934; --line: #262B36; --line-2: #313744;
-  --ink: #E8EAEE; --ink-2: #C3C8D2; --muted: #8F96A3; --faint: #6B7280;
+  --ink: #E8EAEE; --ink-2: #C3C8D2; --muted: #8F96A3; --faint: #8A919E;
   --accent: #9DB0E3; --accent-2: #B5C4EC; --accent-soft: #1E2534; --accent-ink: #B5C4EC; --info: #9DB0E3; --info-soft: #1E2534;
   --ok: #4ADE80; --ok-dot: #22C55E; --warn: #E0B65C; --warn-soft: #2A2416; --bad: #F08A8A; --bad-soft: #2E1B1B;
   --ch-1: #34D36B; --ch-2: #9DB0E3; --ch-3: #1F7A45; --ch-4: #E0B65C; --ch-5: #2DD4BF; --ch-6: #6B7280;
   --app-b: #6F84C2; --app-p: #7E8FB8; --app-f: #8592A6;
-  --side: #12151B; --side-ink: #C3C8D2; --side-muted: #6B7280; --side-hover: #1B1F27; --side-on: #1E2534; --side-on-ink: #DCE3F5; --side-line: #222630;
+  --side: #12151B; --side-ink: #C3C8D2; --side-muted: #8A919E; --side-hover: #1B1F27; --side-on: #1E2534; --side-on-ink: #DCE3F5; --side-line: #222630;
   --sh-2: none; --sh-3: 0 10px 30px rgba(0, 0, 0, .5); color-scheme: dark; } }
 :root[data-theme="dark"] {
   --bg: #0E1015; --surface: #15181F; --surface-2: #1B1F27; --surface-3: #242934; --line: #262B36; --line-2: #313744;
-  --ink: #E8EAEE; --ink-2: #C3C8D2; --muted: #8F96A3; --faint: #6B7280;
+  --ink: #E8EAEE; --ink-2: #C3C8D2; --muted: #8F96A3; --faint: #8A919E;
   --accent: #9DB0E3; --accent-2: #B5C4EC; --accent-soft: #1E2534; --accent-ink: #B5C4EC; --info: #9DB0E3; --info-soft: #1E2534;
   --ok: #4ADE80; --ok-dot: #22C55E; --warn: #E0B65C; --warn-soft: #2A2416; --bad: #F08A8A; --bad-soft: #2E1B1B;
   --ch-1: #34D36B; --ch-2: #9DB0E3; --ch-3: #1F7A45; --ch-4: #E0B65C; --ch-5: #2DD4BF; --ch-6: #6B7280;
   --app-b: #6F84C2; --app-p: #7E8FB8; --app-f: #8592A6;
-  --side: #12151B; --side-ink: #C3C8D2; --side-muted: #6B7280; --side-hover: #1B1F27; --side-on: #1E2534; --side-on-ink: #DCE3F5; --side-line: #222630;
+  --side: #12151B; --side-ink: #C3C8D2; --side-muted: #8A919E; --side-hover: #1B1F27; --side-on: #1E2534; --side-on-ink: #DCE3F5; --side-line: #222630;
   --sh-2: none; --sh-3: 0 10px 30px rgba(0, 0, 0, .5); color-scheme: dark; }
 
 /* ---------- light sidebar ---------- */
@@ -1297,7 +1297,7 @@ ul.plain { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-di
 .cw-m { display: flex; gap: 10px; min-width: 0; }
 .cw-m.u { justify-content: flex-end; }
 .cw-bub { background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px 14px 4px 14px; padding: 9px 12px; max-width: 86%; font-size: 14px; line-height: 1.55; display: flex; flex-direction: column; gap: 6px; overflow-wrap: anywhere; }
-.cw-ctxline { font-size: 11.5px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+.cw-ctxline { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
 .cw-ctxline svg { width: 10px; height: 10px; }
 .cw-body { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 1.6; }
 .cw-who { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
@@ -1326,7 +1326,7 @@ ul.plain { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-di
 .cw-tools button { border: 0; background: transparent; border-radius: 6px; padding: 3px 6px; cursor: pointer; color: var(--muted); font-size: 13px; }
 .cw-tools button svg { width: 14px; height: 14px; }
 .cw-tools button:hover, .cw-tools button.on { background: var(--surface-2); color: var(--ink); }
-.cw-tools .sub { font-size: 11.5px; margin-left: 6px; }
+.cw-tools .sub { font-size: 12px; margin-left: 6px; }
 
 .cw-empty { margin: auto; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; max-width: 360px; padding: 20px 0; }
 .cw-empty h3 { margin: 4px 0 0; font-size: 17px; font-weight: 600; }
@@ -1368,8 +1368,8 @@ ul.plain { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-di
 .cw-menu button:hover, .cw-menu button.on { background: var(--surface-2); }
 .cw-menu button svg { width: 15px; height: 15px; color: var(--muted); flex: none; }
 .cw-menu button span { display: flex; flex-direction: column; min-width: 0; }
-.cw-menu small { color: var(--muted); font-size: 11.5px; }
-.cw-mh { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 8px 8px 4px; }
+.cw-menu small { color: var(--muted); font-size: 12px; }
+.cw-mh { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; padding: 8px 8px 4px; }
 .cw-dz { position: absolute; inset: 0; border: 2px dashed var(--accent); border-radius: 12px; background: color-mix(in srgb, var(--accent-soft) 85%, transparent); display: grid; place-items: center; font-weight: 600; color: var(--accent-ink); }
 .cw-dz[hidden] { display: none; }
 
@@ -1388,7 +1388,7 @@ ul.plain { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-di
 .cw-thr > button:first-child { flex: 1; min-width: 0; border: 0; background: transparent; text-align: left; font: inherit; cursor: pointer; display: flex; gap: 8px; align-items: center; padding: 7px 6px; color: var(--ink); }
 .cw-thr > button:first-child span { display: flex; flex-direction: column; min-width: 0; }
 .cw-thr b { font-weight: 500; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cw-thr small { color: var(--muted); font-size: 11.5px; }
+.cw-thr small { color: var(--muted); font-size: 12px; }
 .cw-thr .cw-ib { width: 26px; height: 26px; font-size: 14px; opacity: 0; } .cw-thr:hover .cw-ib, .cw-thr.on .cw-ib { opacity: 1; }
 .cw-main { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 .cw-agents { padding: 16px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; align-content: start; grid-column: 2 / 4; }
@@ -1422,7 +1422,7 @@ ul.plain { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-di
 .sr-btn.on::before { content: ""; position: absolute; left: -10px; top: 9px; bottom: 9px; width: 3px; border-radius: 0 3px 3px 0; background: #9DB0E3; }
 .sr-btn:focus-visible { outline: 2px solid #9DB0E3; outline-offset: 1px; }
 /* the count sits on the button's corner, outside the icon, with a ring in the rail colour so it reads as a cut-out */
-.sr-cnt { position: absolute; top: -3px; right: -5px; min-width: 17px; height: 17px; padding: 0 4px; box-sizing: border-box; border-radius: 99px; background: #9DB0E3; color: #121A33; font-family: inherit; font-size: 10px; font-weight: 700; line-height: 17px; text-align: center; font-variant-numeric: tabular-nums; box-shadow: 0 0 0 2px var(--sr); pointer-events: none; }
+.sr-cnt { position: absolute; top: -3px; right: -5px; min-width: 17px; height: 17px; padding: 0 4px; box-sizing: border-box; border-radius: 99px; background: #9DB0E3; color: #121A33; font-family: inherit; font-size: 12px; font-weight: 700; line-height: 17px; text-align: center; font-variant-numeric: tabular-nums; box-shadow: 0 0 0 2px var(--sr); pointer-events: none; }
 .sr-btn.on .sr-cnt { background: #fff; }
 .sr-sep { width: 24px; height: 1px; background: rgba(255, 255, 255, .1); margin: 4px 0; }
 .sr-sp { flex: 1; }
@@ -1450,7 +1450,7 @@ ul.plain { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-di
 .ln-search input { flex: 1; border: 0; background: transparent; font-size: 16px; padding: 6px 0; box-shadow: none; color: var(--ink); min-width: 0; }
 .ln-search input:focus { outline: none; box-shadow: none; }
 .ln-body { overflow-y: auto; padding: 6px 18px 18px; }
-.ln-h { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 16px 0 8px; }
+.ln-h { font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 16px 0 8px; }
 .ln-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
 .ln-card { position: relative; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
 .ln-card:hover { border-color: var(--line-2); background: var(--surface-2); }
@@ -1491,7 +1491,7 @@ ul.plain { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-di
 .cr-steps { display: flex; gap: 6px; list-style: none; margin: 0 0 4px; padding: 0; font-size: 12.5px; color: var(--muted); flex-wrap: wrap; }
 .cr-steps li { display: inline-flex; align-items: center; gap: 6px; }
 .cr-steps li + li::before { content: ""; width: 18px; height: 1px; background: var(--line-2); margin-right: 2px; }
-.cr-steps span { width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--line-2); display: grid; place-items: center; font-size: 11px; font-weight: 600; }
+.cr-steps span { width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--line-2); display: grid; place-items: center; font-size: 12px; font-weight: 600; }
 .cr-steps li.on { color: var(--ink); font-weight: 600; } .cr-steps li.on span { background: var(--accent); border-color: var(--accent); color: #fff; }
 .cr-steps li.done span { background: var(--accent-soft); border-color: var(--accent-soft); color: var(--accent); }
 .cr-rv { display: grid; grid-template-columns: minmax(96px, max-content) minmax(0, 1fr); gap: 6px 14px; margin: 4px 0; font-size: 13.5px; }
@@ -1545,7 +1545,7 @@ body.presenting .view { padding-bottom: 220px; }
 .ctx-o { color: var(--muted); max-width: 110px; }
 .ctx-r { font-weight: 600; }
 .ctx-o + .ctx-r::before { content: "·"; color: var(--faint); margin-right: 8px; font-weight: 400; }
-.ctxbtn .brand-caret { color: var(--muted); font-size: 11px; flex: none; }
+.ctxbtn .brand-caret { color: var(--muted); font-size: 12px; flex: none; }
 .ctxpop { position: fixed; width: min(320px, calc(100vw - 24px)); padding: 14px; display: flex; flex-direction: column; gap: 12px; z-index: 30; }
 .ctxpop[hidden] { display: none; }
 .ctx-f { display: flex; flex-direction: column; gap: 6px; font-size: 12.5px; color: var(--muted); font-weight: 600; }
@@ -1597,13 +1597,13 @@ body[data-app="admin"] #view > .tabs[role="tablist"] { display: none; }
 .pc-step > button:hover, .pc-step.on > button { border-color: var(--accent); }
 .pc-step > button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .pc-step b { font-size: 14px; line-height: 1.25; }
-.pc-n { font-size: 11px; color: var(--muted); }
+.pc-n { font-size: 12px; color: var(--muted); }
 .pc-v { font-size: 12px; color: var(--ink-2); } .pc-v b { font-size: 13px; }
 .pc-m { display: flex; gap: 3px; margin-top: auto; }
 .pc-m i, .pstep, .pmod { font-style: normal; display: inline-grid; place-items: center; min-width: 19px; height: 19px; padding: 0 4px; box-sizing: border-box; border-radius: 6px;
-  background: var(--surface); color: var(--ink); font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; border: 1px solid var(--line); }
+  background: var(--surface); color: var(--ink); font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; border: 1px solid var(--line); }
 .pstep { background: var(--accent); color: #fff; border-color: transparent; border-radius: 99px; }
-.pc-x { font-size: 11.5px; line-height: 1.3; color: var(--muted); padding: 3px 7px; border-radius: 7px; border: 1px dashed var(--line); }
+.pc-x { font-size: 12px; line-height: 1.3; color: var(--muted); padding: 3px 7px; border-radius: 7px; border: 1px dashed var(--line); }
 .pc-x.out { color: var(--warn); border-color: var(--warn); }
 .pc-x.both { color: var(--info); border-color: var(--info); }
 .ptl { list-style: none; margin: 0; padding: 12px 16px; display: grid; gap: 0; }
@@ -1627,6 +1627,66 @@ body[data-app="admin"] #view > .tabs[role="tablist"] { display: none; }
 
 @media (max-width: 1280px) { .pcycle { grid-template-columns: repeat(4, minmax(0, 1fr)); } .pc-step:nth-child(4n + 1)::before { content: none; } }
 @media (max-width: 620px) { .pcycle { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pc-step:nth-child(2n + 1)::before { content: none; } }
+
+/* ---- round 65: legibility floor (DGA website standard 8.7, WCAG 2.1 1.4.3 and 1.4.12) ---- */
+/* No text under 12 px anywhere. Thai stacks tone marks and vowels above and below the line, so labels that were
+   under 12 px get 13 px in Thai (counts, codes and initials keep 12 px), and short Thai labels get a line height of
+   at least 1.5. */
+html[lang="th"] .cw-ctxline,
+html[lang="th"] .cw-tools .sub,
+html[lang="th"] .cw-menu small,
+html[lang="th"] .cw-mh,
+html[lang="th"] .cw-thr small,
+html[lang="th"] .brand small,
+html[lang="th"] .nav-h,
+html[lang="th"] .ai-note,
+html[lang="th"] .lvl,
+html[lang="th"] .nav .soon,
+html[lang="th"] .chain-h,
+html[lang="th"] .sgroup,
+html[lang="th"] .sp-note,
+html[lang="th"] .appmenu-h,
+html[lang="th"] .appchip,
+html[lang="th"] .ln-h,
+html[lang="th"] .cr-steps span,
+html[lang="th"] .pc-n,
+html[lang="th"] .pstep,
+html[lang="th"] .pmod,
+html[lang="th"] .pc-x,
+html[lang="th"] .sample,
+html[lang="th"] .eyebrow,
+html[lang="th"] th,
+html[lang="th"] .check .m,
+html[lang="th"] .stepper li,
+html[lang="th"] .funnel-l,
+html[lang="th"] .ptrack .ph span,
+html[lang="th"] .stepper li.now .nm,
+html[lang="th"] .card .pill { font-size: 13px; }
+html[lang="th"] .appt small,
+html[lang="th"] .ln-t small,
+html[lang="th"] .pc-step b,
+html[lang="th"] .pc-x,
+html[lang="th"] .stepper li,
+html[lang="th"] .cal .d,
+html[lang="th"] .card .ct { line-height: 1.5; }
+
+/* ---- round 65: skip link, field errors, footer and policies ---- */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.skiplink { position: fixed; left: 12px; top: -60px; z-index: 100; background: var(--accent); color: #fff; padding: 10px 16px; border-radius: 8px; font-weight: 600; text-decoration: none; }
+.skiplink:focus { top: 12px; outline: 3px solid var(--ink); outline-offset: 2px; }
+#view:focus { outline: none; }
+.fld-err { color: var(--bad); font-size: 13px; margin-top: 4px; }
+[aria-invalid="true"] { border-color: var(--bad) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--bad) 18%, transparent) !important; }
+.sitefoot { margin-top: auto; border-top: 1px solid var(--line); background: var(--surface); padding: 14px max(24px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(24px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--muted); }
+.sf-org { display: flex; flex-wrap: wrap; gap: 4px 14px; } .sf-org b { color: var(--ink-2); font-weight: 600; }
+.sf-links { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.sf-links a { color: var(--accent-ink); text-decoration: underline; text-underline-offset: 2px; padding: 3px 0; }
+body.presenting .sitefoot { padding-bottom: 220px; }
+.sitepol { line-height: 1.7; max-width: 78ch; } .sitepol h3 { font-size: 15px; margin: 16px 0 4px; } .sitepol p { margin: 0 0 8px; } .sitepol ul { margin: 0 0 8px; padding-left: 20px; }
+.si-pdpa { font-size: 13px; color: var(--ink-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; }
+.si-pdpa summary { cursor: pointer; font-weight: 600; line-height: 1.5; }
+.si-pdpa .sitepol { max-height: 240px; overflow: auto; margin-top: 8px; font-size: 13px; }
+@media (max-width: 620px) { .sitefoot { padding-left: 16px; padding-right: 16px; } }
 </style>
 </head>
 <body>
@@ -2816,10 +2876,10 @@ NAV.push(
   { id: "submission", code: "M05", group: "form", roles: ["plan", "exec", "audit"], label: ["ส่งสำนักงบประมาณ", "Submission"],
     plan: [["ตรวจรหัสและโครงสร้างข้อมูลก่อนส่ง", "Pre-submission code and structure checks"], ["ตัวอย่างแบบฟอร์มคำขอ", "Request form preview"], ["ส่งออก Excel / PDF", "Excel / PDF export"], ["ติดตามสถานะและบันทึกผลพิจารณา", "Status tracking and Budget Bureau results"]] },
   { id: "allocation", code: "M06", group: "exec", roles: ["fin", "plan", "exec", "audit"], label: ["จัดสรรงบประมาณ", "Budget Allocation"],
-    plan: [["บันทึกวงเงินตามพระราชบัญญัติงบประมาณ", "Record the appropriation"], ["จัดสรรรายหน่วยงานและโครงการ", "Allocate by unit and project"], ["แผนการใช้จ่ายรายเดือน", "Monthly spending plan"], ["โอนเปลี่ยนแปลงผ่าน Workflow", "Budget transfers through the workflow"]] },
+    plan: [["บันทึกวงเงินตามพระราชบัญญัติงบประมาณ", "Record the appropriation"], ["จัดสรรรายหน่วยงานและโครงการ", "Allocate by unit and project"], ["แผนการใช้จ่ายรายเดือน", "Monthly spending plan"], ["โอนเปลี่ยนแปลงผ่านขั้นตอนงาน", "Budget transfers through the workflow"]] },
   { id: "dashboard", code: "M07", group: "exec", roles: ["exec", "plan", "fin", "audit", "div", "proc", "prochead"], label: ["ติดตามการใช้จ่าย", "Execution Monitoring"] },
   { id: "performance", code: "M08", group: "exec", roles: ["plan", "exec", "div", "audit"], label: ["ผลสัมฤทธิ์", "Performance"],
-    plan: [["บันทึกผลตัวชี้วัด", "Enter KPI results"], ["ห่วงโซ่ผลลัพธ์รายโครงการ", "Results chain per project"], ["Scorecard งบประมาณกับผลลัพธ์", "Budget vs outcome scorecard"], ["รายงานประเมินผล", "Evaluation report"]] },
+    plan: [["บันทึกผลตัวชี้วัด", "Enter KPI results"], ["ห่วงโซ่ผลลัพธ์รายโครงการ", "Results chain per project"], ["บัตรคะแนนงบประมาณกับผลลัพธ์", "Budget vs outcome scorecard"], ["รายงานประเมินผล", "Evaluation report"]] },
   { id: "assistant", code: "M09", group: "intel", roles: ["exec", "plan", "fin", "div", "audit"], label: ["ผู้ช่วย AI งบประมาณ", "AI Budget Assistant"] },
   { id: "admin", code: "M10", group: "sys", roles: ["admin", "audit", "fin", "proc", "prochead"], label: ["ผู้ดูแลระบบ", "System Administration"] },
 );
@@ -3620,7 +3680,7 @@ VIEWS.request = () => {
       <section class="panel"><header><h2>${L("ตรวจความครบถ้วน", "Completeness check")}</h2><span class="sp"></span><span id="chk-sum"></span></header><div class="body"><ul class="check" id="checks"></ul>
         <div class="sub" style="margin-top:10px">${L("กฎตั้งค่าได้ที่ M10 · กฎทางธุรกิจ", "Rules are set in M10 · Business rules")}</div></div></section>
       <section class="panel"><header><h2>${L("เส้นทางอนุมัติ", "Approval route")}</h2></header><div class="body"><ol class="timeline" id="tl"></ol>
-        <div class="sub">${L("ตั้งค่าได้ที่ M10 · Workflow", "Set in M10 · Workflow")}</div></div></section>
+        <div class="sub">${L("ตั้งค่าได้ที่ M10 · ขั้นตอนงาน", "Set in M10 · Workflow")}</div></div></section>
     </div>
   </div>`;
 };
@@ -4325,7 +4385,7 @@ BIND.review = () => {
     const changed = $$(".rounds input.changed");
     if (!changed.length) { toast(L("ยังไม่มีวงเงินที่เปลี่ยน", "No amounts changed yet")); return; }
     const why = $("#why").value.trim();
-    if (!why) { toast(L("ระบุเหตุผลการปรับวงเงินก่อนบันทึก", "Enter a reason before saving")); $("#why").focus(); return; }
+    if (!why) { toastErr(L("ระบุเหตุผลการปรับวงเงินก่อนบันทึก", "Enter a reason before saving")); $("#why").focus(); return; }
     changed.forEach(inp => {
       const r = S.review[inp.dataset.i], k = inp.dataset.k, old = r[k], nv = Number(inp.value), rd = k === "r1" ? 2 : 3;
       const nm = Array.isArray(r.name) ? r.name : [r.name, r.name];
@@ -4415,7 +4475,7 @@ function bindReviewMode(r) {
   if (g) g.onclick = () => { const v = $("#gcmt-in").value.trim(); if (!v) { toast(L("พิมพ์ความเห็นก่อน", "Type a comment first")); return; } addComment(r, null, v); route(); };
   const ret = $("#rv-return");
   if (ret) ret.onclick = () => {
-    if (!openComments(r).length) { toast(L("ใส่ความเห็นอย่างน้อย 1 ข้อก่อนส่งกลับ เพื่อให้ผู้จัดทำรู้ว่าต้องแก้อะไร", "Add at least one comment first so the requester knows what to fix")); return; }
+    if (!openComments(r).length) { toastErr(L("ใส่ความเห็นอย่างน้อย 1 ข้อก่อนส่งกลับ เพื่อให้ผู้จัดทำรู้ว่าต้องแก้อะไร", "Add at least one comment first so the requester knows what to fix")); return; }
     const by = reviewBy(r);
     r.status = "returned"; r.updated = TODAY;
     audit(["ส่งคำขอกลับแก้ไข", "Returned a request for revision"], r.id + by);
@@ -4459,7 +4519,7 @@ REV_PANELS.queue = () => {
   const rows = S.requests.filter(r => ["plan", "committee", "returned"].includes(r.status));
   const step = st => S.workflow.find(w => (st === "plan" ? w.role === "plan" : st === "committee" ? w.cond === "amount" : w.role === "div")) || { sla: 0 };
   return `
-  <section class="panel"><header><h2>${L("คำขอที่อยู่ระหว่างพิจารณา", "Requests in review")}</h2><span class="sp"></span><span class="sub">${L("กำหนดเวลาจาก SLA ใน M10 · Workflow", "Due dates use the SLA in M10 · Workflow")}</span></header>
+  <section class="panel"><header><h2>${L("คำขอที่อยู่ระหว่างพิจารณา", "Requests in review")}</h2><span class="sp"></span><span class="sub">${L("กำหนดเวลาจาก SLA ใน M10 · ขั้นตอนงาน", "Due dates use the SLA in M10 · Workflow")}</span></header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("โครงการ", "Project")}</th><th>${L("หน่วยงาน", "Unit")}</th><th class="n">${L("วงเงิน (ลบ.)", "Amount (M)")}</th><th>${L("สถานะ", "Status")}</th><th class="n">${L("ความเห็นค้าง", "Open comments")}</th><th>${L("ครบกำหนด", "Due")}</th><th></th></tr></thead>
       <tbody>${rows.map(r => { const s = step(r.status), due = addDays(r.updated, s.sla || 0), late = daysUntil(due) < 0, mine = canReview(r);
         return `<tr><td class="mono">${r.id}</td><td>${esc(tx(r.name))}</td><td class="sub">${unitName(r.unit)}</td><td class="n">${mb(r.amount)}</td><td>${pill(r.status)}</td>
@@ -5257,7 +5317,7 @@ function renderChat() {
   const last = c.lastElementChild; if (last) last.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 function ask(text, qi) {
-  if (!agentOn("AG-06")) { toast(L("Executive Budget Assistant ถูกปิดใช้งาน เปิดได้ที่แท็บ AI Agents", "The Executive Budget Assistant is off. Turn it on in the AI agents tab.")); return; }
+  if (!agentOn("AG-06")) { toast(L("Executive Budget Assistant ถูกปิดใช้งาน เปิดได้ที่แท็บเอเจนต์ AI", "The Executive Budget Assistant is off. Turn it on in the AI agents tab.")); return; }
   if (qi == null) {
     if (!text.trim()) return;
     const t = text.toLowerCase();
@@ -5285,7 +5345,7 @@ const INTEL = {}, INTEL_BIND = {};
 const WI = { cut: 15, locks: null };
 const agentOn = id => { const a = (S.agents || []).find(x => x.id === id); return !a || a.on; };
 function intelTabsBar() {
-  const t = [["ask", L("ถาม AI", "Ask AI")], ["trends", L("แนวโน้มหลายปี", "Multi-year trends")], ["whatif", L("จำลองสถานการณ์", "What-if")], ["agents", L("AI Agents และการกำกับ", "AI agents and governance")],
+  const t = [["ask", L("ถาม AI", "Ask AI")], ["trends", L("แนวโน้มหลายปี", "Multi-year trends")], ["whatif", L("จำลองสถานการณ์", "What-if")], ["agents", L("เอเจนต์ AI และการกำกับ", "AI agents and governance")],
     ["anoms", `${L("ความผิดปกติการใช้จ่าย", "Spending anomalies")}${(() => { const n = (S.anoms || []).filter(a => a.status === "new").length; return n ? ` (${n})` : ""; })()}`], ["quality", L("คุณภาพเหตุผลคำขอ", "Justification quality")]];
   return `<div class="tabs" role="tablist">${t.map(([id, l]) => `<button class="tab ${id === INTEL_TAB ? "on" : ""}" type="button" role="tab" aria-selected="${id === INTEL_TAB}" data-itab="${id}">${l}</button>`).join("")}</div>`;
 }
@@ -5396,7 +5456,7 @@ INTEL.agents = () => {
     <div class="kpi"><span class="l">${L("ปฏิเสธเพราะเกินสิทธิ์ข้อมูล", "Declined beyond permissions")}</span><span class="v">${log.filter(x => !x.ok).length}</span></div>
     <div class="kpi"><span class="l">${L("เวลาตอบเฉลี่ย", "Average response time")}</span><span class="v">4.2<small>${L("วินาที", "s")}</small></span><span class="d sub">${L("ตัวอย่าง", "sample")}</span></div>
   </section>
-  <section class="panel"><header><h2>${L("AI Agents", "AI agents")}</h2><span class="sp"></span><span class="sub">${can ? L("ผู้บริหารเปิด/ปิด Agent ได้ในต้นแบบนี้", "Executives can switch agents on or off in this prototype") : L("สลับเป็นบทบาทผู้บริหารเพื่อเปิด/ปิด Agent", "Switch to the Executive role to turn agents on or off")}</span></header>
+  <section class="panel"><header><h2>${L("เอเจนต์ AI", "AI agents")}</h2><span class="sp"></span><span class="sub">${can ? L("ผู้บริหารเปิด/ปิดเอเจนต์ได้ในต้นแบบนี้", "Executives can switch agents on or off in this prototype") : L("สลับเป็นบทบาทผู้บริหารเพื่อเปิด/ปิดเอเจนต์", "Switch to the Executive role to turn agents on or off")}</span></header>
     <div class="tbl-wrap"><table><thead><tr><th class="c">${L("ใช้งาน", "On")}</th><th>Agent</th><th>${L("หน้าที่", "Role")}</th><th class="n">${L("ใช้งานเดือนนี้", "Uses this month")}</th><th>${L("ล่าสุด", "Last run")}</th></tr></thead>
       <tbody>${S.agents.map((a, i) => `<tr><td class="c">${sw("ag-" + i, a.on, !can)}</td><td><span class="mono sub">${a.id}</span> ${tx(a.name)}</td><td class="sub">${tx(a.what)}</td><td class="n">${fmt(a.uses + log.filter(x => x.agent === a.id).length)}</td><td class="sub">${last(a.id)}</td></tr>`).join("")}</tbody></table></div></section>
   <section class="panel"><header><h2>${L("บันทึกการทำงานของ AI", "AI activity log")}</h2><span class="sp"></span><span class="sub">${L("บันทึกทุกคำขอและคำตอบ เพื่อการตรวจสอบ", "Every request and answer is logged for audit")}</span></header>
@@ -5408,7 +5468,7 @@ INTEL.agents = () => {
 INTEL_BIND.agents = () => {
   S.agents.forEach((a, i) => { const el = $("#ag-" + i); if (el && !el.disabled) el.onchange = () => {
     a.on = el.checked; audit([a.on ? "เปิดใช้งาน AI Agent" : "ปิดใช้งาน AI Agent", a.on ? "Turned an AI agent on" : "Turned an AI agent off"], `${a.id} ${tx(a.name)}`); commit(); route();
-    toast(a.on ? L(`เปิด ${a.id} แล้ว`, `${a.id} is on`) : L(`ปิด ${a.id} แล้ว · ฟังก์ชันที่ใช้ Agent นี้จะไม่ทำงาน`, `${a.id} is off · features using it are disabled`));
+    toast(a.on ? L(`เปิด ${a.id} แล้ว`, `${a.id} is on`) : L(`ปิด ${a.id} แล้ว · ฟังก์ชันที่ใช้เอเจนต์นี้จะไม่ทำงาน`, `${a.id} is off · features using it are disabled`));
   }; });
 };
 
@@ -5424,7 +5484,7 @@ INTEL.anoms = () => {
     : a.kind === "vendor" ? `<tr><td>${esc(tx(a.vendor))}</td><td class="n">${a.recs[0][0]}</td></tr>`
     : a.recs.map(r => `<tr><td>${fdate(r[0])}</td><td class="n">${fmt(r[1])}</td></tr>`).join("");
   return `
-  ${on ? "" : `<div class="alert"><div class="ic" style="background:var(--warn-soft);color:var(--warn)">!</div><div><b>${L("Budget Monitoring Agent ปิดอยู่", "The Budget Monitoring Agent is off")}</b><p>${L("จะไม่มีการตรวจหาความผิดปกติใหม่จนกว่าจะเปิดในแท็บ AI Agents", "No new anomalies are flagged until it is switched on in the AI agents tab")}</p></div></div>`}
+  ${on ? "" : `<div class="alert"><div class="ic" style="background:var(--warn-soft);color:var(--warn)">!</div><div><b>${L("Budget Monitoring Agent ปิดอยู่", "The Budget Monitoring Agent is off")}</b><p>${L("จะไม่มีการตรวจหาความผิดปกติใหม่จนกว่าจะเปิดในแท็บเอเจนต์ AI", "No new anomalies are flagged until it is switched on in the AI agents tab")}</p></div></div>`}
   <section class="kpis" style="grid-template-columns:repeat(3,minmax(0,1fr))">
     <div class="kpi"><span class="l">${L("รายการผิดปกติรอตรวจ", "Anomalies to review")}</span><span class="v" style="color:var(--${A.some(a => a.status === "new") ? "warn" : "accent"})">${A.filter(a => a.status === "new").length}</span></div>
     <div class="kpi"><span class="l">${L("ความเสี่ยงสูง (≥ 70)", "High risk (≥ 70)")}</span><span class="v">${A.filter(a => a.risk >= 70 && a.status !== "explained").length}</span></div>
@@ -5897,7 +5957,7 @@ SUB.checks = () => {
   <section class="panel"><header><h2>${L("ผลตรวจรายคำขอ", "Checks by request")}</h2><span class="sp"></span>${blocked ? tag(`${blocked} ${L("รายการต้องแก้ก่อนส่ง", "must be fixed before sending")}`, "p-bad") : tag(L("พร้อมส่ง", "Ready to send"), "p-ok")}</header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("คำขอ", "Request")}</th><th>${L("รหัสงบประมาณ", "Budget code")}</th>${heads.map(h => `<th class="c">${h}</th>`).join("")}</tr></thead>
       <tbody>${res.map(x => `<tr><td><a href="#" data-req="${x.r.id}" class="mono">${x.r.id}</a> ${esc(tx(x.r.name))}<div class="sub">${mb(subAmt(x.r))} ${L("ลบ.", "M")}</div></td><td class="mono">${budgetCode(x.r)}</td>
-        ${x.c.map(c => `<td class="c" title="${esc(c.s === "ok" ? "" : c.bad)}"><span class="m ${c.s}" style="display:inline-grid">${c.s === "ok" ? "✓" : c.s === "no" ? "×" : "!"}</span>${c.s === "ok" ? "" : `<div class="sub" style="font-size:11.5px">${esc(c.bad)}</div>`}</td>`).join("")}</tr>`).join("") || `<tr><td colspan="9" class="sub">${L("ยังไม่มีคำขอที่ผ่านการเห็นชอบภายใน", "No internally approved requests yet")}</td></tr>`}</tbody></table></div></section>
+        ${x.c.map(c => `<td class="c" title="${esc(c.s === "ok" ? "" : c.bad)}"><span class="m ${c.s}" style="display:inline-grid">${c.s === "ok" ? "✓" : c.s === "no" ? "×" : "!"}</span>${c.s === "ok" ? "" : `<div class="sub" style="font-size:12px">${esc(c.bad)}</div>`}</td>`).join("")}</tr>`).join("") || `<tr><td colspan="9" class="sub">${L("ยังไม่มีคำขอที่ผ่านการเห็นชอบภายใน", "No internally approved requests yet")}</td></tr>`}</tbody></table></div></section>
   <section class="panel"><header><h2>${L("คำขอที่ยังไม่เข้าชุดส่ง", "Requests not yet in the package")}</h2></header>
     <div class="tbl-wrap"><table><tbody>${others.map(r => `<tr><td><a href="#" data-req="${r.id}" class="mono">${r.id}</a> ${esc(tx(r.name))}</td><td>${pill(r.status)}</td><td class="n">${mb(r.amount)} ${L("ลบ.", "M")}</td></tr>`).join("") || `<tr><td class="sub">${L("ทุกคำขออยู่ในชุดส่งแล้ว", "Every request is in the package")}</td></tr>`}</tbody></table></div></section>`;
 };
@@ -6841,7 +6901,7 @@ let PERF_TAB = "kpis", CHAIN_P = null;
 const PERF_TABS = [
   { id: "kpis", label: ["ผลตัวชี้วัด", "KPI results"] },
   { id: "chain", label: ["ห่วงโซ่ผลลัพธ์", "Results chain"] },
-  { id: "scorecard", label: ["Scorecard", "Scorecard"] },
+  { id: "scorecard", label: ["บัตรคะแนน", "Scorecard"] },
   { id: "report", label: ["รายงานประเมินผล", "Evaluation report"] },
 ];
 const achv = (r, t) => (r == null || !t ? null : r / t * 100);
@@ -6926,7 +6986,7 @@ PERF.scorecard = () => {
       <span>A ≥ 90 · B ≥ 75 · C ≥ 60 · D &lt; 60</span>
       <span class="sub">${L("ผลลัพธ์ (ตัวชี้วัด) แสดงประกอบ ไม่นำมาคิดคะแนน เพราะเกิดจากหลายโครงการร่วมกัน", "Outcomes (KPIs) are shown for context but not scored, since several projects share them")}</span></div></section>
   </div>
-  <section class="panel"><header><h2>${L("Scorecard รายโครงการ", "Project scorecard")}</h2></header>
+  <section class="panel"><header><h2>${L("บัตรคะแนนรายโครงการ", "Project scorecard")}</h2></header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("โครงการ", "Project")}</th><th class="n">${L("ใช้เงิน (ลบ.)", "Spent (M)")}</th><th class="n">${L("% ตามแผน", "% of plan")}</th><th>${L("ผลผลิต", "Output")}</th><th class="n">${L("% เป้า", "% target")}</th><th class="n">${L("ต้นทุนต่อหน่วย (บาท)", "Cost per unit (baht)")}</th><th>${L("ผลลัพธ์", "Outcome")}</th><th class="c">${L("ระดับ", "Grade")}</th></tr></thead>
       <tbody>${rows.map(({ p, o, s }) => `<tr><td>${esc(tx(p.name))}<div class="sub">${unitName(p.unit)}</div></td><td class="n">${fmt(p.actual, 1)}</td><td class="n">${fmt(s.spend, 0)}%</td>
         <td class="sub">${esc(tx(o.name))}: ${fmtv(o.result)}/${fmtv(o.target)} ${esc(tx(o.unit))}</td><td class="n">${s.out == null ? "—" : fmt(s.out, 0) + "%"}</td>
@@ -7062,7 +7122,7 @@ function bindEvaluate() {
   if (dn) dn.onclick = () => {
     grab();
     if (e.ratings.some(r => !r)) { toast(L("ให้คะแนนให้ครบทั้ง 5 ด้านก่อน", "Score all five criteria first")); return; }
-    if (!tx(e.findings).trim() || !e.lessons.length) { toast(L("ใส่ข้อค้นพบและบทเรียนอย่างน้อย 1 ข้อ", "Add findings and at least one lesson")); return; }
+    if (!tx(e.findings).trim() || !e.lessons.length) { toastErr(L("ใส่ข้อค้นพบและบทเรียนอย่างน้อย 1 ข้อ", "Add findings and at least one lesson")); return; }
     e.status = "done"; e.t = nowIso();
     const unit = evProj(e).unit;
     e.lessons.forEach((l, i) => S.lessons.push({ id: `${e.id}-L${i + 1}`, eval: e.id, unit, text: l, t: e.t }));
@@ -7355,7 +7415,7 @@ function waterfallSvg(steps, o = {}) {
     g += `<rect x="${x.toFixed(1)}" y="${top.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(2, bot - top).toFixed(1)}" rx="3" fill="${fill}"><title>${esc(s.label)} ${fmt(s.v, 1)}</title></rect>`;
     if (i < steps.length - 1) g += `<line x1="${(x + bw).toFixed(1)}" x2="${(x + gap).toFixed(1)}" y1="${y(run).toFixed(1)}" y2="${y(run).toFixed(1)}" stroke="var(--line-2)" stroke-dasharray="3 3"/>`;
     g += `<text x="${(x + bw / 2).toFixed(1)}" y="${(top - 6).toFixed(1)}" text-anchor="middle" style="font-size:12px;font-weight:600;fill:var(--ink)">${s.kind === "delta" ? (s.v < 0 ? "−" : "+") + fmt(Math.abs(s.v), 1) : fmt(s.v, 1)}</text>`;
-    g += `<text x="${(x + bw / 2).toFixed(1)}" y="${H - 14}" text-anchor="middle" style="font-size:11.5px;fill:var(--muted)">${esc(s.label)}</text>`;
+    g += `<text x="${(x + bw / 2).toFixed(1)}" y="${H - 14}" text-anchor="middle" style="font-size:12px;fill:var(--muted)">${esc(s.label)}</text>`;
   });
   return `<svg class="wfall" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(o.aria || "")}"><line x1="${pad}" x2="${W - pad}" y1="${y(0)}" y2="${y(0)}" stroke="var(--line)"/>${g}</svg>`;
 }
@@ -7404,7 +7464,7 @@ const ADMIN_TABS = [
   { id: "fiscal", roles: ["admin"], label: ["ปีงบประมาณและปฏิทิน", "Fiscal years & calendar"] },
   { id: "structure", roles: ["admin"], label: ["โครงสร้างงบประมาณ", "Budget structure"] },
   { id: "users", roles: ["admin"], label: ["ผู้ใช้และสิทธิ์", "Users & roles"] },
-  { id: "workflow", roles: ["admin"], label: ["Workflow", "Workflow"] },
+  { id: "workflow", roles: ["admin"], label: ["ขั้นตอนงาน", "Workflow"] },
   { id: "rules", roles: ["admin"], label: ["กฎทางธุรกิจ", "Business rules"] },
   { id: "audit", roles: ["admin", "audit"], label: ["บันทึกการใช้งาน", "Audit log"] },
   { id: "integrations", roles: ["admin", "fin"], label: ["การเชื่อมต่อระบบ", "Integrations"] },
@@ -7543,8 +7603,8 @@ ADMIN.workflow = () => `
         ${w.cond === "amount" ? `<input type="number" min="0" step="1" data-w="${i}" data-k="amountM" value="${(w.amount || 0) / 1e6}" style="width:80px" aria-label="${L("วงเงินขั้นต่ำ ล้านบาท", "Minimum amount, million baht")}"><span class="sub">${L("ลบ.", "M")}</span>` : ""}</div>
       <div class="acts"><button class="btn ghost" type="button" data-mv="${i}" data-d="-1" ${i === 0 ? "disabled" : ""} aria-label="${L("เลื่อนขึ้น", "Move up")}">↑</button><button class="btn ghost" type="button" data-mv="${i}" data-d="1" ${i === S.workflow.length - 1 ? "disabled" : ""} aria-label="${L("เลื่อนลง", "Move down")}">↓</button><button class="btn ghost danger" type="button" data-rm="${i}" ${S.workflow.length < 3 ? "disabled" : ""} aria-label="${L("ลบขั้นตอน", "Remove step")}">×</button></div>
     </div>`).join("")}</div>
-    <div class="row" style="margin-top:14px"><button class="btn" type="button" id="w-add">+ ${L("เพิ่มขั้นตอน", "Add step")}</button><button class="btn primary" type="button" id="w-save">${L("บันทึก Workflow", "Save workflow")}</button></div></div></section>
-  <section class="panel"><header><h2>${L("ความสามารถของ Workflow", "Workflow features")}</h2></header>
+    <div class="row" style="margin-top:14px"><button class="btn" type="button" id="w-add">+ ${L("เพิ่มขั้นตอน", "Add step")}</button><button class="btn primary" type="button" id="w-save">${L("บันทึกขั้นตอนงาน", "Save workflow")}</button></div></div></section>
+  <section class="panel"><header><h2>${L("ความสามารถของขั้นตอนงาน", "Workflow features")}</h2></header>
     <div class="body chips">${[["Multi-Level Approval", "Multi-Level Approval"], ["มอบอำนาจชั่วคราว", "Delegation of Authority"], ["ส่งกลับแก้ไข", "Return for Revision"], ["Version Control", "Version Control"], ["แจ้งเตือนตามกำหนดเวลา", "Deadline reminders"], ["Audit Trail", "Audit Trail"]].map(c => `<span class="chip">${tx(c)}</span>`).join("")}</div></section>`;
 BIND_ADMIN.workflow = () => {
   $$("[data-w]").forEach(el => (el.onchange = () => {
@@ -7555,7 +7615,7 @@ BIND_ADMIN.workflow = () => {
   $$("[data-mv]").forEach(b => (b.onclick = () => { const i = Number(b.dataset.mv), j = i + Number(b.dataset.d); [S.workflow[i], S.workflow[j]] = [S.workflow[j], S.workflow[i]]; route(); }));
   $$("[data-rm]").forEach(b => (b.onclick = () => { S.workflow.splice(Number(b.dataset.rm), 1); route(); }));
   $("#w-add").onclick = () => { S.workflow.push({ id: "w" + Date.now(), name: L("ขั้นตอนใหม่", "New step"), role: "plan", sla: 5, cond: "always" }); route(); };
-  $("#w-save").onclick = () => { audit(["แก้ไข Workflow คำของบประมาณ", "Changed the request workflow"], `${S.workflow.length} ${L("ขั้นตอน", "steps")}`); commit(); toast(L("บันทึก Workflow แล้ว · ใช้กับคำขอทันที", "Workflow saved · applies to requests now")); };
+  $("#w-save").onclick = () => { audit(["แก้ไขขั้นตอนงานคำของบประมาณ", "Changed the request workflow"], `${S.workflow.length} ${L("ขั้นตอน", "steps")}`); commit(); toast(L("บันทึกขั้นตอนงานแล้ว · ใช้กับคำขอทันที", "Workflow saved · applies to requests now")); };
 };
 
 ADMIN.rules = () => `
@@ -7657,7 +7717,7 @@ ADMIN.notify = () => {
   </div>
   <section class="panel"><header><h2>${L("SLA การแจ้งเตือนล่วงหน้า และการยกระดับ", "SLA reminders and escalation")}</h2><span class="sp"></span>
       <button class="btn" type="button" id="sla-run">${L("ตรวจและส่งแจ้งเตือนตอนนี้", "Check and notify now")}</button></header>
-    <div class="tbl-wrap"><table><thead><tr><th>${L("ขั้นตอน (M10 · Workflow)", "Step (M10 · Workflow)")}</th><th class="n">${L("SLA (วัน)", "SLA (days)")}</th><th class="n">${L("เตือนก่อน (วัน)", "Remind before (days)")}</th><th>${L("ยกระดับถึง", "Escalate to")}</th><th class="n">${L("หลังเกินกำหนด (วัน)", "After overdue (days)")}</th><th class="n">${L("ใกล้ครบ / เกินกำหนด", "Due soon / overdue")}</th></tr></thead>
+    <div class="tbl-wrap"><table><thead><tr><th>${L("ขั้นตอน (M10 · ขั้นตอนงาน)", "Step (M10 · Workflow)")}</th><th class="n">${L("SLA (วัน)", "SLA (days)")}</th><th class="n">${L("เตือนก่อน (วัน)", "Remind before (days)")}</th><th>${L("ยกระดับถึง", "Escalate to")}</th><th class="n">${L("หลังเกินกำหนด (วัน)", "After overdue (days)")}</th><th class="n">${L("ใกล้ครบ / เกินกำหนด", "Due soon / overdue")}</th></tr></thead>
       <tbody>${S.workflow.filter(w => w.sla).map(w => { const e = S.escal[w.id] || { remind: 1, to: "exec", after: 1 }, its = items.filter(x => x.w.id === w.id);
         return `<tr><td>${tx(w.name)}<div class="sub">${tx(ROLES[w.role])}</div></td><td class="n"><input type="number" min="1" max="60" data-wsla="${w.id}" value="${w.sla}" style="width:70px" aria-label="SLA"></td>
           <td class="n"><input type="number" min="0" max="30" data-esc="${w.id}|remind" value="${e.remind}" style="width:70px" aria-label="${L("เตือนก่อน", "Remind before")}"></td>
@@ -7764,7 +7824,7 @@ const DEMO = [
     say: ["ถามด้วยภาษาธรรมชาติ ได้คำตอบพร้อมแหล่งอ้างอิง และจำลองการลดวงเงินโดยล็อกโครงการสำคัญ AI เสนอเท่านั้น", "Ask in plain language and get sourced answers; simulate a cut while locking key projects. AI only suggests."],
     do: ["คลิกคำถามตัวอย่าง → แท็บจำลองสถานการณ์ เลื่อนตัวเลข", "Click a sample question → What-if, move the slider"] },
   { t: "14:00", role: "admin", link: "admin-notify", title: ["M10 ปรับได้โดยไม่แก้โค้ด และปิดท้าย", "M10 Configure without code, and close"],
-    say: ["ข้อความแจ้งเตือน SLA กฎ และ Workflow ปรับได้โดยผู้ดูแลระบบ มีผลทันทีทุกโมดูล และทุกการกระทำมี Audit Trail", "Notifications, SLAs, rules and workflow are changed by the administrator, apply everywhere at once, and every action has an audit trail."],
+    say: ["ข้อความแจ้งเตือน SLA กฎ และขั้นตอนงานปรับได้โดยผู้ดูแลระบบ มีผลทันทีทุกโมดูล และทุกการกระทำมี Audit Trail", "Notifications, SLAs, rules and workflow are changed by the administrator, apply everywhere at once, and every action has an audit trail."],
     do: ["แก้ข้อความแม่แบบดูตัวอย่าง → “ตรวจและส่งแจ้งเตือนตอนนี้” → แท็บบันทึกการใช้งาน", "Edit a template and watch the preview → Check and notify now → Audit log tab"] },
   // Extension (round 17): Fisko Procurement and Fisko Finance, about 10 minutes, same sample organisation.
   { t: "15:00", role: "div", link: "prc-plan", title: ["ขอซื้อขอจ้าง และระบบตรวจการแตกซื้อ", "Raising requisitions and the split-purchase check"],
@@ -7794,8 +7854,8 @@ const DEMO = [
   { t: "25:00", role: "exec", link: "prc-ai", title: ["ผู้ช่วย AI และข้อมูลเปิด OCDS", "AI assistant and OCDS open data"],
     say: ["AI อ่านและร่าง คนตัดสิน ตอบคำถามจากตัวชี้วัดที่นิยามไว้พร้อมแหล่งที่มา และปฏิเสธการให้คะแนนผู้ยื่นหรือเลือกผู้ขาย ข้อมูลที่ประกาศแล้วส่งออกเป็นรูปแบบ OCDS", "AI reads and drafts and a person decides. It answers from the defined KPIs with the source, and refuses to score bidders or pick a supplier. Published data exports in the OCDS format."],
     do: ["ถาม “มีผู้ยื่นรายเดียวกี่ส่วน” → ถาม “จัดอันดับผู้ยื่น” เพื่อดูการปฏิเสธ → แท็บส่งออก OCDS “สร้าง JSON”", "Ask how often there is a single bidder → ask it to rank the bidders to see the refusal → OCDS export tab, Build JSON"] },
-  { t: "26:30", role: "proc", link: "prc-agents", title: ["Agent เตรียมแฟ้ม: วางแผน เรียกเครื่องมือ รอคนอนุมัติ", "Case Copilot: plans, calls tools, waits for a person"],
-    say: ["Agent รับเป้าหมาย “เตรียมแฟ้มให้พร้อมประกาศ” แตกเป็นขั้น เรียกเครื่องมือจากทะเบียน และหยุดให้คนอนุมัติทุกขั้นที่เขียนข้อมูล ไม่มีปุ่มอนุมัติทั้งหมด งานที่เป็นของคน เช่น การแจ้งผลประโยชน์ทับซ้อน Agent ทำแทนไม่ได้", "The agent takes the goal “get the case ready for the notice”, breaks it into steps, calls tools from the register and stops for a person at every step that writes data. There is no approve-all, and human duties such as conflict declarations stay with people."],
+  { t: "26:30", role: "proc", link: "prc-agents", title: ["เอเจนต์เตรียมแฟ้ม: วางแผน เรียกเครื่องมือ รอคนอนุมัติ", "Case Copilot: plans, calls tools, waits for a person"],
+    say: ["เอเจนต์รับเป้าหมาย “เตรียมแฟ้มให้พร้อมประกาศ” แตกเป็นขั้น เรียกเครื่องมือจากทะเบียน และหยุดให้คนอนุมัติทุกขั้นที่เขียนข้อมูล ไม่มีปุ่มอนุมัติทั้งหมด งานที่เป็นของคน เช่น การแจ้งผลประโยชน์ทับซ้อนเอเจนต์ทำแทนไม่ได้", "The agent takes the goal “get the case ready for the notice”, breaks it into steps, calls tools from the register and stops for a person at every step that writes data. There is no approve-all, and human duties such as conflict declarations stay with people."],
     do: [`เลือก PC-2570-006 → “เริ่ม” → อ่านแต่ละขั้น กด “อนุมัติขั้นนี้” ทีละขั้น ใส่เลขที่คำสั่งเมื่อถึงขั้นคณะกรรมการ → ชี้ทะเบียนเครื่องมือและสิ่งที่ไม่มีในทะเบียนด้านล่าง`, `Choose PC-2570-006 → Start → read each step and approve it one at a time, typing the order number at the committee step → point at the tool register and what is not in it`] },
   // Extension 2 (round 35): the Budget cycle in depth (rounds 26 to 34), about 14 minutes, same sample organisation.
   { t: "28:00", role: "div", link: "home", title: ["ผู้ช่วย AI ทำงานร่วมในทุกหน้า", "AI co-work on every page"],
@@ -7828,8 +7888,8 @@ const DEMO = [
   { t: "37:00", role: "div", link: "perf-quarter", title: ["B9 รายงานรายไตรมาส", "B9 Quarterly reports"],
     say: ["รายงานผลภายใน 15 วันหลังสิ้นไตรมาส และรายงานประจำปีภายใน 45 วัน พร้อมปัญหา แนวทางแก้ และหลักฐานที่ผู้ตรวจรับรอง ระบบบอกใครยังไม่ส่ง", "Results are due 15 days after each quarter and the annual report 45 days after the year, with problems, fixes and evidence the auditor certifies. The system shows who hasn't reported."],
     do: ["กรอกผลทุกรายการ → “ใช้รูปตัวอย่าง” → “ส่งรายงาน” → เปลี่ยนเป็นกองแผน “รับรายงาน” → ชี้แท็บต้นทุนต่อผลผลิต และเผยแพร่", "Enter every result → Use a sample photo → Send report → switch to Planning, Accept → point at the Cost per output and Public page tabs"] },
-  { t: "38:00", role: "plan", link: "intel-bagents", title: ["B11 Agent งบประมาณ", "B11 Budget agents"],
-    say: ["Agent วางแผนเป็นขั้น อ่านข้อมูลจริง และหยุดให้คนอนุมัติทุกขั้นที่เปลี่ยนข้อมูลหรือแจ้งผู้อื่น เช่น เขียนวงเงินรอบ 2 หรือยื่นคำขอโอน ไม่มีการอนุมัติคำขอหรือการโอนแทนคน", "Agents plan steps, read real data and stop for a person at every step that changes data or notifies people, such as writing round-2 amounts or filing a transfer. They never approve requests or transfers."],
+  { t: "38:00", role: "plan", link: "intel-bagents", title: ["B11 เอเจนต์งบประมาณ", "B11 Budget agents"],
+    say: ["เอเจนต์วางแผนเป็นขั้น อ่านข้อมูลจริง และหยุดให้คนอนุมัติทุกขั้นที่เปลี่ยนข้อมูลหรือแจ้งผู้อื่น เช่น เขียนวงเงินรอบ 2 หรือยื่นคำขอโอน ไม่มีการอนุมัติคำขอหรือการโอนแทนคน", "Agents plan steps, read real data and stop for a person at every step that changes data or notifies people, such as writing round-2 amounts or filing a transfer. They never approve requests or transfers."],
     do: ["“เริ่มงาน” ที่ AG-03 → อ่านแต่ละขั้น → “อนุมัติขั้นนี้” ที่ขั้นบันทึกวงเงินรอบ 2 → ลอง AG-17 เตือนกองที่ยังไม่ส่งรายงาน", "Start AG-03 → read each step → Approve this step at the round-2 write → try AG-17 to remind units that haven't reported"] },
   { t: "39:00", role: "exec", link: "intel-bwhatif", title: ["B10 พยากรณ์และจำลอง 4 สถานการณ์", "B10 Forecast and four what-ifs"],
     say: ["พยากรณ์เบิกจ่ายสิ้นปีเป็นช่วง เงินที่จะต้องกันเหลื่อมปี และภาระปีหน้า จำลองการลดกรอบ การเลื่อนงบลงทุน การโอนเงินเหลือจ่าย และการตัดของกรรมาธิการ โดยไม่แก้ข้อมูลจริง", "Year-end spending as a range, likely carry-over and next year's load; what-ifs for a ceiling cut, an investment slip, moving savings and a committee cut, without changing real data."],
@@ -8354,7 +8414,7 @@ BIND.procurement = () => {
       const cs = caseOf($("#ct-req").value), rq = famReq(cs.reqn), insp = $$('input[name="ct-insp"]:checked').map(x => x.value), amount = Math.round(Number($("#ct-amt").value) * 1e6 / 1e3) * 1e3;
       if (caseState(cs) !== 8) { toast(L("แฟ้มยังไม่ถึงขั้นทำสัญญา", "The case isn't at the contracting step")); return; }
       if (!(amount > 0) || amount > cs.award.price || amount > rq.amount) { toast(L("วงเงินสัญญาต้องไม่เกินราคาที่ประกาศและวงเงินในใบขอซื้อ", "The contract amount can't exceed the announced price or the requisition amount")); return; }
-      if (insp.length < (amount <= S.pcfg.singleInspectorMax ? 1 : 2)) { toast(L("ต้องมีกรรมการตรวจรับอย่างน้อย 2 คน", "Choose at least 2 committee members")); return; }
+      if (insp.length < (amount <= S.pcfg.singleInspectorMax ? 1 : 2)) { toastErr(L("ต้องมีกรรมการตรวจรับอย่างน้อย 2 คน", "Choose at least 2 committee members")); return; }
       if (!sodCheck("SD-02", [me().id], insp, `${rq.id}`)) return;
       if (!sodCheck("SD-06", insp, caseJudges(cs), `${cs.id}`)) return;
       if (blBlocked(cs, $("#ct-vendor").value.trim())) { toast(L("คู่สัญญาอยู่ในรายชื่อผู้ทิ้งงาน (R-17) ทำสัญญาไม่ได้", "The supplier is on the abandoned-work list (R-17); no contract")); return; }
@@ -8371,7 +8431,7 @@ BIND.procurement = () => {
   }
   $$("[data-ccsave]").forEach(b => (b.onclick = () => {
     const c = famCon(b.dataset.ccsave), insp = $$(`input[name="cc-${c.id}"]:checked`).map(x => x.value);
-    if (insp.length < (c.amount <= S.pcfg.singleInspectorMax ? 1 : 2)) { toast(L("ต้องมีกรรมการตรวจรับอย่างน้อย 2 คน", "Choose at least 2 committee members")); return; }
+    if (insp.length < (c.amount <= S.pcfg.singleInspectorMax ? 1 : 2)) { toastErr(L("ต้องมีกรรมการตรวจรับอย่างน้อย 2 คน", "Choose at least 2 committee members")); return; }
     if (!sodCheck("SD-02", [me().id], insp, c.id)) return;
     const cs = caseByPlan(c.plan); if (cs && !sodCheck("SD-06", insp, caseJudges(cs), c.id)) return;
     c.inspectors = insp; c.phases.filter(ph => !phaseAccepted(ph)).forEach(ph => (ph.need = Math.min(2, insp.length))); audit(["เปลี่ยนกรรมการตรวจรับ", "Changed the acceptance committee"], c.id); commit(); route(); toast(L("บันทึกกรรมการแล้ว", "Committee saved"));
@@ -8692,9 +8752,9 @@ function bindCases() {
   const gc = $("#case-gocon"); if (gc) gc.onclick = () => { CON_OPEN = c.contract; procSet("contracts"); route(); };
   const fl = $("#case-fail"); if (fl) fl.onclick = () => {
     const why = ($("#case-reason").value || "").trim();
-    if (why.length < 5) { toast(L("ระบุเหตุผลอย่างน้อย 5 ตัวอักษร", "Give a reason of at least 5 characters")); return; } caseFail(c, why); done(L("กลับไปขั้นจัดทำ TOR เพื่อดำเนินการใหม่", "Back to specifying to rerun"));
+    if (why.length < 5) { toastErr(L("ระบุเหตุผลอย่างน้อย 5 ตัวอักษร", "Give a reason of at least 5 characters")); return; } caseFail(c, why); done(L("กลับไปขั้นจัดทำ TOR เพื่อดำเนินการใหม่", "Back to specifying to rerun"));
   };
-  const cc = $("#case-cancel"); if (cc) cc.onclick = () => { const why = ($("#case-reason").value || "").trim(); if (why.length < 5) { toast(L("ระบุเหตุผลอย่างน้อย 5 ตัวอักษร", "Give a reason of at least 5 characters")); return; } caseCancel(c, why); CASE_OPEN = null; done(L("ยกเลิกแล้ว วงเงินที่จองถูกคืน", "Cancelled, the reserved amount is released")); };
+  const cc = $("#case-cancel"); if (cc) cc.onclick = () => { const why = ($("#case-reason").value || "").trim(); if (why.length < 5) { toastErr(L("ระบุเหตุผลอย่างน้อย 5 ตัวอักษร", "Give a reason of at least 5 characters")); return; } caseCancel(c, why); CASE_OPEN = null; done(L("ยกเลิกแล้ว วงเงินที่จองถูกคืน", "Cancelled, the reserved amount is released")); };
   const mf = $("#mt-form");
   if (mf) mf.onsubmit = e => {
     e.preventDefault();
@@ -8702,7 +8762,7 @@ function bindCases() {
     const method = $("#mt-method").value, why = $("#mt-why").value.trim(), rec = recommendMethod(c), rp = c.ref ? c.ref.amount : famPlan(c.plan).est;
     if (method === "specific" && !c.special && rp > S.pcfg.specificMax) { toast(L(`วงเงินสูงกว่า ${fmt(S.pcfg.specificMax)} บาท ใช้วิธีเฉพาะเจาะจงได้เฉพาะมีเหตุพิเศษ`, `Above ${fmt(S.pcfg.specificMax)} baht the specific method needs a special reason`)); return; }
     const differs = method !== rec.method, needHead = differs || !!c.special;
-    if (needHead && why.length < 10) { toast(L("ต้องมีเหตุผลอย่างน้อย 10 ตัวอักษรเมื่อต่างจากคำแนะนำหรือมีเหตุพิเศษ", "Give a reason of at least 10 characters when it differs from the advice or is a special case")); return; }
+    if (needHead && why.length < 10) { toastErr(L("ต้องมีเหตุผลอย่างน้อย 10 ตัวอักษรเมื่อต่างจากคำแนะนำหรือมีเหตุพิเศษ", "Give a reason of at least 10 characters when it differs from the advice or is a special case")); return; }
     c.method = method; c.methodWhy = [why || tx(rec.why), why || tx(rec.why)]; famPlan(c.plan).method = method;
     c.methodApproval = needHead ? { status: "pending", t: nowIso(), by: me().id } : { status: "auto", t: nowIso(), by: me().id };
     audit(["เลือกวิธีจัดซื้อ", "Chose the procurement method"], `${c.id} ${tx(PMETHOD[method])}${needHead ? " · รอหัวหน้าพัสดุ" : ""}`); caseLog(c, "method", `${tx(PMETHOD[method])}${needHead ? " (" + L("รอหัวหน้าพัสดุ", "waiting for the head") + ")" : ""}`);
@@ -8711,7 +8771,7 @@ function bindCases() {
   };
   const head = ok => {
     if (c.methodApproval && c.methodApproval.by === me().id) { toast(L("ผู้เลือกวิธีอนุมัติเองไม่ได้", "Whoever chose the method can't approve it")); return; }
-    const nowhy = $("#mt-nowhy") ? $("#mt-nowhy").value.trim() : ""; if (!ok && nowhy.length < 10) { toast(L("ระบุเหตุผลที่ไม่อนุมัติอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return; }
+    const nowhy = $("#mt-nowhy") ? $("#mt-nowhy").value.trim() : ""; if (!ok && nowhy.length < 10) { toastErr(L("ระบุเหตุผลที่ไม่อนุมัติอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return; }
     if (!ok) c.methodNo = nowhy; return headDo(ok); };
   const headDo = ok => { c.methodApproval = { status: ok ? "approved" : "none", t: nowIso(), by: me().id }; if (!ok) { c.method = null; c.methodWhy = null; } audit([ok ? "อนุมัติวิธีจัดซื้อ" : "ไม่อนุมัติวิธีจัดซื้อ", ok ? "Approved a method" : "Rejected a method"], c.id); caseLog(c, ok ? "method_ok" : "method_no"); notify(["proc"], [`แฟ้ม ${c.id} ${ok ? "ได้รับอนุมัติวิธีแล้ว" : "ไม่ได้รับอนุมัติวิธี ต้องเลือกใหม่"}`, `Case ${c.id}: the method was ${ok ? "approved" : "rejected, choose again"}`], `case:${c.id}`); done(ok ? L("อนุมัติแล้ว", "Approved") : L("ไม่อนุมัติ", "Rejected")); };
   const mo = $("#mt-ok"); if (mo) mo.onclick = () => head(true);
@@ -8720,7 +8780,7 @@ function bindCases() {
   if (rf) rf.onsubmit = e => {
     e.preventDefault();
     const amount = Math.round(Number($("#ref-amt").value)), basis = $$('input[name="ref-b"]:checked').map(x => x.value);
-    if (!(amount > 0) || !basis.length) { toast(L("ใส่ราคากลางและเลือกแหล่งอ้างอิงอย่างน้อย 1 แหล่ง", "Enter the price and choose at least one basis")); return; }
+    if (!(amount > 0) || !basis.length) { toastErr(L("ใส่ราคากลางและเลือกแหล่งอ้างอิงอย่างน้อย 1 แหล่ง", "Enter the price and choose at least one basis")); return; }
     c.ref = { amount, basis, note: $("#ref-note").value.trim(), by: me().id, t: nowIso() };
     audit(["บันทึกราคากลาง", "Recorded a reference price"], `${c.id} ${fmt(amount)}`); caseLog(c, "ref", `${fmt(amount)} ${L("บาท", "baht")}`); done(L("บันทึกราคากลางแล้ว", "Reference price saved"));
   };
@@ -8773,10 +8833,10 @@ function bindCases() {
   const an = $("#ap-none"); if (an) an.onclick = () => { c.appealElapsed = true; caseLog(c, "appeal_elapsed", fdate(c.award.appealEnd)); done(L("พ้นกำหนดอุทธรณ์แล้ว", "The appeal period is over")); };
   const asim = $("#ap-sim"); if (asim) asim.onclick = () => { const w = $("#ap-who"); if (w.tagName === "SELECT") w.selectedIndex = 0; else w.value = L("บริษัท ตัวอย่างผู้อุทธรณ์ จำกัด", "Sample Appellant Co., Ltd."); $("#ap-gr").value = L("เห็นว่าคะแนนด้านคุณภาพไม่เป็นไปตามเกณฑ์ที่ประกาศ", "The quality scores don't follow the announced criteria"); $("#ap-gr").focus(); toast(L("เติมค่าจำลองแล้ว ตรวจก่อนบันทึก", "Simulated values filled in; check them before saving")); };
   const apf = $("#ap-form"); if (apf) apf.onsubmit = e => { e.preventDefault(); const who = $("#ap-who").value.trim(), gr = $("#ap-gr").value.trim(), date = $("#ap-date").value;
-    if (!who || gr.length < 5) { toast(L("ระบุผู้อุทธรณ์และประเด็น", "Name the appellant and the grounds")); return; }
+    if (!who || gr.length < 5) { toastErr(L("ระบุผู้อุทธรณ์และประเด็น", "Name the appellant and the grounds")); return; }
     c.appeal = { status: "open", t: nowIso(), who, grounds: gr, date, by: me().id }; audit(["มีการอุทธรณ์ผลการพิจารณา", "An appeal was filed"], `${c.id} ${who}`); caseLog(c, "appeal_filed", `${who} · ${gr}`);
     notify(["prochead"], [`แฟ้ม ${c.id} มีการอุทธรณ์`, `Case ${c.id} has an appeal`], `case:${c.id}`); done(L("บันทึกการอุทธรณ์แล้ว ห้ามทำสัญญาจนกว่าจะมีผล", "Appeal recorded; no contract until it is decided")); };
-  const apWhy = () => { const w = $("#ap-why") ? $("#ap-why").value.trim() : ""; if (w.length < 10) { toast(L("ระบุเหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return null; } return w; };
+  const apWhy = () => { const w = $("#ap-why") ? $("#ap-why").value.trim() : ""; if (w.length < 10) { toastErr(L("ระบุเหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return null; } return w; };
   const ad = $("#ap-dismiss"); if (ad) ad.onclick = () => { const w = apWhy(); if (!w) return; c.appeal.status = "dismissed"; c.appeal.why = w; c.appealElapsed = true; audit(["ยกอุทธรณ์", "Dismissed an appeal"], `${c.id} · ${w}`); caseLog(c, "appeal_dismissed", w); done(L("ยกอุทธรณ์แล้ว", "Appeal dismissed")); };
   const au = $("#ap-uphold"); if (au) au.onclick = () => { const w = apWhy(); if (!w) return; c.appeal.status = "upheld"; c.appeal.why = w; const aw = c.award; c.award = null; c.appealElapsed = false; setState(c, 6, "appeal_upheld", `${aw ? fmt(aw.price) : ""} · ${w}`); audit(["รับอุทธรณ์", "Upheld an appeal"], `${c.id} · ${w}`); done(L("รับอุทธรณ์ กลับไปพิจารณาผลใหม่", "Upheld; back to evaluation")); };
   CASE_BINDS.forEach(f => f(c, done));
@@ -8959,7 +9019,7 @@ PROC.tor = () => {
 function bindTor() {
   const done = m => { commit(); renderShell(); route(); if (m) toast(m); };
   $$("[data-toropen]").forEach(b => (b.onclick = () => { TOR_OPEN = TOR_OPEN === b.dataset.toropen ? null : b.dataset.toropen; route(); }));
-  const f = $("#tor-new"); if (f) f.onsubmit = e => { e.preventDefault(); const t = S.torLib.find(x => x.id === TOR_OPEN), why = $("#tor-why").value.trim(); if (why.length < 5) { toast(L("ระบุเหตุผลที่แก้", "Say why it changed")); return; }
+  const f = $("#tor-new"); if (f) f.onsubmit = e => { e.preventDefault(); const t = S.torLib.find(x => x.id === TOR_OPEN), why = $("#tor-why").value.trim(); if (why.length < 5) { toastErr(L("ระบุเหตุผลที่แก้", "Say why it changed")); return; }
     const v = Math.max(...t.versions.map(x => x.v)) + 1; t.versions.push({ v, text: $("#tor-text").value, status: "draft", by: me().id, t: nowIso(), why, appr: null });
     audit(["เสนอแม่แบบ TOR ฉบับใหม่", "Proposed a new TOR template version"], `${t.id} v${v}`); notify(["prochead"], [`แม่แบบ ${t.id} ฉบับ v${v} รออนุมัติ`, `Template ${t.id} v${v} needs approval`], "prc-tor"); done(L("ส่งให้หัวหน้าพัสดุแล้ว", "Sent to the head")); };
   $$("[data-torok]").forEach(b => (b.onclick = () => { const [id, v] = b.dataset.torok.split("|"), t = S.torLib.find(x => x.id === id), ver = t.versions.find(x => x.v === Number(v));
@@ -9103,7 +9163,7 @@ CASE_BINDS.push((c, done) => {
     if (sumv(C.map(k => k.w)) !== 100) { toast(L(`น้ำหนักรวมต้องเท่ากับ 100 (ตอนนี้ ${sumv(C.map(k => k.w))})`, `Weights must add to 100 (now ${sumv(C.map(k => k.w))})`)); return; }
     c.criteria = C; caseLog(c, "criteria", C.map(k => `${k.k} ${k.w}`).join(", ")); audit(["กำหนดเกณฑ์พิจารณาข้อเสนอ", "Set the evaluation criteria"], c.id); done(L("บันทึกเกณฑ์แล้ว", "Criteria saved")); };
   $$("[data-coi]").forEach(b => (b.onclick = () => { const [, k, u] = b.dataset.coi.split("|"), id = `${k}-${u}`, conflict = $("#coi-c-" + id).checked, w = $("#coi-w-" + id).value.trim();
-    if (conflict && w.length < 2) { toast(L("ระบุผู้ยื่นที่มีส่วนได้เสีย", "Name the bidder")); return; }
+    if (conflict && w.length < 2) { toastErr(L("ระบุผู้ยื่นที่มีส่วนได้เสีย", "Name the bidder")); return; }
     c.coi = c.coi || {}; c.coi[k] = c.coi[k] || {}; c.coi[k][u] = { conflict, with: w, t: nowIso(), by: me().id, paper: u !== me().id };
     caseLog(c, "coi", `${userName(u)} · ${conflict ? "มีส่วนได้เสีย " + w : "ไม่มี"}`); audit(["บันทึกแบบแจ้งผลประโยชน์ทับซ้อน", "Recorded a conflict-of-interest declaration"], `${c.id} ${userName(u)}`);
     if (conflict) notify(["prochead"], [`แฟ้ม ${c.id} มีกรรมการแจ้งส่วนได้เสีย ต้องแทนที่`, `Case ${c.id}: a member declared a conflict and must be replaced`], `case:${c.id}`);
@@ -9253,7 +9313,7 @@ function demandPanel() {
 }
 function bindPlan2() {
   const done = m => { commit(); renderShell(); route(); if (m) toast(m); };
-  const sb = $("#pv-sub"); if (sb) sb.onclick = () => { const why = $("#pv-why").value.trim(); if (why.length < 5) { toast(L("ระบุเหตุผลที่ปรับแผน", "Say why the plan changes")); return; }
+  const sb = $("#pv-sub"); if (sb) sb.onclick = () => { const why = $("#pv-why").value.trim(); if (why.length < 5) { toastErr(L("ระบุเหตุผลที่ปรับแผน", "Say why the plan changes")); return; }
     const v = Math.max(...S.planDoc.versions.map(x => x.v)) + 1; S.planDoc.versions.push({ v, t: nowIso(), by: me().id, why, status: "submitted", items: planLive().map(snap), appr: null, published: null });
     audit(["เสนอแผนจัดซื้อฉบับใหม่", "Proposed a new procurement plan version"], `v${v}`); notify(["exec"], [`แผนจัดซื้อฉบับ v${v} รออนุมัติ`, `Procurement plan v${v} needs approval`], "prc-plan"); done(L("ส่งผู้บริหารแล้ว", "Sent to the executive")); };
   const dec = ok => { const v = S.planDoc.versions.find(x => x.status === "submitted"); v.status = ok ? "approved" : "rejected"; v.appr = { by: me().id, t: nowIso() };
@@ -9365,7 +9425,7 @@ PROC.gantt = () => {
   return `<section class="panel"><header><h2>${L("ไทม์ไลน์แฟ้มทั้งหมด", "All cases on a timeline")}</h2><span class="sp"></span><span class="sub">FR-PR-55</span></header>
     <div class="body row" style="gap:14px"><span class="row" style="gap:6px"><span style="width:14px;height:10px;background:var(--ch-2);border-radius:3px;display:inline-block"></span>${L("เตรียมการ", "Preparation")}</span><span class="row" style="gap:6px"><span style="width:14px;height:10px;background:var(--warn);border-radius:3px;display:inline-block"></span>${L("e-GP และพิจารณาผล", "Sourcing and evaluation")}</span><span class="row" style="gap:6px"><span style="width:14px;height:10px;background:var(--accent);border-radius:3px;display:inline-block"></span>${L("ช่วงสัญญา", "Contract period")}</span><span class="row" style="gap:6px"><span style="width:2px;height:12px;background:var(--ink);display:inline-block"></span>${L("เดือนในแผน", "Planned month")}</span><span class="row" style="gap:6px"><span style="width:2px;height:12px;background:var(--bad);display:inline-block"></span>${L("วันนี้", "Today")}</span></div>
     <div class="tbl-wrap"><div style="min-width:760px;padding:0 16px 12px">
-      <div style="display:grid;grid-template-columns:200px 1fr;gap:10px"><div></div><div style="position:relative;height:22px">${months.map(m => `<span class="sub" style="position:absolute;left:${x(m)}%;font-size:11px">${monthLabel(m.slice(0, 7)).split(" ")[0].slice(0, LANG === "en" ? 3 : 4)}</span>`).join("")}</div></div>
+      <div style="display:grid;grid-template-columns:200px 1fr;gap:10px"><div></div><div style="position:relative;height:22px">${months.map(m => `<span class="sub" style="position:absolute;left:${x(m)}%;font-size:12px">${monthLabel(m.slice(0, 7)).split(" ")[0].slice(0, LANG === "en" ? 3 : 4)}</span>`).join("")}</div></div>
       <div style="position:relative">${rows}
         <span style="position:absolute;top:0;bottom:0;left:calc(210px + (100% - 210px) * ${x(TODAY) / 100});width:2px;background:var(--bad)"></span>
         <span style="position:absolute;top:0;bottom:0;left:calc(210px + (100% - 210px) * ${x("2026-10-01") / 100});width:1px;background:var(--line);border-left:1px dashed var(--muted)" title="${L("เริ่มปีงบประมาณ", "Fiscal year starts")}"></span></div>
@@ -9779,7 +9839,7 @@ function bindContracts() {
   $$("[data-gform]").forEach(f => (f.onsubmit = e => { e.preventDefault(); const c = famCon(f.dataset.gform), fd = new FormData(f);
     const amt = Math.round(Number(fd.get("amt"))), min = Math.round(c.amount * S.pcfg.guaranteePct / 100), last = c.phases[c.phases.length - 1].due;
     if (amt < min) { toast(L(`วงเงินหลักประกันต้องไม่น้อยกว่า ${fmt(min)} บาท (ร้อยละ ${S.pcfg.guaranteePct})`, `The guarantee must be at least ${fmt(min)} baht (${S.pcfg.guaranteePct}%)`)); return; }
-    if (fd.get("exp") < last) { toast(L("หลักประกันต้องมีผลถึงงวดสุดท้ายเป็นอย่างน้อย", "The guarantee must last at least until the last phase")); return; }
+    if (fd.get("exp") < last) { toastErr(L("หลักประกันต้องมีผลถึงงวดสุดท้ายเป็นอย่างน้อย", "The guarantee must last at least until the last phase")); return; }
     c.guarantee = { type: fd.get("type"), ref: String(fd.get("ref") || "").trim(), amount: amt, expires: fd.get("exp"), status: "held", t: nowIso(), by: me().id };
     audit(["บันทึกหลักประกันสัญญา", "Recorded a contract guarantee"], `${c.id} ${fmt(c.guarantee.amount)}`); done(L("บันทึกหลักประกันแล้ว", "Guarantee recorded")); }));
   $$("[data-gsim]").forEach(b => (b.onclick = () => { const f = b.closest("form"), c = famCon(b.dataset.gsim); f.type.value = "bank"; f.ref.value = `BG-${FAM_FY}-${String(4000 + S.contracts.indexOf(c) * 13).slice(-4)}`; f.amt.value = Math.round(c.amount * S.pcfg.guaranteePct / 100); f.exp.value = addDays(c.phases[c.phases.length - 1].due, 30 * Math.max(3, c.warrantyMonths || 0)); f.ref.focus(); toast(L("เติมค่าจำลองแล้ว ตรวจก่อนบันทึก", "Simulated values filled in; check them before saving")); }));
@@ -9801,7 +9861,7 @@ function bindContracts() {
     if (openDissent(ph)) { toast(L("มีความเห็นแย้งค้าง รอหัวหน้าสั่งการ", "A dissent is open; wait for the instruction")); return; }
     if (!sodCheck("SD-02", [me().id], [c.by], c.id)) return;
     if (res === "dissent") {
-      if (note.length < 5) { toast(L("ระบุเหตุผลของความเห็นแย้ง", "Give the reason for the dissent")); return; }
+      if (note.length < 5) { toastErr(L("ระบุเหตุผลของความเห็นแย้ง", "Give the reason for the dissent")); return; }
       (ph.dissent = ph.dissent || []).push({ by: me().id, note, t: nowIso(), resolved: null });
       audit(["บันทึกความเห็นแย้งในการตรวจรับ", "Recorded an acceptance dissent"], `${c.id} ${tx(ph.name)}`);
       notify(["exec", "prochead"], [`${c.id} ${ph.name[0]} กรรมการไม่รับงาน รอสั่งการ`, `${c.id} ${ph.name[1]}: a member did not accept, instruction needed`], "prc-contracts"); done(L("บันทึกความเห็นแย้งแล้ว เสนอหัวหน้าสั่งการ", "Dissent recorded and sent for instruction")); return;
@@ -9819,20 +9879,20 @@ function bindContracts() {
     }
     done(phaseAccepted(ph) ? L("ตรวจรับครบแล้ว ออกใบตรวจรับ 2 ฉบับ", "Accepted; 2 certificates issued") : L("ลงนามแล้ว รอกรรมการท่านอื่น", "Signed, waiting for the other members")); }));
   $$("[data-dsres]").forEach(b => (b.onclick = () => { const [cid, n, i] = b.dataset.dsres.split("|"), c = famCon(cid), ph = ph_(cid, n), note = ($(`#dsn-${cid}-${n}-${i}`).value || "").trim();
-    if (note.length < 5) { toast(L("ระบุคำสั่งการ", "Write the instruction")); return; }
+    if (note.length < 5) { toastErr(L("ระบุคำสั่งการ", "Write the instruction")); return; }
     ph.dissent[Number(i)].resolved = { by: me().id, note, t: nowIso() }; audit(["สั่งการความเห็นแย้งในการตรวจรับ", "Resolved an acceptance dissent"], `${c.id} ${tx(ph.name)}`); done(L("บันทึกคำสั่งการแล้ว", "Instruction recorded")); }));
   $$("[data-ivform]").forEach(f => (f.onsubmit = e => { e.preventDefault(); const [cid, n] = two(f.dataset.ivform), c = famCon(cid), ph = ph_(cid, n), fd = new FormData(f);
     ph.invoice = { no: String(fd.get("no")).trim(), amount: Math.round(Number(fd.get("amt"))), date: TODAY, vendor: tx(c.vendor), contract: c.no, by: me().id };
     audit(["บันทึกใบแจ้งหนี้", "Recorded an invoice"], `${c.id} ${tx(ph.name)} ${ph.invoice.no}`); done(L("บันทึกใบแจ้งหนี้แล้ว", "Invoice recorded")); }));
   $$("[data-release]").forEach(b => (b.onclick = () => { const [cid, n] = two(b.dataset.release), c = famCon(cid), ph = ph_(cid, n), reason = ($(`#rel-${cid}-${n}`).value || "").trim();
-    if (reason.length < 10) { toast(L("ระบุเหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return; }
+    if (reason.length < 10) { toastErr(L("ระบุเหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return; }
     ph.release = { by: me().id, reason, t: nowIso() }; audit(["ปลดข้อยกเว้นประตูเบิกจ่าย", "Released a payment-gate exception"], `${c.id} ${tx(ph.name)}`);
     notify(["audit", "fin"], [`${c.id} ${ph.name[0]} ปลดข้อยกเว้นประตูเบิกจ่ายโดย ${userName(me().id)}`, `${c.id} ${ph.name[1]}: gate exception released by ${userName(me().id)}`], "fnc-pay"); done(L("ปลดข้อยกเว้นแล้ว การเงินส่งคำขอได้", "Released; Finance can send the request")); }));
   $$("[data-vform]").forEach(f => (f.onsubmit = e => {
     e.preventDefault(); const c = famCon(f.dataset.vform), fd = new FormData(f), kind = fd.get("kind"), why = String(fd.get("why")).trim();
     const v = { id: `${c.id}-V${(c.vars || []).length + 1}`, kind, why, by: me().id, t: nowIso(), status: "pending", decided: null };
-    if (kind === "time") { v.days = Math.round(Number(fd.get("days"))); v.phase = Number(fd.get("phase")); v.code = fd.get("code"); if (!(v.days > 0) || !v.phase) { toast(L("ระบุงวดและจำนวนวัน", "Give the phase and the days")); return; } }
-    else { v.delta = Math.round(Number(fd.get("delta"))); if (!v.delta) { toast(L("ระบุส่วนต่างวงเงิน", "Give the amount change")); return; }
+    if (kind === "time") { v.days = Math.round(Number(fd.get("days"))); v.phase = Number(fd.get("phase")); v.code = fd.get("code"); if (!(v.days > 0) || !v.phase) { toastErr(L("ระบุงวดและจำนวนวัน", "Give the phase and the days")); return; } }
+    else { v.delta = Math.round(Number(fd.get("delta"))); if (!v.delta) { toastErr(L("ระบุส่วนต่างวงเงิน", "Give the amount change")); return; }
       if (c.amount + v.delta <= 0) { toast(L("วงเงินใหม่ต้องมากกว่าศูนย์", "The new amount must be above zero")); return; }
       if (v.delta > 0 && v.delta > famHeadroom(c.line)) { toast(L(`เกินวงเงินคงเหลือของรายการจัดสรร (${mb(famHeadroom(c.line))} ลบ.)`, `More than the room left on the line (${mb(famHeadroom(c.line))} M)`)); return; } }
     v.cum = varCum(c, v); v.who = varWho(c, v); (c.vars = c.vars || []).push(v);
@@ -9869,7 +9929,7 @@ function bindClose() {
   f.onsubmit = e => {
     e.preventDefault(); const cs = caseOf(CASE_OPEN), les = $("#cl-les").value.trim();
     if (!closeChecks(cs).every(x => x.ok)) { toast(L("ยังปิดแฟ้มไม่ได้", "Can't close yet")); return; }
-    if (les.length < 10) { toast(L("บันทึกบทเรียนอย่างน้อย 10 ตัวอักษร", "Write the lessons, at least 10 characters")); return; }
+    if (les.length < 10) { toastErr(L("บันทึกบทเรียนอย่างน้อย 10 ตัวอักษร", "Write the lessons, at least 10 characters")); return; }
     cs.close = { lessons: les, score: Number($("#cl-sc").value), by: me().id, t: nowIso() }; caseLog(cs, "closed_case", `${cs.close.score}/5`);
     const con = caseCon(cs); if (con && con.status === "active") { con.status = "closed"; con.closed = { by: me().id, t: nowIso() }; } famPlan(cs.plan).status = "closed"; audit(["ปิดแฟ้มจัดซื้อ", "Closed a procurement case"], cs.id);
     commit(); renderShell(); route(); toast(L("ปิดแฟ้มแล้ว", "Case closed"));
@@ -9994,7 +10054,7 @@ CASE_PANELS.push(c => {
     ${head && hits.some(n => !(ov && ov.names.includes(n))) ? `<div class="row" style="margin-top:6px"><input type="text" id="bl-note" placeholder="${L("หลักฐานว่าเป็นคนละราย", "Evidence it's a different entity")}" style="min-width:220px"><button class="btn" type="button" id="bl-release">${L("ยืนยันว่าเป็นคนละราย", "Confirm a different entity")}</button></div>` : ""}</div></div>`;
 });
 CASE_BINDS.push((c, done) => {
-  const b = $("#bl-release"); if (b) b.onclick = () => { const note = $("#bl-note").value.trim(); if (note.length < 10) { toast(L("ระบุหลักฐานอย่างน้อย 10 ตัวอักษร", "Give evidence of at least 10 characters")); return; }
+  const b = $("#bl-release"); if (b) b.onclick = () => { const note = $("#bl-note").value.trim(); if (note.length < 10) { toastErr(L("ระบุหลักฐานอย่างน้อย 10 ตัวอักษร", "Give evidence of at least 10 characters")); return; }
     const names = [...new Set([...(c.bids || []).map(x => x.name), ...(c.quotes || []).map(q => tx(q.vendor)), ...(c.award ? [tx(c.award.winner)] : [])])].filter(n => blHit(n));
     c.blOverride = { by: me().id, note, t: nowIso(), names }; audit(["ปลดการตรวจพบรายชื่อผู้ทิ้งงาน", "Released an abandoned-work match"], `${c.id} ${names.join(", ")}`); notify(["audit"], [`แฟ้ม ${c.id} ปลดการตรวจพบรายชื่อผู้ทิ้งงาน`, `Case ${c.id}: an abandoned-work match was released`], `case:${c.id}`); done(L("บันทึกแล้ว แจ้งผู้ตรวจสอบแล้ว", "Recorded; Audit notified")); };
 });
@@ -10027,7 +10087,7 @@ CON_BINDS.push(done => {
   $$("[data-cpdemo]").forEach(b => (b.onclick = () => { const [cid, k] = b.dataset.cpdemo.split("|"), c = famCon(cid), lr = lastReport(c), res = suggestAssess(c, k, lr ? lr.actual : 0);
     c.supervision.assess.push({ at: k, d: TODAY, actual: lr ? lr.actual : 0, result: res, note: L("จำลองการถึงจุดประเมิน", "Demo checkpoint"), by: me().id, demo: true }); done(); }));
   $$("[data-cpsave]").forEach(b => (b.onclick = () => { const [cid, k] = b.dataset.cpsave.split("|"), c = famCon(cid), lr = lastReport(c), res = $(`[data-cpres="${cid}|${k}"]`).value, note = $(`#cpn-${cid}-${k}`).value.trim();
-    if (note.length < 5) { toast(L("บันทึกการประเมินอย่างน้อย 5 ตัวอักษร", "Write an assessment note")); return; }
+    if (note.length < 5) { toastErr(L("บันทึกการประเมินอย่างน้อย 5 ตัวอักษร", "Write an assessment note")); return; }
     c.supervision.assess.push({ at: k, d: TODAY, actual: lr ? lr.actual : 0, result: res, note, by: me().id });
     audit(["บันทึกการประเมินความก้าวหน้า", "Recorded a progress assessment"], `${c.id} ${k} ${res}`);
     if (res === "terminate") notify(["exec", "prochead"], [`สัญญา ${c.id} ผลประเมินเสนอพิจารณาบอกเลิก`, `Contract ${c.id}: the assessment suggests termination`], "prc-contracts");
@@ -10047,7 +10107,7 @@ CON_PANELS.push(c => {
     <div class="sub" style="margin-top:4px">${L("เมื่ออนุมัติ: ริบหลักประกัน ยกเลิกงวดที่ยังไม่ตรวจรับ ลดภาระผูกพันเหลือส่วนที่ตรวจรับแล้ว และเสนอชื่อผู้ขายเข้ากระบวนการพิจารณาผู้ทิ้งงาน (ระดับ B)", "On approval: the guarantee is forfeited, unaccepted phases are cancelled, the commitment drops to the accepted work, and the supplier is proposed for the abandoned-work list (level B)")}</div></details></div>`;
 });
 CON_BINDS.push(done => {
-  $$("[data-termask]").forEach(b => (b.onclick = () => { const c = famCon(b.dataset.termask), why = $(`#term-why-${c.id}`).value.trim(); if (why.length < 10) { toast(L("ระบุเหตุอย่างน้อย 10 ตัวอักษร", "Give the grounds, at least 10 characters")); return; }
+  $$("[data-termask]").forEach(b => (b.onclick = () => { const c = famCon(b.dataset.termask), why = $(`#term-why-${c.id}`).value.trim(); if (why.length < 10) { toastErr(L("ระบุเหตุอย่างน้อย 10 ตัวอักษร", "Give the grounds, at least 10 characters")); return; }
     c.term = { status: "pending", why, by: me().id, t: nowIso() }; audit(["เสนอบอกเลิกสัญญา", "Proposed a contract termination"], c.id); notify(["exec"], [`สัญญา ${c.id} เสนอบอกเลิก รออนุมัติ`, `Contract ${c.id}: termination proposed`], "prc-contracts"); done(L("ส่งผู้บริหารแล้ว", "Sent to the executive")); }));
   $$("[data-termno]").forEach(b => (b.onclick = () => { const c = famCon(b.dataset.termno); c.term.status = "rejected"; c.term.decided = { by: me().id, t: nowIso() }; const old = c.term; c.term = null; (c.termLog = c.termLog || []).push(old); audit(["ไม่อนุมัติบอกเลิกสัญญา", "Rejected a termination"], c.id); done(); }));
   $$("[data-termok]").forEach(b => (b.onclick = () => {
@@ -10469,7 +10529,7 @@ Object.assign(STYPE, { plan: ["แผนจัดซื้อ", "Plan item"], co
 
 NAV.push(
   { id: "procurement", code: "PR", group: "procurement", app: "procurement", jumpPrefix: "prc", roles: ["proc", "prochead", "div", "exec", "plan", "fin", "audit"], label: ["Fisko Procurement · จัดซื้อจัดจ้าง", "Fisko Procurement"],
-    tabs: [["cases", ["แฟ้มจัดซื้อ", "Case files"], "P1"], ["plan", ["แผนจัดซื้อ", "Procurement plan"], "P2"], ["reqn", ["ใบขอซื้อขอจ้าง", "Requisitions"], "P3"], ["tor", ["คลัง TOR", "TOR library"], "P4"], ["contracts", ["สัญญาและงวดงาน", "Contracts and phases"], "P5"], ["docs", ["รับเอกสาร (OCR)", "Document intake (OCR)"], "P6"], ["suppliers", ["ผู้ขาย", "Suppliers"], "P7"], ["gantt", ["ไทม์ไลน์แฟ้ม", "Case timeline"], "P8"], ["egp", ["ไฟล์จาก e-GP", "e-GP file"], "P9"], ["analytics", ["วิเคราะห์และตัวชี้วัด", "Analytics and KPIs"], "P10"], ["forecast", ["พยากรณ์", "Forecast"], "P11"], ["whatif", ["จำลองสถานการณ์", "What-if"], "P12"], ["reports", ["รายงานประจำเดือน", "Monthly report"], "P13"], ["flags", ["สัญญาณเตือน", "Red flags"], "P14"], ["ocds", ["ส่งออก OCDS", "OCDS export"], "P15"], ["ai", ["ผู้ช่วย AI", "AI assistant"], "P16"], ["agents", ["Agent อัตโนมัติ", "Agents"], "P17"]],
+    tabs: [["cases", ["แฟ้มจัดซื้อ", "Case files"], "P1"], ["plan", ["แผนจัดซื้อ", "Procurement plan"], "P2"], ["reqn", ["ใบขอซื้อขอจ้าง", "Requisitions"], "P3"], ["tor", ["คลัง TOR", "TOR library"], "P4"], ["contracts", ["สัญญาและงวดงาน", "Contracts and phases"], "P5"], ["docs", ["รับเอกสาร (OCR)", "Document intake (OCR)"], "P6"], ["suppliers", ["ผู้ขาย", "Suppliers"], "P7"], ["gantt", ["ไทม์ไลน์แฟ้ม", "Case timeline"], "P8"], ["egp", ["ไฟล์จาก e-GP", "e-GP file"], "P9"], ["analytics", ["วิเคราะห์และตัวชี้วัด", "Analytics and KPIs"], "P10"], ["forecast", ["พยากรณ์", "Forecast"], "P11"], ["whatif", ["จำลองสถานการณ์", "What-if"], "P12"], ["reports", ["รายงานประจำเดือน", "Monthly report"], "P13"], ["flags", ["สัญญาณเตือน", "Red flags"], "P14"], ["ocds", ["ส่งออก OCDS", "OCDS export"], "P15"], ["ai", ["ผู้ช่วย AI", "AI assistant"], "P16"], ["agents", ["เอเจนต์อัตโนมัติ", "Agents"], "P17"]],
     tabGet: () => PROC_TAB, tabSet: v => (PROC_TAB = v) },
   { id: "finance", code: "FN", group: "finance", app: "finance", jumpPrefix: "fnc", roles: ["fin", "exec", "plan", "audit"], label: ["Fisko Finance · ผูกพันและเบิกจ่าย", "Fisko Finance"],
     tabs: [["chain", ["สายงบประมาณถึงการจ่าย", "Allocation to payment"], "F1"], ["pay", ["ขออนุมัติเบิกจ่าย", "Payments"], "F2"], ["recon", ["กระทบยอด GFMIS", "GFMIS reconciliation"], "F3"]],
@@ -10642,13 +10702,13 @@ let OCDS_JSON = "";
 function bindAnalytics() {
   const done = msg => { commit(); renderShell(); route(); if (msg) toast(msg); };
   const val = id => ($("#" + id).value || "").trim();
-  $$("[data-rfask]").forEach(b => (b.onclick = () => { const k = b.dataset.rfask, t = val("rfa-" + b.dataset.rfid); if (t.length < 5) { toast(L("ระบุข้อที่ต้องชี้แจง", "Say what needs explaining")); return; }
+  $$("[data-rfask]").forEach(b => (b.onclick = () => { const k = b.dataset.rfask, t = val("rfa-" + b.dataset.rfid); if (t.length < 5) { toastErr(L("ระบุข้อที่ต้องชี้แจง", "Say what needs explaining")); return; }
     S.rfRev[k] = Object.assign(rfRev(k), { status: "asked", ask: t, askBy: me().id, t: nowIso() }); audit(["ขอคำชี้แจงสัญญาณเตือน", "Asked for a red-flag explanation"], k.replace("|", " "));
     notify(["proc"], [`ขอคำชี้แจงสัญญาณ ${k.split("|")[0]} ของ ${k.split("|")[1]}`, `Explanation requested for ${k.split("|")[0]} on ${k.split("|")[1]}`], "prc-flags"); done(L("ส่งขอคำชี้แจงแล้ว", "Request sent")); }));
-  $$("[data-rfexp]").forEach(b => (b.onclick = () => { const k = b.dataset.rfexp, t = val("rfx-" + b.dataset.rfid); if (t.length < 5) { toast(L("เขียนคำชี้แจงอย่างน้อย 5 ตัวอักษร", "Write at least 5 characters")); return; }
+  $$("[data-rfexp]").forEach(b => (b.onclick = () => { const k = b.dataset.rfexp, t = val("rfx-" + b.dataset.rfid); if (t.length < 5) { toastErr(L("เขียนคำชี้แจงอย่างน้อย 5 ตัวอักษร", "Write at least 5 characters")); return; }
     S.rfRev[k] = Object.assign(rfRev(k), { status: "explained", explain: t, explainBy: me().id }); audit(["ชี้แจงสัญญาณเตือน", "Explained a red flag"], k.replace("|", " "));
     notify(["audit"], [`มีคำชี้แจงสัญญาณ ${k.split("|")[0]} ของ ${k.split("|")[1]}`, `An explanation arrived for ${k.split("|")[0]} on ${k.split("|")[1]}`], "prc-flags"); done(L("ส่งคำชี้แจงแล้ว", "Explanation sent")); }));
-  $$("[data-rfdec]").forEach(b => (b.onclick = () => { const dv = b.dataset.rfdec, k = dv.slice(0, dv.lastIndexOf("|")), st = dv.slice(dv.lastIndexOf("|") + 1), t = val("rfd-" + b.dataset.rfid); if (t.length < 5) { toast(L("บันทึกผลตัดสินอย่างน้อย 5 ตัวอักษร", "Write a decision note of at least 5 characters")); return; }
+  $$("[data-rfdec]").forEach(b => (b.onclick = () => { const dv = b.dataset.rfdec, k = dv.slice(0, dv.lastIndexOf("|")), st = dv.slice(dv.lastIndexOf("|") + 1), t = val("rfd-" + b.dataset.rfid); if (t.length < 5) { toastErr(L("บันทึกผลตัดสินอย่างน้อย 5 ตัวอักษร", "Write a decision note of at least 5 characters")); return; }
     S.rfRev[k] = Object.assign(rfRev(k), { status: st, note: t, decided: { by: me().id, t: nowIso() } }); audit(["ตัดสินสัญญาณเตือน", "Decided a red flag"], `${k.replace("|", " ")} ${st}`); done(L("บันทึกผลตัดสินแล้ว", "Decision recorded")); }));
   const g = $("#ocds-gen"); if (g) g.onclick = () => { OCDS_JSON = JSON.stringify(ocdsPackage(), null, 2); audit(["สร้างไฟล์ OCDS", "Built an OCDS export"], `${ocdsCases().length} releases`); commit(); route(); };
   const cp = $("#ocds-copy"); if (cp) cp.onclick = () => { const fb = () => { const r = document.createRange(); r.selectNodeContents($("#ocds-pre")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast(L("เลือกข้อความแล้ว กด Ctrl+C", "Selected; press Ctrl+C")); };
@@ -12051,7 +12111,7 @@ function advSave(vals, a) {
 function bindAdvForm() {
   const f = $("#adv-form"); if (!f) return;
   const c = fcfg(), rows = () => $$("#af-items [data-airow]");
-  const bindRm = () => $$("[data-airm]").forEach(b => (b.onclick = () => { if (rows().length > 1) b.closest("[data-airow]").remove(); else toast(L("ต้องมีอย่างน้อยหนึ่งรายการ", "Keep at least one item")); }));
+  const bindRm = () => $$("[data-airm]").forEach(b => (b.onclick = () => { if (rows().length > 1) b.closest("[data-airow]").remove(); else toastErr(L("ต้องมีอย่างน้อยหนึ่งรายการ", "Keep at least one item")); }));
   const addRow = (k, amt) => { $("#af-items").insertAdjacentHTML("beforeend", advItemRow(k, amt)); bindRm(); };
   bindRm();
   $("#af-addrow").onclick = () => { addRow("", ""); const r = rows(); r[r.length - 1].querySelector("select").focus(); };
@@ -12818,7 +12878,7 @@ FS.budgetFeed = () => {
       const per = () => { let p = P.find(x => x.month === m); if (!p) { p = { month: m, status: "open", log: [] }; P.push(p); } return p; };
       $$("[data-perm]").forEach(b => (b.onclick = () => { PER_OPEN = b.dataset.perm; route(); }));
       const dg = $("#dcl-go");
-      if (dg) dg.onclick = () => { const bad = dayChecks(TODAY).filter(c => !c.ok && !c.soft), why = $("#dcl-why").value.trim(); if (bad.length && why.length < 5) { toast(L("มีข้อที่ไม่ผ่าน ระบุเหตุผลอย่างน้อย 5 ตัวอักษร", "A check fails; give a reason of at least 5 characters")); return; }
+      if (dg) dg.onclick = () => { const bad = dayChecks(TODAY).filter(c => !c.ok && !c.soft), why = $("#dcl-why").value.trim(); if (bad.length && why.length < 5) { toastErr(L("มีข้อที่ไม่ผ่าน ระบุเหตุผลอย่างน้อย 5 ตัวอักษร", "A check fails; give a reason of at least 5 characters")); return; }
         (S.dayCloses = S.dayCloses || []).push({ date: TODAY, by: me().id, t: nowIso(), why: bad.length ? why : "" }); audit(["ปิดวัน", "Closed the day"], `${TODAY}${bad.length ? ` · ${why}` : ""}`); done(L("ปิดวันแล้ว", "Day closed")); };
       // FR-FC-36: a closed day reopens like a period (SD-16), while its month is open.
       const dr = $("#dcl-reopen");
@@ -12832,7 +12892,7 @@ FS.budgetFeed = () => {
         const p = per(); Object.assign(p, { status: "closed", by: me().id, t: nowIso(), why: bad.length ? `${bad.map(c => c.k).join(", ")}: ${why}` : "" }); (p.log = p.log || []).push({ t: nowIso(), by: me().id, act: ["ปิดงวด", "Closed"], note: p.why });
         audit(["ปิดงวดบัญชี", "Closed a period"], `${m}${p.why ? ` · ${p.why}` : ""}`); notify(["exec", "audit"], [`การเงินปิดงวด ${monthLabel(m)} แล้ว`, `Finance closed ${monthLabel(m)}`], "fnc-close:month"); done(L("ปิดงวดแล้ว", "Period closed")); };
       const pr = $("#per-reopen");
-      if (pr) pr.onclick = () => { const p = per(), why = $("#per-rwhy").value.trim(); if (why.length < 10) { toast(L("ระบุเหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return; }
+      if (pr) pr.onclick = () => { const p = per(), why = $("#per-rwhy").value.trim(); if (why.length < 10) { toastErr(L("ระบุเหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return; }
         if (!sodCheck("SD-16", [me().id], [p.by], `${L("งวด", "period")} ${m}`)) return;
         p.status = "open"; (p.log = p.log || []).push({ t: nowIso(), by: me().id, act: ["เปิดงวดใหม่", "Reopened"], note: why }); audit(["เปิดงวดบัญชีใหม่", "Reopened a period"], `${m} · ${why}`); notify(["audit"], [`เปิดงวด ${monthLabel(m)} ใหม่: ${why}`, `${monthLabel(m)} was reopened: ${why}`], "fnc-close:month"); done(L("เปิดงวดใหม่แล้ว", "Period reopened")); };
     }
@@ -13082,7 +13142,7 @@ const FAI = {};
 FAI.agents = () => {
   const runs = (S.fRuns || []).slice().reverse(), open = runs.find(r => r.id === F_RUN_OPEN) || runs[0];
   const ST = { pending: ["–", "p-mute"], done: [L("เสร็จ", "Done"), "p-ok"], await: [L("รอคุณอนุมัติ", "Waiting for you"), "p-warn"], approved: [L("อนุมัติแล้ว", "Approved"), "p-ok"], rejected: [L("ไม่อนุมัติ", "Rejected"), "p-bad"], skipped: [L("ข้าม", "Skipped"), "p-mute"], blocked: [L("ทำต่อไม่ได้", "Blocked"), "p-bad"] };
-  return `<div class="alert"><div class="ic">i</div><div><b>${L("Agent ตรวจ จับคู่ เตือน และร่าง แต่ไม่จ่ายเงิน", "Agents check, match, remind and draft, but never pay")}</b><p>${L("จำลองตาม D-P09 · ไม่อนุมัติ ไม่สั่งจ่าย ไม่แก้ยอดเงินหรือบัญชีธนาคาร ไม่ลงนามแทนกรรมการ ไม่ปิดงวด และไม่ส่งหนังสือออก · ทุกขั้นบันทึกใน M09", "Simulated per D-P09 · never approves, pays, changes amounts or bank accounts, signs for the committee, closes periods or sends letters · every step is logged in M09")}</p></div></div>
+  return `<div class="alert"><div class="ic">i</div><div><b>${L("เอเจนต์ตรวจ จับคู่ เตือน และร่าง แต่ไม่จ่ายเงิน", "Agents check, match, remind and draft, but never pay")}</b><p>${L("จำลองตาม D-P09 · ไม่อนุมัติ ไม่สั่งจ่าย ไม่แก้ยอดเงินหรือบัญชีธนาคาร ไม่ลงนามแทนกรรมการ ไม่ปิดงวด และไม่ส่งหนังสือออก · ทุกขั้นบันทึกใน M09", "Simulated per D-P09 · never approves, pays, changes amounts or bank accounts, signs for the committee, closes periods or sends letters · every step is logged in M09")}</p></div></div>
     <div class="brief-grid">${Object.keys(F_AG).map(id => { const on = agentOn(id), g = F_AG[id];
       return `<section class="panel"><header>${chipIco("bot", "info")}<h2>${tx(g.name)}</h2><span class="sp"></span><span class="mono sub">${id}</span></header><div class="body" style="display:flex;flex-direction:column;gap:8px"><span>${tx(g.goal)}</span>
         <span class="sub">${g.plan.map(([t]) => tx(F_TOOL[t][1])).join(" → ")}</span>
@@ -13091,7 +13151,7 @@ FAI.agents = () => {
       <div class="body"><ol class="agsteps">${open.steps.map((s, i) => `<li class="${i === open.ptr && open.status === "waiting" ? "now" : ""}"><div class="row" style="justify-content:space-between;gap:8px;flex-wrap:wrap"><span><span class="mono sub">${s.tool}</span> ${tx(F_TOOL[s.tool][1])} ${tag(F_TOOL[s.tool][0], "p-mute")}</span>${tag(ST[s.status][0], ST[s.status][1])}</div>
         ${s.out ? `<div class="sub">${s.out}</div>` : ""}${s.change ? `<div class="agchange"><b>${L("สิ่งที่จะเปลี่ยน", "What will change")}</b><div>${s.change}</div></div>` : ""}
         ${s.status === "await" ? (F_AG[open.agent].who.includes(ROLE) ? `<div class="row" style="gap:6px;margin-top:6px"><button class="btn primary" type="button" data-fok="${open.id}">${L("อนุมัติขั้นนี้", "Approve this step")}</button>${finAskBtn("frun", "no", L("ไม่อนุมัติ", "Reject"))}</div>` : `<div class="sub" style="margin-top:6px">${L("รอผู้รับผิดชอบขั้นนี้", "Waiting for the person who owns this step")}: ${F_AG[open.agent].who.map(r => tx(ROLES[r])).join(", ")}</div>`) : ""}</li>`).join("")}</ol>${open.stopped ? `<p class="sub">${dotI("bad")}${L("หยุดงาน", "Stopped")} · ${esc(userName(open.stopped.by))} · ${esc(open.stopped.why)}</p>` : ""}
-      ${FIN_ASK && FIN_ASK.key === "frun" ? finAskForm("frun", FIN_ASK.act, FIN_ASK.act === "no" ? L("ไม่อนุมัติขั้นนี้", "Reject this step") : L("หยุดงาน Agent", "Stop the agent run"), { danger: true, impact: FIN_ASK.act === "no" ? L("ขั้นนี้ไม่มีผล งานทำขั้นถัดไปต่อ", "This step has no effect; the run goes on to the next step") : L("ขั้นที่เหลือไม่ทำ สิ่งที่อนุมัติไปแล้วยังอยู่", "The remaining steps don't run; what was approved stays") }) : ""}</div></section>` : ""}`;
+      ${FIN_ASK && FIN_ASK.key === "frun" ? finAskForm("frun", FIN_ASK.act, FIN_ASK.act === "no" ? L("ไม่อนุมัติขั้นนี้", "Reject this step") : L("หยุดงานเอเจนต์", "Stop the agent run"), { danger: true, impact: FIN_ASK.act === "no" ? L("ขั้นนี้ไม่มีผล งานทำขั้นถัดไปต่อ", "This step has no effect; the run goes on to the next step") : L("ขั้นที่เหลือไม่ทำ สิ่งที่อนุมัติไปแล้วยังอยู่", "The remaining steps don't run; what was approved stays") }) : ""}</div></section>` : ""}`;
 };
 FAI.fc = () => {
   const f = fcMonths(), T = spendT(), c = fcCarry(), risk = fcAdvRisk(), load = fcLoad(), mx = Math.max(...f.rows.map(r => r.act + r.exp), 1);
@@ -13162,8 +13222,8 @@ FAI.kpi = () => {
 // The reason boxes of F9 (Finance CRUD FR-FC-41, 43): reject an agent step or stop a run; triage a signal or reopen it.
 FIN_ASK_RUN.frun = (act, why) => {
   const runs = S.fRuns || [], r = runs.find(x => x.id === F_RUN_OPEN) || runs[runs.length - 1]; if (!r) return;
-  if (act === "no") { const s = r.steps[r.ptr]; s.status = "rejected"; s.by = me().id; s.why = why; audit(["ไม่อนุมัติขั้นตอนของ Agent", "Rejected an agent step"], `${r.id} ${s.tool} · ${why}`); r.ptr++; r.status = "running"; fAdvance(r); }
-  else { r.status = "stopped"; r.stopped = { by: me().id, t: nowIso(), why }; audit(["หยุดงาน Agent การเงิน", "Stopped a finance agent run"], `${r.id} · ${why}`); }
+  if (act === "no") { const s = r.steps[r.ptr]; s.status = "rejected"; s.by = me().id; s.why = why; audit(["ไม่อนุมัติขั้นตอนของเอเจนต์", "Rejected an agent step"], `${r.id} ${s.tool} · ${why}`); r.ptr++; r.status = "running"; fAdvance(r); }
+  else { r.status = "stopped"; r.stopped = { by: me().id, t: nowIso(), why }; audit(["หยุดงานเอเจนต์การเงิน", "Stopped a finance agent run"], `${r.id} · ${why}`); }
   commit(); renderShell(); route(); toast(act === "no" ? L("ไม่อนุมัติขั้นนี้แล้ว", "Step rejected") : L("หยุดงานแล้ว", "Run stopped"));
 };
 FIN_ASK_RUN.sig = (act, why) => {
@@ -13176,9 +13236,9 @@ FIN_ASK_RUN.sig = (act, why) => {
 {
   FIN_BINDS.push(() => {
     const done = msg => { commit(); renderShell(); route(); if (msg) toast(msg); };
-    $$("[data-fstart]").forEach(b => (b.onclick = () => { fStart(b.dataset.fstart); audit(["เริ่มงาน Agent การเงิน", "Started a finance agent"], b.dataset.fstart); done(); }));
+    $$("[data-fstart]").forEach(b => (b.onclick = () => { fStart(b.dataset.fstart); audit(["เริ่มงานเอเจนต์การเงิน", "Started a finance agent"], b.dataset.fstart); done(); }));
     $$("[data-fopen]").forEach(s => (s.onchange = () => { F_RUN_OPEN = s.value; route(); }));
-    $$("[data-fok]").forEach(b => (b.onclick = () => { const r = S.fRuns.find(x => x.id === b.dataset.fok), s = r.steps[r.ptr]; fApply(r, s); s.status = "approved"; s.by = me().id; audit(["อนุมัติขั้นตอนของ Agent", "Approved an agent step"], `${r.id} ${s.tool}`); r.ptr++; r.status = "running"; fAdvance(r); done(); }));
+    $$("[data-fok]").forEach(b => (b.onclick = () => { const r = S.fRuns.find(x => x.id === b.dataset.fok), s = r.steps[r.ptr]; fApply(r, s); s.status = "approved"; s.by = me().id; audit(["อนุมัติขั้นตอนของเอเจนต์", "Approved an agent step"], `${r.id} ${s.tool}`); r.ptr++; r.status = "running"; fAdvance(r); done(); }));
     const wf = $("#wi-form");
     if (wf) wf.onsubmit = e => { e.preventDefault(); FWI = { lag: Number($("#wi-lag").value), slip: Number($("#wi-slip").value), target: Number($("#wi-target").value), share: Number($("#wi-share").value) }; route(); };
     const wr = $("#wi-reset"); if (wr) wr.onclick = () => { FWI = null; route(); };
@@ -13226,8 +13286,8 @@ DEMO.push(
   { t: "56:00", role: "finhead", link: "fnc-recon", title: ["งบพิสูจน์ยอดเงินฝากและการปิดงวด", "Bank reconciliation and period close"],
     say: ["จับคู่สามทาง Fisko GFMIS และธนาคาร ผู้บันทึกรับจ่ายของเดือนลงนามงบพิสูจน์ยอดไม่ได้ และปิดงวดด้วยรายการตรวจ 6 ข้อ", "Three-way matching of Fisko, GFMIS and the bank. Whoever recorded the month's money can't sign the reconciliation, and the period closes on a six-point checklist."],
     do: ["(เป็นการเงิน) นำเข้ารายการเดินบัญชี → “บันทึกเข้าบัญชี” ค่าธรรมเนียม → (เป็นหัวหน้าการเงิน) ลงนาม → F8 ปิดงวดกันยายน", "(As finance) import the statement → Record the fee in the books → (as head of finance) sign → F8 close September"] },
-  { t: "57:00", role: "finhead", link: "fnc-ai", title: ["Agent การเงินและพยากรณ์", "Finance agents and forecasts"],
-    say: ["Agent ตรวจใบขอเบิก ติดตามเงินยืม เสนอคู่กระทบยอด ช่วยปิดงวด และพยากรณ์ แต่หยุดให้คนอนุมัติทุกขั้นที่เขียนข้อมูล และไม่จ่ายเงินเอง", "Agents check vouchers, chase advances, propose matches, help close and forecast, but stop for a person at every write and never pay."],
+  { t: "57:00", role: "finhead", link: "fnc-ai", title: ["เอเจนต์การเงินและพยากรณ์", "Finance agents and forecasts"],
+    say: ["เอเจนต์ตรวจใบขอเบิก ติดตามเงินยืม เสนอคู่กระทบยอด ช่วยปิดงวด และพยากรณ์ แต่หยุดให้คนอนุมัติทุกขั้นที่เขียนข้อมูล และไม่จ่ายเงินเอง", "Agents check vouchers, chase advances, propose matches, help close and forecast, but stop for a person at every write and never pay."],
     do: ["เริ่ม “ผู้ช่วยปิดงวด” → อ่านร่างบันทึก → แท็บพยากรณ์ → แท็บตัวชี้วัด “ขอคำชี้แจง” สัญญาณใบแจ้งหนี้ซ้ำ", "Start the Close Assistant → read the draft memo → Forecasts tab → KPIs tab, Ask about the duplicate invoice signal"] },
 );
 
@@ -13281,10 +13341,10 @@ const FIN_PAGES = [
       { id: "year", label: ["สิ้นปี", "Year end"], secs: ["yearEnd"] },
       { id: "audit", label: ["ข้อทักท้วง", "Audit queries"], secs: ["auditQ"] },
       { id: "budget", label: ["ส่งให้ Fisko Budget", "To Fisko Budget"], secs: ["budgetFeed"] }] },
-  { id: "ai", code: "F9", group: "more", label: ["AI และ Analytics", "AI and analytics"], get: () => FAI_TAB, set: v => (FAI_TAB = v),
-    sub: ["Agent การเงิน พยากรณ์ จำลองสถานการณ์ ตัวชี้วัด และสัญญาณเตือน", "Finance agents, forecasts, what-ifs, KPIs and warning signals"],
+  { id: "ai", code: "F9", group: "more", label: ["AI และการวิเคราะห์ข้อมูล", "AI and analytics"], get: () => FAI_TAB, set: v => (FAI_TAB = v),
+    sub: ["เอเจนต์การเงิน พยากรณ์ จำลองสถานการณ์ ตัวชี้วัด และสัญญาณเตือน", "Finance agents, forecasts, what-ifs, KPIs and warning signals"],
     tabs: [
-      { id: "agents", label: ["Agent การเงิน", "Finance agents"], secs: ["aiAgents"] },
+      { id: "agents", label: ["เอเจนต์การเงิน", "Finance agents"], secs: ["aiAgents"] },
       { id: "fc", label: ["พยากรณ์", "Forecasts"], secs: ["aiFc"] },
       { id: "wi", label: ["จำลองสถานการณ์", "What-if"], secs: ["aiWi"] },
       { id: "kpi", label: ["ตัวชี้วัดและสัญญาณ", "KPIs and signals"], secs: ["aiKpi"] }] },
@@ -13601,7 +13661,7 @@ let AI_CASE = null, AI_RES = {}, AI_TOR = "", AI_DOCT = "tor", AI_Q = "";
 const AI_VER = "rules-1";
 const AI_AGENTS = [["AG-07", ["Procurement Drafting Agent", "Procurement Drafting Agent"], ["ร่าง TOR คำสั่งแต่งตั้ง ใบตรวจรับ หนังสือ และเสนอราคากลางพร้อมหลักฐาน", "Drafts TORs, orders, certificates and letters, and proposes reference prices with evidence"]],
   ["AG-08", ["Contract Monitoring Agent", "Contract Monitoring Agent"], ["เตือนงานล่าช้า สัญญาและหลักประกันใกล้ครบกำหนด และร่างหนังสือเร่งรัด", "Warns of late work and contracts or guarantees nearing expiry, and drafts reminders"]],
-  ["AG-10", ["Procurement Insight Agent", "Procurement Insight Agent"], ["ตอบคำถามและสรุปข้อมูลจัดซื้อจากชั้นความหมายของ Analytics และสรุปผลงานผู้ขาย", "Answers questions and summarises procurement data from the analytics layer and supplier record"]]];
+  ["AG-10", ["Procurement Insight Agent", "Procurement Insight Agent"], ["ตอบคำถามและสรุปข้อมูลจัดซื้อจากชั้นความหมายของการวิเคราะห์ข้อมูลและสรุปผลงานผู้ขาย", "Answers questions and summarises procurement data from the analytics layer and supplier record"]]];
 function seedAI(s) {
   AI_AGENTS.forEach(([id, name, what]) => { if (!s.agents.some(a => a.id === id)) s.agents.push({ id, on: true, uses: 0, name, what }); });
   s.aiDrafts = [];
@@ -13679,7 +13739,7 @@ PROC.ai = () => {
   const vendors = [...new Set(S.contracts.map(x => tx(x.vendor)))];
   return `
   <div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">AI</div><div><b>${L("AI อ่านและร่าง คนตัดสิน", "AI reads and drafts; a person decides")}</b>
-    <p>${L("ต้นแบบนี้ใช้กฎและสถิติ ไม่เรียกโมเดลภายนอก (รุ่น rules-1) ทุกการใช้บันทึกใน M09 และปิดเปิดแต่ละ Agent ได้ที่นั่น AI ไม่ให้คะแนนหรือจัดอันดับข้อเสนอ ไม่เลือกผู้ขาย ไม่ประกาศผู้ชนะ ไม่อนุมัติ ไม่เขียนสถานะ 6 ถึง 8 และไม่ส่งข้อมูลลับออกนอกหน่วยงาน", "This prototype uses rules and statistics and calls no outside model (version rules-1). Every use is logged in M09 and each agent can be switched there. AI never scores or ranks bids, selects a supplier, announces a winner, approves, writes in steps 6 to 8 or sends confidential data out.")}</p></div></div>
+    <p>${L("ต้นแบบนี้ใช้กฎและสถิติ ไม่เรียกโมเดลภายนอก (รุ่น rules-1) ทุกการใช้บันทึกใน M09 และปิดเปิดแต่ละเอเจนต์ได้ที่นั่น AI ไม่ให้คะแนนหรือจัดอันดับข้อเสนอ ไม่เลือกผู้ขาย ไม่ประกาศผู้ชนะ ไม่อนุมัติ ไม่เขียนสถานะ 6 ถึง 8 และไม่ส่งข้อมูลลับออกนอกหน่วยงาน", "This prototype uses rules and statistics and calls no outside model (version rules-1). Every use is logged in M09 and each agent can be switched there. AI never scores or ranks bids, selects a supplier, announces a winner, approves, writes in steps 6 to 8 or sends confidential data out.")}</p></div></div>
   <section class="panel"><header><h2>${L("เลือกแฟ้ม", "Choose a case")}</h2></header><div class="body row"><select id="ai-case" aria-label="${L("แฟ้ม", "Case")}">${cs.map(x => `<option value="${x.id}" ${c && x.id === c.id ? "selected" : ""}>${x.id} · ${esc(caseName(x))}</option>`).join("")}</select>${c ? caseStTag(c) : ""}</div></section>
   <div style="margin:0 0 12px">${segBar(AI_TOOLS.map(([k, l]) => [k, `<span class="mono">${k}</span> ${tx(l)}`]), AI_TOOL, "aitool")}</div>
   ${sec(L("AI-01 เสนอรวมความต้องการและเตือนแตกซื้อ", "AI-01 Consolidation and split-purchase watch"), "AG-05", L("เทียบชื่อรายการและหน่วยงานในแผน เสนอรวมซื้อ ไม่ตัดสินว่าผิด", "Compares item names and units in the plan and suggests buying together. It does not judge anyone."), `<div><button class="btn" type="button" id="ai-01" ${pr ? "" : "disabled"}>${L("สแกนแผนจัดซื้อ", "Scan the plan")}</button></div>${res("a01")}`)}
@@ -13823,7 +13883,7 @@ const EXEC = {
   "tor.draft": (run, s) => { const c = caseOf(run.target), t = S.torLib.find(x => x.kind === c.kind && torLatest(x)) || S.torLib.find(x => torLatest(x)), v = torLatest(t); run.memo = Object.assign(run.memo || {}, { tpl: t.id, tplV: v.v, text: v.text }); s.out = `${t.id} v${v.v} · ${esc(tx(t.name))}`; return drLevel(run) === "suggested" ? "suggested" : "done"; },
   "tor.check": (run, s) => { const r = aiSpecCheck((run.memo || {}).text || ""); s.out = r.hits.length ? L(`พบ ${r.hits.length} จุดที่ควรตรวจ`, `${r.hits.length} points to check`) : L("ไม่พบข้อความล็อกสเปก", "No spec-locking wording"); return "done"; },
   "tor.write": (run, s) => { const c = caseOf(run.target), m = run.memo || {}; if (!m.tpl) { s.out = L("ไม่มีร่าง TOR", "No TOR draft"); return "blocked"; } s.change = { what: "TOR", before: c.tor ? c.tor.doc : "—", after: `TOR_${c.id}_${m.tpl}-v${m.tplV}.pdf` }; return caseState(c) === 4 ? wrLevel(run) : (s.out = L("แฟ้มยังไม่อยู่ขั้น 4", "The case isn't at step 4"), "blocked"); },
-  "committee.propose": (run, s) => { const c = caseOf(run.target), pool = famPeople().filter(u => u.id !== me().id && !caseJudges(c).includes(u.id)).map(u => u.id).slice(0, S.pcfg.minMembers); run.memo = Object.assign(run.memo || {}, { cm: pool }); s.out = pool.map(userName).join(", ") + ` · ${L("กรรมการต้องแจ้งผลประโยชน์ทับซ้อนเอง Agent แจ้งแทนไม่ได้", "members must declare conflicts themselves; the agent can't")}`; return "done"; },
+  "committee.propose": (run, s) => { const c = caseOf(run.target), pool = famPeople().filter(u => u.id !== me().id && !caseJudges(c).includes(u.id)).map(u => u.id).slice(0, S.pcfg.minMembers); run.memo = Object.assign(run.memo || {}, { cm: pool }); s.out = pool.map(userName).join(", ") + ` · ${L("กรรมการต้องแจ้งผลประโยชน์ทับซ้อนเองเอเจนต์แจ้งแทนไม่ได้", "members must declare conflicts themselves; the agent can't")}`; return "done"; },
   "committee.write": (run, s) => { const c = caseOf(run.target), cm = (run.memo || {}).cm || []; if (cm.length < S.pcfg.minMembers) { s.out = L("รายชื่อไม่พอ", "Not enough people"); return "blocked"; } s.value = ""; s.change = { what: L("เลขที่คำสั่งแต่งตั้งกรรมการ TOR", "TOR committee order no."), before: "—", after: L("(ใส่เลขที่คำสั่งก่อนอนุมัติ)", "(enter the order number before approving)"), editable: "text" }; return caseState(c) === 4 ? wrLevel(run) : (s.out = L("แฟ้มยังไม่อยู่ขั้น 4", "The case isn't at step 4"), "blocked"); },
   "criteria.write": (run, s) => { const c = caseOf(run.target); s.change = { what: L("เกณฑ์พิจารณา", "Evaluation criteria"), before: c.criteria ? c.criteria.map(k => `${k.k} ${k.w}`).join(", ") : "—", after: CRIT_PRESET.pp.map(k => `${tx(k.name)} ${k.w}`).join(", ") }; return caseState(c) === 4 ? wrLevel(run) : (s.out = L("แฟ้มยังไม่อยู่ขั้น 4", "The case isn't at step 4"), "blocked"); },
   "pack.draft": (run, s) => { s.out = esc(egpPack(caseOf(run.target))).replace(/\n/g, "<br>"); return "done"; },
@@ -13863,7 +13923,7 @@ const canApprove = (run, s) => (s.tool === "report.publish" ? ROLE === "prochead
 function advance(run) {
   while (run.ptr < run.steps.length && run.status === "running") {
     const s = run.steps[run.ptr], t0 = performance.now();
-    if (!TOOLS[s.tool][3].includes(run.agent)) { s.status = "blocked"; s.out = L("Agent นี้ไม่มีสิทธิ์ใช้เครื่องมือนี้", "This agent may not use this tool"); run.ptr++; continue; }
+    if (!TOOLS[s.tool][3].includes(run.agent)) { s.status = "blocked"; s.out = L("เอเจนต์นี้ไม่มีสิทธิ์ใช้เครื่องมือนี้", "This agent may not use this tool"); run.ptr++; continue; }
     s.status = EXEC[s.tool](run, s); s.ms = Math.round(performance.now() - t0); s.at = nowIso();
     S.aiLog.unshift({ t: nowIso(), agent: run.agent, user: me().id, action: [TOOLS[s.tool][1], TOOLS[s.tool][2]], target: `${run.id} ${run.target}`, sources: 1, ok: s.status !== "blocked", ver: "agent-sim-1" });
     if (s.status === "await") { s.awaitMs = Date.now(); run.status = "waiting"; return; }
@@ -13878,14 +13938,14 @@ PROC.agents = () => {
   const openCases11 = S.cases.filter(c => !c.cancelled && [3, 4].includes(caseState(c)));
   const goal = (id, body) => `<div class="callout" style="margin:0;display:flex;flex-direction:column;gap:8px"><div class="row"><b>${agName(id)}</b><span class="mono sub">${id}</span>${tag(`${agLevel(id)} ${tx(AG_LEVELS[agLevel(id)])}`, "p-info")}${agentOn(id) ? "" : tag(L("ปิดอยู่ใน M09", "Off in M09"), "p-bad")}</div>${body}</div>`;
   return `
-  <div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">AI</div><div><b>${L("Agent แบบจำลอง: วางแผนจากแม่แบบ เรียกเครื่องมือจริง หยุดรอคนทุกจุดที่เขียนข้อมูล", "Simulated agents: plans come from templates, tools are real, and every write waits for a person")}</b><p>${L("ไม่เรียกโมเดลภาษา ผลแต่ละขั้นมาจากกฎที่มีอยู่ (D-P09) ไม่มีปุ่มอนุมัติทั้งหมด และ Agent ไม่มีเครื่องมือให้คะแนนข้อเสนอ ประกาศผู้ชนะ ทำสัญญา อนุมัติ หรือเบิกจ่าย", "No language model is called; each step's result comes from existing rules (D-P09). There is no approve-all, and agents have no tool to score bids, announce a winner, sign, approve or pay.")}</p></div></div>
+  <div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">AI</div><div><b>${L("เอเจนต์แบบจำลอง: วางแผนจากแม่แบบ เรียกเครื่องมือจริง หยุดรอคนทุกจุดที่เขียนข้อมูล", "Simulated agents: plans come from templates, tools are real, and every write waits for a person")}</b><p>${L("ไม่เรียกโมเดลภาษา ผลแต่ละขั้นมาจากกฎที่มีอยู่ (D-P09) ไม่มีปุ่มอนุมัติทั้งหมด และเอเจนต์ไม่มีเครื่องมือให้คะแนนข้อเสนอ ประกาศผู้ชนะ ทำสัญญา อนุมัติ หรือเบิกจ่าย", "No language model is called; each step's result comes from existing rules (D-P09). There is no approve-all, and agents have no tool to score bids, announce a winner, sign, approve or pay.")}</p></div></div>
   <section class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
     <div class="kpi"><span class="l">${L("การทำงานทั้งหมด", "Runs")}</span><span class="v">${S.agentRuns.length}</span></div>
     <div class="kpi"><span class="l">${L("รอคุณอนุมัติ", "Waiting for a person")}</span><span class="v">${S.agentRuns.filter(r => r.status === "waiting").length}</span></div>
     <div class="kpi"><span class="l">${L("เวลาก่อนอนุมัติ (ค่ากลาง)", "Time before approving (median)")}</span><span class="v">${secs.length ? fmt(med(secs), 1) : "—"}<small>${secs.length ? L(" วินาที", " s") : ""}</small></span></div>
     <div class="kpi"><span class="l">${L("อนุมัติเร็วผิดปกติ", "Unusually fast approvals")}</span><span class="v">${fast}<small>${dec.length ? ` / ${dec.length}` : ""}</small></span><span class="d sub">&lt; ${S.pcfg.fastApproveSec} ${L("วินาที", "s")}</span></div>
   </section>
-  <section class="panel"><header><h2>${L("สั่งงาน Agent", "Give an agent a goal")}</h2></header><div class="body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px">
+  <section class="panel"><header><h2>${L("สั่งงานเอเจนต์", "Give an agent a goal")}</h2></header><div class="body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px">
     ${goal("AG-11", `<span class="sub">${L("เป้าหมาย: เตรียมแฟ้มให้พร้อมประกาศ", "Goal: get the case ready for the notice")}</span><select id="ag11-case" aria-label="${L("แฟ้ม", "Case")}">${openCases11.map(c => `<option value="${c.id}">${c.id} · ${esc(caseName(c))} (${caseState(c)}/12)</option>`).join("") || `<option value="">${L("ไม่มีแฟ้มที่ขั้น 3 หรือ 4", "No case at step 3 or 4")}</option>`}</select><button class="btn primary" type="button" data-agrun="AG-11" ${openCases11.length && isProcRole() ? "" : "disabled"}>${L("เริ่ม", "Start")}</button>`)}
     ${goal("AG-12", `<span class="sub">${L("เป้าหมาย: ตรวจสัญญาทุกฉบับวันนี้", "Goal: check every contract today")}</span><button class="btn primary" type="button" data-agrun="AG-12" ${isProcRole() || canSpend() ? "" : "disabled"}>${L("เริ่ม", "Start")}</button>`)}
     ${goal("AG-13", `<span class="sub">${L("เป้าหมาย: รายงานสรุปผลรายเดือน", "Goal: monthly summary")}</span><select id="ag13-m" aria-label="${L("เดือน", "Month")}">${repMonths().map(m => `<option value="${m}">${monthLabel(m)}</option>`).join("")}</select><button class="btn primary" type="button" data-agrun="AG-13" ${isProcRole() ? "" : "disabled"}>${L("เริ่ม", "Start")}</button>`)}
@@ -13917,16 +13977,16 @@ function bindAgents() {
   $$("[data-agrun]").forEach(b => (b.onclick = () => {
     const id = b.dataset.agrun; if (!agentOn(id)) { toast(L(`${agName(id)} ถูกปิดใช้งานใน M09`, `${agName(id)} is switched off in M09`)); return; }
     const target = id === "AG-11" ? $("#ag11-case").value : id === "AG-13" ? $("#ag13-m").value : id === "AG-10" ? $("#ag10-q").value.trim() : "ALL";
-    if (!target) return; const r = startRun(id, target); RUN_OPEN = r.id; audit(["สั่งงาน Agent", "Started an agent"], `${r.id} ${id} ${target}`); done(r.status === "waiting" ? L("Agent หยุดรอคุณอนุมัติ", "The agent is waiting for your approval") : L("Agent ทำงานเสร็จ", "The agent finished"));
+    if (!target) return; const r = startRun(id, target); RUN_OPEN = r.id; audit(["สั่งงานเอเจนต์", "Started an agent"], `${r.id} ${id} ${target}`); done(r.status === "waiting" ? L("เอเจนต์หยุดรอคุณอนุมัติ", "The agent is waiting for your approval") : L("เอเจนต์ทำงานเสร็จ", "The agent finished"));
   }));
   $$("[data-runopen]").forEach(b => (b.onclick = () => { RUN_OPEN = RUN_OPEN === b.dataset.runopen ? null : b.dataset.runopen; route(); }));
   $$("[data-aglset]").forEach(b => (b.onclick = () => { const id = b.dataset.aglset, lv = $(`[data-aglvl="${id}"]`).value, why = $(`#aglw-${id}`).value.trim();
-    if (lv === agLevel(id)) return; if (why.length < 5) { toast(L("ระบุเหตุผลการเปลี่ยนระดับ", "Give a reason for the change")); return; }
+    if (lv === agLevel(id)) return; if (why.length < 5) { toastErr(L("ระบุเหตุผลการเปลี่ยนระดับ", "Give a reason for the change")); return; }
     if (lv === "L3" && id !== "AG-12") { toast(L("L3 ใช้ได้เฉพาะ AG-12", "L3 is only for AG-12")); return; }
-    const old = agLevel(id); S.agentLevels[id] = lv; audit(["เปลี่ยนระดับความเป็นอิสระของ Agent", "Changed an agent's autonomy level"], `${id} ${old} → ${lv} · ${why}`);
+    const old = agLevel(id); S.agentLevels[id] = lv; audit(["เปลี่ยนระดับความเป็นอิสระของเอเจนต์", "Changed an agent's autonomy level"], `${id} ${old} → ${lv} · ${why}`);
     notify(["audit"], [`${id} เปลี่ยนระดับ ${old} → ${lv}`, `${id} level changed ${old} → ${lv}`], "prc-agents"); done(L("บันทึกแล้ว แจ้งผู้ตรวจสอบแล้ว", "Saved; Audit notified")); }));
   const run = S.agentRuns.find(r => r.id === RUN_OPEN); if (!run) return;
-  const st = $("#run-stop"); if (st) st.onclick = () => { run.steps.slice(run.ptr).forEach(s => { if (s.status === "pending" || s.status === "await") s.status = "stopped"; }); run.status = "stopped"; audit(["หยุดแผนของ Agent", "Stopped an agent's plan"], run.id); done(); };
+  const st = $("#run-stop"); if (st) st.onclick = () => { run.steps.slice(run.ptr).forEach(s => { if (s.status === "pending" || s.status === "await") s.status = "stopped"; }); run.status = "stopped"; audit(["หยุดแผนของเอเจนต์", "Stopped an agent's plan"], run.id); done(); };
   const decide = ok => { const s = run.steps[run.ptr]; if (!canApprove(run, s)) { toast(L("คุณไม่มีสิทธิ์ทำรายการนี้", "You aren't allowed to do this")); return; }
     const val = $("#step-val") ? $("#step-val").value : null;
     if (ok) { const err = applyStep(run, s, val); if (err) { toast(err); return; } s.status = val != null && String(val) !== String(s.value ?? "") ? "edited" : "approved"; }
@@ -13948,7 +14008,7 @@ function bindAgents() {
     base(R);
     if (!S.agentRuns) return;
     S.agentTasks.filter(t => (t.role === ROLE || (t.role === "proc" && isProcRole()) || (ROLE === "divhead" && t.role === "div")) && (!t.unit || t.unit === me().unit)).forEach(t => R(`${t.title}`, `${t.agent} · ${t.run}`, t.due, t.link, "p-info"));
-    S.agentRuns.filter(r => r.status === "waiting" && canApprove(r, r.steps[r.ptr])).forEach(r => R(`${L("Agent รออนุมัติ", "An agent is waiting for you")} ${r.id}`, `${agName(r.agent)} · ${tx([TOOLS[r.steps[r.ptr].tool][1], TOOLS[r.steps[r.ptr].tool][2]])}`, TODAY, "prc-agents", "p-warn"));
+    S.agentRuns.filter(r => r.status === "waiting" && canApprove(r, r.steps[r.ptr])).forEach(r => R(`${L("เอเจนต์รออนุมัติ", "An agent is waiting for you")} ${r.id}`, `${agName(r.agent)} · ${tx([TOOLS[r.steps[r.ptr].tool][1], TOOLS[r.steps[r.ptr].tool][2]])}`, TODAY, "prc-agents", "p-warn"));
   };
 }
 function seedAgents(s) {
@@ -14069,7 +14129,7 @@ function cwAnswer(agentId, text, files, recs) {
   let id = agentId;
   if (id === "FA") { id = cwPick(text, files); if (id !== "FA") steps.push(step("route", `${L("ส่งต่อให้", "Handed to")} ${tx(cwAgent(id).name)}`)); }
   const a = cwAgent(id);
-  if (id !== "FA" && a.on === false) return { agent: id, steps, html: `<p>${tx(a.name)} ${L("ถูกปิดใช้งานใน M09 · ผู้บริหารเปิดได้ที่แท็บ AI Agents", "is switched off in M09. An executive can turn it on in the AI agents tab.")}</p>`, actions: [cwAct(L("เปิด M09", "Open M09"), "go", "assistant")] };
+  if (id !== "FA" && a.on === false) return { agent: id, steps, html: `<p>${tx(a.name)} ${L("ถูกปิดใช้งานใน M09 · ผู้บริหารเปิดได้ที่แท็บเอเจนต์ AI", "is switched off in M09. An executive can turn it on in the AI agents tab.")}</p>`, actions: [cwAct(L("เปิด M09", "Open M09"), "go", "assistant")] };
   // files first
   if (files.length) {
     const parts = files.map(f => {
@@ -14147,12 +14207,12 @@ function cwAnswer(agentId, text, files, recs) {
   if (id === "AG-11") {
     steps.push(step("case.read", L("อ่านแฟ้มจัดซื้อ", "Read the case files")));
     const open = (S.cases || []).filter(c => !c.cancelled && caseState(c) < 12).sort((x, y) => caseState(x) - caseState(y));
-    return { agent: id, steps, html: `<p>${L("แฟ้มที่เปิดอยู่", "Open cases")}: ${open.length}</p>${cwTable([[L("แฟ้ม", "Case")], [L("ชื่อ", "Name")], [L("ขั้น", "Step"), 1]], open.slice(0, 6).map(c => [`<span class="mono">${c.id}</span>`, esc(caseName(c)), `${caseState(c)}/12`]))}<p class="sub">${L("ให้ Case Copilot เตรียมแฟ้มได้ที่แท็บ AI Agents ของจัดซื้อ ทุกขั้นที่เขียนข้อมูลรอคุณอนุมัติ", "Case Copilot can prepare a case from the procurement AI agents tab; every step that writes data waits for you.")}</p>`, actions: [cwAct(L("เปิดแฟ้มจัดซื้อ", "Open case files"), "jump", "prc-cases", true)] };
+    return { agent: id, steps, html: `<p>${L("แฟ้มที่เปิดอยู่", "Open cases")}: ${open.length}</p>${cwTable([[L("แฟ้ม", "Case")], [L("ชื่อ", "Name")], [L("ขั้น", "Step"), 1]], open.slice(0, 6).map(c => [`<span class="mono">${c.id}</span>`, esc(caseName(c)), `${caseState(c)}/12`]))}<p class="sub">${L("ให้ Case Copilot เตรียมแฟ้มได้ที่แท็บเอเจนต์ AI ของจัดซื้อ ทุกขั้นที่เขียนข้อมูลรอคุณอนุมัติ", "Case Copilot can prepare a case from the procurement AI agents tab; every step that writes data waits for you.")}</p>`, actions: [cwAct(L("เปิดแฟ้มจัดซื้อ", "Open case files"), "jump", "prc-cases", true)] };
   }
   if (id === "AG-10" && typeof aiAnswer === "function") {
     steps.push(step("kpi.query", L("ค้นจากชั้นตัวชี้วัด", "Queried the KPI layer")));
     const res = aiAnswer(text);
-    return { agent: id, steps, html: `<p>${esc(res.text)}</p>${res.note ? `<p class="sub">${esc(res.note)}</p>` : ""}${res.src && res.src.length ? `<p class="sub">${L("แหล่ง", "Source")}: ${res.src.join(", ")}</p>` : ""}`, actions: [cwAct(L("เปิด Analytics", "Open analytics"), "jump", "prc-analytics")] };
+    return { agent: id, steps, html: `<p>${esc(res.text)}</p>${res.note ? `<p class="sub">${esc(res.note)}</p>` : ""}${res.src && res.src.length ? `<p class="sub">${L("แหล่ง", "Source")}: ${res.src.join(", ")}</p>` : ""}`, actions: [cwAct(L("เปิดการวิเคราะห์ข้อมูล", "Open analytics"), "jump", "prc-analytics")] };
   }
   if (id === "AG-07" || id === "AG-13" || id === "AG-14") {
     return { agent: id, steps, html: `<p>${tx(a.what)}</p><p class="sub">${id === "AG-14" ? L("แนบไฟล์ใบแจ้งหนี้ ใบส่งของ หรือหนังสือค้ำประกันด้วยปุ่ม + หรือวางไฟล์ลงในช่องแชท", "Attach an invoice, delivery note or guarantee with the + button, or drop the file into the chat.") : L("เปิดหน้าที่เกี่ยวข้องเพื่อเริ่มงาน ฉันจะร่างและรอให้คุณตรวจ", "Open the related page to start; I'll draft and wait for you to check.")}</p>`, actions: [cwAct(L("เปิดผู้ช่วย AI จัดซื้อ", "Open procurement AI"), "jump", id === "AG-14" ? "prc-docs" : "prc-ai", true)] };
@@ -14566,13 +14626,13 @@ function kpiB() {
 // ---------- M09 tabs ----------
 {
   const bt = intelTabsBar;
-  intelTabsBar = function () { const h = bt(), x = [["bagents", L("Agent งบประมาณ", "Budget agents")], ["bfore", L("พยากรณ์ปีนี้", "This year's forecast")], ["bwhatif", L("จำลอง 4 สถานการณ์", "Four what-ifs")], ["bkpi", L("ตัวชี้วัดและสัญญาณ", "KPIs and signals")]];
+  intelTabsBar = function () { const h = bt(), x = [["bagents", L("เอเจนต์งบประมาณ", "Budget agents")], ["bfore", L("พยากรณ์ปีนี้", "This year's forecast")], ["bwhatif", L("จำลอง 4 สถานการณ์", "Four what-ifs")], ["bkpi", L("ตัวชี้วัดและสัญญาณ", "KPIs and signals")]];
     return h.replace(/<\/div>\s*$/, x.map(([id, l]) => `<button class="tab ${id === INTEL_TAB ? "on" : ""}" type="button" role="tab" aria-selected="${id === INTEL_TAB}" data-itab="${id}">${l}</button>`).join("") + "</div>"); };
 }
 INTEL.bagents = () => {
   const runs = (S.bRuns || []).slice().reverse(), open = runs.find(r => r.id === B_RUN_OPEN) || runs[0], A = S.allocs[B4_FY];
   const ST = { pending: ["–", "p-mute"], done: [L("เสร็จ", "Done"), "p-ok"], await: [L("รอคุณอนุมัติ", "Waiting for you"), "p-warn"], approved: [L("อนุมัติแล้ว", "Approved"), "p-ok"], rejected: [L("ไม่อนุมัติ", "Rejected"), "p-bad"], skipped: [L("ข้าม", "Skipped"), "p-mute"], blocked: [L("ทำต่อไม่ได้", "Blocked"), "p-bad"] };
-  return `<div class="alert"><div class="ic">i</div><div><b>${L("Agent วางแผน เรียกเครื่องมือ และหยุดให้คนอนุมัติทุกขั้นที่เปลี่ยนข้อมูลหรือแจ้งผู้อื่น", "Agents plan, call tools, and stop for a person at every step that changes data or notifies people")}</b><p>${L("จำลองตาม D-P09 · ไม่อนุมัติคำขอ ไม่ตัดวงเงินจริงโดยไม่มีคน ไม่ลงมติ และไม่อนุมัติการโอน · ทุกขั้นบันทึกใน M09", "Simulated per D-P09 · never approves requests, changes amounts without a person, votes or approves transfers · every step is logged in M09")}</p></div></div>
+  return `<div class="alert"><div class="ic">i</div><div><b>${L("เอเจนต์วางแผน เรียกเครื่องมือ และหยุดให้คนอนุมัติทุกขั้นที่เปลี่ยนข้อมูลหรือแจ้งผู้อื่น", "Agents plan, call tools, and stop for a person at every step that changes data or notifies people")}</b><p>${L("จำลองตาม D-P09 · ไม่อนุมัติคำขอ ไม่ตัดวงเงินจริงโดยไม่มีคน ไม่ลงมติ และไม่อนุมัติการโอน · ทุกขั้นบันทึกใน M09", "Simulated per D-P09 · never approves requests, changes amounts without a person, votes or approves transfers · every step is logged in M09")}</p></div></div>
     <div class="brief-grid">${Object.keys(B_AG).map(id => { const on = agentOn(id), g = B_AG[id];
       return `<section class="panel"><header>${cwAv(cwAgent(id) || CW_GENERAL, 28)}<h2>${bAgName(id)}</h2><span class="sp"></span><span class="mono sub">${id}</span></header><div class="body" style="display:flex;flex-direction:column;gap:8px"><span>${tx(g.goal)}</span>
         <span class="sub">${g.plan().map(([t]) => tx(B_TOOL[t][1])).join(" → ")}</span>
@@ -14586,8 +14646,8 @@ INTEL.bagents = () => {
 INTEL_BIND.bagents = () => {
   $$("[data-bstart]").forEach(b => (b.onclick = () => { const id = b.dataset.bstart, o = id === "AG-15" ? { to: ($("[data-agto]") || {}).value || "L14", need: Math.round(Number(($("[data-agneed]") || {}).value || 1) * 1e6) } : {}; if (id === "AG-15") B_AG_GOAL = { to: o.to, need: o.need / 1e6 }; bStart(id, o); commit(); route(); }));
   $$("[data-bopen]").forEach(s => (s.onchange = () => { B_RUN_OPEN = s.value; route(); }));
-  $$("[data-bok]").forEach(b => (b.onclick = () => { const r = S.bRuns.find(x => x.id === b.dataset.bok), s = r.steps[r.ptr]; bApply(r, s); s.status = "approved"; s.by = me().id; audit(["อนุมัติขั้นตอนของ Agent", "Approved an agent step"], `${r.id} ${s.tool}`); r.ptr++; r.status = "running"; bAdvance(r); commit(); route(); }));
-  $$("[data-bno]").forEach(b => (b.onclick = () => { const r = S.bRuns.find(x => x.id === b.dataset.bno), s = r.steps[r.ptr]; s.status = "rejected"; audit(["ไม่อนุมัติขั้นตอนของ Agent", "Rejected an agent step"], `${r.id} ${s.tool}`); r.ptr++; r.status = "running"; bAdvance(r); commit(); route(); }));
+  $$("[data-bok]").forEach(b => (b.onclick = () => { const r = S.bRuns.find(x => x.id === b.dataset.bok), s = r.steps[r.ptr]; bApply(r, s); s.status = "approved"; s.by = me().id; audit(["อนุมัติขั้นตอนของเอเจนต์", "Approved an agent step"], `${r.id} ${s.tool}`); r.ptr++; r.status = "running"; bAdvance(r); commit(); route(); }));
+  $$("[data-bno]").forEach(b => (b.onclick = () => { const r = S.bRuns.find(x => x.id === b.dataset.bno), s = r.steps[r.ptr]; s.status = "rejected"; audit(["ไม่อนุมัติขั้นตอนของเอเจนต์", "Rejected an agent step"], `${r.id} ${s.tool}`); r.ptr++; r.status = "running"; bAdvance(r); commit(); route(); }));
 };
 INTEL.bfore = () => {
   const f = fcYear(), T = spendT(), A = S.allocs[B4_FY], mx = 100;
@@ -14675,7 +14735,7 @@ ADMIN.bcfg = () => {
       ${sec(L("เป้าหมายการเบิกจ่ายของปี (BR-21)", "Spending targets for the year (BR-21)"), L("ตามมติ ครม. ของปีนั้น", "From that year's Cabinet resolution"),
         [0, 1, 2, 3].map(i => row(`${L("สะสมสิ้นไตรมาส", "Cumulative end of Q")}${i + 1}`, num(`targets.q.${i}`, c.targets.q[i]), "%", "B")).join("") +
         row(L("ภาพรวมสิ้นปี", "Total, year end"), num("targets.end.all", c.targets.end.all), "%", "B") + row(L("รายจ่ายลงทุนสิ้นปี", "Investment, year end"), num("targets.end.inv", c.targets.end.inv), "%", "B") + row(L("รายจ่ายประจำสิ้นปี", "Recurrent, year end"), num("targets.end.ope", c.targets.end.ope), "%", "B"))}
-      ${sec(L("สมมติฐานพยากรณ์ (FC-B1, FC-B2)", "Forecast assumptions (FC-B1, FC-B2)"), L("ใช้ที่ M09 พยากรณ์ปีนี้ และ Agent AG-05", "Used by M09 forecast and agent AG-05"),
+      ${sec(L("สมมติฐานพยากรณ์ (FC-B1, FC-B2)", "Forecast assumptions (FC-B1, FC-B2)"), L("ใช้ที่ M09 พยากรณ์ปีนี้ และเอเจนต์ AG-05", "Used by M09 forecast and agent AG-05"),
         Object.keys(P).map(k => row(`${L("โอกาสเบิกจ่ายส่วนที่ยังว่าง", "Chance the free amount is spent")} · ${P[k]}`, num(`fc.p.${k}`, c.fc.p[k]), "%", "C")).join("") +
         row(L("ส่วนของยอดจองที่จะเบิกจ่ายในปี", "Share of reservations spent in the year"), num("fc.res", c.fc.res), "%", "C") +
         row(L("ส่วนของงบลงทุนที่ยังว่างที่จะกันเหลื่อมปี", "Share of free investment carried over"), num("fc.invCarry", c.fc.invCarry), "%", "C"))}
@@ -14687,7 +14747,7 @@ ADMIN.bcfg = () => {
       row(`BF-05 · ${L("ใช้เงินเกิน", "Spent more than")}`, num("sig.spend", c.sig.spend), "%", "C") +
       row(`BF-05 · ${L("แต่ผลผลิตต่ำกว่า", "but output below")}`, num("sig.out", c.sig.out), "%", "C") +
       row(`BF-06 · ${L("จำนวนคำขอขั้นต่ำที่ตัดเท่ากัน", "Minimum requests cut equally")}`, num("sig.eqMin", c.sig.eqMin, { min: 2, max: 20 }), L("คำขอ", "requests"), "C"))}
-    ${sec(L("เกณฑ์วิเคราะห์ 3R (M03 และ Agent AG-03)", "3R analysis rules (M03 and agent AG-03)"), L("Review Redeploy Replace ตามคู่มือสำนักงบประมาณ", "Review, Redeploy, Replace per the Budget Bureau manual"),
+    ${sec(L("เกณฑ์วิเคราะห์ 3R (M03 และเอเจนต์ AG-03)", "3R analysis rules (M03 and agent AG-03)"), L("Review Redeploy Replace ตามคู่มือสำนักงบประมาณ", "Review, Redeploy, Replace per the Budget Bureau manual"),
       row(`Redeploy · ${L("คะแนนความสำคัญต่ำกว่า", "Priority score below")}`, num("r3.lowScore", c.r3.lowScore), L("คะแนน", "points"), "C") +
       row(`Redeploy · ${L("ลดวงเงินคำขอคะแนนต่ำ", "Cut for a low score")}`, num("r3.lowCut", c.r3.lowCut, { max: 50 }), "%", "C") +
       row(`Review · ${L("ปีก่อนกองเบิกจ่ายต่ำกว่า", "Unit spent under, last year")}`, num("r3.slowRate", c.r3.slowRate), L("% ของแผน", "% of plan"), "C") +
@@ -14870,7 +14930,7 @@ CASE_BINDS.push((c, done) => {
   const hc = $("#hr-cm"); if (hc) hc.onsubmit = e => { e.preventDefault(); c.hearing.comments.push({ who: $("#hr-w").value.trim(), text: $("#hr-t").value.trim(), resp: $("#hr-r").value.trim(), t: TODAY });
     caseLog(c, "hearing_comment", c.hearing.comments[c.hearing.comments.length - 1].who); done(); };
   const hx = $("#hr-close"); if (hx) hx.onsubmit = e => { e.preventDefault(); const sum = $("#hr-sum").value.trim(), early = $("#hr-early") ? $("#hr-early").value.trim() : "";
-    if (sum.length < 5) { toast(L("สรุปผลอย่างน้อย 5 ตัวอักษร", "Write a conclusion of at least 5 characters")); return; }
+    if (sum.length < 5) { toastErr(L("สรุปผลอย่างน้อย 5 ตัวอักษร", "Write a conclusion of at least 5 characters")); return; }
     if (c.hearing.end > TODAY && early.length < 5) { toast(L("ยังไม่ถึงวันสิ้นสุด ต้องระบุเหตุผลปิดก่อนกำหนด", "The hearing has not ended; give a reason for closing early")); return; }
     const rev = $("#hr-rev").checked; if (rev && !c.tor) { toast(L("ยังไม่ได้แนบ TOR ที่จะแก้", "There is no attached TOR to change")); return; }
     Object.assign(c.hearing, { summary: sum + (early ? ` (ปิดก่อนกำหนด: ${early})` : ""), revised: rev, rev: rev ? { status: "pending", by: me().id, t: nowIso() } : null, closedAt: nowIso() });
@@ -14883,7 +14943,7 @@ CASE_BINDS.push((c, done) => {
     caseLog(c, "hearing_again", `รอบ ${c.hearing.round}`); done(L("เปิดรับฟังซ้ำแล้ว", "Hearing reopened")); };
 
   const rf = $("#rq-form"); if (rf) rf.onsubmit = e => { e.preventDefault(); const V = S.vendors, picks = $$("[name=rq-v]:checked").map(i => V[Number(i.value)].name), due = $("#rq-d").value;
-    if (!picks.length) { toast(L("เลือกผู้ขายอย่างน้อย 1 ราย", "Pick at least one supplier")); return; } if (due < TODAY) { toast(L("วันตอบกลับต้องไม่ก่อนวันนี้", "The reply date can't be in the past")); return; }
+    if (!picks.length) { toastErr(L("เลือกผู้ขายอย่างน้อย 1 ราย", "Pick at least one supplier")); return; } if (due < TODAY) { toast(L("วันตอบกลับต้องไม่ก่อนวันนี้", "The reply date can't be in the past")); return; }
     const r = { no: docNo("rfq", uid, c.id), sent: TODAY, due, by: me().id, rows: picks.map(v => ({ v, reply: null })) }; (c.rfq = c.rfq || []).push(r);
     caseLog(c, "rfq_sent", `${r.no} · ${picks.length}`); audit(["ส่งใบสอบถามราคา / หนังสือเชิญ (จำลอง)", "Sent an RFQ or invitation (simulated)"], `${c.id} ${r.no}`); done(`${L("ออกเลขที่", "Issued")} ${r.no}`); };
   $$("[data-rqrep]").forEach(b => (b.onclick = () => { const [ri, xi] = b.dataset.rqrep.split("|").map(Number), row = c.rfq[ri].rows[xi], pr = Math.round(Number($(`#rq-p-${ri}-${xi}`).value) || 0);
@@ -15086,10 +15146,10 @@ CASE_BINDS.push((c, done) => {
     (c.bsec = c.bsec || []).push({ who, type: $("#bs-t").value, amount: amt, from: TODAY, to, status: "held", ext: [] }); caseLog(c, "bsec_add", `${who} · ${fmt(amt)}`); done(L("รับหลักประกันแล้ว", "Received")); };
   $$("[data-bsa]").forEach(b => (b.onclick = () => { const [act, i] = b.dataset.bsa.split("|"), x = c.bsec[Number(i)], why = ($("#bs-x-" + i).value || "").trim(), d = $("#bs-d-" + i).value;
     if (act === "ext") { if (d <= x.to) { toast(L("วันที่ใหม่ต้องหลังวันเดิม", "The new date must be after the old one")); return; } x.ext.push({ to: x.to, t: TODAY }); x.to = d; caseLog(c, "bsec_ext", `${x.who} → ${d}`); audit(["ขยายอายุหลักประกันการเสนอราคา", "Extended a bid security"], `${c.id} ${x.who}`); done(L("ขยายแล้ว", "Extended")); return; }
-    if (why.length < 3) { toast(L("ระบุเหตุผลอย่างน้อย 3 ตัวอักษร", "Give a reason of at least 3 characters")); return; }
+    if (why.length < 3) { toastErr(L("ระบุเหตุผลอย่างน้อย 3 ตัวอักษร", "Give a reason of at least 3 characters")); return; }
     if (act === "ret") { if (!c.award) { toast(L("คืนได้หลังประกาศผู้ชนะ", "Returns come after the award")); return; } if (norm(x.who) === norm(winnerOf(c)) && !S.contracts.some(k => k.plan === c.plan)) { toast(L("ผู้ชนะคืนได้หลังทำสัญญา", "The winner's security is returned after the contract")); return; }
       x.status = "returned"; x.ret = { d: TODAY, reason: why, by: me().id }; caseLog(c, "bsec_ret", x.who); audit(["คืนหลักประกันการเสนอราคา", "Returned a bid security"], `${c.id} ${x.who}`); done(L("คืนแล้ว", "Returned")); return; }
-    if (why.length < 10) { toast(L("ริบหลักประกันต้องมีเหตุผลอย่างน้อย 10 ตัวอักษร", "Forfeiting needs a reason of at least 10 characters")); return; }
+    if (why.length < 10) { toastErr(L("ริบหลักประกันต้องมีเหตุผลอย่างน้อย 10 ตัวอักษร", "Forfeiting needs a reason of at least 10 characters")); return; }
     x.status = "forfeited"; x.forf = { d: TODAY, reason: why, by: me().id }; caseLog(c, "bsec_forf", `${x.who} · ${why}`); audit(["ริบหลักประกันการเสนอราคา", "Forfeited a bid security"], `${c.id} ${x.who}`); done(L("ริบแล้ว", "Forfeited")); }));
 
   const ts = $("#ts-form"); if (ts) ts.onsubmit = e => { e.preventDefault(); const n = (c.tests || []).length + 1; (c.tests = c.tests || []).push({ id: "T" + n, vendor: $("#ts-v").value.trim(), item: $("#ts-i").value.trim(), recv: "", sent: "", start: "", end: "", notified: "", replied: "", lab: "", report: "", result: null });
@@ -15170,7 +15230,7 @@ VIEWS.vportal = () => {
 };
 BIND.vportal = () => {
   const reply = (key, decline) => { const [cid, ri, xi] = [key.slice(0, key.indexOf("-", 8)), ...key.slice(key.indexOf("-", 8) + 1).split("-")].map((x, i) => (i ? Number(x) : x)), c = caseOf(cid), x = c.rfq[ri].rows[xi];
-    const pr = decline ? 0 : Math.round(Number($("#vp-p-" + key).value) || 0); if (!decline && pr < 1) { toast(L("ระบุราคา", "Enter a price")); return; }
+    const pr = decline ? 0 : Math.round(Number($("#vp-p-" + key).value) || 0); if (!decline && pr < 1) { toastErr(L("ระบุราคา", "Enter a price")); return; }
     x.reply = { d: TODAY, price: pr, by: me().id, via: "portal" }; caseLog(c, "rfq_reply", `${x.v} · ${pr ? fmt(pr) : "ไม่เสนอ"} (portal)`);
     if (pr && !needsCompetition(c) && !c.quotes.some(q => tx(q.vendor) === x.v)) c.quotes.push({ vendor: [x.v, x.v], price: pr, win: false });
     notify(["proc", "prochead"], [`${x.v} ตอบ RFQ ${c.rfq[ri].no}`, `${x.v} replied to RFQ ${c.rfq[ri].no}`], "case:" + c.id); audit(["ผู้ขายตอบ RFQ ผ่านพอร์ทัล (จำลอง)", "A supplier replied to an RFQ in the portal (simulated)"], `${c.id} ${c.rfq[ri].no}`); commit(); route(); toast(L("ส่งคำตอบแล้ว", "Sent")); };
@@ -15200,7 +15260,7 @@ const vendorHome = () => { const v = vpMe(), R = v ? vpRfqs(v).filter(o => !o.x.
     bb();
     $$("[data-vinvok]").forEach(b => (b.onclick = () => { const x = S.vinv.find(y => y.id === b.dataset.vinvok), k = S.contracts.find(y => y.id === x.contract), ph = k.phases.find(p => p.n === x.phase);
       ph.invoice = { no: x.no, amount: x.amount, date: x.date, vendor: tx(k.vendor), contract: k.no, by: me().id, via: "portal" }; x.status = "confirmed"; audit(["ยืนยันใบแจ้งหนี้จากพอร์ทัลผู้ขาย", "Confirmed an invoice from the supplier portal"], `${k.id} ${x.no}`); commit(); route(); toast(L("ยืนยันแล้ว เข้าตรวจสามทางได้", "Confirmed; it feeds the three-way check")); }));
-    $$("[data-vinvno]").forEach(b => (b.onclick = () => { const why = ($("#vinv-n-" + b.dataset.vinvno).value || "").trim(); if (why.length < 3) { toast(L("ระบุเหตุผลอย่างน้อย 3 ตัวอักษร", "Give a reason of at least 3 characters")); return; } const x = S.vinv.find(y => y.id === b.dataset.vinvno); x.status = "returned"; x.note = why;
+    $$("[data-vinvno]").forEach(b => (b.onclick = () => { const why = ($("#vinv-n-" + b.dataset.vinvno).value || "").trim(); if (why.length < 3) { toastErr(L("ระบุเหตุผลอย่างน้อย 3 ตัวอักษร", "Give a reason of at least 3 characters")); return; } const x = S.vinv.find(y => y.id === b.dataset.vinvno); x.status = "returned"; x.note = why;
       audit(["ส่งคืนใบแจ้งหนี้ของผู้ขาย", "Returned a supplier invoice"], `${x.contract} ${x.no}`); commit(); route(); }));
   };
 }
@@ -15304,7 +15364,7 @@ function t3Panel(c) {
       const r = { n: k.drw.rounds.length + 1, recv: d, mn: docNo("mn", "", k.id), status: "submitted", note: "", replied: null, by: me().id }; k.drw.rounds.push(r);
       notify(k.inspectors || [], [`สัญญา ${k.id} ได้รับแบบ ${r.mn} ตอบภายใน ${fdate(drwDue(r))}`, `Contract ${k.id}: drawings ${r.mn} received; reply by ${fdate(drwDue(r))}`], "prc-contracts"); audit(["บันทึกการรับแบบ", "Recorded receipt of drawings"], `${k.id} ${r.mn}`); redo(`${L("ออกเลข", "Issued")} ${r.mn}`); }));
     $$("[data-drwdec]").forEach(b => (b.onclick = () => { const [id, n, st] = b.dataset.drwdec.split("|"), k = conOf(id), r = k.drw.rounds.find(x => x.n === Number(n)), note = ($(`#dn-${id}-${n}`).value || "").trim();
-      if (st === "rejected" && note.length < 3) { toast(L("ระบุเหตุผลที่ส่งกลับอย่างน้อย 3 ตัวอักษร", "Give a reason of at least 3 characters")); return; }
+      if (st === "rejected" && note.length < 3) { toastErr(L("ระบุเหตุผลที่ส่งกลับอย่างน้อย 3 ตัวอักษร", "Give a reason of at least 3 characters")); return; }
       r.status = st; r.note = note; r.replied = TODAY; audit([st === "approved" ? "อนุมัติแบบ" : "ส่งแบบกลับแก้", st === "approved" ? "Approved drawings" : "Sent drawings back"], `${k.id} ${r.mn}`); redo(L("บันทึกแล้ว", "Saved")); }));
     $$("[data-boqadd]").forEach(f => (f.onsubmit = e => { e.preventDefault(); const k = conOf(f.dataset.boqadd), fd = new FormData(f), it = String(fd.get("item")).trim(); (k.boq = k.boq || []).push({ item: [it, it], unit: [String(fd.get("unit")).trim(), String(fd.get("unit")).trim()], qty: Math.round(Number(fd.get("qty"))), price: Math.round(Number(fd.get("price"))), serial: fd.get("serial") === "on", kind: fd.get("kind") });
       audit(["เพิ่มรายการ BOQ", "Added a BOQ item"], `${k.id} ${it}`); redo(L("เพิ่มแล้ว", "Added")); }));
@@ -15383,7 +15443,7 @@ PROC.fees = () => {
       (S.fees = S.fees || []).push(f); FEE_DRAFT = null; notify([f.total <= P3().feeLadder ? "prochead" : "exec"], [`ใบเบิกค่าตอบแทนกรรมการ ${f.docNo} รออนุมัติ ${fmt(f.total)} บาท`, `Committee fee claim ${f.docNo} is waiting: ${fmt(f.total)} baht`], "prc-fees");
       audit(["ส่งใบเบิกค่าตอบแทนกรรมการ", "Sent a committee fee claim"], `${f.id} ${fmt(f.total)}`); redo(`${L("ส่งแล้ว เลขที่", "Sent, no.")} ${f.docNo}`); };
     const decide = (id, ok) => { const f = S.fees.find(x => x.id === id), note = ($("#fn-" + id).value || "").trim(); if (f.by === me().id) { toast(L("ผู้เบิกกับผู้อนุมัติต้องเป็นคนละคน", "The person who raised the claim cannot approve it")); return; }
-      if (!ok && note.length < 3) { toast(L("ระบุเหตุผลอย่างน้อย 3 ตัวอักษร", "Give a reason of at least 3 characters")); return; }
+      if (!ok && note.length < 3) { toastErr(L("ระบุเหตุผลอย่างน้อย 3 ตัวอักษร", "Give a reason of at least 3 characters")); return; }
       f.status = ok ? "approved" : "rejected"; f.decided = { by: me().id, t: nowIso(), note }; audit([ok ? "อนุมัติใบเบิกค่าตอบแทนกรรมการ" : "ไม่อนุมัติใบเบิกค่าตอบแทนกรรมการ", ok ? "Approved a committee fee claim" : "Rejected a committee fee claim"], `${f.id} ${fmt(f.total)}`); redo(L("บันทึกแล้ว", "Saved")); };
     $$("[data-fok]").forEach(b => (b.onclick = () => decide(b.dataset.fok, true))); $$("[data-fno]").forEach(b => (b.onclick = () => decide(b.dataset.fno, false)));
   };
@@ -15668,10 +15728,10 @@ const PROC_PAGES = [
     sub: ["นำเข้าไฟล์สถานะจาก e-GP และส่งออกข้อมูลเปิดตามมาตรฐาน OCDS", "Import status files from e-GP and export open data in OCDS"],
     tabs: [{ id: "egp", key: "egp", label: ["ไฟล์จาก e-GP", "e-GP file"], secs: ["egp"] },
       { id: "ocds", key: "ocds", label: ["ส่งออก OCDS", "OCDS export"], secs: ["ocds"] }] },
-  { id: "ai", code: "P13", group: "more", label: ["AI และ Agent", "AI and agents"], roles: ["proc", "prochead", "exec", "audit"],
-    sub: ["ผู้ช่วย AI ทีละเครื่องมือ และ Agent ที่หยุดให้คนอนุมัติทุกขั้นที่เขียนข้อมูล (จำลอง)", "The AI assistant one tool at a time, and agents that stop for a person at every write (simulated)"],
+  { id: "ai", code: "P13", group: "more", label: ["AI และเอเจนต์", "AI and agents"], roles: ["proc", "prochead", "exec", "audit"],
+    sub: ["ผู้ช่วย AI ทีละเครื่องมือ และเอเจนต์ที่หยุดให้คนอนุมัติทุกขั้นที่เขียนข้อมูล (จำลอง)", "The AI assistant one tool at a time, and agents that stop for a person at every write (simulated)"],
     tabs: [{ id: "assist", key: "ai", label: ["ผู้ช่วย AI", "AI assistant"], secs: ["ai"] },
-      { id: "agents", key: "agents", label: ["Agent อัตโนมัติ", "Agents"], secs: ["agents"] }] },
+      { id: "agents", key: "agents", label: ["เอเจนต์อัตโนมัติ", "Agents"], secs: ["agents"] }] },
 ];
 
 // ---------- helpers ----------
@@ -15913,14 +15973,14 @@ const BUD_PAGES = [
   { id: "dashboard", code: "B8", m: "M07", group: "exec", mod: "dashboard",
     tabs: ["live", "drill", "forecast", "alerts", "progress", "procure", { id: "import", roles: ["plan", "exec", "fin", "audit"] }, { id: "overview", label: [`ปี ${CUR_FY - 1}`, `FY${CUR_FY - 1}`] }] },
   { id: "performance", code: "B9", m: "M08", group: "intel", mod: "performance",
-    tabs: [{ id: "kpis", label: ["ตัวชี้วัดและ Scorecard", "KPIs and scorecard"], keys: ["kpis", "scorecard"] }, "chain", "quarter", { id: "cost", roles: ["plan", "exec", "audit"] },
+    tabs: [{ id: "kpis", label: ["ตัวชี้วัดและบัตรคะแนน", "KPIs and scorecard"], keys: ["kpis", "scorecard"] }, "chain", "quarter", { id: "cost", roles: ["plan", "exec", "audit"] },
       { id: "evals", label: ["รายงานและประเมินผล", "Reports and evaluation"], keys: ["report", "evaluate", "stages"], roles: ["plan", "exec", "audit"] }, "recs", { id: "public", roles: ["plan", "exec", "audit"] }] },
   { id: "insight", code: "B10", m: "M09", group: "intel", mod: "intel", view: "assistant", roles: ["plan", "exec", "fin", "audit"],
     label: ["วิเคราะห์และพยากรณ์", "Analytics and forecasts"], h1: ["วิเคราะห์และพยากรณ์งบประมาณ", "Budget analytics and forecasts"],
     tabs: ["bfore", { id: "sim", label: ["จำลองสถานการณ์", "What-if"], keys: ["bwhatif", "whatif"] }, "trends",
       { id: "signals", label: ["สัญญาณและคุณภาพ", "Signals and quality"], keys: ["bkpi", "anoms", "quality"] }] },
   { id: "assistant", code: "B11", m: "M09", group: "intel", mod: "intel",
-    label: ["ผู้ช่วย AI และ Agent", "AI assistant and agents"], h1: ["ผู้ช่วย AI และ Agent งบประมาณ", "Budget AI assistant and agents"],
+    label: ["ผู้ช่วย AI และเอเจนต์", "AI assistant and agents"], h1: ["ผู้ช่วย AI และเอเจนต์งบประมาณ", "Budget AI assistant and agents"],
     tabs: ["ask", { id: "bagents", roles: ["plan", "exec", "fin", "audit"] }, { id: "agents", roles: ["plan", "exec", "fin", "audit"] }] },
 ];
 BUD_PAGES.forEach(p => (p.tabs = (p.tabs || []).map(t => (typeof t === "string" ? { id: t } : t)).map(t => ({ ...t, keys: t.keys || [t.id] }))));
@@ -16855,7 +16915,7 @@ CRUD.def("csDup", {
     if (rt) rt.onclick = () => {
       const id = $("#rv-ret-req") && $("#rv-ret-req").value, why = $("#why").value.trim(), r = S.requests.find(x => x.id === id);
       if (!r) { toast(L("ไม่มีคำขอที่ส่งกลับได้", "No request to return")); return; }
-      if (why.length < 10) { toast(L("ใส่เหตุผลอย่างน้อย 10 ตัวอักษรในช่องเหตุผล", "Put a reason of at least 10 characters in the reason box")); $("#why").focus(); return; }
+      if (why.length < 10) { toastErr(L("ใส่เหตุผลอย่างน้อย 10 ตัวอักษรในช่องเหตุผล", "Put a reason of at least 10 characters in the reason box")); $("#why").focus(); return; }
       const snap = crSnap(); addComment(r, null, why); r.status = "returned"; r.updated = TODAY;
       audit(["ส่งคำขอกลับแก้ไข", "Returned a request for revision"], `${r.id} · ${why}`); notify(["div"], [`คำขอ ${r.id} ถูกส่งกลับแก้ไข: ${why}`, `Request ${r.id} was returned: ${why}`], "req:" + r.id);
       commit(); renderShell(); route(); crUndoOffer(snap, `${L("ส่งกลับ", "Returned")} ${r.id}`);
@@ -17200,7 +17260,7 @@ function bindParl2() {
   };
   const bk = $("#pl-back"); if (bk) bk.onclick = () => { $("#pl-back-box").hidden = false; $("#pl-back-why").focus(); };
   const bo = $("#pl-back-ok"); if (bo) bo.onclick = () => {
-    const why = $("#pl-back-why").value.trim(); if (why.length < 10) { toast(L("ใส่เหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return; }
+    const why = $("#pl-back-why").value.trim(); if (why.length < 10) { toastErr(L("ใส่เหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return; }
     const snap = crSnap(); P.stage -= 1; delete plDates()[P.stage]; if (P.stage < PL_CUT && !plCutRows().length) P.items = null;
     audit(["ย้อนขั้นตอนร่าง พ.ร.บ.", "Stepped the budget bill back"], `${tx(PARL_STEPS[P.stage][0])} · ${why}`); commit(); route(); crUndoOffer(snap, L("ย้อนขั้นแล้ว", "Stepped back"));
   };
@@ -17738,17 +17798,17 @@ CRUD.def("anDone", {
 // ---------- cancelling agent runs (FR-C-44) ----------
 const RUN_ST = { running: [["กำลังทำงาน", "Running"], "p-info"], waiting: [["รอคนอนุมัติ", "Waiting for a person"], "p-warn"], stopped: [["หยุด", "Stopped"], "p-bad"], done: [["เสร็จ", "Done"], "p-ok"], cancelled: [["ยกเลิก", "Cancelled"], "p-mute"] };
 CRUD.def("agRun", {
-  noun: ["งานของ Agent", "Agent run"], st: RUN_ST,
+  noun: ["งานของเอเจนต์", "Agent run"], st: RUN_ST,
   list: () => (S.bRuns || []).slice().reverse(), id: r => r.id, title: r => `${r.id} · ${bAgName(r.agent)}`, sub: r => `${esc(userName(r.by))} · ${fdate(r.t, true)}`, status: r => r.status, gone: r => r.status === "cancelled",
   cols: [{ h: ["งาน", "Run"], c: r => `<span class="mono">${r.id}</span> ${bAgName(r.agent)}` }, { h: ["ขั้น", "Step"], n: true, c: r => `${Math.min(r.ptr + 1, r.steps.length)}/${r.steps.length}` }, { h: ["เริ่มโดย", "Started by"], c: r => `<span class="sub">${esc(userName(r.by))}</span>` }],
   acts: r => (["running", "waiting"].includes(r.status) && (r.by === me().id || ["plan", "fin", "exec"].includes(ROLE)) ? [
-    { id: "show", label: L("เปิดในหน้า Agent", "Show it on the page"), undo: false, run: () => { B_RUN_OPEN = r.id; crClose(); return ""; } },
+    { id: "show", label: L("เปิดในหน้าเอเจนต์", "Show it on the page"), undo: false, run: () => { B_RUN_OPEN = r.id; crClose(); return ""; } },
     { id: "cancel", label: L("ยกเลิกงาน", "Cancel the run"), kind: "danger", why: true, impact: () => L("ขั้นที่ยังไม่ทำจะไม่ทำ สิ่งที่อนุมัติไปแล้วยังมีผล", "Steps not yet done won't run; steps already approved stay in effect"),
-      run: (_, why) => { const s = r.steps[r.ptr]; if (s && s.status === "await") s.status = "skipped"; /* the agent page knows "skipped" */ r.status = "cancelled"; r.cancelled = { t: nowIso(), by: me().id, why }; audit(["ยกเลิกงานของ Agent", "Cancelled an agent run"], `${r.id} · ${why}`); return L("ยกเลิกงานแล้ว", "Run cancelled"); } },
-  ] : [{ id: "show", label: L("เปิดในหน้า Agent", "Show it on the page"), undo: false, run: () => { B_RUN_OPEN = r.id; crClose(); return ""; } }]),
+      run: (_, why) => { const s = r.steps[r.ptr]; if (s && s.status === "await") s.status = "skipped"; /* the agent page knows "skipped" */ r.status = "cancelled"; r.cancelled = { t: nowIso(), by: me().id, why }; audit(["ยกเลิกงานของเอเจนต์", "Cancelled an agent run"], `${r.id} · ${why}`); return L("ยกเลิกงานแล้ว", "Run cancelled"); } },
+  ] : [{ id: "show", label: L("เปิดในหน้าเอเจนต์", "Show it on the page"), undo: false, run: () => { B_RUN_OPEN = r.id; crClose(); return ""; } }]),
   view: r => `<ol class="plain">${r.steps.map((s, i) => `<li><span class="mono sub">${i + 1}. ${s.tool}</span> ${s.status ? tag(s.status, s.status === "approved" || s.status === "done" ? "p-ok" : s.status === "await" ? "p-warn" : "p-mute") : ""}</li>`).join("")}</ol>${r.cancelled ? kv([[L("ยกเลิกเมื่อ", "Cancelled"), `${fdate(r.cancelled.t)} · ${esc(userName(r.cancelled.by))} · ${esc(r.cancelled.why)}`]]) : ""}`,
 });
-{ const p = INTEL.bagents; INTEL.bagents = () => p() + crudList("agRun", { head: `<h2>${L("งานของ Agent ทั้งหมด", "All agent runs")}</h2>`, empty: L("ยังไม่มีงาน", "No runs yet") }); }
+{ const p = INTEL.bagents; INTEL.bagents = () => p() + crudList("agRun", { head: `<h2>${L("งานของเอเจนต์ทั้งหมด", "All agent runs")}</h2>`, empty: L("ยังไม่มีงาน", "No runs yet") }); }
 
 // ---------- the end-to-end demo (design chapter 11) ----------
 const E2E = [
@@ -18697,7 +18757,7 @@ FS.dayCheck = () => {
 };
 FIN_BINDS.push(() => {
   $$("[data-dck]").forEach(cb => (cb.onchange = () => { cb.checked ? DCK_SKIP.delete(cb.dataset.dck) : DCK_SKIP.add(cb.dataset.dck); route(); }));
-  $$("[data-dckflag]").forEach(b => (b.onclick = () => { const v = vcOf(b.dataset.dckflag), why = ($(`#dck-${v.id}`).value || "").trim(); if (why.length < 5) { toast(L("ระบุข้อสังเกตอย่างน้อย 5 ตัวอักษร", "Write a note of at least 5 characters")); return; } dckFlag(v, why); DCK_SKIP.add(v.id); FIN_ROW = null; commit(); renderShell(); route(); toast(L("บันทึกข้อสังเกตแล้ว · แจ้งการเงิน", "Note saved · Finance is told")); }));
+  $$("[data-dckflag]").forEach(b => (b.onclick = () => { const v = vcOf(b.dataset.dckflag), why = ($(`#dck-${v.id}`).value || "").trim(); if (why.length < 5) { toastErr(L("ระบุข้อสังเกตอย่างน้อย 5 ตัวอักษร", "Write a note of at least 5 characters")); return; } dckFlag(v, why); DCK_SKIP.add(v.id); FIN_ROW = null; commit(); renderShell(); route(); toast(L("บันทึกข้อสังเกตแล้ว · แจ้งการเงิน", "Note saved · Finance is told")); }));
   const dc = $("#day-check");
   if (dc) dc.onclick = () => { const err = dckSign(dckToday().filter(v => !DCK_SKIP.has(v.id) && !v.dayFlag).map(v => v.id)); if (err) { toast(err); return; } commit(); renderShell(); route(); toast(L("ลงนามตรวจการจ่ายประจำวันแล้ว", "Daily payment check signed")); };
 });
@@ -19157,7 +19217,7 @@ CON_BINDS.push(done => {
   $$("[data-ivsim]").forEach(b => (b.onclick = () => { const [cid, n] = two(b.dataset.ivsim), c = famCon(cid), ph = ph_(cid, n), f = b.closest("form");
     f.no.value = `INV-${FAM_FY % 100}-${c.id.slice(-3)}${ph.n}`; f.amt.value = ph.result === "partial" ? ph.okAmount : ph.amount; f.no.focus(); toast(L("เติมใบแจ้งหนี้จำลองจากพอร์ทัลผู้ขายแล้ว ตรวจก่อนบันทึก", "Simulated invoice from the supplier portal filled in; check it before saving")); }));
   $$("[data-ivret]").forEach(b => (b.onclick = () => { const [cid, n] = two(b.dataset.ivret), c = famCon(cid), ph = ph_(cid, n), why = ($("#ivr-" + cid + "-" + n) || {}).value || "";
-    if (why.trim().length < 10) { toast(L("ระบุเหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return; }
+    if (why.trim().length < 10) { toastErr(L("ระบุเหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return; }
     if (phPayStarted(c, ph)) { toast(L("งวดนี้ส่งเบิกแล้ว", "This phase has gone to payment")); return; }
     (ph.invReturned = ph.invReturned || []).push(Object.assign({}, ph.invoice, { why: why.trim(), by: me().id, at: nowIso() })); delete ph.invoice; delete ph.hold;
     audit(["ส่งคืนใบแจ้งหนี้", "Returned an invoice"], `${c.id} ${tx(ph.name)} · ${why.trim()}`); done(L("ส่งคืนแล้ว บันทึกใบแจ้งหนี้ใหม่ได้", "Returned; record a new invoice")); }));
@@ -19383,7 +19443,7 @@ const FE2E = [
   ["fin", "fnc-recon:bank", ["กระทบยอดธนาคาร", "Bank reconciliation"], ["นำเข้าผิดลบแล้วนำเข้าใหม่ได้ ปรับปรุงบัญชีกลับรายการได้ก่อนลงนาม", "A wrong import is deleted and imported again; an adjustment is reversed before signing"], ["นำเข้า ปรับปรุงค่าธรรมเนียม แล้วกลับรายการ", "Import, record the fee, then reverse it"]],
   ["exec", "fnc-close:month", ["ปิดและเปิดงวด", "Close and reopen"], ["เปิดงวด วัน หรืองบพิสูจน์ที่ปิดแล้วต้องเป็นคนละคนกับผู้ปิดหรือผู้บริหาร (SD-16)", "A closed period, day or reconciliation is reopened by someone other than whoever closed it, or the executive (SD-16)"], ["ผู้บริหารเปิดงวดใหม่พร้อมเหตุผล", "The executive reopens a period with a reason"]],
   ["fin", "fnc-nb:plans", ["เงินนอกงบประมาณ", "Non-budget money"], ["แผนที่อนุมัติปรับเป็นฉบับใหม่ได้ ฉบับเดิมยังใช้จ่ายได้จนกว่าฉบับใหม่ได้รับอนุมัติ", "An approved plan is amended as a new version; the old one stays in force until the new one is approved"], ["เปิดแผนที่อนุมัติ ปรับแผน เพิ่มรายการ แล้วเสนอ", "Open an approved plan, amend it, add a line, send it"]],
-  ["audit", "fnc-ai:kpi", ["ผู้ตรวจสอบและสัญญาณ", "The auditor and the signals"], ["ยืนยันประเด็นหรือผลบวกลวงต้องมีเหตุผล เปิดใหม่ได้ งาน Agent หยุดได้พร้อมเหตุผล", "Confirming an issue or a false positive needs a reason and can be reopened; an agent run can be stopped with a reason"], ["ตั้งสัญญาณเป็นประเด็น แล้วเปิดประวัติใบขอเบิก", "Mark a signal as an issue, then open a voucher's history"]],
+  ["audit", "fnc-ai:kpi", ["ผู้ตรวจสอบและสัญญาณ", "The auditor and the signals"], ["ยืนยันประเด็นหรือผลบวกลวงต้องมีเหตุผล เปิดใหม่ได้ งานเอเจนต์หยุดได้พร้อมเหตุผล", "Confirming an issue or a false positive needs a reason and can be reopened; an agent run can be stopped with a reason"], ["ตั้งสัญญาณเป็นประเด็น แล้วเปิดประวัติใบขอเบิก", "Mark a signal as an issue, then open a voucher's history"]],
   ["plan", "mon-live", ["ยอดเบิกจ่ายใน Fisko Budget", "Spending in Fisko Budget"], ["การจ่ายและเงินคืนจากขั้นก่อนหน้าเห็นในการติดตามปีนี้ทันที", "The payments and refunds from the earlier steps show in this year's tracking at once"], ["ดูยอดเบิกจ่ายของรายการที่ใช้", "Look at the spending of the lines used"]],
 ];
 FE2E.forEach(([role, link, title, say, doo], i) => DEMO.push({ t: `E-F${String(i + 1).padStart(2, "0")}`, part: "fin", role, link, title, say, do: doo }));
@@ -19431,7 +19491,7 @@ CASE_PANELS.push(c => {
 CASE_BINDS.push((c, done) => {
   const f = $("#egp-edit"); if (!f) return;
   f.onsubmit = e => { e.preventDefault(); const no = $("#ege-no").value.trim(), close = $("#ege-close").value, why = $("#ege-why").value.trim();
-    if (why.length < 10) { toast(L("ระบุเหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return; }
+    if (why.length < 10) { toastErr(L("ระบุเหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return; }
     if (!no || !close || close < c.egp.announce) { toast(L("วันปิดรับต้องไม่ก่อนวันประกาศ", "The closing date can't be before the announcement")); return; }
     if (no === c.egp.no && close === c.egp.close) { toast(L("ยังไม่มีอะไรเปลี่ยน", "Nothing changed")); return; }
     (c.egp.amends = c.egp.amends || []).push({ from: { no: c.egp.no, close: c.egp.close }, to: { no, close }, why, by: me().id, t: nowIso() });
@@ -19468,7 +19528,7 @@ const SYSTEMS = {
   budget: { grp: "core", icon: "pie", app: true },
   procurement: { grp: "core", icon: "folder", app: true },
   finance: { grp: "core", icon: "wallet", app: true },
-  admin: { grp: "platform", icon: "settings", name: ["ผู้ดูแลระบบ", "Administration"], desc: ["ผู้ใช้ สิทธิ์ Workflow กฎ และการเชื่อมต่อ", "Users, roles, workflow, rules and interfaces"] },
+  admin: { grp: "platform", icon: "settings", name: ["ผู้ดูแลระบบ", "Administration"], desc: ["ผู้ใช้ สิทธิ์ขั้นตอนงานกฎ และการเชื่อมต่อ", "Users, roles, workflow, rules and interfaces"] },
   assets: { grp: "planned", icon: "building", planned: true, name: ["Fisko Assets", "Fisko Assets"], desc: ["พัสดุ ครุภัณฑ์ และค่าเสื่อมราคา", "Stock, equipment and depreciation"],
     covers: [["ทะเบียนพัสดุและครุภัณฑ์ รับเข้าจากการตรวจรับใน Fisko Procurement", "Stock and equipment register, fed by acceptance in Fisko Procurement"], ["เบิกจ่ายพัสดุ โอนย้าย ตรวจนับประจำปี และจำหน่าย", "Issues, transfers, the annual count and disposal"], ["ค่าเสื่อมราคาและรายงานสินทรัพย์ส่ง GFMIS", "Depreciation and asset reports for GFMIS"]],
     joins: [["รับรายการจากใบตรวจรับของ Procurement", "Takes items from Procurement's acceptance certificates"], ["ส่งค่าเสื่อมราคาให้ Finance ลงบัญชี", "Sends depreciation to Finance for the books"]] },
@@ -19928,9 +19988,9 @@ DEMO.push(
 const PRES_ROUTES = [
   ["exec", ["ฉบับผู้บริหาร 7 ขั้น", "Executive cut · 7 steps"]],
   ["story", ["เรื่องเล่าหลัก", "Storyline"]],
-  ["e2e", ["Budget ครบวงจร", "Budget end to end"]],
-  ["pe2e", ["Procurement ครบวงจร", "Procurement end to end"]],
-  ["fin", ["Finance ครบวงจร", "Finance end to end"]],
+  ["e2e", ["งบประมาณครบวงจร", "Budget end to end"]],
+  ["pe2e", ["จัดซื้อจัดจ้างครบวงจร", "Procurement end to end"]],
+  ["fin", ["การเงินครบวงจร", "Finance end to end"]],
 ];
 // The executive cut: one platform, the inbox and the exception centre, then one strong moment from each app.
 function presSteps(rt) {
@@ -20441,7 +20501,7 @@ BIND["prj-share"] = () => {
     st.log.unshift({ t: nowIso(), to: c.id, rows: prjList().length * (c.kind === "ext" ? 1 : 12), asOf: TODAY, by: me().id, ok: null });
     audit(["ส่งข้อมูลจากคลังข้อมูลกลาง", "Shared data from the warehouse"], (c.name)[1]); save(); route(); toast(`${L("ส่งแล้ว", "Sent")}: ${tx(c.name)}`); }));
   $$("[data-shareok]").forEach(b => (b.onclick = () => { const c = cs.find(x => x.id === b.dataset.shareok), w = $("#share-why"), why = w ? w.value.trim() : "";
-    if (why.length < 10) { toast(L("ระบุเหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); if (w) w.focus(); return; }
+    if (why.length < 10) { toastErr(L("ระบุเหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); if (w) w.focus(); return; }
     st.cons[c.id] = "active"; st.log.unshift({ t: nowIso(), to: c.id, rows: prjList().length, asOf: TODAY, by: (S.users.find(u => u.role === (c.ask ? c.ask.by : "plan")) || me()).id, ok: me().id, why });
     audit(["อนุมัติการส่งข้อมูลให้หน่วยงานภายนอก", "Approved an external data share"], (c.name)[1]); save(); renderNav(); route(); toast(L("อนุมัติและส่งแล้ว บันทึกในทะเบียนการส่ง", "Approved and sent; recorded in the send log")); }));
 };
@@ -20518,6 +20578,204 @@ DEMO.push(
 PRES_ROUTES.splice(1, 0, ["na", ["วงจรโครงการ 8 ขั้น", "Project cycle · 8 steps"]]);
 // a step whose tenant has nothing to show (no ToR map) drops out of the presenter
 { const ps = presSteps; presSteps = rt => ps(rt).filter(i => !DEMO[i].when || DEMO[i].when()); }
+
+/* ---- 95b-site.js ---- */
+// Government-site basics (round 65), from the UX review against the DGA Government Website Standard v3.0
+// (มสพร. 11-2566) and PDPA section 23: a skip link, errors that move focus to the field and are announced, a live
+// region for every toast, page labels without design codes, presenter steps that open the record they talk about,
+// a footer with the agency's contact and policies, the policy pages, and a privacy notice at sign-in.
+// The wording is the product's; each agency's address, contact and data protection officer are tenant data in
+// SITE_CFG[ORG], set by that tenant's data file.
+const SITE_CFG = {};
+const SITE_DEF = {
+  addr: null, tel: null, email: null, web: null, dpo: null, // [th, en] for addr; strings for the rest
+  hours: ["วันจันทร์–ศุกร์ เวลา 08.30–16.30 น. เว้นวันหยุดราชการ", "Monday to Friday, 08.30–16.30, except public holidays"],
+  updated: "2026-10-28",
+};
+const siteCfg = () => Object.assign({}, SITE_DEF, SITE_CFG[ORG] || {});
+
+// ---------- skip link and live region ----------
+{
+  const sk = document.createElement("a"); sk.className = "skiplink"; sk.id = "skiplink"; sk.href = "#";
+  sk.onclick = e => { e.preventDefault(); const v = $("#view"); v.setAttribute("tabindex", "-1"); v.focus(); };
+  document.body.prepend(sk);
+  const lv = document.createElement("div"); lv.id = "sr-live"; lv.className = "sr-only"; lv.setAttribute("role", "status"); lv.setAttribute("aria-live", "polite");
+  document.body.appendChild(lv);
+}
+// Every toast is also read out: the toast itself is shown and hidden, which screen readers don't announce reliably.
+{
+  const bt = toast;
+  toast = function (msg) { bt.apply(this, arguments); const lv = $("#sr-live"); if (lv) { lv.textContent = ""; setTimeout(() => (lv.textContent = msg), 50); } };
+}
+
+// ---------- errors tied to their field ----------
+// A blocked save says why in a toast; toastErr also finds the field the person was filling in (the nearest text box
+// to the button they pressed that is empty or too short), marks it invalid, puts the message under it and moves focus
+// there, so keyboard and screen-reader users land on what to fix (WCAG 3.3.1, 3.3.3).
+let SITE_ACT = null;
+document.addEventListener("click", e => (SITE_ACT = e.target), true);
+document.addEventListener("submit", e => (SITE_ACT = e.submitter || e.target), true);
+const siteFields = root => [...root.querySelectorAll('textarea, input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="search"]):not([type="button"]):not([type="submit"]), select')]
+  .filter(el => !el.disabled && !el.readOnly && el.offsetParent !== null);
+function siteErrField() {
+  let n = SITE_ACT && SITE_ACT.isConnected ? SITE_ACT : null;
+  for (; n && n !== document.body; n = n.parentElement) {
+    const fs = siteFields(n);
+    if (!fs.length) continue;
+    return fs.find(el => el.tagName === "SELECT" ? !el.value : el.type === "number" ? !(Number(el.value) > 0) : el.value.trim().length < 10) || fs[0];
+  }
+  return null;
+}
+function toastErr(msg) {
+  toast(msg);
+  const el = siteErrField(); if (!el) return;
+  $$(".fld-err").forEach(x => x.remove());
+  $$('[data-fld-err]').forEach(x => { x.removeAttribute("aria-invalid"); x.removeAttribute("data-fld-err"); });
+  const id = "fe-" + (el.id || Math.random().toString(36).slice(2, 8)), m = document.createElement("div");
+  m.className = "fld-err"; m.id = id; m.textContent = msg;
+  el.insertAdjacentElement("afterend", m);
+  el.setAttribute("aria-invalid", "true"); el.setAttribute("data-fld-err", ""); el.setAttribute("aria-describedby", [el.getAttribute("aria-describedby"), id].filter(Boolean).join(" "));
+  el.focus();
+  el.addEventListener("input", function clear() { el.removeAttribute("aria-invalid"); el.removeAttribute("data-fld-err"); m.remove(); el.removeEventListener("input", clear); });
+}
+
+// ---------- page labels ----------
+// Eyebrows keep what a reader needs (the area, the record id) and drop design codes (B3, M02, F1) and, in Thai, the
+// English names left from the design documents.
+const SITE_CODE = /^(?:[A-Z]{1,2}-?\d{1,2}[a-z]?|M\d\d)$/;
+function siteEyebrows(root) {
+  $$(".head .eyebrow, .cr-head .eyebrow", root).forEach(e => {
+    const parts = e.innerHTML.split(/\s+·\s+/).filter(p => {
+      const t = p.replace(/<[^>]*>/g, "").replace(/&amp;/g, "&").trim();
+      if (!t) return false;
+      if (SITE_CODE.test(t)) return false;
+      if (LANG === "th" && !/</.test(p) && !/[฀-๿]/.test(t) && /^[A-Za-z& ]+$/.test(t)) return false;
+      return true;
+    });
+    e.innerHTML = parts.join(" · ");
+    e.hidden = !parts.length;
+  });
+}
+
+// ---------- presenter steps open their record ----------
+// Each step names the record it works on; the list alone made the presenter hunt for it on screen.
+const presCase = (lo, hi, pick) => {
+  const open = S.cases.filter(c => !c.cancelled && !c.close), st = c => caseState(c);
+  const hit = open.filter(c => st(c) >= lo && st(c) <= hi && (!pick || pick(c)));
+  const pool = hit.length ? hit : open.slice().sort((a, b) => Math.abs(st(a) - lo) - Math.abs(st(b) - lo));
+  return pool[0] || null;
+};
+const presCon = () => (S.contracts || []).filter(c => c.signed && !c.closed).slice(-1)[0] || null;
+const presVc = states => { const vs = S.vouchers || []; for (const st of states) { const v = vs.filter(x => x.state === st).slice(-1)[0]; if (v) return v; } return null; };
+const PRES_OPEN = {
+  "P-E05": () => presCase(3, 3, c => !c.method), "P-E06": () => presCase(4, 4), "P-E07": () => presCase(5, 5),
+  "P-E08": () => presCase(6, 7), "P-E09": () => presCase(7, 8, c => !c.contract), "P-E14": () => presCase(10, 11),
+  "P-E15": () => presCase(5, 6, c => !(c.bids || []).length),
+  "P-E10": () => presCon(), "P-E11": () => presCon(), "P-E13": () => presCon(),
+  "E-F03": () => presVc(["draft", "check"]), "E-F04": () => presVc(["check"]), "E-F05": () => presVc(["approve"]), "E-F07": () => presVc(["paid"]),
+};
+{
+  const bg = presGo;
+  presGo = function (i) {
+    bg.apply(this, arguments);
+    const s = PRES && DEMO[presSteps(PRES.rt)[PRES.i]], f = s && PRES_OPEN[s.t], r = f && f();
+    if (!r) return;
+    if (s.t.startsWith("E-F")) { VC_OPEN = r.id; route(); }
+    else if (r.phases) { CON_OPEN = r.id; procSet("contracts"); route(); }
+    else jump("case:" + r.id);
+  };
+}
+
+// ---------- footer and policy pages ----------
+const SITE_POL = [
+  ["privacy", ["นโยบายคุ้มครองข้อมูลส่วนบุคคล", "Privacy policy"]],
+  ["cookie", ["นโยบายคุกกี้", "Cookie policy"]],
+  ["security", ["นโยบายการรักษาความมั่นคงปลอดภัย", "Security policy"]],
+  ["terms", ["นโยบายเว็บไซต์และข้อจำกัดความรับผิดชอบ", "Website policy and disclaimer"]],
+  ["a11y", ["การเข้าถึงได้", "Accessibility"]],
+  ["contact", ["ติดต่อหน่วยงาน", "Contact"]],
+];
+let SITE_TAB = "privacy";
+const siteOrg = () => esc(tx(S.org));
+const siteBE = iso => Number(iso.slice(0, 4)) + (LANG === "th" ? 543 : 0);
+function siteContact(c) {
+  const rows = [
+    c.addr && [L("ที่อยู่", "Address"), esc(tx(c.addr))],
+    c.tel && [L("โทรศัพท์", "Phone"), esc(c.tel)],
+    c.email && [L("อีเมล", "Email"), `<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`],
+    c.web && [L("เว็บไซต์", "Website"), esc(c.web)],
+    [L("เวลาทำการ", "Office hours"), esc(tx(c.hours))],
+  ].filter(Boolean);
+  return `<dl class="cr-kv">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>`;
+}
+function renderSiteFoot() {
+  let f = $("#sitefoot");
+  if (!f) { f = document.createElement("footer"); f.id = "sitefoot"; f.className = "sitefoot"; $(".main").appendChild(f); }
+  const c = siteCfg();
+  f.setAttribute("aria-label", L("ข้อมูลหน่วยงานและนโยบาย", "Agency information and policies"));
+  f.innerHTML = `<div class="sf-org"><b>${siteOrg()}</b>${c.addr ? `<span>${esc(tx(c.addr))}</span>` : ""}${c.tel ? `<span>${L("โทร", "Tel.")} ${esc(c.tel)}</span>` : ""}${c.email ? `<span>${esc(c.email)}</span>` : ""}</div>
+    <nav class="sf-links" aria-label="${L("นโยบาย", "Policies")}">${SITE_POL.map(([k, l]) => `<a href="#policy" data-sitepol="${k}">${tx(l)}</a>`).join("")}</nav>
+    <div class="sf-copy">© ${siteBE(c.updated)} ${siteOrg()} · ${L("สงวนลิขสิทธิ์", "All rights reserved")} · ${L("ปรับปรุงล่าสุด", "Last updated")} ${fdate(c.updated)}</div>`;
+  $$("[data-sitepol]", f).forEach(a => (a.onclick = e => { e.preventDefault(); SITE_TAB = a.dataset.sitepol; go("policy"); }));
+}
+// The policy texts are the product's template: the agency's name and contacts fill in from tenant data.
+function sitePolicy(k) {
+  const c = siteCfg(), org = siteOrg(), dpo = c.dpo ? `<a href="mailto:${esc(c.dpo)}">${esc(c.dpo)}</a>` : L("เจ้าหน้าที่คุ้มครองข้อมูลส่วนบุคคลของหน่วยงาน", "the agency's data protection officer");
+  const P = (th, en) => `<p>${L(th, en)}</p>`, UL = items => `<ul>${items.map(([th, en]) => `<li>${L(th, en)}</li>`).join("")}</ul>`;
+  if (k === "privacy") return P(`${org} ในฐานะผู้ควบคุมข้อมูลส่วนบุคคล แจ้งรายละเอียดตามมาตรา 23 แห่งพระราชบัญญัติคุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562`, `${org}, as the data controller, gives this notice under section 23 of the Personal Data Protection Act B.E. 2562 (2019).`)
+    + `<h3>${L("ข้อมูลที่เก็บ", "What we collect")}</h3>` + UL([["ชื่อ ตำแหน่ง หน่วยงาน บทบาท และอีเมลราชการ จากบัญชีผู้ใช้ของหน่วยงาน", "Name, position, unit, role and official email, from the agency's user accounts"], ["บันทึกการเข้าใช้และการทำรายการ (วันเวลา รายการที่ทำ เหตุผลที่ระบุ)", "Sign-in and activity records (time, action, the reason given)"], ["ข้อมูลคู่สัญญาและผู้รับเงิน เช่น ชื่อ เลขประจำตัวผู้เสียภาษี และบัญชีธนาคาร เท่าที่จำเป็นต่อการจ่ายเงิน", "Supplier and payee details, such as name, tax id and bank account, only as needed to pay them"]])
+    + `<h3>${L("วัตถุประสงค์และฐานทางกฎหมาย", "Purpose and legal basis")}</h3>` + P("เพื่อจัดทำ บริหาร และติดตามงบประมาณ การจัดซื้อจัดจ้าง และการเงินการคลังของหน่วยงาน ซึ่งเป็นการปฏิบัติหน้าที่ตามกฎหมายและภารกิจเพื่อประโยชน์สาธารณะ (มาตรา 24 (4) และ (6)) ระบบไม่ใช้ข้อมูลเพื่อการตลาด และไม่ใช้ตัดสินใจแทนเจ้าหน้าที่", "To prepare, run and monitor the agency's budget, procurement and finance: duties under law and in the public interest (section 24 (4) and (6)). The data is never used for marketing, and the system never decides in place of an official.")
+    + `<h3>${L("ผู้รับข้อมูล", "Who receives it")}</h3>` + P("ส่งให้หน่วยงานที่กฎหมายกำหนดเท่านั้น เช่น กรมบัญชีกลาง สำนักงบประมาณ และสำนักงานการตรวจเงินแผ่นดิน ทุกการส่งบันทึกไว้และตรวจสอบได้", "Only to bodies the law names, such as the Comptroller General's Department, the Budget Bureau and the State Audit Office. Every send is logged and can be checked.")
+    + `<h3>${L("ระยะเวลาเก็บรักษา", "How long we keep it")}</h3>` + P("ตามตารางระยะเวลาเก็บรักษาข้อมูลของหน่วยงานและระเบียบงานสารบรรณ เมื่อพ้นกำหนดจะลบหรือทำให้ไม่สามารถระบุตัวบุคคลได้", "As set in the agency's records-retention schedule and the official records rules; after that the data is deleted or de-identified.")
+    + `<h3>${L("สิทธิของเจ้าของข้อมูล", "Your rights")}</h3>` + P(`ขอเข้าถึง ขอสำเนา ขอแก้ไข ขอลบ ขอระงับ หรือคัดค้านการใช้ข้อมูล และร้องเรียนต่อสำนักงานคณะกรรมการคุ้มครองข้อมูลส่วนบุคคล ติดต่อ ${dpo}`, `To see, copy, correct, delete or restrict your data, or object to its use, and to complain to the PDPC Office. Contact ${dpo}.`);
+  if (k === "cookie") return P("ระบบใช้ที่เก็บข้อมูลในเบราว์เซอร์เฉพาะที่จำเป็นต่อการทำงาน ไม่มีคุกกี้โฆษณาหรือการติดตามข้ามเว็บไซต์ จึงไม่ต้องขอความยินยอม", "The system keeps only what it needs in your browser. There are no advertising or cross-site tracking cookies, so no consent is needed.")
+    + UL([["fisko-lang, fisko-org, fisko-app: ภาษา หน่วยงาน และระบบที่เปิดล่าสุด", "fisko-lang, fisko-org, fisko-app: your language, agency and last system"], ["fisko-session, fisko-role: สถานะการเข้าสู่ระบบ ลบเมื่อออกจากระบบ", "fisko-session, fisko-role: sign-in state, cleared when you sign out"], ["fisko-pins, fisko-recent, fisko-sys-pins: หน้าที่ปักหมุดและเปิดล่าสุด", "fisko-pins, fisko-recent, fisko-sys-pins: your pinned and recent pages"], ["ในต้นแบบนี้ ข้อมูลตัวอย่างที่แก้ไขเก็บไว้ในเบราว์เซอร์ของคุณเท่านั้น", "In this prototype, the sample records you change stay in your browser only"]]);
+  if (k === "security") return P(`${org} รักษาความมั่นคงปลอดภัยของระบบตามพระราชบัญญัติการรักษาความมั่นคงปลอดภัยไซเบอร์ พ.ศ. 2562 และมาตรฐานของสำนักงานพัฒนารัฐบาลดิจิทัล`, `${org} secures the system under the Cyber Security Act B.E. 2562 (2019) and the Digital Government Development Agency's standards.`)
+    + UL([["เข้าสู่ระบบด้วยบัญชีของหน่วยงาน (SSO) และการยืนยันตัวตนสองชั้น", "Sign-in with the agency's account (SSO) and two-factor authentication"], ["สิทธิ์ตามบทบาท และแยกหน้าที่ผู้จัดทำ ผู้ตรวจ ผู้อนุมัติ", "Role-based access, with maker, checker and approver kept apart"], ["บันทึกการทำรายการที่ลบหรือแก้ไขไม่ได้", "An audit log that cannot be edited or deleted"], ["เข้ารหัสข้อมูลระหว่างส่ง และสำรองข้อมูลพร้อมทดสอบการกู้คืน", "Encryption in transit, and backups with tested restores"], ["แจ้งเหตุผิดปกติหรือช่องโหว่ได้ที่ช่องทางติดต่อของหน่วยงาน", "Report an incident or a weakness through the agency's contact channel"]]);
+  if (k === "terms") return P(`ระบบนี้ใช้สำหรับเจ้าหน้าที่ของ${org}และผู้ที่ได้รับอนุญาตเท่านั้น ข้อมูลที่แสดงใช้ประกอบการปฏิบัติงาน ตัวเลขทางการให้ยึดตามระบบ GFMIS และเอกสารที่ลงนามแล้ว การนำข้อมูลไปเผยแพร่ต้องได้รับอนุญาตจากหน่วยงาน`, `This system is for ${org} staff and authorised users only. What it shows supports their work; official figures are those in GFMIS and in signed documents. Publishing any of it needs the agency's permission.`)
+    + P("ต้นแบบนี้ใช้ข้อมูลตัวอย่างทั้งหมดเพื่อการหารือ ไม่ใช่ข้อมูลจริงของหน่วยงาน", "This prototype uses sample data only, for discussion; it is not the agency's real data.");
+  if (k === "a11y") return P("ระบบออกแบบให้เป็นไปตามมาตรฐานเว็บไซต์ภาครัฐ (มสพร. 11-2566) ซึ่งอ้างอิง WCAG 2.1 ระดับ AA", "The system is designed to the Government Website Standard (มสพร. 11-2566), which refers to WCAG 2.1 level AA.")
+    + UL([["ใช้งานด้วยแป้นพิมพ์ได้ทุกหน้า และมีลิงก์ข้ามไปเนื้อหาหลัก", "Every page works by keyboard, with a link to skip to the main content"], ["ตัวอักษรไม่เล็กกว่า 12 พิกเซล ความต่างของสีตามเกณฑ์ และขยายตัวอักษรได้ด้วยเบราว์เซอร์", "No text under 12 px, colour contrast to the criteria, and text can be enlarged in the browser"], ["ข้อผิดพลาดแจ้งที่ช่องที่ต้องแก้ และโปรแกรมอ่านหน้าจออ่านได้", "Errors are shown at the field to fix and read out by screen readers"], ["ใช้ได้ทั้งภาษาไทยและภาษาอังกฤษ และปีเป็นพุทธศักราช", "Thai and English throughout, with Buddhist-era years"]])
+    + P("ข้อจำกัดที่ทราบ: กราฟบางชนิดยังไม่มีตารางข้อมูลแทน และเอกสารราชการที่ระบบสร้างยังไม่ใช้ฟอนต์ TH Sarabun หากพบปัญหาในการใช้งาน แจ้งได้ที่ช่องทางติดต่อของหน่วยงาน", "Known limits: some charts have no data table yet, and the official documents the system generates are not yet set in TH Sarabun. Tell us about any barrier through the agency's contact channel.");
+  return siteContact(c);
+}
+VIEWS.policy = () => `<div class="head"><div><div class="eyebrow">${siteOrg()}</div><h1>${L("นโยบายและข้อมูลหน่วยงาน", "Policies and agency information")}</h1><p>${L("ปรับปรุงล่าสุด", "Last updated")} ${fdate(siteCfg().updated)}</p></div></div>
+  <div class="tabs" role="tablist">${SITE_POL.map(([k, l]) => `<button class="tab ${k === SITE_TAB ? "on" : ""}" type="button" role="tab" aria-selected="${k === SITE_TAB}" data-sitetab="${k}">${tx(l)}</button>`).join("")}</div>
+  <section class="panel"><header><h2>${tx(SITE_POL.find(p => p[0] === SITE_TAB)[1])}</h2></header><div class="body sitepol">${sitePolicy(SITE_TAB)}</div></section>`;
+BIND.policy = () => $$("[data-sitetab]").forEach(b => (b.onclick = () => { SITE_TAB = b.dataset.sitetab; route(); }));
+// The policy pages belong to the Workspace, like the demo guide, so opening one never switches the system.
+WS_PAGES.add("policy");
+{ const bc = curPage; curPage = function () { return CUR === "policy" ? { link: "policy", label: ["นโยบายและข้อมูลหน่วยงาน", "Policies and agency information"], sys: "workspace" } : bc.apply(this, arguments); }; }
+
+// ---------- privacy notice at sign-in (PDPA section 23) ----------
+{
+  const bs = showSignIn;
+  showSignIn = function () {
+    bs.apply(this, arguments);
+    const card = $("#signin .si-card"), foot = card && card.querySelector(".si-foot"); if (!foot) return;
+    const d = document.createElement("details"); d.className = "si-pdpa";
+    d.innerHTML = `<summary>${L("ประกาศความเป็นส่วนตัว: ระบบใช้ชื่อ ตำแหน่ง และบันทึกการใช้งานของคุณเพื่อปฏิบัติงานตามกฎหมาย", "Privacy notice: the system uses your name, position and activity records to carry out legal duties")}</summary><div class="sitepol">${sitePolicy("privacy")}</div>`;
+    foot.before(d);
+    const o = $("#otp");
+    if (o && SIGN.err) { const e = o.closest(".mfa").querySelector('span[style*="--bad"]'); if (e) { e.id = "otp-err"; e.setAttribute("role", "alert"); o.setAttribute("aria-invalid", "true"); o.setAttribute("aria-describedby", "otp-err"); } }
+  };
+}
+
+// ---------- the shell ----------
+{
+  const bs = renderShell;
+  renderShell = function () {
+    bs.apply(this, arguments);
+    $("#skiplink").textContent = L("ข้ามไปยังเนื้อหาหลัก", "Skip to main content");
+    renderSiteFoot();
+  };
+  const br = route;
+  route = function () {
+    const r = br.apply(this, arguments);
+    siteEyebrows($("#view"));
+    return r;
+  };
+}
 
 /* ---- 96-data-dpt-na02.js ---- */
 // DPT's project registry setup (round 64), from the A3 sheet NA-02 "โครงการพัฒนาระบบคลังข้อมูลกลาง" (ระบบคลังแผน ·
@@ -20654,6 +20912,13 @@ PRJ_CFG.dpt = {
   ].map(([g, name, mods, gf, page]) => ({ grp: DPT_GRP[g], name, mods, gf: !!gf, page })),
 };
 
+/* ---- 96-data-dpt-site.js ---- */
+// DPT's contact details for the footer and the policy pages (round 65). Check them with DPT before a customer demo.
+SITE_CFG.dpt = {
+  addr: ["218/1 ถนนพระรามที่ 6 แขวงสามเสนใน เขตพญาไท กรุงเทพมหานคร 10400", "218/1 Rama VI Road, Samsen Nai, Phaya Thai, Bangkok 10400"],
+  tel: "1460", web: "www.dpt.go.th",
+};
+
 /* ---- 96-data-sample-prj.js ---- */
 // The sample organization's project registry setup (round 64): who receives its shared data. Every name is sample data.
 PRJ_CFG.sample = {
@@ -20666,6 +20931,13 @@ PRJ_CFG.sample = {
     { id: "parl", kind: "ext", name: ["คณะกรรมาธิการงบประมาณ รัฐสภา", "Parliament budget committee"], data: [["เอกสารชี้แจงและผลการเบิกจ่าย", "Briefing documents and spending results"]], mode: ["ไฟล์", "File"], status: "pending", last: "",
       ask: { by: "plan", t: "2026-10-15T14:00", why: ["คณะกรรมาธิการขอผลเบิกจ่ายรายโครงการก่อนการพิจารณาวาระแรก", "The committee asked for spending by project before the first reading"] } },
   ],
+};
+
+/* ---- 96-data-sample-site.js ---- */
+// The sample organization's contact details for the footer and the policy pages (round 65). Every value is sample data.
+SITE_CFG.sample = {
+  addr: ["เลขที่ 99 ถนนตัวอย่าง แขวงตัวอย่าง เขตตัวอย่าง กรุงเทพมหานคร 10000", "99 Sample Road, Sample District, Bangkok 10000"],
+  tel: "0 2000 0000", email: "contact@sample.go.th", web: "www.sample.go.th", dpo: "dpo@sample.go.th",
 };
 
 /* ---- 99-boot.js ---- */

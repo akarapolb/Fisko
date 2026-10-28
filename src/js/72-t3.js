@@ -96,7 +96,7 @@ function t3Panel(c) {
       const r = { n: k.drw.rounds.length + 1, recv: d, mn: docNo("mn", "", k.id), status: "submitted", note: "", replied: null, by: me().id }; k.drw.rounds.push(r);
       notify(k.inspectors || [], [`สัญญา ${k.id} ได้รับแบบ ${r.mn} ตอบภายใน ${fdate(drwDue(r))}`, `Contract ${k.id}: drawings ${r.mn} received; reply by ${fdate(drwDue(r))}`], "prc-contracts"); audit(["บันทึกการรับแบบ", "Recorded receipt of drawings"], `${k.id} ${r.mn}`); redo(`${L("ออกเลข", "Issued")} ${r.mn}`); }));
     $$("[data-drwdec]").forEach(b => (b.onclick = () => { const [id, n, st] = b.dataset.drwdec.split("|"), k = conOf(id), r = k.drw.rounds.find(x => x.n === Number(n)), note = ($(`#dn-${id}-${n}`).value || "").trim();
-      if (st === "rejected" && note.length < 3) { toast(L("ระบุเหตุผลที่ส่งกลับอย่างน้อย 3 ตัวอักษร", "Give a reason of at least 3 characters")); return; }
+      if (st === "rejected" && note.length < 3) { toastErr(L("ระบุเหตุผลที่ส่งกลับอย่างน้อย 3 ตัวอักษร", "Give a reason of at least 3 characters")); return; }
       r.status = st; r.note = note; r.replied = TODAY; audit([st === "approved" ? "อนุมัติแบบ" : "ส่งแบบกลับแก้", st === "approved" ? "Approved drawings" : "Sent drawings back"], `${k.id} ${r.mn}`); redo(L("บันทึกแล้ว", "Saved")); }));
     $$("[data-boqadd]").forEach(f => (f.onsubmit = e => { e.preventDefault(); const k = conOf(f.dataset.boqadd), fd = new FormData(f), it = String(fd.get("item")).trim(); (k.boq = k.boq || []).push({ item: [it, it], unit: [String(fd.get("unit")).trim(), String(fd.get("unit")).trim()], qty: Math.round(Number(fd.get("qty"))), price: Math.round(Number(fd.get("price"))), serial: fd.get("serial") === "on", kind: fd.get("kind") });
       audit(["เพิ่มรายการ BOQ", "Added a BOQ item"], `${k.id} ${it}`); redo(L("เพิ่มแล้ว", "Added")); }));
@@ -175,7 +175,7 @@ PROC.fees = () => {
       (S.fees = S.fees || []).push(f); FEE_DRAFT = null; notify([f.total <= P3().feeLadder ? "prochead" : "exec"], [`ใบเบิกค่าตอบแทนกรรมการ ${f.docNo} รออนุมัติ ${fmt(f.total)} บาท`, `Committee fee claim ${f.docNo} is waiting: ${fmt(f.total)} baht`], "prc-fees");
       audit(["ส่งใบเบิกค่าตอบแทนกรรมการ", "Sent a committee fee claim"], `${f.id} ${fmt(f.total)}`); redo(`${L("ส่งแล้ว เลขที่", "Sent, no.")} ${f.docNo}`); };
     const decide = (id, ok) => { const f = S.fees.find(x => x.id === id), note = ($("#fn-" + id).value || "").trim(); if (f.by === me().id) { toast(L("ผู้เบิกกับผู้อนุมัติต้องเป็นคนละคน", "The person who raised the claim cannot approve it")); return; }
-      if (!ok && note.length < 3) { toast(L("ระบุเหตุผลอย่างน้อย 3 ตัวอักษร", "Give a reason of at least 3 characters")); return; }
+      if (!ok && note.length < 3) { toastErr(L("ระบุเหตุผลอย่างน้อย 3 ตัวอักษร", "Give a reason of at least 3 characters")); return; }
       f.status = ok ? "approved" : "rejected"; f.decided = { by: me().id, t: nowIso(), note }; audit([ok ? "อนุมัติใบเบิกค่าตอบแทนกรรมการ" : "ไม่อนุมัติใบเบิกค่าตอบแทนกรรมการ", ok ? "Approved a committee fee claim" : "Rejected a committee fee claim"], `${f.id} ${fmt(f.total)}`); redo(L("บันทึกแล้ว", "Saved")); };
     $$("[data-fok]").forEach(b => (b.onclick = () => decide(b.dataset.fok, true))); $$("[data-fno]").forEach(b => (b.onclick = () => decide(b.dataset.fno, false)));
   };

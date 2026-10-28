@@ -20,7 +20,7 @@ const SYSTEMS = {
   budget: { grp: "core", icon: "pie", app: true },
   procurement: { grp: "core", icon: "folder", app: true },
   finance: { grp: "core", icon: "wallet", app: true },
-  admin: { grp: "platform", icon: "settings", name: ["ผู้ดูแลระบบ", "Administration"], desc: ["ผู้ใช้ สิทธิ์ Workflow กฎ และการเชื่อมต่อ", "Users, roles, workflow, rules and interfaces"] },
+  admin: { grp: "platform", icon: "settings", name: ["ผู้ดูแลระบบ", "Administration"], desc: ["ผู้ใช้ สิทธิ์ขั้นตอนงานกฎ และการเชื่อมต่อ", "Users, roles, workflow, rules and interfaces"] },
   assets: { grp: "planned", icon: "building", planned: true, name: ["Fisko Assets", "Fisko Assets"], desc: ["พัสดุ ครุภัณฑ์ และค่าเสื่อมราคา", "Stock, equipment and depreciation"],
     covers: [["ทะเบียนพัสดุและครุภัณฑ์ รับเข้าจากการตรวจรับใน Fisko Procurement", "Stock and equipment register, fed by acceptance in Fisko Procurement"], ["เบิกจ่ายพัสดุ โอนย้าย ตรวจนับประจำปี และจำหน่าย", "Issues, transfers, the annual count and disposal"], ["ค่าเสื่อมราคาและรายงานสินทรัพย์ส่ง GFMIS", "Depreciation and asset reports for GFMIS"]],
     joins: [["รับรายการจากใบตรวจรับของ Procurement", "Takes items from Procurement's acceptance certificates"], ["ส่งค่าเสื่อมราคาให้ Finance ลงบัญชี", "Sends depreciation to Finance for the books"]] },

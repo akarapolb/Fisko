@@ -295,9 +295,9 @@ function bindCases() {
   const gc = $("#case-gocon"); if (gc) gc.onclick = () => { CON_OPEN = c.contract; procSet("contracts"); route(); };
   const fl = $("#case-fail"); if (fl) fl.onclick = () => {
     const why = ($("#case-reason").value || "").trim();
-    if (why.length < 5) { toast(L("ระบุเหตุผลอย่างน้อย 5 ตัวอักษร", "Give a reason of at least 5 characters")); return; } caseFail(c, why); done(L("กลับไปขั้นจัดทำ TOR เพื่อดำเนินการใหม่", "Back to specifying to rerun"));
+    if (why.length < 5) { toastErr(L("ระบุเหตุผลอย่างน้อย 5 ตัวอักษร", "Give a reason of at least 5 characters")); return; } caseFail(c, why); done(L("กลับไปขั้นจัดทำ TOR เพื่อดำเนินการใหม่", "Back to specifying to rerun"));
   };
-  const cc = $("#case-cancel"); if (cc) cc.onclick = () => { const why = ($("#case-reason").value || "").trim(); if (why.length < 5) { toast(L("ระบุเหตุผลอย่างน้อย 5 ตัวอักษร", "Give a reason of at least 5 characters")); return; } caseCancel(c, why); CASE_OPEN = null; done(L("ยกเลิกแล้ว วงเงินที่จองถูกคืน", "Cancelled, the reserved amount is released")); };
+  const cc = $("#case-cancel"); if (cc) cc.onclick = () => { const why = ($("#case-reason").value || "").trim(); if (why.length < 5) { toastErr(L("ระบุเหตุผลอย่างน้อย 5 ตัวอักษร", "Give a reason of at least 5 characters")); return; } caseCancel(c, why); CASE_OPEN = null; done(L("ยกเลิกแล้ว วงเงินที่จองถูกคืน", "Cancelled, the reserved amount is released")); };
   const mf = $("#mt-form");
   if (mf) mf.onsubmit = e => {
     e.preventDefault();
@@ -305,7 +305,7 @@ function bindCases() {
     const method = $("#mt-method").value, why = $("#mt-why").value.trim(), rec = recommendMethod(c), rp = c.ref ? c.ref.amount : famPlan(c.plan).est;
     if (method === "specific" && !c.special && rp > S.pcfg.specificMax) { toast(L(`วงเงินสูงกว่า ${fmt(S.pcfg.specificMax)} บาท ใช้วิธีเฉพาะเจาะจงได้เฉพาะมีเหตุพิเศษ`, `Above ${fmt(S.pcfg.specificMax)} baht the specific method needs a special reason`)); return; }
     const differs = method !== rec.method, needHead = differs || !!c.special;
-    if (needHead && why.length < 10) { toast(L("ต้องมีเหตุผลอย่างน้อย 10 ตัวอักษรเมื่อต่างจากคำแนะนำหรือมีเหตุพิเศษ", "Give a reason of at least 10 characters when it differs from the advice or is a special case")); return; }
+    if (needHead && why.length < 10) { toastErr(L("ต้องมีเหตุผลอย่างน้อย 10 ตัวอักษรเมื่อต่างจากคำแนะนำหรือมีเหตุพิเศษ", "Give a reason of at least 10 characters when it differs from the advice or is a special case")); return; }
     c.method = method; c.methodWhy = [why || tx(rec.why), why || tx(rec.why)]; famPlan(c.plan).method = method;
     c.methodApproval = needHead ? { status: "pending", t: nowIso(), by: me().id } : { status: "auto", t: nowIso(), by: me().id };
     audit(["เลือกวิธีจัดซื้อ", "Chose the procurement method"], `${c.id} ${tx(PMETHOD[method])}${needHead ? " · รอหัวหน้าพัสดุ" : ""}`); caseLog(c, "method", `${tx(PMETHOD[method])}${needHead ? " (" + L("รอหัวหน้าพัสดุ", "waiting for the head") + ")" : ""}`);
@@ -314,7 +314,7 @@ function bindCases() {
   };
   const head = ok => {
     if (c.methodApproval && c.methodApproval.by === me().id) { toast(L("ผู้เลือกวิธีอนุมัติเองไม่ได้", "Whoever chose the method can't approve it")); return; }
-    const nowhy = $("#mt-nowhy") ? $("#mt-nowhy").value.trim() : ""; if (!ok && nowhy.length < 10) { toast(L("ระบุเหตุผลที่ไม่อนุมัติอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return; }
+    const nowhy = $("#mt-nowhy") ? $("#mt-nowhy").value.trim() : ""; if (!ok && nowhy.length < 10) { toastErr(L("ระบุเหตุผลที่ไม่อนุมัติอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return; }
     if (!ok) c.methodNo = nowhy; return headDo(ok); };
   const headDo = ok => { c.methodApproval = { status: ok ? "approved" : "none", t: nowIso(), by: me().id }; if (!ok) { c.method = null; c.methodWhy = null; } audit([ok ? "อนุมัติวิธีจัดซื้อ" : "ไม่อนุมัติวิธีจัดซื้อ", ok ? "Approved a method" : "Rejected a method"], c.id); caseLog(c, ok ? "method_ok" : "method_no"); notify(["proc"], [`แฟ้ม ${c.id} ${ok ? "ได้รับอนุมัติวิธีแล้ว" : "ไม่ได้รับอนุมัติวิธี ต้องเลือกใหม่"}`, `Case ${c.id}: the method was ${ok ? "approved" : "rejected, choose again"}`], `case:${c.id}`); done(ok ? L("อนุมัติแล้ว", "Approved") : L("ไม่อนุมัติ", "Rejected")); };
   const mo = $("#mt-ok"); if (mo) mo.onclick = () => head(true);
@@ -323,7 +323,7 @@ function bindCases() {
   if (rf) rf.onsubmit = e => {
     e.preventDefault();
     const amount = Math.round(Number($("#ref-amt").value)), basis = $$('input[name="ref-b"]:checked').map(x => x.value);
-    if (!(amount > 0) || !basis.length) { toast(L("ใส่ราคากลางและเลือกแหล่งอ้างอิงอย่างน้อย 1 แหล่ง", "Enter the price and choose at least one basis")); return; }
+    if (!(amount > 0) || !basis.length) { toastErr(L("ใส่ราคากลางและเลือกแหล่งอ้างอิงอย่างน้อย 1 แหล่ง", "Enter the price and choose at least one basis")); return; }
     c.ref = { amount, basis, note: $("#ref-note").value.trim(), by: me().id, t: nowIso() };
     audit(["บันทึกราคากลาง", "Recorded a reference price"], `${c.id} ${fmt(amount)}`); caseLog(c, "ref", `${fmt(amount)} ${L("บาท", "baht")}`); done(L("บันทึกราคากลางแล้ว", "Reference price saved"));
   };
@@ -376,10 +376,10 @@ function bindCases() {
   const an = $("#ap-none"); if (an) an.onclick = () => { c.appealElapsed = true; caseLog(c, "appeal_elapsed", fdate(c.award.appealEnd)); done(L("พ้นกำหนดอุทธรณ์แล้ว", "The appeal period is over")); };
   const asim = $("#ap-sim"); if (asim) asim.onclick = () => { const w = $("#ap-who"); if (w.tagName === "SELECT") w.selectedIndex = 0; else w.value = L("บริษัท ตัวอย่างผู้อุทธรณ์ จำกัด", "Sample Appellant Co., Ltd."); $("#ap-gr").value = L("เห็นว่าคะแนนด้านคุณภาพไม่เป็นไปตามเกณฑ์ที่ประกาศ", "The quality scores don't follow the announced criteria"); $("#ap-gr").focus(); toast(L("เติมค่าจำลองแล้ว ตรวจก่อนบันทึก", "Simulated values filled in; check them before saving")); };
   const apf = $("#ap-form"); if (apf) apf.onsubmit = e => { e.preventDefault(); const who = $("#ap-who").value.trim(), gr = $("#ap-gr").value.trim(), date = $("#ap-date").value;
-    if (!who || gr.length < 5) { toast(L("ระบุผู้อุทธรณ์และประเด็น", "Name the appellant and the grounds")); return; }
+    if (!who || gr.length < 5) { toastErr(L("ระบุผู้อุทธรณ์และประเด็น", "Name the appellant and the grounds")); return; }
     c.appeal = { status: "open", t: nowIso(), who, grounds: gr, date, by: me().id }; audit(["มีการอุทธรณ์ผลการพิจารณา", "An appeal was filed"], `${c.id} ${who}`); caseLog(c, "appeal_filed", `${who} · ${gr}`);
     notify(["prochead"], [`แฟ้ม ${c.id} มีการอุทธรณ์`, `Case ${c.id} has an appeal`], `case:${c.id}`); done(L("บันทึกการอุทธรณ์แล้ว ห้ามทำสัญญาจนกว่าจะมีผล", "Appeal recorded; no contract until it is decided")); };
-  const apWhy = () => { const w = $("#ap-why") ? $("#ap-why").value.trim() : ""; if (w.length < 10) { toast(L("ระบุเหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return null; } return w; };
+  const apWhy = () => { const w = $("#ap-why") ? $("#ap-why").value.trim() : ""; if (w.length < 10) { toastErr(L("ระบุเหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return null; } return w; };
   const ad = $("#ap-dismiss"); if (ad) ad.onclick = () => { const w = apWhy(); if (!w) return; c.appeal.status = "dismissed"; c.appeal.why = w; c.appealElapsed = true; audit(["ยกอุทธรณ์", "Dismissed an appeal"], `${c.id} · ${w}`); caseLog(c, "appeal_dismissed", w); done(L("ยกอุทธรณ์แล้ว", "Appeal dismissed")); };
   const au = $("#ap-uphold"); if (au) au.onclick = () => { const w = apWhy(); if (!w) return; c.appeal.status = "upheld"; c.appeal.why = w; const aw = c.award; c.award = null; c.appealElapsed = false; setState(c, 6, "appeal_upheld", `${aw ? fmt(aw.price) : ""} · ${w}`); audit(["รับอุทธรณ์", "Upheld an appeal"], `${c.id} · ${w}`); done(L("รับอุทธรณ์ กลับไปพิจารณาผลใหม่", "Upheld; back to evaluation")); };
   CASE_BINDS.forEach(f => f(c, done));

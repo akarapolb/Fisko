@@ -198,7 +198,7 @@ BIND.procurement = () => {
       const cs = caseOf($("#ct-req").value), rq = famReq(cs.reqn), insp = $$('input[name="ct-insp"]:checked').map(x => x.value), amount = Math.round(Number($("#ct-amt").value) * 1e6 / 1e3) * 1e3;
       if (caseState(cs) !== 8) { toast(L("แฟ้มยังไม่ถึงขั้นทำสัญญา", "The case isn't at the contracting step")); return; }
       if (!(amount > 0) || amount > cs.award.price || amount > rq.amount) { toast(L("วงเงินสัญญาต้องไม่เกินราคาที่ประกาศและวงเงินในใบขอซื้อ", "The contract amount can't exceed the announced price or the requisition amount")); return; }
-      if (insp.length < (amount <= S.pcfg.singleInspectorMax ? 1 : 2)) { toast(L("ต้องมีกรรมการตรวจรับอย่างน้อย 2 คน", "Choose at least 2 committee members")); return; }
+      if (insp.length < (amount <= S.pcfg.singleInspectorMax ? 1 : 2)) { toastErr(L("ต้องมีกรรมการตรวจรับอย่างน้อย 2 คน", "Choose at least 2 committee members")); return; }
       if (!sodCheck("SD-02", [me().id], insp, `${rq.id}`)) return;
       if (!sodCheck("SD-06", insp, caseJudges(cs), `${cs.id}`)) return;
       if (blBlocked(cs, $("#ct-vendor").value.trim())) { toast(L("คู่สัญญาอยู่ในรายชื่อผู้ทิ้งงาน (R-17) ทำสัญญาไม่ได้", "The supplier is on the abandoned-work list (R-17); no contract")); return; }
@@ -215,7 +215,7 @@ BIND.procurement = () => {
   }
   $$("[data-ccsave]").forEach(b => (b.onclick = () => {
     const c = famCon(b.dataset.ccsave), insp = $$(`input[name="cc-${c.id}"]:checked`).map(x => x.value);
-    if (insp.length < (c.amount <= S.pcfg.singleInspectorMax ? 1 : 2)) { toast(L("ต้องมีกรรมการตรวจรับอย่างน้อย 2 คน", "Choose at least 2 committee members")); return; }
+    if (insp.length < (c.amount <= S.pcfg.singleInspectorMax ? 1 : 2)) { toastErr(L("ต้องมีกรรมการตรวจรับอย่างน้อย 2 คน", "Choose at least 2 committee members")); return; }
     if (!sodCheck("SD-02", [me().id], insp, c.id)) return;
     const cs = caseByPlan(c.plan); if (cs && !sodCheck("SD-06", insp, caseJudges(cs), c.id)) return;
     c.inspectors = insp; c.phases.filter(ph => !phaseAccepted(ph)).forEach(ph => (ph.need = Math.min(2, insp.length))); audit(["เปลี่ยนกรรมการตรวจรับ", "Changed the acceptance committee"], c.id); commit(); route(); toast(L("บันทึกกรรมการแล้ว", "Committee saved"));

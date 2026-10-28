@@ -147,7 +147,7 @@ function bindContracts() {
   $$("[data-gform]").forEach(f => (f.onsubmit = e => { e.preventDefault(); const c = famCon(f.dataset.gform), fd = new FormData(f);
     const amt = Math.round(Number(fd.get("amt"))), min = Math.round(c.amount * S.pcfg.guaranteePct / 100), last = c.phases[c.phases.length - 1].due;
     if (amt < min) { toast(L(`วงเงินหลักประกันต้องไม่น้อยกว่า ${fmt(min)} บาท (ร้อยละ ${S.pcfg.guaranteePct})`, `The guarantee must be at least ${fmt(min)} baht (${S.pcfg.guaranteePct}%)`)); return; }
-    if (fd.get("exp") < last) { toast(L("หลักประกันต้องมีผลถึงงวดสุดท้ายเป็นอย่างน้อย", "The guarantee must last at least until the last phase")); return; }
+    if (fd.get("exp") < last) { toastErr(L("หลักประกันต้องมีผลถึงงวดสุดท้ายเป็นอย่างน้อย", "The guarantee must last at least until the last phase")); return; }
     c.guarantee = { type: fd.get("type"), ref: String(fd.get("ref") || "").trim(), amount: amt, expires: fd.get("exp"), status: "held", t: nowIso(), by: me().id };
     audit(["บันทึกหลักประกันสัญญา", "Recorded a contract guarantee"], `${c.id} ${fmt(c.guarantee.amount)}`); done(L("บันทึกหลักประกันแล้ว", "Guarantee recorded")); }));
   $$("[data-gsim]").forEach(b => (b.onclick = () => { const f = b.closest("form"), c = famCon(b.dataset.gsim); f.type.value = "bank"; f.ref.value = `BG-${FAM_FY}-${String(4000 + S.contracts.indexOf(c) * 13).slice(-4)}`; f.amt.value = Math.round(c.amount * S.pcfg.guaranteePct / 100); f.exp.value = addDays(c.phases[c.phases.length - 1].due, 30 * Math.max(3, c.warrantyMonths || 0)); f.ref.focus(); toast(L("เติมค่าจำลองแล้ว ตรวจก่อนบันทึก", "Simulated values filled in; check them before saving")); }));
@@ -169,7 +169,7 @@ function bindContracts() {
     if (openDissent(ph)) { toast(L("มีความเห็นแย้งค้าง รอหัวหน้าสั่งการ", "A dissent is open; wait for the instruction")); return; }
     if (!sodCheck("SD-02", [me().id], [c.by], c.id)) return;
     if (res === "dissent") {
-      if (note.length < 5) { toast(L("ระบุเหตุผลของความเห็นแย้ง", "Give the reason for the dissent")); return; }
+      if (note.length < 5) { toastErr(L("ระบุเหตุผลของความเห็นแย้ง", "Give the reason for the dissent")); return; }
       (ph.dissent = ph.dissent || []).push({ by: me().id, note, t: nowIso(), resolved: null });
       audit(["บันทึกความเห็นแย้งในการตรวจรับ", "Recorded an acceptance dissent"], `${c.id} ${tx(ph.name)}`);
       notify(["exec", "prochead"], [`${c.id} ${ph.name[0]} กรรมการไม่รับงาน รอสั่งการ`, `${c.id} ${ph.name[1]}: a member did not accept, instruction needed`], "prc-contracts"); done(L("บันทึกความเห็นแย้งแล้ว เสนอหัวหน้าสั่งการ", "Dissent recorded and sent for instruction")); return;
@@ -187,20 +187,20 @@ function bindContracts() {
     }
     done(phaseAccepted(ph) ? L("ตรวจรับครบแล้ว ออกใบตรวจรับ 2 ฉบับ", "Accepted; 2 certificates issued") : L("ลงนามแล้ว รอกรรมการท่านอื่น", "Signed, waiting for the other members")); }));
   $$("[data-dsres]").forEach(b => (b.onclick = () => { const [cid, n, i] = b.dataset.dsres.split("|"), c = famCon(cid), ph = ph_(cid, n), note = ($(`#dsn-${cid}-${n}-${i}`).value || "").trim();
-    if (note.length < 5) { toast(L("ระบุคำสั่งการ", "Write the instruction")); return; }
+    if (note.length < 5) { toastErr(L("ระบุคำสั่งการ", "Write the instruction")); return; }
     ph.dissent[Number(i)].resolved = { by: me().id, note, t: nowIso() }; audit(["สั่งการความเห็นแย้งในการตรวจรับ", "Resolved an acceptance dissent"], `${c.id} ${tx(ph.name)}`); done(L("บันทึกคำสั่งการแล้ว", "Instruction recorded")); }));
   $$("[data-ivform]").forEach(f => (f.onsubmit = e => { e.preventDefault(); const [cid, n] = two(f.dataset.ivform), c = famCon(cid), ph = ph_(cid, n), fd = new FormData(f);
     ph.invoice = { no: String(fd.get("no")).trim(), amount: Math.round(Number(fd.get("amt"))), date: TODAY, vendor: tx(c.vendor), contract: c.no, by: me().id };
     audit(["บันทึกใบแจ้งหนี้", "Recorded an invoice"], `${c.id} ${tx(ph.name)} ${ph.invoice.no}`); done(L("บันทึกใบแจ้งหนี้แล้ว", "Invoice recorded")); }));
   $$("[data-release]").forEach(b => (b.onclick = () => { const [cid, n] = two(b.dataset.release), c = famCon(cid), ph = ph_(cid, n), reason = ($(`#rel-${cid}-${n}`).value || "").trim();
-    if (reason.length < 10) { toast(L("ระบุเหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return; }
+    if (reason.length < 10) { toastErr(L("ระบุเหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return; }
     ph.release = { by: me().id, reason, t: nowIso() }; audit(["ปลดข้อยกเว้นประตูเบิกจ่าย", "Released a payment-gate exception"], `${c.id} ${tx(ph.name)}`);
     notify(["audit", "fin"], [`${c.id} ${ph.name[0]} ปลดข้อยกเว้นประตูเบิกจ่ายโดย ${userName(me().id)}`, `${c.id} ${ph.name[1]}: gate exception released by ${userName(me().id)}`], "fnc-pay"); done(L("ปลดข้อยกเว้นแล้ว การเงินส่งคำขอได้", "Released; Finance can send the request")); }));
   $$("[data-vform]").forEach(f => (f.onsubmit = e => {
     e.preventDefault(); const c = famCon(f.dataset.vform), fd = new FormData(f), kind = fd.get("kind"), why = String(fd.get("why")).trim();
     const v = { id: `${c.id}-V${(c.vars || []).length + 1}`, kind, why, by: me().id, t: nowIso(), status: "pending", decided: null };
-    if (kind === "time") { v.days = Math.round(Number(fd.get("days"))); v.phase = Number(fd.get("phase")); v.code = fd.get("code"); if (!(v.days > 0) || !v.phase) { toast(L("ระบุงวดและจำนวนวัน", "Give the phase and the days")); return; } }
-    else { v.delta = Math.round(Number(fd.get("delta"))); if (!v.delta) { toast(L("ระบุส่วนต่างวงเงิน", "Give the amount change")); return; }
+    if (kind === "time") { v.days = Math.round(Number(fd.get("days"))); v.phase = Number(fd.get("phase")); v.code = fd.get("code"); if (!(v.days > 0) || !v.phase) { toastErr(L("ระบุงวดและจำนวนวัน", "Give the phase and the days")); return; } }
+    else { v.delta = Math.round(Number(fd.get("delta"))); if (!v.delta) { toastErr(L("ระบุส่วนต่างวงเงิน", "Give the amount change")); return; }
       if (c.amount + v.delta <= 0) { toast(L("วงเงินใหม่ต้องมากกว่าศูนย์", "The new amount must be above zero")); return; }
       if (v.delta > 0 && v.delta > famHeadroom(c.line)) { toast(L(`เกินวงเงินคงเหลือของรายการจัดสรร (${mb(famHeadroom(c.line))} ลบ.)`, `More than the room left on the line (${mb(famHeadroom(c.line))} M)`)); return; } }
     v.cum = varCum(c, v); v.who = varWho(c, v); (c.vars = c.vars || []).push(v);
@@ -237,7 +237,7 @@ function bindClose() {
   f.onsubmit = e => {
     e.preventDefault(); const cs = caseOf(CASE_OPEN), les = $("#cl-les").value.trim();
     if (!closeChecks(cs).every(x => x.ok)) { toast(L("ยังปิดแฟ้มไม่ได้", "Can't close yet")); return; }
-    if (les.length < 10) { toast(L("บันทึกบทเรียนอย่างน้อย 10 ตัวอักษร", "Write the lessons, at least 10 characters")); return; }
+    if (les.length < 10) { toastErr(L("บันทึกบทเรียนอย่างน้อย 10 ตัวอักษร", "Write the lessons, at least 10 characters")); return; }
     cs.close = { lessons: les, score: Number($("#cl-sc").value), by: me().id, t: nowIso() }; caseLog(cs, "closed_case", `${cs.close.score}/5`);
     const con = caseCon(cs); if (con && con.status === "active") { con.status = "closed"; con.closed = { by: me().id, t: nowIso() }; } famPlan(cs.plan).status = "closed"; audit(["ปิดแฟ้มจัดซื้อ", "Closed a procurement case"], cs.id);
     commit(); renderShell(); route(); toast(L("ปิดแฟ้มแล้ว", "Case closed"));

@@ -59,7 +59,7 @@ function bindEvaluate() {
   if (dn) dn.onclick = () => {
     grab();
     if (e.ratings.some(r => !r)) { toast(L("ให้คะแนนให้ครบทั้ง 5 ด้านก่อน", "Score all five criteria first")); return; }
-    if (!tx(e.findings).trim() || !e.lessons.length) { toast(L("ใส่ข้อค้นพบและบทเรียนอย่างน้อย 1 ข้อ", "Add findings and at least one lesson")); return; }
+    if (!tx(e.findings).trim() || !e.lessons.length) { toastErr(L("ใส่ข้อค้นพบและบทเรียนอย่างน้อย 1 ข้อ", "Add findings and at least one lesson")); return; }
     e.status = "done"; e.t = nowIso();
     const unit = evProj(e).unit;
     e.lessons.forEach((l, i) => S.lessons.push({ id: `${e.id}-L${i + 1}`, eval: e.id, unit, text: l, t: e.t }));

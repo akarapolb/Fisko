@@ -163,13 +163,13 @@ let OCDS_JSON = "";
 function bindAnalytics() {
   const done = msg => { commit(); renderShell(); route(); if (msg) toast(msg); };
   const val = id => ($("#" + id).value || "").trim();
-  $$("[data-rfask]").forEach(b => (b.onclick = () => { const k = b.dataset.rfask, t = val("rfa-" + b.dataset.rfid); if (t.length < 5) { toast(L("ระบุข้อที่ต้องชี้แจง", "Say what needs explaining")); return; }
+  $$("[data-rfask]").forEach(b => (b.onclick = () => { const k = b.dataset.rfask, t = val("rfa-" + b.dataset.rfid); if (t.length < 5) { toastErr(L("ระบุข้อที่ต้องชี้แจง", "Say what needs explaining")); return; }
     S.rfRev[k] = Object.assign(rfRev(k), { status: "asked", ask: t, askBy: me().id, t: nowIso() }); audit(["ขอคำชี้แจงสัญญาณเตือน", "Asked for a red-flag explanation"], k.replace("|", " "));
     notify(["proc"], [`ขอคำชี้แจงสัญญาณ ${k.split("|")[0]} ของ ${k.split("|")[1]}`, `Explanation requested for ${k.split("|")[0]} on ${k.split("|")[1]}`], "prc-flags"); done(L("ส่งขอคำชี้แจงแล้ว", "Request sent")); }));
-  $$("[data-rfexp]").forEach(b => (b.onclick = () => { const k = b.dataset.rfexp, t = val("rfx-" + b.dataset.rfid); if (t.length < 5) { toast(L("เขียนคำชี้แจงอย่างน้อย 5 ตัวอักษร", "Write at least 5 characters")); return; }
+  $$("[data-rfexp]").forEach(b => (b.onclick = () => { const k = b.dataset.rfexp, t = val("rfx-" + b.dataset.rfid); if (t.length < 5) { toastErr(L("เขียนคำชี้แจงอย่างน้อย 5 ตัวอักษร", "Write at least 5 characters")); return; }
     S.rfRev[k] = Object.assign(rfRev(k), { status: "explained", explain: t, explainBy: me().id }); audit(["ชี้แจงสัญญาณเตือน", "Explained a red flag"], k.replace("|", " "));
     notify(["audit"], [`มีคำชี้แจงสัญญาณ ${k.split("|")[0]} ของ ${k.split("|")[1]}`, `An explanation arrived for ${k.split("|")[0]} on ${k.split("|")[1]}`], "prc-flags"); done(L("ส่งคำชี้แจงแล้ว", "Explanation sent")); }));
-  $$("[data-rfdec]").forEach(b => (b.onclick = () => { const dv = b.dataset.rfdec, k = dv.slice(0, dv.lastIndexOf("|")), st = dv.slice(dv.lastIndexOf("|") + 1), t = val("rfd-" + b.dataset.rfid); if (t.length < 5) { toast(L("บันทึกผลตัดสินอย่างน้อย 5 ตัวอักษร", "Write a decision note of at least 5 characters")); return; }
+  $$("[data-rfdec]").forEach(b => (b.onclick = () => { const dv = b.dataset.rfdec, k = dv.slice(0, dv.lastIndexOf("|")), st = dv.slice(dv.lastIndexOf("|") + 1), t = val("rfd-" + b.dataset.rfid); if (t.length < 5) { toastErr(L("บันทึกผลตัดสินอย่างน้อย 5 ตัวอักษร", "Write a decision note of at least 5 characters")); return; }
     S.rfRev[k] = Object.assign(rfRev(k), { status: st, note: t, decided: { by: me().id, t: nowIso() } }); audit(["ตัดสินสัญญาณเตือน", "Decided a red flag"], `${k.replace("|", " ")} ${st}`); done(L("บันทึกผลตัดสินแล้ว", "Decision recorded")); }));
   const g = $("#ocds-gen"); if (g) g.onclick = () => { OCDS_JSON = JSON.stringify(ocdsPackage(), null, 2); audit(["สร้างไฟล์ OCDS", "Built an OCDS export"], `${ocdsCases().length} releases`); commit(); route(); };
   const cp = $("#ocds-copy"); if (cp) cp.onclick = () => { const fb = () => { const r = document.createRange(); r.selectNodeContents($("#ocds-pre")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast(L("เลือกข้อความแล้ว กด Ctrl+C", "Selected; press Ctrl+C")); };

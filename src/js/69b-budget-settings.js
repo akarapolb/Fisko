@@ -24,7 +24,7 @@ ADMIN.bcfg = () => {
       ${sec(L("เป้าหมายการเบิกจ่ายของปี (BR-21)", "Spending targets for the year (BR-21)"), L("ตามมติ ครม. ของปีนั้น", "From that year's Cabinet resolution"),
         [0, 1, 2, 3].map(i => row(`${L("สะสมสิ้นไตรมาส", "Cumulative end of Q")}${i + 1}`, num(`targets.q.${i}`, c.targets.q[i]), "%", "B")).join("") +
         row(L("ภาพรวมสิ้นปี", "Total, year end"), num("targets.end.all", c.targets.end.all), "%", "B") + row(L("รายจ่ายลงทุนสิ้นปี", "Investment, year end"), num("targets.end.inv", c.targets.end.inv), "%", "B") + row(L("รายจ่ายประจำสิ้นปี", "Recurrent, year end"), num("targets.end.ope", c.targets.end.ope), "%", "B"))}
-      ${sec(L("สมมติฐานพยากรณ์ (FC-B1, FC-B2)", "Forecast assumptions (FC-B1, FC-B2)"), L("ใช้ที่ M09 พยากรณ์ปีนี้ และ Agent AG-05", "Used by M09 forecast and agent AG-05"),
+      ${sec(L("สมมติฐานพยากรณ์ (FC-B1, FC-B2)", "Forecast assumptions (FC-B1, FC-B2)"), L("ใช้ที่ M09 พยากรณ์ปีนี้ และเอเจนต์ AG-05", "Used by M09 forecast and agent AG-05"),
         Object.keys(P).map(k => row(`${L("โอกาสเบิกจ่ายส่วนที่ยังว่าง", "Chance the free amount is spent")} · ${P[k]}`, num(`fc.p.${k}`, c.fc.p[k]), "%", "C")).join("") +
         row(L("ส่วนของยอดจองที่จะเบิกจ่ายในปี", "Share of reservations spent in the year"), num("fc.res", c.fc.res), "%", "C") +
         row(L("ส่วนของงบลงทุนที่ยังว่างที่จะกันเหลื่อมปี", "Share of free investment carried over"), num("fc.invCarry", c.fc.invCarry), "%", "C"))}
@@ -36,7 +36,7 @@ ADMIN.bcfg = () => {
       row(`BF-05 · ${L("ใช้เงินเกิน", "Spent more than")}`, num("sig.spend", c.sig.spend), "%", "C") +
       row(`BF-05 · ${L("แต่ผลผลิตต่ำกว่า", "but output below")}`, num("sig.out", c.sig.out), "%", "C") +
       row(`BF-06 · ${L("จำนวนคำขอขั้นต่ำที่ตัดเท่ากัน", "Minimum requests cut equally")}`, num("sig.eqMin", c.sig.eqMin, { min: 2, max: 20 }), L("คำขอ", "requests"), "C"))}
-    ${sec(L("เกณฑ์วิเคราะห์ 3R (M03 และ Agent AG-03)", "3R analysis rules (M03 and agent AG-03)"), L("Review Redeploy Replace ตามคู่มือสำนักงบประมาณ", "Review, Redeploy, Replace per the Budget Bureau manual"),
+    ${sec(L("เกณฑ์วิเคราะห์ 3R (M03 และเอเจนต์ AG-03)", "3R analysis rules (M03 and agent AG-03)"), L("Review Redeploy Replace ตามคู่มือสำนักงบประมาณ", "Review, Redeploy, Replace per the Budget Bureau manual"),
       row(`Redeploy · ${L("คะแนนความสำคัญต่ำกว่า", "Priority score below")}`, num("r3.lowScore", c.r3.lowScore), L("คะแนน", "points"), "C") +
       row(`Redeploy · ${L("ลดวงเงินคำขอคะแนนต่ำ", "Cut for a low score")}`, num("r3.lowCut", c.r3.lowCut, { max: 50 }), "%", "C") +
       row(`Review · ${L("ปีก่อนกองเบิกจ่ายต่ำกว่า", "Unit spent under, last year")}`, num("r3.slowRate", c.r3.slowRate), L("% ของแผน", "% of plan"), "C") +

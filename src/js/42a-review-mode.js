@@ -63,7 +63,7 @@ function bindReviewMode(r) {
   if (g) g.onclick = () => { const v = $("#gcmt-in").value.trim(); if (!v) { toast(L("พิมพ์ความเห็นก่อน", "Type a comment first")); return; } addComment(r, null, v); route(); };
   const ret = $("#rv-return");
   if (ret) ret.onclick = () => {
-    if (!openComments(r).length) { toast(L("ใส่ความเห็นอย่างน้อย 1 ข้อก่อนส่งกลับ เพื่อให้ผู้จัดทำรู้ว่าต้องแก้อะไร", "Add at least one comment first so the requester knows what to fix")); return; }
+    if (!openComments(r).length) { toastErr(L("ใส่ความเห็นอย่างน้อย 1 ข้อก่อนส่งกลับ เพื่อให้ผู้จัดทำรู้ว่าต้องแก้อะไร", "Add at least one comment first so the requester knows what to fix")); return; }
     const by = reviewBy(r);
     r.status = "returned"; r.updated = TODAY;
     audit(["ส่งคำขอกลับแก้ไข", "Returned a request for revision"], r.id + by);

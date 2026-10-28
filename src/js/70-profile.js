@@ -160,7 +160,7 @@ CASE_BINDS.push((c, done) => {
   const hc = $("#hr-cm"); if (hc) hc.onsubmit = e => { e.preventDefault(); c.hearing.comments.push({ who: $("#hr-w").value.trim(), text: $("#hr-t").value.trim(), resp: $("#hr-r").value.trim(), t: TODAY });
     caseLog(c, "hearing_comment", c.hearing.comments[c.hearing.comments.length - 1].who); done(); };
   const hx = $("#hr-close"); if (hx) hx.onsubmit = e => { e.preventDefault(); const sum = $("#hr-sum").value.trim(), early = $("#hr-early") ? $("#hr-early").value.trim() : "";
-    if (sum.length < 5) { toast(L("สรุปผลอย่างน้อย 5 ตัวอักษร", "Write a conclusion of at least 5 characters")); return; }
+    if (sum.length < 5) { toastErr(L("สรุปผลอย่างน้อย 5 ตัวอักษร", "Write a conclusion of at least 5 characters")); return; }
     if (c.hearing.end > TODAY && early.length < 5) { toast(L("ยังไม่ถึงวันสิ้นสุด ต้องระบุเหตุผลปิดก่อนกำหนด", "The hearing has not ended; give a reason for closing early")); return; }
     const rev = $("#hr-rev").checked; if (rev && !c.tor) { toast(L("ยังไม่ได้แนบ TOR ที่จะแก้", "There is no attached TOR to change")); return; }
     Object.assign(c.hearing, { summary: sum + (early ? ` (ปิดก่อนกำหนด: ${early})` : ""), revised: rev, rev: rev ? { status: "pending", by: me().id, t: nowIso() } : null, closedAt: nowIso() });
@@ -173,7 +173,7 @@ CASE_BINDS.push((c, done) => {
     caseLog(c, "hearing_again", `รอบ ${c.hearing.round}`); done(L("เปิดรับฟังซ้ำแล้ว", "Hearing reopened")); };
 
   const rf = $("#rq-form"); if (rf) rf.onsubmit = e => { e.preventDefault(); const V = S.vendors, picks = $$("[name=rq-v]:checked").map(i => V[Number(i.value)].name), due = $("#rq-d").value;
-    if (!picks.length) { toast(L("เลือกผู้ขายอย่างน้อย 1 ราย", "Pick at least one supplier")); return; } if (due < TODAY) { toast(L("วันตอบกลับต้องไม่ก่อนวันนี้", "The reply date can't be in the past")); return; }
+    if (!picks.length) { toastErr(L("เลือกผู้ขายอย่างน้อย 1 ราย", "Pick at least one supplier")); return; } if (due < TODAY) { toast(L("วันตอบกลับต้องไม่ก่อนวันนี้", "The reply date can't be in the past")); return; }
     const r = { no: docNo("rfq", uid, c.id), sent: TODAY, due, by: me().id, rows: picks.map(v => ({ v, reply: null })) }; (c.rfq = c.rfq || []).push(r);
     caseLog(c, "rfq_sent", `${r.no} · ${picks.length}`); audit(["ส่งใบสอบถามราคา / หนังสือเชิญ (จำลอง)", "Sent an RFQ or invitation (simulated)"], `${c.id} ${r.no}`); done(`${L("ออกเลขที่", "Issued")} ${r.no}`); };
   $$("[data-rqrep]").forEach(b => (b.onclick = () => { const [ri, xi] = b.dataset.rqrep.split("|").map(Number), row = c.rfq[ri].rows[xi], pr = Math.round(Number($(`#rq-p-${ri}-${xi}`).value) || 0);

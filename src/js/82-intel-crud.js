@@ -49,17 +49,17 @@ CRUD.def("anDone", {
 // ---------- cancelling agent runs (FR-C-44) ----------
 const RUN_ST = { running: [["กำลังทำงาน", "Running"], "p-info"], waiting: [["รอคนอนุมัติ", "Waiting for a person"], "p-warn"], stopped: [["หยุด", "Stopped"], "p-bad"], done: [["เสร็จ", "Done"], "p-ok"], cancelled: [["ยกเลิก", "Cancelled"], "p-mute"] };
 CRUD.def("agRun", {
-  noun: ["งานของ Agent", "Agent run"], st: RUN_ST,
+  noun: ["งานของเอเจนต์", "Agent run"], st: RUN_ST,
   list: () => (S.bRuns || []).slice().reverse(), id: r => r.id, title: r => `${r.id} · ${bAgName(r.agent)}`, sub: r => `${esc(userName(r.by))} · ${fdate(r.t, true)}`, status: r => r.status, gone: r => r.status === "cancelled",
   cols: [{ h: ["งาน", "Run"], c: r => `<span class="mono">${r.id}</span> ${bAgName(r.agent)}` }, { h: ["ขั้น", "Step"], n: true, c: r => `${Math.min(r.ptr + 1, r.steps.length)}/${r.steps.length}` }, { h: ["เริ่มโดย", "Started by"], c: r => `<span class="sub">${esc(userName(r.by))}</span>` }],
   acts: r => (["running", "waiting"].includes(r.status) && (r.by === me().id || ["plan", "fin", "exec"].includes(ROLE)) ? [
-    { id: "show", label: L("เปิดในหน้า Agent", "Show it on the page"), undo: false, run: () => { B_RUN_OPEN = r.id; crClose(); return ""; } },
+    { id: "show", label: L("เปิดในหน้าเอเจนต์", "Show it on the page"), undo: false, run: () => { B_RUN_OPEN = r.id; crClose(); return ""; } },
     { id: "cancel", label: L("ยกเลิกงาน", "Cancel the run"), kind: "danger", why: true, impact: () => L("ขั้นที่ยังไม่ทำจะไม่ทำ สิ่งที่อนุมัติไปแล้วยังมีผล", "Steps not yet done won't run; steps already approved stay in effect"),
-      run: (_, why) => { const s = r.steps[r.ptr]; if (s && s.status === "await") s.status = "skipped"; /* the agent page knows "skipped" */ r.status = "cancelled"; r.cancelled = { t: nowIso(), by: me().id, why }; audit(["ยกเลิกงานของ Agent", "Cancelled an agent run"], `${r.id} · ${why}`); return L("ยกเลิกงานแล้ว", "Run cancelled"); } },
-  ] : [{ id: "show", label: L("เปิดในหน้า Agent", "Show it on the page"), undo: false, run: () => { B_RUN_OPEN = r.id; crClose(); return ""; } }]),
+      run: (_, why) => { const s = r.steps[r.ptr]; if (s && s.status === "await") s.status = "skipped"; /* the agent page knows "skipped" */ r.status = "cancelled"; r.cancelled = { t: nowIso(), by: me().id, why }; audit(["ยกเลิกงานของเอเจนต์", "Cancelled an agent run"], `${r.id} · ${why}`); return L("ยกเลิกงานแล้ว", "Run cancelled"); } },
+  ] : [{ id: "show", label: L("เปิดในหน้าเอเจนต์", "Show it on the page"), undo: false, run: () => { B_RUN_OPEN = r.id; crClose(); return ""; } }]),
   view: r => `<ol class="plain">${r.steps.map((s, i) => `<li><span class="mono sub">${i + 1}. ${s.tool}</span> ${s.status ? tag(s.status, s.status === "approved" || s.status === "done" ? "p-ok" : s.status === "await" ? "p-warn" : "p-mute") : ""}</li>`).join("")}</ol>${r.cancelled ? kv([[L("ยกเลิกเมื่อ", "Cancelled"), `${fdate(r.cancelled.t)} · ${esc(userName(r.cancelled.by))} · ${esc(r.cancelled.why)}`]]) : ""}`,
 });
-{ const p = INTEL.bagents; INTEL.bagents = () => p() + crudList("agRun", { head: `<h2>${L("งานของ Agent ทั้งหมด", "All agent runs")}</h2>`, empty: L("ยังไม่มีงาน", "No runs yet") }); }
+{ const p = INTEL.bagents; INTEL.bagents = () => p() + crudList("agRun", { head: `<h2>${L("งานของเอเจนต์ทั้งหมด", "All agent runs")}</h2>`, empty: L("ยังไม่มีงาน", "No runs yet") }); }
 
 // ---------- the end-to-end demo (design chapter 11) ----------
 const E2E = [

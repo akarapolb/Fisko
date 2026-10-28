@@ -4,7 +4,7 @@ const INTEL = {}, INTEL_BIND = {};
 const WI = { cut: 15, locks: null };
 const agentOn = id => { const a = (S.agents || []).find(x => x.id === id); return !a || a.on; };
 function intelTabsBar() {
-  const t = [["ask", L("ถาม AI", "Ask AI")], ["trends", L("แนวโน้มหลายปี", "Multi-year trends")], ["whatif", L("จำลองสถานการณ์", "What-if")], ["agents", L("AI Agents และการกำกับ", "AI agents and governance")],
+  const t = [["ask", L("ถาม AI", "Ask AI")], ["trends", L("แนวโน้มหลายปี", "Multi-year trends")], ["whatif", L("จำลองสถานการณ์", "What-if")], ["agents", L("เอเจนต์ AI และการกำกับ", "AI agents and governance")],
     ["anoms", `${L("ความผิดปกติการใช้จ่าย", "Spending anomalies")}${(() => { const n = (S.anoms || []).filter(a => a.status === "new").length; return n ? ` (${n})` : ""; })()}`], ["quality", L("คุณภาพเหตุผลคำขอ", "Justification quality")]];
   return `<div class="tabs" role="tablist">${t.map(([id, l]) => `<button class="tab ${id === INTEL_TAB ? "on" : ""}" type="button" role="tab" aria-selected="${id === INTEL_TAB}" data-itab="${id}">${l}</button>`).join("")}</div>`;
 }
@@ -115,7 +115,7 @@ INTEL.agents = () => {
     <div class="kpi"><span class="l">${L("ปฏิเสธเพราะเกินสิทธิ์ข้อมูล", "Declined beyond permissions")}</span><span class="v">${log.filter(x => !x.ok).length}</span></div>
     <div class="kpi"><span class="l">${L("เวลาตอบเฉลี่ย", "Average response time")}</span><span class="v">4.2<small>${L("วินาที", "s")}</small></span><span class="d sub">${L("ตัวอย่าง", "sample")}</span></div>
   </section>
-  <section class="panel"><header><h2>${L("AI Agents", "AI agents")}</h2><span class="sp"></span><span class="sub">${can ? L("ผู้บริหารเปิด/ปิด Agent ได้ในต้นแบบนี้", "Executives can switch agents on or off in this prototype") : L("สลับเป็นบทบาทผู้บริหารเพื่อเปิด/ปิด Agent", "Switch to the Executive role to turn agents on or off")}</span></header>
+  <section class="panel"><header><h2>${L("เอเจนต์ AI", "AI agents")}</h2><span class="sp"></span><span class="sub">${can ? L("ผู้บริหารเปิด/ปิดเอเจนต์ได้ในต้นแบบนี้", "Executives can switch agents on or off in this prototype") : L("สลับเป็นบทบาทผู้บริหารเพื่อเปิด/ปิดเอเจนต์", "Switch to the Executive role to turn agents on or off")}</span></header>
     <div class="tbl-wrap"><table><thead><tr><th class="c">${L("ใช้งาน", "On")}</th><th>Agent</th><th>${L("หน้าที่", "Role")}</th><th class="n">${L("ใช้งานเดือนนี้", "Uses this month")}</th><th>${L("ล่าสุด", "Last run")}</th></tr></thead>
       <tbody>${S.agents.map((a, i) => `<tr><td class="c">${sw("ag-" + i, a.on, !can)}</td><td><span class="mono sub">${a.id}</span> ${tx(a.name)}</td><td class="sub">${tx(a.what)}</td><td class="n">${fmt(a.uses + log.filter(x => x.agent === a.id).length)}</td><td class="sub">${last(a.id)}</td></tr>`).join("")}</tbody></table></div></section>
   <section class="panel"><header><h2>${L("บันทึกการทำงานของ AI", "AI activity log")}</h2><span class="sp"></span><span class="sub">${L("บันทึกทุกคำขอและคำตอบ เพื่อการตรวจสอบ", "Every request and answer is logged for audit")}</span></header>
@@ -127,6 +127,6 @@ INTEL.agents = () => {
 INTEL_BIND.agents = () => {
   S.agents.forEach((a, i) => { const el = $("#ag-" + i); if (el && !el.disabled) el.onchange = () => {
     a.on = el.checked; audit([a.on ? "เปิดใช้งาน AI Agent" : "ปิดใช้งาน AI Agent", a.on ? "Turned an AI agent on" : "Turned an AI agent off"], `${a.id} ${tx(a.name)}`); commit(); route();
-    toast(a.on ? L(`เปิด ${a.id} แล้ว`, `${a.id} is on`) : L(`ปิด ${a.id} แล้ว · ฟังก์ชันที่ใช้ Agent นี้จะไม่ทำงาน`, `${a.id} is off · features using it are disabled`));
+    toast(a.on ? L(`เปิด ${a.id} แล้ว`, `${a.id} is on`) : L(`ปิด ${a.id} แล้ว · ฟังก์ชันที่ใช้เอเจนต์นี้จะไม่ทำงาน`, `${a.id} is off · features using it are disabled`));
   }; });
 };

@@ -47,10 +47,10 @@ const FIN_PAGES = [
       { id: "year", label: ["สิ้นปี", "Year end"], secs: ["yearEnd"] },
       { id: "audit", label: ["ข้อทักท้วง", "Audit queries"], secs: ["auditQ"] },
       { id: "budget", label: ["ส่งให้ Fisko Budget", "To Fisko Budget"], secs: ["budgetFeed"] }] },
-  { id: "ai", code: "F9", group: "more", label: ["AI และ Analytics", "AI and analytics"], get: () => FAI_TAB, set: v => (FAI_TAB = v),
-    sub: ["Agent การเงิน พยากรณ์ จำลองสถานการณ์ ตัวชี้วัด และสัญญาณเตือน", "Finance agents, forecasts, what-ifs, KPIs and warning signals"],
+  { id: "ai", code: "F9", group: "more", label: ["AI และการวิเคราะห์ข้อมูล", "AI and analytics"], get: () => FAI_TAB, set: v => (FAI_TAB = v),
+    sub: ["เอเจนต์การเงิน พยากรณ์ จำลองสถานการณ์ ตัวชี้วัด และสัญญาณเตือน", "Finance agents, forecasts, what-ifs, KPIs and warning signals"],
     tabs: [
-      { id: "agents", label: ["Agent การเงิน", "Finance agents"], secs: ["aiAgents"] },
+      { id: "agents", label: ["เอเจนต์การเงิน", "Finance agents"], secs: ["aiAgents"] },
       { id: "fc", label: ["พยากรณ์", "Forecasts"], secs: ["aiFc"] },
       { id: "wi", label: ["จำลองสถานการณ์", "What-if"], secs: ["aiWi"] },
       { id: "kpi", label: ["ตัวชี้วัดและสัญญาณ", "KPIs and signals"], secs: ["aiKpi"] }] },

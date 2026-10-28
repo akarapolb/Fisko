@@ -60,7 +60,7 @@ function demandPanel() {
 }
 function bindPlan2() {
   const done = m => { commit(); renderShell(); route(); if (m) toast(m); };
-  const sb = $("#pv-sub"); if (sb) sb.onclick = () => { const why = $("#pv-why").value.trim(); if (why.length < 5) { toast(L("ระบุเหตุผลที่ปรับแผน", "Say why the plan changes")); return; }
+  const sb = $("#pv-sub"); if (sb) sb.onclick = () => { const why = $("#pv-why").value.trim(); if (why.length < 5) { toastErr(L("ระบุเหตุผลที่ปรับแผน", "Say why the plan changes")); return; }
     const v = Math.max(...S.planDoc.versions.map(x => x.v)) + 1; S.planDoc.versions.push({ v, t: nowIso(), by: me().id, why, status: "submitted", items: planLive().map(snap), appr: null, published: null });
     audit(["เสนอแผนจัดซื้อฉบับใหม่", "Proposed a new procurement plan version"], `v${v}`); notify(["exec"], [`แผนจัดซื้อฉบับ v${v} รออนุมัติ`, `Procurement plan v${v} needs approval`], "prc-plan"); done(L("ส่งผู้บริหารแล้ว", "Sent to the executive")); };
   const dec = ok => { const v = S.planDoc.versions.find(x => x.status === "submitted"); v.status = ok ? "approved" : "rejected"; v.appr = { by: me().id, t: nowIso() };
@@ -172,7 +172,7 @@ PROC.gantt = () => {
   return `<section class="panel"><header><h2>${L("ไทม์ไลน์แฟ้มทั้งหมด", "All cases on a timeline")}</h2><span class="sp"></span><span class="sub">FR-PR-55</span></header>
     <div class="body row" style="gap:14px"><span class="row" style="gap:6px"><span style="width:14px;height:10px;background:var(--ch-2);border-radius:3px;display:inline-block"></span>${L("เตรียมการ", "Preparation")}</span><span class="row" style="gap:6px"><span style="width:14px;height:10px;background:var(--warn);border-radius:3px;display:inline-block"></span>${L("e-GP และพิจารณาผล", "Sourcing and evaluation")}</span><span class="row" style="gap:6px"><span style="width:14px;height:10px;background:var(--accent);border-radius:3px;display:inline-block"></span>${L("ช่วงสัญญา", "Contract period")}</span><span class="row" style="gap:6px"><span style="width:2px;height:12px;background:var(--ink);display:inline-block"></span>${L("เดือนในแผน", "Planned month")}</span><span class="row" style="gap:6px"><span style="width:2px;height:12px;background:var(--bad);display:inline-block"></span>${L("วันนี้", "Today")}</span></div>
     <div class="tbl-wrap"><div style="min-width:760px;padding:0 16px 12px">
-      <div style="display:grid;grid-template-columns:200px 1fr;gap:10px"><div></div><div style="position:relative;height:22px">${months.map(m => `<span class="sub" style="position:absolute;left:${x(m)}%;font-size:11px">${monthLabel(m.slice(0, 7)).split(" ")[0].slice(0, LANG === "en" ? 3 : 4)}</span>`).join("")}</div></div>
+      <div style="display:grid;grid-template-columns:200px 1fr;gap:10px"><div></div><div style="position:relative;height:22px">${months.map(m => `<span class="sub" style="position:absolute;left:${x(m)}%;font-size:12px">${monthLabel(m.slice(0, 7)).split(" ")[0].slice(0, LANG === "en" ? 3 : 4)}</span>`).join("")}</div></div>
       <div style="position:relative">${rows}
         <span style="position:absolute;top:0;bottom:0;left:calc(210px + (100% - 210px) * ${x(TODAY) / 100});width:2px;background:var(--bad)"></span>
         <span style="position:absolute;top:0;bottom:0;left:calc(210px + (100% - 210px) * ${x("2026-10-01") / 100});width:1px;background:var(--line);border-left:1px dashed var(--muted)" title="${L("เริ่มปีงบประมาณ", "Fiscal year starts")}"></span></div>

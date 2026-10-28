@@ -172,7 +172,7 @@ function advSave(vals, a) {
 function bindAdvForm() {
   const f = $("#adv-form"); if (!f) return;
   const c = fcfg(), rows = () => $$("#af-items [data-airow]");
-  const bindRm = () => $$("[data-airm]").forEach(b => (b.onclick = () => { if (rows().length > 1) b.closest("[data-airow]").remove(); else toast(L("ต้องมีอย่างน้อยหนึ่งรายการ", "Keep at least one item")); }));
+  const bindRm = () => $$("[data-airm]").forEach(b => (b.onclick = () => { if (rows().length > 1) b.closest("[data-airow]").remove(); else toastErr(L("ต้องมีอย่างน้อยหนึ่งรายการ", "Keep at least one item")); }));
   const addRow = (k, amt) => { $("#af-items").insertAdjacentHTML("beforeend", advItemRow(k, amt)); bindRm(); };
   bindRm();
   $("#af-addrow").onclick = () => { addRow("", ""); const r = rows(); r[r.length - 1].querySelector("select").focus(); };

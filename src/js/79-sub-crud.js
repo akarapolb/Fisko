@@ -225,7 +225,7 @@ function bindParl2() {
   };
   const bk = $("#pl-back"); if (bk) bk.onclick = () => { $("#pl-back-box").hidden = false; $("#pl-back-why").focus(); };
   const bo = $("#pl-back-ok"); if (bo) bo.onclick = () => {
-    const why = $("#pl-back-why").value.trim(); if (why.length < 10) { toast(L("ใส่เหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return; }
+    const why = $("#pl-back-why").value.trim(); if (why.length < 10) { toastErr(L("ใส่เหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); return; }
     const snap = crSnap(); P.stage -= 1; delete plDates()[P.stage]; if (P.stage < PL_CUT && !plCutRows().length) P.items = null;
     audit(["ย้อนขั้นตอนร่าง พ.ร.บ.", "Stepped the budget bill back"], `${tx(PARL_STEPS[P.stage][0])} · ${why}`); commit(); route(); crUndoOffer(snap, L("ย้อนขั้นแล้ว", "Stepped back"));
   };

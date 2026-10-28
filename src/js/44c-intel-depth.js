@@ -9,7 +9,7 @@ INTEL.anoms = () => {
     : a.kind === "vendor" ? `<tr><td>${esc(tx(a.vendor))}</td><td class="n">${a.recs[0][0]}</td></tr>`
     : a.recs.map(r => `<tr><td>${fdate(r[0])}</td><td class="n">${fmt(r[1])}</td></tr>`).join("");
   return `
-  ${on ? "" : `<div class="alert"><div class="ic" style="background:var(--warn-soft);color:var(--warn)">!</div><div><b>${L("Budget Monitoring Agent ปิดอยู่", "The Budget Monitoring Agent is off")}</b><p>${L("จะไม่มีการตรวจหาความผิดปกติใหม่จนกว่าจะเปิดในแท็บ AI Agents", "No new anomalies are flagged until it is switched on in the AI agents tab")}</p></div></div>`}
+  ${on ? "" : `<div class="alert"><div class="ic" style="background:var(--warn-soft);color:var(--warn)">!</div><div><b>${L("Budget Monitoring Agent ปิดอยู่", "The Budget Monitoring Agent is off")}</b><p>${L("จะไม่มีการตรวจหาความผิดปกติใหม่จนกว่าจะเปิดในแท็บเอเจนต์ AI", "No new anomalies are flagged until it is switched on in the AI agents tab")}</p></div></div>`}
   <section class="kpis" style="grid-template-columns:repeat(3,minmax(0,1fr))">
     <div class="kpi"><span class="l">${L("รายการผิดปกติรอตรวจ", "Anomalies to review")}</span><span class="v" style="color:var(--${A.some(a => a.status === "new") ? "warn" : "accent"})">${A.filter(a => a.status === "new").length}</span></div>
     <div class="kpi"><span class="l">${L("ความเสี่ยงสูง (≥ 70)", "High risk (≥ 70)")}</span><span class="v">${A.filter(a => a.risk >= 70 && a.status !== "explained").length}</span></div>

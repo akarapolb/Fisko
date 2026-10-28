@@ -85,7 +85,7 @@ CASE_PANELS.push(c => {
     ${head && hits.some(n => !(ov && ov.names.includes(n))) ? `<div class="row" style="margin-top:6px"><input type="text" id="bl-note" placeholder="${L("หลักฐานว่าเป็นคนละราย", "Evidence it's a different entity")}" style="min-width:220px"><button class="btn" type="button" id="bl-release">${L("ยืนยันว่าเป็นคนละราย", "Confirm a different entity")}</button></div>` : ""}</div></div>`;
 });
 CASE_BINDS.push((c, done) => {
-  const b = $("#bl-release"); if (b) b.onclick = () => { const note = $("#bl-note").value.trim(); if (note.length < 10) { toast(L("ระบุหลักฐานอย่างน้อย 10 ตัวอักษร", "Give evidence of at least 10 characters")); return; }
+  const b = $("#bl-release"); if (b) b.onclick = () => { const note = $("#bl-note").value.trim(); if (note.length < 10) { toastErr(L("ระบุหลักฐานอย่างน้อย 10 ตัวอักษร", "Give evidence of at least 10 characters")); return; }
     const names = [...new Set([...(c.bids || []).map(x => x.name), ...(c.quotes || []).map(q => tx(q.vendor)), ...(c.award ? [tx(c.award.winner)] : [])])].filter(n => blHit(n));
     c.blOverride = { by: me().id, note, t: nowIso(), names }; audit(["ปลดการตรวจพบรายชื่อผู้ทิ้งงาน", "Released an abandoned-work match"], `${c.id} ${names.join(", ")}`); notify(["audit"], [`แฟ้ม ${c.id} ปลดการตรวจพบรายชื่อผู้ทิ้งงาน`, `Case ${c.id}: an abandoned-work match was released`], `case:${c.id}`); done(L("บันทึกแล้ว แจ้งผู้ตรวจสอบแล้ว", "Recorded; Audit notified")); };
 });
@@ -118,7 +118,7 @@ CON_BINDS.push(done => {
   $$("[data-cpdemo]").forEach(b => (b.onclick = () => { const [cid, k] = b.dataset.cpdemo.split("|"), c = famCon(cid), lr = lastReport(c), res = suggestAssess(c, k, lr ? lr.actual : 0);
     c.supervision.assess.push({ at: k, d: TODAY, actual: lr ? lr.actual : 0, result: res, note: L("จำลองการถึงจุดประเมิน", "Demo checkpoint"), by: me().id, demo: true }); done(); }));
   $$("[data-cpsave]").forEach(b => (b.onclick = () => { const [cid, k] = b.dataset.cpsave.split("|"), c = famCon(cid), lr = lastReport(c), res = $(`[data-cpres="${cid}|${k}"]`).value, note = $(`#cpn-${cid}-${k}`).value.trim();
-    if (note.length < 5) { toast(L("บันทึกการประเมินอย่างน้อย 5 ตัวอักษร", "Write an assessment note")); return; }
+    if (note.length < 5) { toastErr(L("บันทึกการประเมินอย่างน้อย 5 ตัวอักษร", "Write an assessment note")); return; }
     c.supervision.assess.push({ at: k, d: TODAY, actual: lr ? lr.actual : 0, result: res, note, by: me().id });
     audit(["บันทึกการประเมินความก้าวหน้า", "Recorded a progress assessment"], `${c.id} ${k} ${res}`);
     if (res === "terminate") notify(["exec", "prochead"], [`สัญญา ${c.id} ผลประเมินเสนอพิจารณาบอกเลิก`, `Contract ${c.id}: the assessment suggests termination`], "prc-contracts");
@@ -138,7 +138,7 @@ CON_PANELS.push(c => {
     <div class="sub" style="margin-top:4px">${L("เมื่ออนุมัติ: ริบหลักประกัน ยกเลิกงวดที่ยังไม่ตรวจรับ ลดภาระผูกพันเหลือส่วนที่ตรวจรับแล้ว และเสนอชื่อผู้ขายเข้ากระบวนการพิจารณาผู้ทิ้งงาน (ระดับ B)", "On approval: the guarantee is forfeited, unaccepted phases are cancelled, the commitment drops to the accepted work, and the supplier is proposed for the abandoned-work list (level B)")}</div></details></div>`;
 });
 CON_BINDS.push(done => {
-  $$("[data-termask]").forEach(b => (b.onclick = () => { const c = famCon(b.dataset.termask), why = $(`#term-why-${c.id}`).value.trim(); if (why.length < 10) { toast(L("ระบุเหตุอย่างน้อย 10 ตัวอักษร", "Give the grounds, at least 10 characters")); return; }
+  $$("[data-termask]").forEach(b => (b.onclick = () => { const c = famCon(b.dataset.termask), why = $(`#term-why-${c.id}`).value.trim(); if (why.length < 10) { toastErr(L("ระบุเหตุอย่างน้อย 10 ตัวอักษร", "Give the grounds, at least 10 characters")); return; }
     c.term = { status: "pending", why, by: me().id, t: nowIso() }; audit(["เสนอบอกเลิกสัญญา", "Proposed a contract termination"], c.id); notify(["exec"], [`สัญญา ${c.id} เสนอบอกเลิก รออนุมัติ`, `Contract ${c.id}: termination proposed`], "prc-contracts"); done(L("ส่งผู้บริหารแล้ว", "Sent to the executive")); }));
   $$("[data-termno]").forEach(b => (b.onclick = () => { const c = famCon(b.dataset.termno); c.term.status = "rejected"; c.term.decided = { by: me().id, t: nowIso() }; const old = c.term; c.term = null; (c.termLog = c.termLog || []).push(old); audit(["ไม่อนุมัติบอกเลิกสัญญา", "Rejected a termination"], c.id); done(); }));
   $$("[data-termok]").forEach(b => (b.onclick = () => {

@@ -385,7 +385,7 @@ BIND["prj-share"] = () => {
     st.log.unshift({ t: nowIso(), to: c.id, rows: prjList().length * (c.kind === "ext" ? 1 : 12), asOf: TODAY, by: me().id, ok: null });
     audit(["ส่งข้อมูลจากคลังข้อมูลกลาง", "Shared data from the warehouse"], (c.name)[1]); save(); route(); toast(`${L("ส่งแล้ว", "Sent")}: ${tx(c.name)}`); }));
   $$("[data-shareok]").forEach(b => (b.onclick = () => { const c = cs.find(x => x.id === b.dataset.shareok), w = $("#share-why"), why = w ? w.value.trim() : "";
-    if (why.length < 10) { toast(L("ระบุเหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); if (w) w.focus(); return; }
+    if (why.length < 10) { toastErr(L("ระบุเหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); if (w) w.focus(); return; }
     st.cons[c.id] = "active"; st.log.unshift({ t: nowIso(), to: c.id, rows: prjList().length, asOf: TODAY, by: (S.users.find(u => u.role === (c.ask ? c.ask.by : "plan")) || me()).id, ok: me().id, why });
     audit(["อนุมัติการส่งข้อมูลให้หน่วยงานภายนอก", "Approved an external data share"], (c.name)[1]); save(); renderNav(); route(); toast(L("อนุมัติและส่งแล้ว บันทึกในทะเบียนการส่ง", "Approved and sent; recorded in the send log")); }));
 };

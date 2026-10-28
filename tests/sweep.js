@@ -867,6 +867,27 @@
           n++; window.FISKO_ROUTE = null; S = SEEDS[org].seed();
         }); await tick(); }
       }
+      // government-site basics (round 65): footer and policy pages, errors tied to their field, presenter steps that open their record
+      if (typeof sitePolicy === "function") for (const org of o.orgs) { ORG = org; S = SEEDS[org].seed();
+        for (const lang of o.langs) { LANG = lang; safe(`site ${org}/${lang}`, () => {
+          ROLE = "exec"; renderShell();
+          const ft = document.getElementById("sitefoot");
+          if (!ft || !txt(ft).includes(tx(S.org)) || ft.querySelectorAll("[data-sitepol]").length !== SITE_POL.length) errs.push(`site ${org}/${lang}: footer missing the agency or its policy links`);
+          for (const [k] of SITE_POL) { SITE_TAB = k; go2("policy"); bad(`policy ${org}/${lang}/${k}`, txt(document.getElementById("view"))); }
+          go2("home"); const bx = document.createElement("div"); bx.innerHTML = '<textarea id="sw-why"></textarea><button type="button" id="sw-go">go</button>'; document.getElementById("view").appendChild(bx);
+          SITE_ACT = document.getElementById("sw-go"); toastErr("sweep");
+          const w = document.getElementById("sw-why");
+          if (w.getAttribute("aria-invalid") !== "true" || document.activeElement !== w || !document.getElementById(w.getAttribute("aria-describedby"))) errs.push(`site ${org}/${lang}: toastErr did not mark and focus the field`);
+          for (const rt of ["pe2e", "fin"]) {
+            PRES = { rt, i: 0, open: false };
+            presSteps(rt).forEach((di, i) => { const s = DEMO[di]; if (!PRES_OPEN[s.t] || !PRES_OPEN[s.t]()) return; CASE_OPEN = CON_OPEN = VC_OPEN = null; presGo(i);
+              if (!(s.t.startsWith("E-F") ? VC_OPEN : CASE_OPEN || CON_OPEN)) errs.push(`presenter ${org}/${s.t}: the step did not open its record`); });
+          }
+          PRES = null; presSave(); renderPresBar(); window.FISKO_ROUTE = null; n++;
+          go2("home"); $$("#view .head .eyebrow").forEach(e => { if (/(^|·\s*)(B|M|F|P)\d{1,2}(\s*·|$)/.test(e.textContent)) errs.push(`site ${org}/${lang}: a design code left in an eyebrow`); });
+          S = SEEDS[org].seed();
+        }); await tick(); }
+      }
       report("shell");
     }
     window.onerror = oldErr; window.FISKO_ROUTE = null;

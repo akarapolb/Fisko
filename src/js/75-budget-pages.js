@@ -39,14 +39,14 @@ const BUD_PAGES = [
   { id: "dashboard", code: "B8", m: "M07", group: "exec", mod: "dashboard",
     tabs: ["live", "drill", "forecast", "alerts", "progress", "procure", { id: "import", roles: ["plan", "exec", "fin", "audit"] }, { id: "overview", label: [`ปี ${CUR_FY - 1}`, `FY${CUR_FY - 1}`] }] },
   { id: "performance", code: "B9", m: "M08", group: "intel", mod: "performance",
-    tabs: [{ id: "kpis", label: ["ตัวชี้วัดและ Scorecard", "KPIs and scorecard"], keys: ["kpis", "scorecard"] }, "chain", "quarter", { id: "cost", roles: ["plan", "exec", "audit"] },
+    tabs: [{ id: "kpis", label: ["ตัวชี้วัดและบัตรคะแนน", "KPIs and scorecard"], keys: ["kpis", "scorecard"] }, "chain", "quarter", { id: "cost", roles: ["plan", "exec", "audit"] },
       { id: "evals", label: ["รายงานและประเมินผล", "Reports and evaluation"], keys: ["report", "evaluate", "stages"], roles: ["plan", "exec", "audit"] }, "recs", { id: "public", roles: ["plan", "exec", "audit"] }] },
   { id: "insight", code: "B10", m: "M09", group: "intel", mod: "intel", view: "assistant", roles: ["plan", "exec", "fin", "audit"],
     label: ["วิเคราะห์และพยากรณ์", "Analytics and forecasts"], h1: ["วิเคราะห์และพยากรณ์งบประมาณ", "Budget analytics and forecasts"],
     tabs: ["bfore", { id: "sim", label: ["จำลองสถานการณ์", "What-if"], keys: ["bwhatif", "whatif"] }, "trends",
       { id: "signals", label: ["สัญญาณและคุณภาพ", "Signals and quality"], keys: ["bkpi", "anoms", "quality"] }] },
   { id: "assistant", code: "B11", m: "M09", group: "intel", mod: "intel",
-    label: ["ผู้ช่วย AI และ Agent", "AI assistant and agents"], h1: ["ผู้ช่วย AI และ Agent งบประมาณ", "Budget AI assistant and agents"],
+    label: ["ผู้ช่วย AI และเอเจนต์", "AI assistant and agents"], h1: ["ผู้ช่วย AI และเอเจนต์งบประมาณ", "Budget AI assistant and agents"],
     tabs: ["ask", { id: "bagents", roles: ["plan", "exec", "fin", "audit"] }, { id: "agents", roles: ["plan", "exec", "fin", "audit"] }] },
 ];
 BUD_PAGES.forEach(p => (p.tabs = (p.tabs || []).map(t => (typeof t === "string" ? { id: t } : t)).map(t => ({ ...t, keys: t.keys || [t.id] }))));

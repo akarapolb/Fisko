@@ -141,10 +141,10 @@ CASE_BINDS.push((c, done) => {
     (c.bsec = c.bsec || []).push({ who, type: $("#bs-t").value, amount: amt, from: TODAY, to, status: "held", ext: [] }); caseLog(c, "bsec_add", `${who} · ${fmt(amt)}`); done(L("รับหลักประกันแล้ว", "Received")); };
   $$("[data-bsa]").forEach(b => (b.onclick = () => { const [act, i] = b.dataset.bsa.split("|"), x = c.bsec[Number(i)], why = ($("#bs-x-" + i).value || "").trim(), d = $("#bs-d-" + i).value;
     if (act === "ext") { if (d <= x.to) { toast(L("วันที่ใหม่ต้องหลังวันเดิม", "The new date must be after the old one")); return; } x.ext.push({ to: x.to, t: TODAY }); x.to = d; caseLog(c, "bsec_ext", `${x.who} → ${d}`); audit(["ขยายอายุหลักประกันการเสนอราคา", "Extended a bid security"], `${c.id} ${x.who}`); done(L("ขยายแล้ว", "Extended")); return; }
-    if (why.length < 3) { toast(L("ระบุเหตุผลอย่างน้อย 3 ตัวอักษร", "Give a reason of at least 3 characters")); return; }
+    if (why.length < 3) { toastErr(L("ระบุเหตุผลอย่างน้อย 3 ตัวอักษร", "Give a reason of at least 3 characters")); return; }
     if (act === "ret") { if (!c.award) { toast(L("คืนได้หลังประกาศผู้ชนะ", "Returns come after the award")); return; } if (norm(x.who) === norm(winnerOf(c)) && !S.contracts.some(k => k.plan === c.plan)) { toast(L("ผู้ชนะคืนได้หลังทำสัญญา", "The winner's security is returned after the contract")); return; }
       x.status = "returned"; x.ret = { d: TODAY, reason: why, by: me().id }; caseLog(c, "bsec_ret", x.who); audit(["คืนหลักประกันการเสนอราคา", "Returned a bid security"], `${c.id} ${x.who}`); done(L("คืนแล้ว", "Returned")); return; }
-    if (why.length < 10) { toast(L("ริบหลักประกันต้องมีเหตุผลอย่างน้อย 10 ตัวอักษร", "Forfeiting needs a reason of at least 10 characters")); return; }
+    if (why.length < 10) { toastErr(L("ริบหลักประกันต้องมีเหตุผลอย่างน้อย 10 ตัวอักษร", "Forfeiting needs a reason of at least 10 characters")); return; }
     x.status = "forfeited"; x.forf = { d: TODAY, reason: why, by: me().id }; caseLog(c, "bsec_forf", `${x.who} · ${why}`); audit(["ริบหลักประกันการเสนอราคา", "Forfeited a bid security"], `${c.id} ${x.who}`); done(L("ริบแล้ว", "Forfeited")); }));
 
   const ts = $("#ts-form"); if (ts) ts.onsubmit = e => { e.preventDefault(); const n = (c.tests || []).length + 1; (c.tests = c.tests || []).push({ id: "T" + n, vendor: $("#ts-v").value.trim(), item: $("#ts-i").value.trim(), recv: "", sent: "", start: "", end: "", notified: "", replied: "", lab: "", report: "", result: null });
@@ -225,7 +225,7 @@ VIEWS.vportal = () => {
 };
 BIND.vportal = () => {
   const reply = (key, decline) => { const [cid, ri, xi] = [key.slice(0, key.indexOf("-", 8)), ...key.slice(key.indexOf("-", 8) + 1).split("-")].map((x, i) => (i ? Number(x) : x)), c = caseOf(cid), x = c.rfq[ri].rows[xi];
-    const pr = decline ? 0 : Math.round(Number($("#vp-p-" + key).value) || 0); if (!decline && pr < 1) { toast(L("ระบุราคา", "Enter a price")); return; }
+    const pr = decline ? 0 : Math.round(Number($("#vp-p-" + key).value) || 0); if (!decline && pr < 1) { toastErr(L("ระบุราคา", "Enter a price")); return; }
     x.reply = { d: TODAY, price: pr, by: me().id, via: "portal" }; caseLog(c, "rfq_reply", `${x.v} · ${pr ? fmt(pr) : "ไม่เสนอ"} (portal)`);
     if (pr && !needsCompetition(c) && !c.quotes.some(q => tx(q.vendor) === x.v)) c.quotes.push({ vendor: [x.v, x.v], price: pr, win: false });
     notify(["proc", "prochead"], [`${x.v} ตอบ RFQ ${c.rfq[ri].no}`, `${x.v} replied to RFQ ${c.rfq[ri].no}`], "case:" + c.id); audit(["ผู้ขายตอบ RFQ ผ่านพอร์ทัล (จำลอง)", "A supplier replied to an RFQ in the portal (simulated)"], `${c.id} ${c.rfq[ri].no}`); commit(); route(); toast(L("ส่งคำตอบแล้ว", "Sent")); };
@@ -255,7 +255,7 @@ const vendorHome = () => { const v = vpMe(), R = v ? vpRfqs(v).filter(o => !o.x.
     bb();
     $$("[data-vinvok]").forEach(b => (b.onclick = () => { const x = S.vinv.find(y => y.id === b.dataset.vinvok), k = S.contracts.find(y => y.id === x.contract), ph = k.phases.find(p => p.n === x.phase);
       ph.invoice = { no: x.no, amount: x.amount, date: x.date, vendor: tx(k.vendor), contract: k.no, by: me().id, via: "portal" }; x.status = "confirmed"; audit(["ยืนยันใบแจ้งหนี้จากพอร์ทัลผู้ขาย", "Confirmed an invoice from the supplier portal"], `${k.id} ${x.no}`); commit(); route(); toast(L("ยืนยันแล้ว เข้าตรวจสามทางได้", "Confirmed; it feeds the three-way check")); }));
-    $$("[data-vinvno]").forEach(b => (b.onclick = () => { const why = ($("#vinv-n-" + b.dataset.vinvno).value || "").trim(); if (why.length < 3) { toast(L("ระบุเหตุผลอย่างน้อย 3 ตัวอักษร", "Give a reason of at least 3 characters")); return; } const x = S.vinv.find(y => y.id === b.dataset.vinvno); x.status = "returned"; x.note = why;
+    $$("[data-vinvno]").forEach(b => (b.onclick = () => { const why = ($("#vinv-n-" + b.dataset.vinvno).value || "").trim(); if (why.length < 3) { toastErr(L("ระบุเหตุผลอย่างน้อย 3 ตัวอักษร", "Give a reason of at least 3 characters")); return; } const x = S.vinv.find(y => y.id === b.dataset.vinvno); x.status = "returned"; x.note = why;
       audit(["ส่งคืนใบแจ้งหนี้ของผู้ขาย", "Returned a supplier invoice"], `${x.contract} ${x.no}`); commit(); route(); }));
   };
 }

@@ -87,7 +87,7 @@ const EXEC = {
   "tor.draft": (run, s) => { const c = caseOf(run.target), t = S.torLib.find(x => x.kind === c.kind && torLatest(x)) || S.torLib.find(x => torLatest(x)), v = torLatest(t); run.memo = Object.assign(run.memo || {}, { tpl: t.id, tplV: v.v, text: v.text }); s.out = `${t.id} v${v.v} · ${esc(tx(t.name))}`; return drLevel(run) === "suggested" ? "suggested" : "done"; },
   "tor.check": (run, s) => { const r = aiSpecCheck((run.memo || {}).text || ""); s.out = r.hits.length ? L(`พบ ${r.hits.length} จุดที่ควรตรวจ`, `${r.hits.length} points to check`) : L("ไม่พบข้อความล็อกสเปก", "No spec-locking wording"); return "done"; },
   "tor.write": (run, s) => { const c = caseOf(run.target), m = run.memo || {}; if (!m.tpl) { s.out = L("ไม่มีร่าง TOR", "No TOR draft"); return "blocked"; } s.change = { what: "TOR", before: c.tor ? c.tor.doc : "—", after: `TOR_${c.id}_${m.tpl}-v${m.tplV}.pdf` }; return caseState(c) === 4 ? wrLevel(run) : (s.out = L("แฟ้มยังไม่อยู่ขั้น 4", "The case isn't at step 4"), "blocked"); },
-  "committee.propose": (run, s) => { const c = caseOf(run.target), pool = famPeople().filter(u => u.id !== me().id && !caseJudges(c).includes(u.id)).map(u => u.id).slice(0, S.pcfg.minMembers); run.memo = Object.assign(run.memo || {}, { cm: pool }); s.out = pool.map(userName).join(", ") + ` · ${L("กรรมการต้องแจ้งผลประโยชน์ทับซ้อนเอง Agent แจ้งแทนไม่ได้", "members must declare conflicts themselves; the agent can't")}`; return "done"; },
+  "committee.propose": (run, s) => { const c = caseOf(run.target), pool = famPeople().filter(u => u.id !== me().id && !caseJudges(c).includes(u.id)).map(u => u.id).slice(0, S.pcfg.minMembers); run.memo = Object.assign(run.memo || {}, { cm: pool }); s.out = pool.map(userName).join(", ") + ` · ${L("กรรมการต้องแจ้งผลประโยชน์ทับซ้อนเองเอเจนต์แจ้งแทนไม่ได้", "members must declare conflicts themselves; the agent can't")}`; return "done"; },
   "committee.write": (run, s) => { const c = caseOf(run.target), cm = (run.memo || {}).cm || []; if (cm.length < S.pcfg.minMembers) { s.out = L("รายชื่อไม่พอ", "Not enough people"); return "blocked"; } s.value = ""; s.change = { what: L("เลขที่คำสั่งแต่งตั้งกรรมการ TOR", "TOR committee order no."), before: "—", after: L("(ใส่เลขที่คำสั่งก่อนอนุมัติ)", "(enter the order number before approving)"), editable: "text" }; return caseState(c) === 4 ? wrLevel(run) : (s.out = L("แฟ้มยังไม่อยู่ขั้น 4", "The case isn't at step 4"), "blocked"); },
   "criteria.write": (run, s) => { const c = caseOf(run.target); s.change = { what: L("เกณฑ์พิจารณา", "Evaluation criteria"), before: c.criteria ? c.criteria.map(k => `${k.k} ${k.w}`).join(", ") : "—", after: CRIT_PRESET.pp.map(k => `${tx(k.name)} ${k.w}`).join(", ") }; return caseState(c) === 4 ? wrLevel(run) : (s.out = L("แฟ้มยังไม่อยู่ขั้น 4", "The case isn't at step 4"), "blocked"); },
   "pack.draft": (run, s) => { s.out = esc(egpPack(caseOf(run.target))).replace(/\n/g, "<br>"); return "done"; },
@@ -127,7 +127,7 @@ const canApprove = (run, s) => (s.tool === "report.publish" ? ROLE === "prochead
 function advance(run) {
   while (run.ptr < run.steps.length && run.status === "running") {
     const s = run.steps[run.ptr], t0 = performance.now();
-    if (!TOOLS[s.tool][3].includes(run.agent)) { s.status = "blocked"; s.out = L("Agent นี้ไม่มีสิทธิ์ใช้เครื่องมือนี้", "This agent may not use this tool"); run.ptr++; continue; }
+    if (!TOOLS[s.tool][3].includes(run.agent)) { s.status = "blocked"; s.out = L("เอเจนต์นี้ไม่มีสิทธิ์ใช้เครื่องมือนี้", "This agent may not use this tool"); run.ptr++; continue; }
     s.status = EXEC[s.tool](run, s); s.ms = Math.round(performance.now() - t0); s.at = nowIso();
     S.aiLog.unshift({ t: nowIso(), agent: run.agent, user: me().id, action: [TOOLS[s.tool][1], TOOLS[s.tool][2]], target: `${run.id} ${run.target}`, sources: 1, ok: s.status !== "blocked", ver: "agent-sim-1" });
     if (s.status === "await") { s.awaitMs = Date.now(); run.status = "waiting"; return; }
@@ -142,14 +142,14 @@ PROC.agents = () => {
   const openCases11 = S.cases.filter(c => !c.cancelled && [3, 4].includes(caseState(c)));
   const goal = (id, body) => `<div class="callout" style="margin:0;display:flex;flex-direction:column;gap:8px"><div class="row"><b>${agName(id)}</b><span class="mono sub">${id}</span>${tag(`${agLevel(id)} ${tx(AG_LEVELS[agLevel(id)])}`, "p-info")}${agentOn(id) ? "" : tag(L("ปิดอยู่ใน M09", "Off in M09"), "p-bad")}</div>${body}</div>`;
   return `
-  <div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">AI</div><div><b>${L("Agent แบบจำลอง: วางแผนจากแม่แบบ เรียกเครื่องมือจริง หยุดรอคนทุกจุดที่เขียนข้อมูล", "Simulated agents: plans come from templates, tools are real, and every write waits for a person")}</b><p>${L("ไม่เรียกโมเดลภาษา ผลแต่ละขั้นมาจากกฎที่มีอยู่ (D-P09) ไม่มีปุ่มอนุมัติทั้งหมด และ Agent ไม่มีเครื่องมือให้คะแนนข้อเสนอ ประกาศผู้ชนะ ทำสัญญา อนุมัติ หรือเบิกจ่าย", "No language model is called; each step's result comes from existing rules (D-P09). There is no approve-all, and agents have no tool to score bids, announce a winner, sign, approve or pay.")}</p></div></div>
+  <div class="alert"><div class="ic" style="background:var(--info-soft);color:var(--info)">AI</div><div><b>${L("เอเจนต์แบบจำลอง: วางแผนจากแม่แบบ เรียกเครื่องมือจริง หยุดรอคนทุกจุดที่เขียนข้อมูล", "Simulated agents: plans come from templates, tools are real, and every write waits for a person")}</b><p>${L("ไม่เรียกโมเดลภาษา ผลแต่ละขั้นมาจากกฎที่มีอยู่ (D-P09) ไม่มีปุ่มอนุมัติทั้งหมด และเอเจนต์ไม่มีเครื่องมือให้คะแนนข้อเสนอ ประกาศผู้ชนะ ทำสัญญา อนุมัติ หรือเบิกจ่าย", "No language model is called; each step's result comes from existing rules (D-P09). There is no approve-all, and agents have no tool to score bids, announce a winner, sign, approve or pay.")}</p></div></div>
   <section class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
     <div class="kpi"><span class="l">${L("การทำงานทั้งหมด", "Runs")}</span><span class="v">${S.agentRuns.length}</span></div>
     <div class="kpi"><span class="l">${L("รอคุณอนุมัติ", "Waiting for a person")}</span><span class="v">${S.agentRuns.filter(r => r.status === "waiting").length}</span></div>
     <div class="kpi"><span class="l">${L("เวลาก่อนอนุมัติ (ค่ากลาง)", "Time before approving (median)")}</span><span class="v">${secs.length ? fmt(med(secs), 1) : "—"}<small>${secs.length ? L(" วินาที", " s") : ""}</small></span></div>
     <div class="kpi"><span class="l">${L("อนุมัติเร็วผิดปกติ", "Unusually fast approvals")}</span><span class="v">${fast}<small>${dec.length ? ` / ${dec.length}` : ""}</small></span><span class="d sub">&lt; ${S.pcfg.fastApproveSec} ${L("วินาที", "s")}</span></div>
   </section>
-  <section class="panel"><header><h2>${L("สั่งงาน Agent", "Give an agent a goal")}</h2></header><div class="body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px">
+  <section class="panel"><header><h2>${L("สั่งงานเอเจนต์", "Give an agent a goal")}</h2></header><div class="body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px">
     ${goal("AG-11", `<span class="sub">${L("เป้าหมาย: เตรียมแฟ้มให้พร้อมประกาศ", "Goal: get the case ready for the notice")}</span><select id="ag11-case" aria-label="${L("แฟ้ม", "Case")}">${openCases11.map(c => `<option value="${c.id}">${c.id} · ${esc(caseName(c))} (${caseState(c)}/12)</option>`).join("") || `<option value="">${L("ไม่มีแฟ้มที่ขั้น 3 หรือ 4", "No case at step 3 or 4")}</option>`}</select><button class="btn primary" type="button" data-agrun="AG-11" ${openCases11.length && isProcRole() ? "" : "disabled"}>${L("เริ่ม", "Start")}</button>`)}
     ${goal("AG-12", `<span class="sub">${L("เป้าหมาย: ตรวจสัญญาทุกฉบับวันนี้", "Goal: check every contract today")}</span><button class="btn primary" type="button" data-agrun="AG-12" ${isProcRole() || canSpend() ? "" : "disabled"}>${L("เริ่ม", "Start")}</button>`)}
     ${goal("AG-13", `<span class="sub">${L("เป้าหมาย: รายงานสรุปผลรายเดือน", "Goal: monthly summary")}</span><select id="ag13-m" aria-label="${L("เดือน", "Month")}">${repMonths().map(m => `<option value="${m}">${monthLabel(m)}</option>`).join("")}</select><button class="btn primary" type="button" data-agrun="AG-13" ${isProcRole() ? "" : "disabled"}>${L("เริ่ม", "Start")}</button>`)}
@@ -181,16 +181,16 @@ function bindAgents() {
   $$("[data-agrun]").forEach(b => (b.onclick = () => {
     const id = b.dataset.agrun; if (!agentOn(id)) { toast(L(`${agName(id)} ถูกปิดใช้งานใน M09`, `${agName(id)} is switched off in M09`)); return; }
     const target = id === "AG-11" ? $("#ag11-case").value : id === "AG-13" ? $("#ag13-m").value : id === "AG-10" ? $("#ag10-q").value.trim() : "ALL";
-    if (!target) return; const r = startRun(id, target); RUN_OPEN = r.id; audit(["สั่งงาน Agent", "Started an agent"], `${r.id} ${id} ${target}`); done(r.status === "waiting" ? L("Agent หยุดรอคุณอนุมัติ", "The agent is waiting for your approval") : L("Agent ทำงานเสร็จ", "The agent finished"));
+    if (!target) return; const r = startRun(id, target); RUN_OPEN = r.id; audit(["สั่งงานเอเจนต์", "Started an agent"], `${r.id} ${id} ${target}`); done(r.status === "waiting" ? L("เอเจนต์หยุดรอคุณอนุมัติ", "The agent is waiting for your approval") : L("เอเจนต์ทำงานเสร็จ", "The agent finished"));
   }));
   $$("[data-runopen]").forEach(b => (b.onclick = () => { RUN_OPEN = RUN_OPEN === b.dataset.runopen ? null : b.dataset.runopen; route(); }));
   $$("[data-aglset]").forEach(b => (b.onclick = () => { const id = b.dataset.aglset, lv = $(`[data-aglvl="${id}"]`).value, why = $(`#aglw-${id}`).value.trim();
-    if (lv === agLevel(id)) return; if (why.length < 5) { toast(L("ระบุเหตุผลการเปลี่ยนระดับ", "Give a reason for the change")); return; }
+    if (lv === agLevel(id)) return; if (why.length < 5) { toastErr(L("ระบุเหตุผลการเปลี่ยนระดับ", "Give a reason for the change")); return; }
     if (lv === "L3" && id !== "AG-12") { toast(L("L3 ใช้ได้เฉพาะ AG-12", "L3 is only for AG-12")); return; }
-    const old = agLevel(id); S.agentLevels[id] = lv; audit(["เปลี่ยนระดับความเป็นอิสระของ Agent", "Changed an agent's autonomy level"], `${id} ${old} → ${lv} · ${why}`);
+    const old = agLevel(id); S.agentLevels[id] = lv; audit(["เปลี่ยนระดับความเป็นอิสระของเอเจนต์", "Changed an agent's autonomy level"], `${id} ${old} → ${lv} · ${why}`);
     notify(["audit"], [`${id} เปลี่ยนระดับ ${old} → ${lv}`, `${id} level changed ${old} → ${lv}`], "prc-agents"); done(L("บันทึกแล้ว แจ้งผู้ตรวจสอบแล้ว", "Saved; Audit notified")); }));
   const run = S.agentRuns.find(r => r.id === RUN_OPEN); if (!run) return;
-  const st = $("#run-stop"); if (st) st.onclick = () => { run.steps.slice(run.ptr).forEach(s => { if (s.status === "pending" || s.status === "await") s.status = "stopped"; }); run.status = "stopped"; audit(["หยุดแผนของ Agent", "Stopped an agent's plan"], run.id); done(); };
+  const st = $("#run-stop"); if (st) st.onclick = () => { run.steps.slice(run.ptr).forEach(s => { if (s.status === "pending" || s.status === "await") s.status = "stopped"; }); run.status = "stopped"; audit(["หยุดแผนของเอเจนต์", "Stopped an agent's plan"], run.id); done(); };
   const decide = ok => { const s = run.steps[run.ptr]; if (!canApprove(run, s)) { toast(L("คุณไม่มีสิทธิ์ทำรายการนี้", "You aren't allowed to do this")); return; }
     const val = $("#step-val") ? $("#step-val").value : null;
     if (ok) { const err = applyStep(run, s, val); if (err) { toast(err); return; } s.status = val != null && String(val) !== String(s.value ?? "") ? "edited" : "approved"; }
@@ -212,7 +212,7 @@ function bindAgents() {
     base(R);
     if (!S.agentRuns) return;
     S.agentTasks.filter(t => (t.role === ROLE || (t.role === "proc" && isProcRole()) || (ROLE === "divhead" && t.role === "div")) && (!t.unit || t.unit === me().unit)).forEach(t => R(`${t.title}`, `${t.agent} · ${t.run}`, t.due, t.link, "p-info"));
-    S.agentRuns.filter(r => r.status === "waiting" && canApprove(r, r.steps[r.ptr])).forEach(r => R(`${L("Agent รออนุมัติ", "An agent is waiting for you")} ${r.id}`, `${agName(r.agent)} · ${tx([TOOLS[r.steps[r.ptr].tool][1], TOOLS[r.steps[r.ptr].tool][2]])}`, TODAY, "prc-agents", "p-warn"));
+    S.agentRuns.filter(r => r.status === "waiting" && canApprove(r, r.steps[r.ptr])).forEach(r => R(`${L("เอเจนต์รออนุมัติ", "An agent is waiting for you")} ${r.id}`, `${agName(r.agent)} · ${tx([TOOLS[r.steps[r.ptr].tool][1], TOOLS[r.steps[r.ptr].tool][2]])}`, TODAY, "prc-agents", "p-warn"));
   };
 }
 function seedAgents(s) {

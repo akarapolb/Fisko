@@ -108,7 +108,7 @@ function cwAnswer(agentId, text, files, recs) {
   let id = agentId;
   if (id === "FA") { id = cwPick(text, files); if (id !== "FA") steps.push(step("route", `${L("ส่งต่อให้", "Handed to")} ${tx(cwAgent(id).name)}`)); }
   const a = cwAgent(id);
-  if (id !== "FA" && a.on === false) return { agent: id, steps, html: `<p>${tx(a.name)} ${L("ถูกปิดใช้งานใน M09 · ผู้บริหารเปิดได้ที่แท็บ AI Agents", "is switched off in M09. An executive can turn it on in the AI agents tab.")}</p>`, actions: [cwAct(L("เปิด M09", "Open M09"), "go", "assistant")] };
+  if (id !== "FA" && a.on === false) return { agent: id, steps, html: `<p>${tx(a.name)} ${L("ถูกปิดใช้งานใน M09 · ผู้บริหารเปิดได้ที่แท็บเอเจนต์ AI", "is switched off in M09. An executive can turn it on in the AI agents tab.")}</p>`, actions: [cwAct(L("เปิด M09", "Open M09"), "go", "assistant")] };
   // files first
   if (files.length) {
     const parts = files.map(f => {
@@ -186,12 +186,12 @@ function cwAnswer(agentId, text, files, recs) {
   if (id === "AG-11") {
     steps.push(step("case.read", L("อ่านแฟ้มจัดซื้อ", "Read the case files")));
     const open = (S.cases || []).filter(c => !c.cancelled && caseState(c) < 12).sort((x, y) => caseState(x) - caseState(y));
-    return { agent: id, steps, html: `<p>${L("แฟ้มที่เปิดอยู่", "Open cases")}: ${open.length}</p>${cwTable([[L("แฟ้ม", "Case")], [L("ชื่อ", "Name")], [L("ขั้น", "Step"), 1]], open.slice(0, 6).map(c => [`<span class="mono">${c.id}</span>`, esc(caseName(c)), `${caseState(c)}/12`]))}<p class="sub">${L("ให้ Case Copilot เตรียมแฟ้มได้ที่แท็บ AI Agents ของจัดซื้อ ทุกขั้นที่เขียนข้อมูลรอคุณอนุมัติ", "Case Copilot can prepare a case from the procurement AI agents tab; every step that writes data waits for you.")}</p>`, actions: [cwAct(L("เปิดแฟ้มจัดซื้อ", "Open case files"), "jump", "prc-cases", true)] };
+    return { agent: id, steps, html: `<p>${L("แฟ้มที่เปิดอยู่", "Open cases")}: ${open.length}</p>${cwTable([[L("แฟ้ม", "Case")], [L("ชื่อ", "Name")], [L("ขั้น", "Step"), 1]], open.slice(0, 6).map(c => [`<span class="mono">${c.id}</span>`, esc(caseName(c)), `${caseState(c)}/12`]))}<p class="sub">${L("ให้ Case Copilot เตรียมแฟ้มได้ที่แท็บเอเจนต์ AI ของจัดซื้อ ทุกขั้นที่เขียนข้อมูลรอคุณอนุมัติ", "Case Copilot can prepare a case from the procurement AI agents tab; every step that writes data waits for you.")}</p>`, actions: [cwAct(L("เปิดแฟ้มจัดซื้อ", "Open case files"), "jump", "prc-cases", true)] };
   }
   if (id === "AG-10" && typeof aiAnswer === "function") {
     steps.push(step("kpi.query", L("ค้นจากชั้นตัวชี้วัด", "Queried the KPI layer")));
     const res = aiAnswer(text);
-    return { agent: id, steps, html: `<p>${esc(res.text)}</p>${res.note ? `<p class="sub">${esc(res.note)}</p>` : ""}${res.src && res.src.length ? `<p class="sub">${L("แหล่ง", "Source")}: ${res.src.join(", ")}</p>` : ""}`, actions: [cwAct(L("เปิด Analytics", "Open analytics"), "jump", "prc-analytics")] };
+    return { agent: id, steps, html: `<p>${esc(res.text)}</p>${res.note ? `<p class="sub">${esc(res.note)}</p>` : ""}${res.src && res.src.length ? `<p class="sub">${L("แหล่ง", "Source")}: ${res.src.join(", ")}</p>` : ""}`, actions: [cwAct(L("เปิดการวิเคราะห์ข้อมูล", "Open analytics"), "jump", "prc-analytics")] };
   }
   if (id === "AG-07" || id === "AG-13" || id === "AG-14") {
     return { agent: id, steps, html: `<p>${tx(a.what)}</p><p class="sub">${id === "AG-14" ? L("แนบไฟล์ใบแจ้งหนี้ ใบส่งของ หรือหนังสือค้ำประกันด้วยปุ่ม + หรือวางไฟล์ลงในช่องแชท", "Attach an invoice, delivery note or guarantee with the + button, or drop the file into the chat.") : L("เปิดหน้าที่เกี่ยวข้องเพื่อเริ่มงาน ฉันจะร่างและรอให้คุณตรวจ", "Open the related page to start; I'll draft and wait for you to check.")}</p>`, actions: [cwAct(L("เปิดผู้ช่วย AI จัดซื้อ", "Open procurement AI"), "jump", id === "AG-14" ? "prc-docs" : "prc-ai", true)] };

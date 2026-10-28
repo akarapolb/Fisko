@@ -130,13 +130,13 @@ function kpiB() {
 // ---------- M09 tabs ----------
 {
   const bt = intelTabsBar;
-  intelTabsBar = function () { const h = bt(), x = [["bagents", L("Agent งบประมาณ", "Budget agents")], ["bfore", L("พยากรณ์ปีนี้", "This year's forecast")], ["bwhatif", L("จำลอง 4 สถานการณ์", "Four what-ifs")], ["bkpi", L("ตัวชี้วัดและสัญญาณ", "KPIs and signals")]];
+  intelTabsBar = function () { const h = bt(), x = [["bagents", L("เอเจนต์งบประมาณ", "Budget agents")], ["bfore", L("พยากรณ์ปีนี้", "This year's forecast")], ["bwhatif", L("จำลอง 4 สถานการณ์", "Four what-ifs")], ["bkpi", L("ตัวชี้วัดและสัญญาณ", "KPIs and signals")]];
     return h.replace(/<\/div>\s*$/, x.map(([id, l]) => `<button class="tab ${id === INTEL_TAB ? "on" : ""}" type="button" role="tab" aria-selected="${id === INTEL_TAB}" data-itab="${id}">${l}</button>`).join("") + "</div>"); };
 }
 INTEL.bagents = () => {
   const runs = (S.bRuns || []).slice().reverse(), open = runs.find(r => r.id === B_RUN_OPEN) || runs[0], A = S.allocs[B4_FY];
   const ST = { pending: ["–", "p-mute"], done: [L("เสร็จ", "Done"), "p-ok"], await: [L("รอคุณอนุมัติ", "Waiting for you"), "p-warn"], approved: [L("อนุมัติแล้ว", "Approved"), "p-ok"], rejected: [L("ไม่อนุมัติ", "Rejected"), "p-bad"], skipped: [L("ข้าม", "Skipped"), "p-mute"], blocked: [L("ทำต่อไม่ได้", "Blocked"), "p-bad"] };
-  return `<div class="alert"><div class="ic">i</div><div><b>${L("Agent วางแผน เรียกเครื่องมือ และหยุดให้คนอนุมัติทุกขั้นที่เปลี่ยนข้อมูลหรือแจ้งผู้อื่น", "Agents plan, call tools, and stop for a person at every step that changes data or notifies people")}</b><p>${L("จำลองตาม D-P09 · ไม่อนุมัติคำขอ ไม่ตัดวงเงินจริงโดยไม่มีคน ไม่ลงมติ และไม่อนุมัติการโอน · ทุกขั้นบันทึกใน M09", "Simulated per D-P09 · never approves requests, changes amounts without a person, votes or approves transfers · every step is logged in M09")}</p></div></div>
+  return `<div class="alert"><div class="ic">i</div><div><b>${L("เอเจนต์วางแผน เรียกเครื่องมือ และหยุดให้คนอนุมัติทุกขั้นที่เปลี่ยนข้อมูลหรือแจ้งผู้อื่น", "Agents plan, call tools, and stop for a person at every step that changes data or notifies people")}</b><p>${L("จำลองตาม D-P09 · ไม่อนุมัติคำขอ ไม่ตัดวงเงินจริงโดยไม่มีคน ไม่ลงมติ และไม่อนุมัติการโอน · ทุกขั้นบันทึกใน M09", "Simulated per D-P09 · never approves requests, changes amounts without a person, votes or approves transfers · every step is logged in M09")}</p></div></div>
     <div class="brief-grid">${Object.keys(B_AG).map(id => { const on = agentOn(id), g = B_AG[id];
       return `<section class="panel"><header>${cwAv(cwAgent(id) || CW_GENERAL, 28)}<h2>${bAgName(id)}</h2><span class="sp"></span><span class="mono sub">${id}</span></header><div class="body" style="display:flex;flex-direction:column;gap:8px"><span>${tx(g.goal)}</span>
         <span class="sub">${g.plan().map(([t]) => tx(B_TOOL[t][1])).join(" → ")}</span>
@@ -150,8 +150,8 @@ INTEL.bagents = () => {
 INTEL_BIND.bagents = () => {
   $$("[data-bstart]").forEach(b => (b.onclick = () => { const id = b.dataset.bstart, o = id === "AG-15" ? { to: ($("[data-agto]") || {}).value || "L14", need: Math.round(Number(($("[data-agneed]") || {}).value || 1) * 1e6) } : {}; if (id === "AG-15") B_AG_GOAL = { to: o.to, need: o.need / 1e6 }; bStart(id, o); commit(); route(); }));
   $$("[data-bopen]").forEach(s => (s.onchange = () => { B_RUN_OPEN = s.value; route(); }));
-  $$("[data-bok]").forEach(b => (b.onclick = () => { const r = S.bRuns.find(x => x.id === b.dataset.bok), s = r.steps[r.ptr]; bApply(r, s); s.status = "approved"; s.by = me().id; audit(["อนุมัติขั้นตอนของ Agent", "Approved an agent step"], `${r.id} ${s.tool}`); r.ptr++; r.status = "running"; bAdvance(r); commit(); route(); }));
-  $$("[data-bno]").forEach(b => (b.onclick = () => { const r = S.bRuns.find(x => x.id === b.dataset.bno), s = r.steps[r.ptr]; s.status = "rejected"; audit(["ไม่อนุมัติขั้นตอนของ Agent", "Rejected an agent step"], `${r.id} ${s.tool}`); r.ptr++; r.status = "running"; bAdvance(r); commit(); route(); }));
+  $$("[data-bok]").forEach(b => (b.onclick = () => { const r = S.bRuns.find(x => x.id === b.dataset.bok), s = r.steps[r.ptr]; bApply(r, s); s.status = "approved"; s.by = me().id; audit(["อนุมัติขั้นตอนของเอเจนต์", "Approved an agent step"], `${r.id} ${s.tool}`); r.ptr++; r.status = "running"; bAdvance(r); commit(); route(); }));
+  $$("[data-bno]").forEach(b => (b.onclick = () => { const r = S.bRuns.find(x => x.id === b.dataset.bno), s = r.steps[r.ptr]; s.status = "rejected"; audit(["ไม่อนุมัติขั้นตอนของเอเจนต์", "Rejected an agent step"], `${r.id} ${s.tool}`); r.ptr++; r.status = "running"; bAdvance(r); commit(); route(); }));
 };
 INTEL.bfore = () => {
   const f = fcYear(), T = spendT(), A = S.allocs[B4_FY], mx = 100;

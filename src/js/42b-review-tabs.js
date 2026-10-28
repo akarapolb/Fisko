@@ -19,7 +19,7 @@ REV_PANELS.queue = () => {
   const rows = S.requests.filter(r => ["plan", "committee", "returned"].includes(r.status));
   const step = st => S.workflow.find(w => (st === "plan" ? w.role === "plan" : st === "committee" ? w.cond === "amount" : w.role === "div")) || { sla: 0 };
   return `
-  <section class="panel"><header><h2>${L("คำขอที่อยู่ระหว่างพิจารณา", "Requests in review")}</h2><span class="sp"></span><span class="sub">${L("กำหนดเวลาจาก SLA ใน M10 · Workflow", "Due dates use the SLA in M10 · Workflow")}</span></header>
+  <section class="panel"><header><h2>${L("คำขอที่อยู่ระหว่างพิจารณา", "Requests in review")}</h2><span class="sp"></span><span class="sub">${L("กำหนดเวลาจาก SLA ใน M10 · ขั้นตอนงาน", "Due dates use the SLA in M10 · Workflow")}</span></header>
     <div class="tbl-wrap"><table><thead><tr><th>${L("เลขที่", "No.")}</th><th>${L("โครงการ", "Project")}</th><th>${L("หน่วยงาน", "Unit")}</th><th class="n">${L("วงเงิน (ลบ.)", "Amount (M)")}</th><th>${L("สถานะ", "Status")}</th><th class="n">${L("ความเห็นค้าง", "Open comments")}</th><th>${L("ครบกำหนด", "Due")}</th><th></th></tr></thead>
       <tbody>${rows.map(r => { const s = step(r.status), due = addDays(r.updated, s.sla || 0), late = daysUntil(due) < 0, mine = canReview(r);
         return `<tr><td class="mono">${r.id}</td><td>${esc(tx(r.name))}</td><td class="sub">${unitName(r.unit)}</td><td class="n">${mb(r.amount)}</td><td>${pill(r.status)}</td>

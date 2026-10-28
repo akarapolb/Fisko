@@ -43,7 +43,7 @@ function renderChat() {
   const last = c.lastElementChild; if (last) last.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 function ask(text, qi) {
-  if (!agentOn("AG-06")) { toast(L("Executive Budget Assistant ถูกปิดใช้งาน เปิดได้ที่แท็บ AI Agents", "The Executive Budget Assistant is off. Turn it on in the AI agents tab.")); return; }
+  if (!agentOn("AG-06")) { toast(L("Executive Budget Assistant ถูกปิดใช้งาน เปิดได้ที่แท็บเอเจนต์ AI", "The Executive Budget Assistant is off. Turn it on in the AI agents tab.")); return; }
   if (qi == null) {
     if (!text.trim()) return;
     const t = text.toLowerCase();
