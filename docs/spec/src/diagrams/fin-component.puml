@@ -1,0 +1,61 @@
+@startuml
+!include include/common.puml
+' title.th: องค์ประกอบภายในโมดูล finance
+' title.en: Components inside the finance module
+' desc.th: โมดูล finance แบ่งเป็นแพ็กเกจตามงาน เปิดเฉพาะแพ็กเกจ api finance เรียก procurement.api และ budget และติดตั้ง SPI ที่ procurement ประกาศ การเชื่อมต่อ GFMIS ธนาคาร และไฟล์ผ่าน outbox และ adapter
+' desc.en: The finance module is split into packages by work area and publishes only its api package. Finance calls procurement.api and budget, and implements the SPIs that Procurement declares. GFMIS, bank and file links run through the outbox and adapters.
+left to right direction
+skinparam nodesep 20
+skinparam ranksep 90
+actor "$t("เจ้าหน้าที่การเงิน", "Finance staff")" as staff
+actor "$t("ผู้ยืม", "Borrower")" as bor
+package "$t("โมดูล finance (ข้อเสนอ)", "Module finance (proposal)")" as fin {
+  [web] as web
+  [commitment] as cm
+  [voucher] as vc
+  [payment] as pay
+  [supplierbank] as sb
+  [advance] as adv
+  [receipt, cash] as rc
+  [nonbudget] as nb
+  [reconcile] as rec
+  [closing, auditquery] as cl
+  [settings] as set
+  [reporting, assistant] as rp
+  [gfmis] as gf
+  [api] as api
+}
+package "$t("โมดูลอื่น", "Other modules")" as oth {
+  [platform] as plt
+  [budget] as bgt
+  [procurement.api] as pa
+  [projects, review] as pr
+}
+queue "outbox" as q
+component "GFMIS" as ext1 <<ext>>
+component "$t("ธนาคาร", "Bank")" as ext2 <<ext>>
+staff --> web
+bor --> web
+web --> cm
+web --> vc
+web --> adv
+web --> rc
+web --> nb
+web --> rec
+web --> cl
+web --> set
+web --> rp
+web --> sb
+web --> pay
+vc --> pa : $t("ประตูเบิกจ่าย", "payment gate")
+cm --> bgt : LineLedger
+vc --> bgt : LineLedger
+api ..> pa : $t("ติดตั้ง SPI", "implements SPI")
+pr --> api
+pay --> q
+q --> gf
+gf --> ext1
+pay --> ext2
+rec --> plt : SodGuard
+cl --> plt : WorkingCalendar
+@enduml

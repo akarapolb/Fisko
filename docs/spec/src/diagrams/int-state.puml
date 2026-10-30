@@ -1,0 +1,19 @@
+@startuml
+!include include/common.puml
+' title.th: สถานะของการส่งออกหนึ่งรายการ
+' title.en: States of one outbound delivery
+' desc.th: การส่งเริ่มที่ pending ไป sending หากสำเร็จเป็น delivered หากล้มเหลวชั่วคราวเป็น retrying หากถูกปฏิเสธหรือครบจำนวนครั้งเป็น failed เจ้าหน้าที่สั่งส่งซ้ำหรือยกเลิกได้ ทุกสถานะแสดงให้ผู้ใช้เห็น
+' desc.en: A delivery goes from pending to sending. Success makes it delivered, a temporary failure makes it retrying, and a rejection or used-up attempts make it failed. An officer can resend or cancel. Users can see every state.
+hide empty description
+[*] --> pending
+pending --> sending : $t("adapter รับเหตุการณ์", "adapter takes the event")
+sending --> delivered : $t("ปลายทางรับ", "receiver accepts")
+sending --> retrying : $t("ล้มเหลวชั่วคราว", "temporary failure")
+retrying --> sending : $t("ถึงเวลาลองใหม่", "next attempt time")
+retrying --> failed : $t("ครบจำนวนครั้ง", "attempts used up")
+sending --> failed : $t("ปลายทางปฏิเสธ", "receiver rejects")
+failed --> sending : $t("เจ้าหน้าที่สั่งส่งซ้ำ", "officer resends")
+failed --> cancelled : $t("เจ้าหน้าที่ยกเลิกพร้อมเหตุผล", "officer cancels with a reason")
+delivered --> [*]
+cancelled --> [*]
+@enduml

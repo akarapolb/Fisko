@@ -1,0 +1,39 @@
+@startuml
+!include include/common.puml
+' title.th: กระบวนการเบิกจ่ายจากใบขอเบิกถึงกระทบยอด
+' title.en: From voucher to reconciliation
+' desc.th: ใบขอเบิกของงวดสัญญาเริ่มจากประตูเบิกจ่าย ใบประเภทอื่นเริ่มจากผูกพันหรือรายการจัดสรร จากนั้นตรวจกฎ ตรวจหลักฐาน อนุมัติตามอำนาจ แยกทางจ่าย ส่ง GFMIS หรือจ่ายจากบัญชีหน่วยงาน แล้วตรวจการจ่ายประจำวันและกระทบยอด
+' desc.en: A contract voucher starts at the payment gate. Other vouchers start from a commitment or an allocation line. Rules and evidence are checked, the authority approves, the route splits between GFMIS and the agency account, and the payment is checked daily and reconciled.
+' law: TRR 28; TRR 29; TRR 36; TRR 43
+skinparam defaultTextAlignment left
+start
+if ($t("มาจากงวดสัญญา", "From a contract phase")) then ($t("ใช่", "yes"))
+  :$t("เรียกประตูเบิกจ่าย", "Call the payment gate");
+  if ($t("ผ่าน หรือปลดข้อยกเว้นแล้ว", "Pass, or released")) then ($t("ใช่", "yes"))
+    :$t("สร้างใบจากงวด พร้อมค่าปรับ", "Create it from the phase, with the penalty");
+  else ($t("ไม่", "no"))
+    :$t("พักเป็นข้อยกเว้นใน Procurement", "Held as an exception in Procurement");
+    stop
+  endif
+else ($t("ไม่", "no"))
+  :$t("สร้างจากผูกพัน รายการจัดสรร หรือแผนนอกงบ", "Create from a commitment, line or non-budget plan");
+endif
+:$t("คำนวณภาษี ทางจ่าย และยอดสุทธิ", "Work out tax, route and net");
+:$t("ส่งตรวจ จองยอด", "Send for checking, hold the amount");
+:$t("ผู้ตรวจคนที่สองตรวจหลักฐาน", "A second person checks the evidence");
+:$t("ผู้มีอำนาจอนุมัติตามวงเงิน", "The authority approves within its limit");
+if ($t("เงินนอกงบประมาณ", "Non-budget money")) then ($t("ใช่", "yes"))
+  :$t("จ่ายจากบัญชีนอกงบประมาณ", "Pay from the non-budget account");
+else ($t("ไม่", "no"))
+  :$t("ส่งไฟล์เข้า GFMIS และรับผล", "Send a GFMIS file, get the results");
+  if ($t("ทางจ่าย", "Route")) then ($t("จ่ายตรง", "direct"))
+    :$t("กรมบัญชีกลางจ่ายผู้รับ", "The Comptroller General pays the payee");
+  else ($t("ผ่านหน่วยงาน", "agency"))
+    :$t("เงินเข้าบัญชีหน่วยงาน แล้วจ่ายต่อ", "Money reaches the agency, then is paid on");
+  endif
+endif
+:$t("ออก 50 ทวิ เมื่อมีภาษีหัก", "Issue the 50 Tawi when tax was withheld");
+:$t("ตรวจการจ่ายประจำวัน", "Daily payment check");
+:$t("กระทบยอดกับ GFMIS และธนาคาร", "Reconcile with GFMIS and the bank");
+stop
+@enduml

@@ -1,0 +1,35 @@
+@startuml
+!include include/common.puml
+' title.th: การส่งข้อมูลโครงการให้ระบบ PM เมื่อข้อมูลเปลี่ยน
+' title.en: Sending project data to the PM system on a change
+' desc.th: เมื่อโอนเงินงบประมาณได้รับอนุมัติ โมดูล budget ออกเหตุการณ์ โมดูล projects คำนวณ 12 รายการใหม่ เทียบ hash และสร้าง delivery ถ้าระบบ PM ล่ม รายการพักในคิวและลองใหม่ เมื่อปลายทางรับแล้วสถานะเป็น sent
+' desc.en: When a budget transfer is approved, the budget module raises an event. The projects module rebuilds the 12 items, compares the hash and creates a delivery. If the PM system is down the item waits and retries. When the system accepts it, the state becomes sent.
+skinparam sequenceMessageAlign left
+participant "budget" as b
+queue "outbox" as q
+participant "exchange" as e
+database "PostgreSQL" as db
+participant "$t("adapter PM", "PM adapter")" as a
+participant "$t("ระบบ PM", "PM system")" as pm
+participant "platform" as p
+
+b -> q : $t("เหตุการณ์โอนเงินได้รับอนุมัติ", "transfer approved event")
+q -> e : $t("ทิ้งรายการซ้ำด้วย eventId", "duplicates dropped by eventId")
+e -> e : $t("สร้าง 12 รายการ คำนวณ hash", "build the 12 items, compute the hash")
+group $t("ธุรกรรมเดียว", "One transaction")
+  e -> db : $t("exchange_record เป็น queued สร้าง delivery", "exchange_record queued, delivery created")
+  e -> q : projects.exchange.queued
+end
+q -> a : $t("ส่งตาม delivery", "send the delivery")
+a -> pm : $t("ส่ง 12 รายการพร้อม delivery_id", "12 items with the delivery_id")
+alt $t("ปลายทางไม่พร้อม", "PM system down")
+  pm --> a : $t("หมดเวลาหรือ 5xx", "timeout or 5xx")
+  a -> db : $t("delivery เป็น retrying", "delivery retrying")
+  a -> p : InterfaceReporter
+  note over a : $t("circuit breaker หยุดเรียกจนปลายทางกลับมา", "the circuit breaker stops calls until it is back")
+  a -> pm : $t("ส่งซ้ำด้วยกุญแจเดิม", "retry with the same key")
+end
+pm --> a : $t("รับแล้ว พร้อม external_ref", "accepted, with external_ref")
+a -> db : $t("delivery เป็น delivered, exchange_record เป็น sent", "delivery delivered, exchange_record sent")
+a -> q : projects.exchange.sent
+@enduml

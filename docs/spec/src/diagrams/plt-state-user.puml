@@ -1,0 +1,19 @@
+@startuml
+!include include/common.puml
+' title.th: สถานะของบัญชีผู้ใช้
+' title.en: States of a user account
+' desc.th: บัญชีใหม่ต้องตั้งค่า MFA ก่อนจึงใช้งานได้ ผู้ดูแลระบบระงับบัญชีพร้อมเหตุผล ซึ่งจบเซสชันทั้งหมด และเปิดใช้งานอีกครั้งได้ บัญชีไม่ถูกลบ
+' desc.en: A new account sets up MFA before it can be used. The administrator suspends an account with a reason, which ends all its sessions, and can reactivate it. An account is never deleted.
+hide empty description
+left to right direction
+skinparam nodesep 70
+skinparam ranksep 120
+state "$t("รอตั้งค่า MFA", "MFA setup needed")" as m
+state "$t("ใช้งาน", "Active")" as a
+state "$t("ระงับ", "Suspended")" as s
+[*] --> m : $t("ผู้ดูแลระบบเพิ่มผู้ใช้", "administrator adds the user")
+m --> a : $t("ตั้งค่า MFA สำเร็จ", "MFA set up")
+a --> s : $t("ระงับ พร้อมเหตุผล", "suspended, with a reason")
+m --> s : $t("ระงับ พร้อมเหตุผล", "suspended, with a reason")
+s --> a : $t("เปิดใช้งานอีกครั้ง", "reactivated")
+@enduml

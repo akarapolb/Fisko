@@ -1,0 +1,30 @@
+@startuml
+!include include/common.puml
+' title.th: การเข้าสู่ระบบของเจ้าหน้าที่
+' title.en: Staff sign-in
+' desc.th: เบราว์เซอร์เริ่ม OIDC authorization code กับ PKCE Keycloak เลือก organization ส่งต่อไปไดเรกทอรีของหน่วยงานหรือ ThaID ถาม MFA และออกโทเค็น แอปตรวจโทเค็นและโหลดบทบาทจาก platform
+' desc.en: The browser starts the OIDC authorization code flow with PKCE. Keycloak picks the organization, passes to the agency directory or ThaID, asks for MFA and issues a token. The application verifies it and loads roles from platform.
+skinparam sequenceMessageAlign left
+actor "$t("ผู้ใช้", "User")" as u
+participant "$t("เบราว์เซอร์ React", "React in browser")" as b
+participant "Keycloak" as k
+participant "$t("ไดเรกทอรีหรือ ThaID", "Directory or ThaID")" as d
+participant "$t("แอปในเซลล์", "App in the cell")" as a
+u -> b : $t("เปิด Fisko", "open Fisko")
+b -> k : $t("Authorization code กับ PKCE", "authorization code with PKCE")
+k -> k : $t("ระบุ Organization ของผู้ใช้", "identify the user's Organization")
+k -> d : $t("OIDC หรือ SAML", "OIDC or SAML")
+d --> k : $t("ยืนยันตัวตนแล้ว", "authenticated")
+k -> u : $t("ขอ MFA ตามนโยบาย", "ask for MFA by policy")
+u --> k : $t("รหัส MFA", "MFA code")
+k --> b : $t("access token และ refresh token", "access and refresh tokens")
+b -> a : $t("เรียก API พร้อม access token", "call the API with the access token")
+a -> a : $t("ตรวจลายเซ็น อายุ และ organization", "verify signature, expiry, organization")
+a -> a : $t("โหลดบทบาทและการมอบอำนาจ", "load roles and delegations")
+a --> b : $t("ข้อมูลและสิทธิ์ของหน้าจอ", "data and screen permissions")
+== $t("ไม่มีการใช้งานจนใกล้ครบกำหนด", "No activity, close to the limit") ==
+b -> u : $t("เตือนก่อนหมดเวลา", "warn before the time-out")
+k -> k : $t("ถึงกำหนดบนเซิร์ฟเวอร์ ปิด session", "server limit reached, end the session")
+k -> a : $t("เหตุการณ์สิ้นสุด session", "session-ended event")
+a -> a : $t("Audit: ออกจากระบบอัตโนมัติ", "audit: automatic sign-out")
+@enduml

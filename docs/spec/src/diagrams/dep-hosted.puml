@@ -1,0 +1,40 @@
+@startuml
+!include include/common.puml
+hide stereotype
+' title.th: การติดตั้งบริการแบบโฮสต์
+' title.en: Hosted service deployment
+' desc.th: บริการแบบโฮสต์รันบน Kubernetes ที่บริหารโดยคลาวด์ในไทยข้ามสามโซน เซลล์หนึ่งมีอินสแตนซ์แอปทุกโซน PostgreSQL แบบบริหารจัดการมีตัวสำรองข้ามโซน ที่เก็บวัตถุและ KMS เป็นบริการของคลาวด์
+' desc.en: The hosted service runs on managed Kubernetes on a Thai cloud across three zones. A cell has application instances in every zone, managed PostgreSQL has standbys across zones, and object storage and KMS are cloud services.
+left to right direction
+skinparam nodesep 20
+skinparam ranksep 70
+component "$t("Edge, WAF\nTenant router", "Edge, WAF\nTenant router")" as edge
+component "Keycloak" as kc <<sec>>
+package "$t("Kubernetes แบบบริหารจัดการ: เซลล์หนึ่ง สามโซน", "Managed Kubernetes: one cell, three zones")" as k8s {
+  node "$t("โซน A", "Zone A")" as za {
+    component "$t("แอป, Relay, RabbitMQ, OpenSearch", "App, relay, RabbitMQ, OpenSearch")" as a1
+  }
+  node "$t("โซน B", "Zone B")" as zb {
+    component "$t("แอป, Relay, RabbitMQ, OpenSearch", "App, relay, RabbitMQ, OpenSearch")" as a2
+  }
+  node "$t("โซน C", "Zone C")" as zc {
+    component "$t("แอป, Relay, RabbitMQ, OpenSearch", "App, relay, RabbitMQ, OpenSearch")" as a3
+  }
+}
+database "$t("PostgreSQL แบบบริหารจัดการ\nตัวหลักและตัวสำรองข้ามโซน", "Managed PostgreSQL\nprimary and standbys across zones")" as pg
+component "$t("ที่เก็บวัตถุของคลาวด์", "Cloud object storage")" as s3 <<data>>
+component "KMS" as kms <<sec>>
+edge --> a1
+edge --> a2
+edge --> a3
+a1 --> pg
+a2 --> pg
+a3 --> pg
+a1 --> s3
+a2 --> s3
+a3 --> s3
+a1 --> kms
+a2 --> kms
+a3 --> kms
+edge ..> kc
+@enduml

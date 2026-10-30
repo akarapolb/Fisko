@@ -1,0 +1,21 @@
+@startuml
+!include include/common.puml
+' title.th: การอัปเกรดทีละเซลล์
+' title.en: Rolling upgrade across cells
+' desc.th: รุ่นใหม่เริ่มจากเซลล์ canary ด้วยขั้น expand ของ schema แล้วทยอยเปลี่ยนอินสแตนซ์ เฝ้าดูตัวชี้วัด หากผ่านจึงไปเซลล์ถัดไป หากไม่ผ่านจะหยุดและถอยแอปกลับ ขั้น contract ทำหลังทุกเซลล์ใช้รุ่นใหม่แล้ว
+' desc.en: A release starts on a canary cell with the schema expand step, replaces instances gradually and watches the indicators. If it passes, it goes to the next cell. If not, the rollout stops and the application is rolled back. The contract step runs once every cell is on the new release.
+start
+:$t("Argo CD รับรุ่นที่ลงนามแล้ว", "Argo CD receives the signed release");
+:$t("เลือกเซลล์ canary", "Pick the canary cell");
+repeat
+  :$t("ขั้น expand ของ schema", "Run the schema expand step");
+  :$t("ทยอยเปลี่ยนอินสแตนซ์แอป", "Replace application instances gradually");
+  :$t("เฝ้าดูตัวชี้วัดของเซลล์", "Watch the cell's indicators");
+  if ($t("ตัวชี้วัดผ่าน?", "Indicators pass?")) then ($t("ไม่", "no"))
+    :$t("หยุดการปล่อย ถอยแอปกลับรุ่นเดิม", "Stop the rollout, roll the application back");
+    stop
+  endif
+repeat while ($t("ยังมีเซลล์เหลือ?", "Cells left?")) is ($t("มี", "yes")) not ($t("ไม่", "no"))
+:$t("ขั้น contract ของ schema ในรุ่นถัดไป", "Run the schema contract step in a later release");
+stop
+@enduml

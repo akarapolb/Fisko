@@ -1,0 +1,35 @@
+@startuml
+!include include/common.puml
+' title.th: ขั้นอนุมัติ การแจ้งเตือน และการยกระดับ
+' title.en: An approval step, its notice and escalation
+' desc.th: โมดูลส่งเอกสารเข้าสาย platform คำนวณขั้นจากเงื่อนไข เปิดรายการงานและเขียนการแจ้งเตือนลง outbox ในธุรกรรมเดียว งานประจำวันส่งเตือนและยกระดับ เมื่อตัดสินแล้ว รายการงานปิดและขั้นถัดไปเปิด
+' desc.en: A module sends a document into a chain. Platform works out the steps from the conditions, then opens a work item and writes the notice to the outbox in one transaction. A daily job reminds and escalates. A decision closes the work item and opens the next step.
+skinparam sequenceMessageAlign left
+actor "$t("ผู้ส่ง", "Sender")" as u
+participant "$t("โมดูลธุรกิจ", "Business module")" as m
+participant "ApprovalRoutes" as r
+participant "WorkItems" as w
+participant "Notifier" as n
+queue "outbox" as q
+participant "$t("งาน SLA", "SLA job")" as j
+actor "$t("เจ้าของขั้น", "Step owner")" as o
+
+u -> m : POST .../send
+group $t("ธุรกรรมเดียว", "One transaction")
+  m -> r : start(chainKey, subject, context)
+  r -> r : $t("คำนวณขั้น ตรึงฉบับของสาย", "work out steps, pin the chain version")
+  r -> w : open(step, ownerRole, dueOn)
+  w -> n : send(templateKey, params, audience)
+  n -> q : platform.notice.requested
+end
+q --> o : $t("แจ้งในระบบและอีเมล", "in-app notice and e-mail")
+== $t("ทุกเช้า", "Every morning") ==
+j -> w : $t("หาขั้นที่ถึงวันเตือนหรือเกินกำหนด", "find steps at the reminder date or overdue")
+j -> n : $t("เตือนเจ้าของขั้น", "remind the step owner")
+j -> n : $t("ยกระดับตามวันที่ตั้ง", "escalate after the set days")
+== $t("การตัดสิน", "Decision") ==
+o -> m : POST .../approve
+m -> r : decide(instance, decision)
+r -> w : $t("ปิดงาน เปิดขั้นถัดไป", "close the item, open the next step")
+r --> m : $t("ผลและขั้นถัดไป", "result and next step")
+@enduml

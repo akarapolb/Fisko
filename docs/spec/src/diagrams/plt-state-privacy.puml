@@ -1,0 +1,25 @@
+@startuml
+!include include/common.puml
+' title.th: สถานะของคำขอของเจ้าของข้อมูล
+' title.en: States of a data subject request
+' desc.th: คำขอเข้าคิวพร้อมกำหนดเสร็จ เจ้าหน้าที่คุ้มครองข้อมูลยืนยันตัวผู้ขอ พิจารณา แล้วดำเนินการหรือปฏิเสธพร้อมเหตุผล เช่น กฎหมายกำหนดให้เก็บรายการนั้น
+' desc.en: A request enters the queue with a due date. The data protection officer verifies the requester, assesses the request, then fulfils it or refuses it with a reason, for example that law requires the record to be kept.
+' law: PDPA 30; PDPA 32; PDPA 33; PDPA 34
+hide empty description
+left to right direction
+skinparam nodesep 60
+skinparam ranksep 100
+state "$t("รับเรื่อง", "Received")" as re
+state "$t("ยืนยันตัวผู้ขอแล้ว", "Verified")" as v
+state "$t("กำลังดำเนินการ", "In progress")" as p
+state "$t("เสร็จสิ้น", "Fulfilled")" as f
+state "$t("ปฏิเสธ", "Refused")" as x
+[*] --> re
+re --> v : $t("ยืนยันตัวตน", "identity verified")
+re --> x : $t("ยืนยันตัวตนไม่ได้", "cannot verify")
+v --> p : $t("เริ่มดำเนินการ", "work starts")
+p --> f : $t("แนบหลักฐาน", "evidence attached")
+p --> x : $t("ติดข้อยกเว้นตามกฎหมาย", "a legal exception applies")
+f --> [*]
+x --> [*]
+@enduml

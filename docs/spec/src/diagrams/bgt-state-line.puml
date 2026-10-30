@@ -1,0 +1,19 @@
+@startuml
+!include include/common.puml
+' title.th: สถานะของรายการจัดสรร
+' title.en: States of an allocation line
+' desc.th: รายการจัดสรรเริ่มเป็นร่างซึ่งยังไม่นับยอด การยืนยันทำให้มีผล รายการที่มีผลยกเลิกได้เมื่อไม่มีการใช้ และยังเก็บไว้ด้วยวงเงินศูนย์
+' desc.en: An allocation line starts as a draft that counts for nothing. Confirming makes it active. An active line can be cancelled while nothing uses it, and it stays on record at amount zero.
+hide empty description
+left to right direction
+skinparam nodesep 60
+skinparam ranksep 110
+state "draft" as d
+state "active" as a
+state "cancelled" as c
+[*] --> d : $t("เพิ่มหรือสร้างจาก พ.ร.บ.", "added, or built from the act")
+d --> [*] : $t("ลบร่าง เลขไม่ใช้ซ้ำ", "draft deleted, number kept")
+d --> a : $t("ยืนยัน", "confirm")
+a --> c : $t("ยกเลิก เมื่อไม่มีการใช้", "cancel, when unused")
+c --> [*]
+@enduml

@@ -1,0 +1,25 @@
+@startuml
+!include include/common.puml
+' title.th: สถานะของชุดส่งสำนักงบประมาณ
+' title.en: States of a submission batch
+' desc.th: ชุดส่งเริ่มเตรียม ส่งได้เมื่อมีความเห็นชอบของรัฐมนตรี สำนักงบประมาณรับและพิจารณา บันทึกผล แล้วปิดเมื่อตอบคำขอแก้ไขครบ ชุดที่ยังเตรียมอยู่ยกเลิกได้
+' desc.en: A batch starts in preparation and can be sent once the minister has approved. The Budget Bureau receives and reviews it, results are recorded, and it closes when every revision request is answered. A batch in preparation can be cancelled.
+hide empty description
+left to right direction
+skinparam nodesep 50
+skinparam ranksep 90
+state "prep" as p
+state "sent" as s
+state "reviewing" as v
+state "result" as r
+state "closed" as c
+state "cancelled" as k
+[*] --> p
+p --> s : $t("ส่ง", "send")
+p --> k : $t("ยกเลิก", "cancel")
+s --> v : $t("บันทึกการรับ", "record receipt")
+v --> r : $t("บันทึกผล", "save results")
+r --> c : $t("คำขอแก้ไขตอบครบ", "revisions answered")
+k --> [*]
+c --> [*]
+@enduml

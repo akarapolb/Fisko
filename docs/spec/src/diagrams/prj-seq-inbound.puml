@@ -1,0 +1,31 @@
+@startuml
+!include include/common.puml
+' title.th: การรับข้อมูลจากระบบ PM
+' title.en: Receiving data from the PM system
+' desc.th: ระบบ PM ส่งข้อความหนึ่งใน 4 มิติ ระบบตรวจตัวตน รหัสโครงการ และข้อความซ้ำ บันทึกข้อความ เปิดงานให้การคลัง ผู้รับรับทราบ ข้อความไม่แก้ไขงบ ก่อหนี้ หรือเบิกจ่าย การแก้ไขสัญญาทำผ่าน procurement
+' desc.en: The PM system sends a message in one of 4 dimensions. The system checks the client, the project id and duplicates, stores the message and opens a task for Finance. A person acknowledges it. The message changes no budget, commitment or payment; a contract change runs in Procurement.
+skinparam sequenceMessageAlign left
+participant "$t("ระบบ PM", "PM system")" as pm
+participant "web" as w
+participant "exchange" as e
+database "PostgreSQL" as db
+participant "platform" as p
+actor "$t("เจ้าหน้าที่การคลัง", "Finance officer")" as f
+
+pm -> w : POST /pm/messages
+w -> e : $t("รับข้อความ", "receive(message)")
+e -> db : $t("ตรวจ message_id ซ้ำ และรหัสโครงการ", "check message_id and the project id")
+alt $t("ไม่พบรหัสโครงการ", "Unknown project id")
+  e --> pm : 422 PRJ_UNKNOWN_PROJECT
+else $t("ปกติ", "Accepted")
+  e -> db : $t("บันทึก pm_message", "save pm_message")
+  e -> p : WorkItems.open, Notifier.send
+  e --> pm : 202
+end
+f -> w : POST /pm/messages/{id}/acknowledge
+w -> p : $t("ตรวจสิทธิ์", "check authority")
+w -> e : acknowledge()
+e -> db : $t("บันทึกผู้รับทราบและเวลา", "save who and when")
+e -> p : AuditLog.record, WorkItems.close
+note over f, e : $t("ถ้ากระทบวงเงินหรือเวลา ผู้ใช้เปิดการแก้ไขสัญญาใน procurement", "If amount or time changes, the user opens a contract change in procurement")
+@enduml

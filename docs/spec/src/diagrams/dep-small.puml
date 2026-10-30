@@ -1,0 +1,31 @@
+@startuml
+!include include/common.puml
+hide stereotype
+' title.th: การติดตั้งขนาดเล็กด้วย Docker Compose
+' title.en: Small setup on Docker Compose
+' desc.th: ชุดติดตั้งขนาดเล็กรันบนโฮสต์เดียวด้วย Docker Compose มีแอป Keycloak PostgreSQL ที่เก็บ S3 ClamAV และ OpenBao ไม่มี RabbitMQ และ OpenSearch โดยประมวลผล outbox ในแอปและใช้การค้นหาของ PostgreSQL
+' desc.en: The small setup runs on one host with Docker Compose: application, Keycloak, PostgreSQL, S3-compatible storage, ClamAV and OpenBao. It has no RabbitMQ or OpenSearch: the application processes the outbox and uses PostgreSQL search.
+left to right direction
+skinparam nodesep 22
+skinparam ranksep 70
+actor "$t("ผู้ใช้", "Users")" as u
+package "$t("โฮสต์เดียว: Docker Compose", "One host: Docker Compose")" as h {
+  component "$t("Reverse proxy\nTLS 1.3", "Reverse proxy\nTLS 1.3")" as rp
+  component "$t("แอป Fisko\nรวม relay ของ outbox", "Fisko application\nwith the outbox relay")" as app
+  component "Keycloak" as kc <<sec>>
+  database "PostgreSQL\n$t("ข้อมูล, outbox, การค้นหา", "data, outbox, search")" as pg
+  component "$t("ที่เก็บ S3 API", "S3 API storage")" as s3 <<data>>
+  component "ClamAV" as av
+  component "OpenBao" as ob <<sec>>
+}
+component "$t("ที่สำรองนอกโฮสต์", "Backup outside the host")" as bk <<ext>>
+u --> rp : HTTPS
+rp --> app
+rp --> kc
+app --> pg
+app --> s3
+app --> av
+app --> ob
+pg --> bk : $t("สำรองข้อมูล", "backup")
+s3 --> bk
+@enduml

@@ -1,0 +1,78 @@
+@startuml
+!include include/common.puml
+' title.th: ตารางหลักของงบประมาณ
+' title.en: Core budget tables
+' desc.th: คำขอมีรายการค่าใช้จ่ายและแถววงเงินรายรอบ ชุดส่งเก็บผลต่อคำขอ วงเงินตาม พ.ร.บ. มีรายการจัดสรร ซึ่งมีแผน รายการในบัญชี การโอน และเงินกันเหลื่อมปี
+' desc.en: A request has cost lines and a review row. A batch holds a result per request. An appropriation has allocation lines, and each line has plans, ledger entries, transfers and carry-overs.
+hide circle
+hide empty methods
+skinparam linetype ortho
+skinparam nodesep 34
+skinparam ranksep 46
+entity budget_request {
+  * tenant_id, id
+  --
+  no, unit_id, activity_id
+  status, decided
+}
+entity request_line {
+  * tenant_id, id
+  --
+  request_id, type, qty
+}
+entity review_row {
+  * tenant_id, request_id
+  --
+  requested, round2, round3
+}
+entity submission_batch {
+  * tenant_id, id
+  --
+  no, status
+}
+entity batch_result {
+  * tenant_id, batch_id, request_id
+  --
+  amount
+}
+entity appropriation {
+  * tenant_id, fy
+  --
+  act, total
+}
+entity allocation_line {
+  * tenant_id, id
+  --
+  fy, no, request_id, amount
+}
+entity spending_plan {
+  * tenant_id, line_id, version
+  --
+  months
+}
+entity ledger_entry {
+  * tenant_id, id
+  --
+  line_id, kind, amount
+}
+entity transfer {
+  * tenant_id, id
+  --
+  from_line, to_line, status
+}
+entity carry_over {
+  * tenant_id, id
+  --
+  line_id, amount, due_on
+}
+budget_request ||--o{ request_line
+budget_request ||--|| review_row
+submission_batch ||--o{ batch_result
+budget_request ||--o{ batch_result
+appropriation ||--o{ allocation_line
+budget_request |o--o{ allocation_line
+allocation_line ||--o{ spending_plan
+allocation_line ||--o{ ledger_entry
+allocation_line ||--o{ transfer
+allocation_line ||--o{ carry_over
+@enduml

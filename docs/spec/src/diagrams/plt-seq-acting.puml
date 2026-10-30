@@ -1,0 +1,35 @@
+@startuml
+!include include/common.puml
+' title.th: การทำแทนและการตรวจการแยกหน้าที่
+' title.en: Acting on behalf and the duty check
+' desc.th: ผู้รับมอบอนุมัติรายการ โมดูลขอชุดผู้กระทำจาก Delegations ซึ่งคืนผู้ใช้และผู้มอบทุกคนในขอบเขตนั้น SodGuard ตรวจทุกคนกับกลุ่มที่เปรียบเทียบ เมื่อขัดกัน บันทึกการกันในธุรกรรมของตนเองและตอบปฏิเสธ เมื่อผ่าน โมดูลบันทึกการตัดสินพร้อมผู้ถืออำนาจและเลขที่การมอบอำนาจ
+' desc.en: A delegate approves an item. The module asks Delegations for the actor set, which returns the user and every delegator in that scope. SodGuard checks them all against the compared group. On a clash it writes the block in its own transaction and refuses. Otherwise the module saves the decision with the holder and the delegation number.
+skinparam sequenceMessageAlign left
+actor "$t("ผู้รับมอบ", "Delegate")" as d
+participant "$t("โมดูลธุรกิจ", "Business module")" as m
+participant "Authorizer" as a
+participant "Delegations" as g
+participant "SodGuard" as s
+participant "AuditLog" as l
+database "PostgreSQL" as db
+
+d -> m : POST .../approve
+m -> a : $t("ตรวจสิทธิ์และขอบเขต", "check authority and scope")
+a -> g : activeFor(user, role, scope)
+g --> a : $t("การมอบอำนาจที่มีผล", "delegations in force")
+a --> m : $t("อนุญาต พร้อม ActorSet", "allowed, with an ActorSet")
+m -> s : check(rule, actorSet, others, item)
+alt $t("ขัดกัน", "clash")
+  s -> db : $t("เขียน sod_block ในธุรกรรมแยก", "write sod_block in its own transaction")
+  s -> l : $t("บันทึกการกัน", "log the block")
+  s --> m : SodBlocked
+  m --> d : 403 PLT_SOD_BLOCKED
+else $t("ผ่าน", "no clash")
+  s --> m : $t("ผ่าน", "passed")
+  group $t("ธุรกรรมเดียว", "One transaction")
+    m -> db : $t("บันทึกการตัดสิน ผู้ทำ ผู้ถืออำนาจ เลขที่", "save the decision, actor, holder, number")
+    m -> l : $t("บันทึกการตัดสิน", "log the decision")
+  end
+  m --> d : 200
+end
+@enduml

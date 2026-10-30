@@ -1,0 +1,22 @@
+@startuml
+!include include/common.puml
+hide stereotype
+' title.th: Audit log แบบลูกโซ่แฮชและการลบข้อมูลส่วนบุคคล
+' title.en: Hash-chained audit log and erasure
+' desc.th: รายการ Audit แต่ละรายการเก็บแฮชของรายการก่อนหน้าและอ้างอิงบุคคลแบบแฝงนาม จุดตรวจเก็บแยกที่อื่น รายละเอียดบุคคลอยู่ในตารางแยกภายใต้กุญแจรายบุคคล การทำลายกุญแจทำให้อ่านรายละเอียดไม่ได้โดยลูกโซ่ยังตรวจสอบได้
+' desc.en: Each audit entry holds the hash of the previous entry and a pseudonymous subject reference. Checkpoints are stored elsewhere. Personal details sit in a separate table under a per-subject key. Destroying the key makes the details unreadable and the chain still verifies.
+left to right direction
+skinparam nodesep 34
+skinparam ranksep 70
+rectangle "$t("รายการ n-1\nsubject_ref, การกระทำ, เวลา, แฮช", "Entry n-1\nsubject_ref, action, time, hash")" as e1
+rectangle "$t("รายการ n\nsubject_ref, การกระทำ, เวลา, แฮช", "Entry n\nsubject_ref, action, time, hash")" as e2
+rectangle "$t("รายการ n+1\nsubject_ref, การกระทำ, เวลา, แฮช", "Entry n+1\nsubject_ref, action, time, hash")" as e3
+rectangle "$t("จุดตรวจ\nเก็บแยกนอกฐานข้อมูล", "Checkpoint\nstored outside the database")" as cp #E8F5EC
+database "$t("ตารางบุคคล\nรายละเอียดเข้ารหัส", "Subject table\nencrypted details")" as sub
+component "$t("กุญแจรายบุคคล\nทำลายเพื่อลบ", "Per-subject key\ndestroy to erase")" as key <<sec>>
+e2 --> e1 : $t("แฮชก่อนหน้า", "previous hash")
+e3 --> e2 : $t("แฮชก่อนหน้า", "previous hash")
+cp --> e3 : $t("ผนึก", "seals")
+e2 ..> sub : $t("อ้างอิงเท่านั้น", "reference only")
+key --> sub : $t("ถอดรหัส", "decrypts")
+@enduml

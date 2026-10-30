@@ -1,0 +1,65 @@
+@startuml
+!include include/common.puml
+' title.th: ตารางหลักของ projects (ข้อเสนอ)
+' title.en: Core projects tables (proposal)
+' desc.th: ทุกตารางมี tenant_id โครงการมีลิงก์หลายแถวไปยังระเบียนของโมดูลอื่นโดยไม่มี foreign key ข้ามสคีมา ตารางสรุปสร้างใหม่ได้จากเหตุการณ์ สถานะการส่งชี้ไปยังแถว delivery ผู้รับข้อมูลมีคำขอและบันทึกการส่งแบบเพิ่มอย่างเดียว
+' desc.en: Every table has tenant_id. A project has link rows to records of other modules, with no foreign key across schemas. The summary table can be rebuilt from events. The exchange record points to a delivery row. A consumer has requests and an append-only send log.
+skinparam nodesep 40
+skinparam ranksep 60
+skinparam defaultTextAlignment left
+hide circle
+hide empty methods
+entity project {
+  *tenant_id, *id
+  project_no, first_fy
+  unit_id, exchange_scope
+  version
+}
+entity project_link {
+  *tenant_id, *id
+  project_id
+  source_type, source_id
+  fiscal_year
+}
+entity project_summary {
+  *tenant_id, *project_id
+  step, amount, committed
+  paid, refreshed_at
+}
+entity exchange_record {
+  *tenant_id, *project_id
+  state, last_hash
+  delivery_id, last_sent_at
+}
+entity delivery {
+  *tenant_id, *delivery_id
+  event_id, state, attempts
+  external_ref
+}
+entity pm_message {
+  *tenant_id, *id
+  project_id, message_id
+  dimension, acknowledged_at
+}
+entity data_consumer {
+  *tenant_id, *id
+  kind, channel, status
+}
+entity share_request {
+  *tenant_id, *id
+  consumer_id, why
+  decided_by_ref, reason
+}
+entity send_log {
+  *tenant_id, *id
+  consumer_id, rows
+  gfmis_as_of, sent_by_ref
+}
+project ||--o{ project_link
+project ||--|| project_summary
+project ||--o| exchange_record
+exchange_record }o--o| delivery
+project ||--o{ pm_message
+data_consumer ||--o{ share_request
+data_consumer ||--o{ send_log
+@enduml

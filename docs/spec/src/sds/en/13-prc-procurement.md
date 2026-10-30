@@ -46,7 +46,7 @@ Every SRS requirement group maps to a design section below.
 | Non-functional requirements | PRC-NFR-001 to PRC-NFR-008 | Non-functional design, Security design | all |
 | Constraints | PRC-CR-001 to PRC-CR-006 | Design overview | all |
 | Test evidence | Sweep walks of the SRS | Test design | tests |
-| Open issues | OI-PRC-01 to OI-PRC-14 | Known gaps and open issues | all |
+| Open issues | OI-PRC-01 to OI-PRC-17 | Known gaps and open issues | all |
 
 ## Design overview and decisions {#prc-decisions}
 
@@ -108,7 +108,7 @@ Procurement is the Spring Modulith module `procurement`, under the base package 
 | `documents` | Document numbers, forms, letters, reminders, incoming documents and their checks | `NumberSeries`, `FormDocument`, `SupplierLetter`, `IncomingDocument` |
 | `settings` | Profile, feature switches, tenant settings, legal rule sets, categories | `ProcurementProfile`, `FeatureGuard`, `LegalRuleSet`, `SettingRange` |
 | `reporting` | Monthly summary, timeline view, KPIs, forecasts, what-if, red flags, OCDS export | `MonthlySummary`, `KpiCatalogue`, `ForecastEngine`, `RedFlagDetector`, `OcdsExporter` |
-| `assistant` | AI tools and agents AG-10 to AG-13, tool register, stop for a person at each write | `ToolRegister`, `AgentRunner` |
+| `assistant` | AI tools of agents AG-10 to AG-13 and the tool register. Runs and the stop for a person at each write sit in `AgentRuntime` in `platform.ai` (proposal, DG-REV-01) | `ToolRegister` |
 | `egp` | e-GP port, file adapter, status comparison, data pack | `EgpStatusSource`, `EgpFileAdapter`, `EgpPackBuilder` |
 
 ### Published interfaces {#prc-published}
@@ -117,26 +117,30 @@ Procurement is the Spring Modulith module `procurement`, under the base package 
 | --- | --- | --- | --- |
 | `AcceptedPhaseQuery` | `finance` | Accepted phases with no live payment, with net amount, penalty and gate result | PRC-IR-008 |
 | `PaymentGate` | `finance` | `evaluate(contractId, phaseNo)` returns the checks, net amount and hold state | PRC-FR-118, BR-PRC-15 |
-| `PhasePayment` | `finance` | `started`, `approved` and `rejected` calls that set Paid and block waiver changes | PRC-FR-126, PRC-FR-117 |
+| `PhasePayment` | `finance` | `started`, `approved` and `rejected` calls that set Paid, block waiver changes, and free the phase when a voucher is rejected or cancelled | PRC-FR-126, PRC-FR-117 |
 | `ContractLookup` | `finance`, `projects`, `review` | Contract summary with no personal fields | PRC-CR-005 |
 | `SupplierDirectory` | `finance` | Supplier identity and status for payment | PRC-IR-012 |
-| `FinanceFacts` (SPI) | Implemented by `finance` | `purchaseOrderRecorded(contractId)`, `paymentStarted(contractId, phaseNo)`, and the other commitments that change room | PRC-IR-009, BR-PRC-15 |
+| `FinanceFacts` (SPI) | Implemented by `finance` | `purchaseOrderRecorded(contractId)`, `paymentStarted(contractId, phaseNo)`. Room comes from `LineLedger`, so this SPI carries no commitments | PRC-IR-009, BR-PRC-15 |
+| `BankChangeIntake` (SPI) | Implemented by `finance` | `submit(supplierId, sealedRequest)`, which carries a bank change from the portal. The account never travels in an event | PRC-IR-012, FIN-FR-057 |
 | Events in `api.events` | Any module, and RabbitMQ through the outbox | The event catalogue in the interface section | ADR-0008 |
 
 ### Dependencies on other modules {#prc-dependencies}
 
 | Module | Interface needed | Used for | Requirements |
 | --- | --- | --- | --- |
-| `platform` | `TenantContext`, `Authorizer`, `Delegations` | Tenant binding, authority checks and acting on behalf | ADR-0006, BR-PRC-08 |
-| `platform` | `SodGuard` | Separation-of-duties checks and logging of blocked attempts | PRC-NFR-002 |
-| `platform` | `AuditLog`, `Notifier`, `WorkingCalendar` | Audit entries, tasks and notices, one working-day count | PRC-NFR-001, PRC-NFR-003 |
+| `platform` | `TenantContext`, `Authorizer`, `Delegations` | Tenant binding, authority checks and acting on behalf, passed as an `ActorSet` | ADR-0006, BR-PRC-08 |
+| `platform` | `SodGuard` | Separation-of-duties checks on an `ActorSet`, and logging of blocked attempts | PRC-NFR-002 |
+| `platform` | `AuditLog`, `Notifier`, `WorkItems`, `WorkingCalendar` | Audit entries, notices by template key and parameters, tasks, one working-day count | PRC-NFR-001, PRC-NFR-003 |
 | `platform` | `DocumentService`, `FileStore`, `FieldCrypto` | PDF and PAdES, S3 files with scanning, field encryption and blind index | ADR-0010, ADR-0011, ADR-0013 |
+| `platform` | `RetentionRegistry`, `SubjectDirectory`, and the SPI `RetentionHold`, which this module implements | Retention keys and legal holds; names behind `*_ref` columns | PLT-FR-110, PLT-FR-112 |
 | `platform` | `AiGateway`, `SearchIndexer` | All AI calls; search documents with no restricted data | ADR-0016, ADR-0009 |
+| `platform` | `AgentRuntime`, `AgentCatalogue` (proposal, DG-REV-01) | Agent runs, steps, switches and levels | PRC-FR-187, REV-FR-036 |
 | `budget` | `LineLedger` | Read a line, `room`, `reserve`, `release`, `commit`, `adjustCommitment` | BR-PRC-04, PRC-IR-006, PRC-IR-007, PRC-FR-138 |
+| `budget` | `AllocationQuery` | Lines of a year with amount and structure | PRC-IR-006 |
 | `budget` | `BudgetRequestQuery` | Reviewed budget request items for demand and next year's plan | PRC-FR-009, PRC-FR-010 |
-| `finance` | None at compile time | `finance` depends on `procurement.api` and implements `FinanceFacts` | PRC-CR-005 |
+| `finance` | None at compile time | `finance` depends on `procurement.api` and implements `FinanceFacts` and `BankChangeIntake` | PRC-CR-005 |
 
-> [!OPEN] The SRS and SDS chapters of `platform`, `budget` and `finance` are empty at this version, so the interfaces above are what Procurement asks for, and those chapters have not agreed them. The authors of those chapters must confirm or change them, and the product owner decides any conflict (DG-PRC-08).
+> [!NOTE] Platform answered these requests in [its answer table](#plt-dg-prc): callers pass an `ActorSet`, notices use template keys and parameters, tasks go through `WorkItems`, and Procurement implements `RetentionHold`. Budget and Finance publish the interfaces above in their own chapters. This chapter follows those answers (DG-PRC-08).
 
 ## Domain model {#prc-domain}
 
@@ -289,6 +293,7 @@ A phase has no status column. `Phase.state()` derives it in the SRS order: Cance
 | Waiting | Delivered | `Contract.recordDelivery` | Phase order; date not before signing (PRC-FR-107) |
 | Delivered | Accepted | `Contract.sign` on the phase | Committee member; previous phase accepted; no open dissent; SD-02; same amount as earlier members; BR-PRC-28 |
 | Accepted | Paid | `PhasePayment.approved` | Called by Finance |
+| Accepted | Accepted | `PhasePayment.rejected` | Called by Finance when a voucher is rejected or cancelled. The phase is free for a new voucher (OI-FIN-10) |
 | Waiting, Delivered | Cancelled | `Contract.approveTermination` | The penalty clock stops at the cancellation date |
 
 ### Requisition, plan item and plan version {#prc-state-others}
@@ -330,7 +335,7 @@ Procurement owns everything up to the gate. Finance owns the payment request and
 - On completion the system records 2 certificates (PRC-FR-115). `DocumentService` renders them to PDF and signs them with PAdES. Rendering runs after commit from an outbox event, so a signing failure never undoes an acceptance, and the state is shown to users (ADR-0008).
 - The gate checks acceptance, invoice, match within `invoiceTol`, guarantee, and the GFMIS purchase order through `FinanceFacts`. Payable is the accepted amount less the penalty (PRC-FR-118).
 - A failed gate stores a hold. A head or the authorised approver may release it with a reason of at least 10 characters, and the auditor and Finance are told (PRC-FR-119). `PRC_GATE_PO_MISSING` cannot be released (BR-PRC-15).
-- Once `PhasePayment.started` is called, waivers and invoice returns on that phase are refused (PRC-FR-117, PRC-FR-126).
+- Once `PhasePayment.started` is called, waivers and invoice returns on that phase are refused (PRC-FR-117, PRC-FR-126). `PhasePayment.rejected` frees the phase again when Finance rejects or cancels the voucher, and the next voucher reads the current penalty.
 
 > [!OPEN] A contract terminated by BR-PRC-20 has a forfeited guarantee, so an accepted and unpaid phase fails the guarantee check and needs a release. The procurement specialist must say whether that check applies after termination (DG-PRC-03).
 
@@ -342,7 +347,7 @@ Jobs run per cell and work tenant by tenant, each with the tenant bound as for a
 | --- | --- | --- |
 | Appeal period | Marks the period over and moves the case when no appeal is open | PRC-FR-070, BR-PRC-09 |
 | RFQ opening | Opens sealed replies after the reply date and closes the portal for that RFQ | PRC-IR-010, ADR-0013 |
-| Task sweep | Guarantee expiry, due deliveries, rejection notices, defects, bid security returns, appeal result dates, stale supervision reports | PRC-FR-080, PRC-FR-095, PRC-FR-129, PRC-FR-132, PRC-FR-075, PRC-FR-145 |
+| Task sweep | Opens work items through `WorkItems` for guarantee expiry, due deliveries, rejection notices, defects, bid security returns, appeal result dates, stale supervision reports | PRC-FR-080, PRC-FR-095, PRC-FR-129, PRC-FR-132, PRC-FR-075, PRC-FR-145 |
 | e-GP comparison | Compares the imported stage with the case step and adds a task after `syncDays` | PRC-IR-003, BR-PRC-24 |
 | Red flag detection | Runs signals RF-01 to RF-10 and updates the queue | PRC-FR-171, PRC-FR-172 |
 | Retention | Applies the schedule of ADR-0014 to ended records | PRC-DR-010 |
@@ -420,11 +425,12 @@ Class is the ADR-0013 class of the row as a whole; field exceptions are in the n
 | `incoming_document`, `incoming_field` | `type`, `source`, `status`, `file_key`; `name`, `value`, `original`, `confidence`, `checked` | Confidential | `prc.intake` | PRC-FR-161 to PRC-FR-163 |
 | `egp_import`, `egp_import_row` | `file_hash`, `imported_by_ref`, `ok_count`, `skipped_count`; `plan_no`, `egp_no`, `stage`, `stage_on` | Internal | `prc.plan` | PRC-IR-001, PRC-IR-002 |
 | `monthly_summary`, `red_flag` | `month`, `rows` (jsonb), `published_at`; `signal`, `target`, `score`, `status`, `evidence`, `note` | Public after publishing; Confidential | `prc.report` | PRC-FR-164, PRC-FR-171 to PRC-FR-175 |
-| `procurement_setting`, `procurement_profile`, `method_rule`, `category`, `holiday` | `key`, `value`, `effective_from`; `kind`, `switches`; `rule_id`, `condition`, `method`, `ceiling`, `on`; `kind`; `day` | Internal | `prc.config` | PRC-FR-040 to PRC-FR-043, PRC-FR-176 to PRC-FR-179 |
-| `agent_run`, `ai_use` | `agent`, `level`, `steps`, `status`; `tool`, `user_ref`, `target`, `source_count`, `version`, `draft`, `final_text` | Confidential | `prc.ai` | PRC-FR-181, PRC-FR-185, PRC-FR-187 |
+| `procurement_setting`, `procurement_profile`, `method_rule`, `category` | `key`, `value`, `effective_from`; `kind`, `switches`; `rule_id`, `condition`, `method`, `ceiling`, `on`; `kind` | Internal | `prc.config` | PRC-FR-040 to PRC-FR-042, PRC-FR-176 to PRC-FR-179 |
 | `outbox_event` | `event_id`, `type`, `payload`, `published_at` | Internal | Short, set with the platform | ADR-0008 |
 
-> [!NOTE] Supplier bank accounts and vouchers belong to Finance, so no procurement table holds a bank account. A bank change request from the portal passes straight to Finance (PRC-IR-012).
+> [!NOTE] Supplier bank accounts and vouchers belong to Finance, so no procurement table holds a bank account. A bank change request from the portal reaches Finance through the SPI `BankChangeIntake`, with no direct call to a Finance class (PRC-IR-012).
+
+> [!NOTE] Two stores sit outside this schema. The holiday list is the `holiday` table of `platform`, behind `WorkingCalendar` (DG-PLT-02, PRC-FR-043). Agent runs and AI use follow the shared runtime proposed in DG-REV-01: `agent_run` and `ai_use` live in `platform.ai`, and Procurement keeps its tools in `ToolRegister` (PRC-FR-181, PRC-FR-185, PRC-FR-187).
 
 ### Personal and restricted fields {#prc-data-fields}
 
@@ -445,7 +451,7 @@ This table feeds the data dictionary and the records of processing (ADR-0014, PD
 - TOR files, guarantees, delivery notes, invoices and signed certificates are objects in S3 API storage, linked by `file_key` (PRC-DR-008). Each upload is scanned before it can be downloaded, and each is encrypted under a tenant key (ADR-0010).
 - Full bid files are not stored (PRC-DR-007), subject to OI-PRC-13.
 - OpenSearch indexes cases, plan items, contracts and suppliers by name and number. Restricted data is never indexed, and each query is filtered by tenant on the server (ADR-0009). PostgreSQL stays the source of truth.
-- Each retention key names one schedule row in `platform`. Records that law requires to be kept cannot be deleted early, and a data subject sees the reason (ADR-0014). The tenant setting and its allowed range wait for OI-PRC-14.
+- Each retention key names one schedule row in `platform`, read through `RetentionRegistry`. Records that law requires to be kept cannot be deleted early: `procurement` implements `RetentionHold`, and a data subject sees the reason (ADR-0014). The tenant setting and its allowed range wait for OI-PRC-14.
 
 ## Interface design {#prc-interfaces}
 
@@ -497,7 +503,7 @@ The REST API is described in OpenAPI 3.1 (ADR-0003), and the events in AsyncAPI 
 | `GET /reports/monthly`; `POST /reports/monthly/{month}/publish`; `GET /reports/kpis, forecast, timeline`; `POST /reports/what-if`; `GET /exports/ocds` | Reports and export | `prc.read`, `prc.head` | PRC-FR-164 to PRC-FR-170, PRC-IR-014 |
 | `GET /red-flags`; `POST /red-flags/{id}/ask, explain, decide` | Red flag queue | `prc.flag` | PRC-FR-173, PRC-FR-174 |
 | `GET, PUT /settings`; `GET, PUT /profile`; `GET, PUT /method-rules`; `GET, PUT /number-formats` | Administration | `prc.admin` | PRC-FR-040 to PRC-FR-043, PRC-FR-156, PRC-FR-176 to PRC-FR-179 |
-| `POST /ai/{tool}`; `POST /agents/{agent}/runs`; `POST /agent-runs/{id}/steps/{n}/approve` | AI tools and agent steps | `prc.ai`, plus the authority of the action | PRC-FR-180 to PRC-FR-188 |
+| `POST /ai/{tool}`; `POST /agents/{agent}/runs`; `POST /agent-runs/{id}/steps/{n}/approve` | AI tools and agent steps, passed to `AgentRuntime` (proposal, DG-REV-01) | `prc.ai`, plus the authority of the action | PRC-FR-180 to PRC-FR-188 |
 | `GET /portal/rfqs`; `POST /portal/rfqs/{id}/reply, decline`; `GET /portal/contracts`; `POST /portal/contracts/{id}/phases/{n}/invoice`; `POST /portal/bank-change` | Supplier portal, own records only | `prc.portal` | PRC-IR-010 to PRC-IR-012 |
 
 ### Error catalogue {#prc-errors}
@@ -574,11 +580,11 @@ Adapters run on the outbox path, retry safely and show their state to users (ADR
 
 <!-- covers: PDPA 39; PDPA 40 -->
 
-Keycloak signs users in (ADR-0006). Roles, duty rules and delegation live in `platform`, and the server checks them on every action. Each request binds the tenant with `SET LOCAL app.tenant_id` in its transaction, so row-level security applies even if a query forgets its filter. Procurement sits at OWASP ASVS Level 2, and the payment gate path is reviewed at Level 3 with Finance (ADR-0017).
+Keycloak signs users in (ADR-0006, XC-SEC-005). Roles, duty rules and delegation live in `platform`, and the server checks them on every action (XC-SEC-003). Each request binds the tenant with `SET LOCAL app.tenant_id` in its transaction, so row-level security applies even if a query forgets its filter. Procurement sits at OWASP ASVS Level 2 (XC-SEC-001), and the payment gate path is reviewed at Level 3 with Finance (ADR-0017, XC-SEC-002).
 
 ### Authorities {#prc-authorities}
 
-> [!NOTE] The authority names are a proposal. Roles map to authorities as tenant data, and these defaults follow the actor table of the SRS.
+> [!NOTE] The authority names are a proposal. Roles map to authorities as tenant data, and these defaults follow the actor table of the SRS. The server checks each authority on every action (XC-SEC-003), and refuses a request that no role permits with HTTP 403 and a log entry (XC-SEC-004).
 
 | Authority | Default roles | Allows |
 | --- | --- | --- |
@@ -594,7 +600,7 @@ Keycloak signs users in (ADR-0006). Roles, duty rules and delegation live in `pl
 | `prc.invoice` | Procurement officer, finance officer | Record and return invoices |
 | `prc.supplier`, `prc.doc` | Procurement officer, head | Supplier register, documents |
 | `prc.flag` | Auditor, head; officers and units for items they are asked about | Red flag queue, PRC-FR-173 |
-| `prc.admin` | Administrator | Rules, settings, holidays, categories, profile |
+| `prc.admin` | Administrator | Rules, settings, categories, profile. Holidays move to Platform with the `holiday` table |
 | `prc.ai` | Roles the tenant allows, only when the tool is on | AI tools and agents |
 | `prc.portal` | External supplier user bound to one tax ID | Own invitations, contracts and invoices |
 
@@ -602,7 +608,7 @@ The auditor has `prc.read`. Bid prices are an exception until the award is recor
 
 ### Separation-of-duties checks {#prc-sod}
 
-`SodGuard.check(rule, actors, others, item)` runs inside the command, after the authority check and before any state change. `actors` is the person acting plus anyone whose authority they hold (`Delegations`). A refusal is written in its own transaction, so the log survives the rollback, with time, person, role, rule and item, including who delegated (PRC-NFR-002).
+`SodGuard.check(rule, actorSet, others, item)` runs inside the command, after the authority check and before any state change. `ActorSet` holds the person acting and every delegation in force (`Delegations`). A refusal is written in its own transaction, so the log survives the rollback, with time, person, role, rule and item, including who delegated (PRC-NFR-002).
 
 | Rule | Command | Actors | Compared with | Requirements |
 | --- | --- | --- | --- | --- |
@@ -619,12 +625,12 @@ The auditor has `prc.read`. Bid prices are an exception until the award is recor
 
 ### Sealed bids {#prc-sealed}
 
-ADR-0013 requires sealed bids to stay encrypted until the opening time, so that no one can read them early, including operators. e-GP bids reach Fisko only after closing, so the sealing below applies to RFQ replies sent through the portal (PRC-IR-010).
+ADR-0013 requires sealed bids to stay encrypted until the opening time, so that no one can read them early, including operators (XC-SEC-028). e-GP bids reach Fisko only after closing, so the sealing below applies to RFQ replies sent through the portal (PRC-IR-010, OI-XC-11).
 
-- Each RFQ gets its own sealing key, wrapped by a tenant key in KMS or OpenBao. `rfq_reply.sealing_key_ref` names it.
-- The application encrypts the reply at receipt with AES-256-GCM through Tink. Price and terms exist only in `sealed_payload` until opening. The `price` column stays empty, and logs and search see nothing.
+- Each RFQ gets its own sealing key, wrapped by a tenant key in KMS or OpenBao (XC-SEC-021). `rfq_reply.sealing_key_ref` names it.
+- The application encrypts the reply at receipt with AES-256-GCM through Tink (XC-SEC-020). Price and terms exist only in `sealed_payload` until opening. The `price` column stays empty, and logs and search see nothing.
 - The application role gets no decrypt right on that key until the reply date has passed. The RFQ opening job then requests the right, opens all replies of the RFQ together and writes an audit entry. No endpoint opens a single reply.
-- Every key use is logged (ADR-0013). A use before the reply date raises an alert to the auditor.
+- Every key use is logged (ADR-0013, XC-SEC-023). A use before the reply date raises an alert to the auditor.
 - The reply date on the server decides. A supplier sees the receipt time and never another supplier's reply.
 
 Bid summaries keyed at step 6 are Confidential: role-based, with no field encryption, because the price score needs them (BR-PRC-18). After the award the winning price becomes public data.
@@ -633,10 +639,10 @@ Bid summaries keyed at step 6 are Confidential: role-based, with no field encryp
 
 ### Audit {#prc-audit}
 
-- Every approval, rejection, cancellation, release, settings change and import writes an entry through `AuditLog` (PRC-NFR-001, PRC-CR-006). A `CommandAudit` aspect on each command makes the entry part of the same transaction.
-- The log is append-only and hash-chained per tenant. Entries hold a pseudonymous subject reference and item ids, never names or free text (ADR-0015).
-- Reasons and notes stay in the business record, and the audit entry points to it. Erasing a person destroys the subject key, and the timeline shows a placeholder.
-- Revealing a restricted field is itself logged (ADR-0015), and so is each dossier compilation (PRC-FR-035).
+- Every approval, rejection, cancellation, release, settings change and import writes an entry through `AuditLog` (PRC-NFR-001, PRC-CR-006, XC-SEC-032). A `CommandAudit` aspect on each command makes the entry part of the same transaction.
+- The log is append-only and hash-chained per tenant (XC-SEC-033, XC-SEC-034). Entries hold a pseudonymous subject reference and item ids, never names or free text (ADR-0015, XC-SEC-037).
+- Reasons and notes stay in the business record, and the audit entry points to it. Erasing a person destroys the subject key, and the timeline shows a placeholder (XC-SEC-039, XC-SEC-040).
+- Revealing a restricted field is itself logged (ADR-0015, XC-SEC-027, XC-SEC-041), and so is each dossier compilation (PRC-FR-035).
 - Application logs and telemetry hold no personal data, and tests check this (ADR-0015, ADR-0017).
 
 ### AI controls {#prc-ai-security}
@@ -648,7 +654,7 @@ Bid summaries keyed at step 6 are Confidential: role-based, with no field encryp
 
 ## Non-functional design {#prc-nfr}
 
-The table shows how each Procurement non-functional requirement is met. No time or volume target is stated, because the cross-cutting SRS chapter is empty at this version.
+The table shows how each Procurement non-functional requirement is met. Time and volume targets are the cross-cutting rows XC-PER-001 to XC-PER-008, which are proposals (OI-XC-01).
 
 | Requirement | Design answer | Verified by |
 | --- | --- | --- |
@@ -663,13 +669,13 @@ The table shows how each Procurement non-functional requirement is met. No time 
 
 ### Load and availability {#prc-nfr-load}
 
-- Capacity is planned against the 30 September peak, and all agencies peak together (ADR-0005). k6 scripts cover plan publishing, signing and acceptance at that peak (ADR-0017).
+- Capacity is planned against the 30 September peak, and all agencies peak together (ADR-0005). k6 scripts cover plan publishing, signing and acceptance at that peak (ADR-0017, XC-PER-008).
 - The Budget ledger row lock is the expected contention point at the peak, so each transaction holds it only for the ledger call and the commit. Load tests must measure it.
 - Lists read `display_step` and indexed columns, with paging. Reports read projections.
 - A failure affects one cell, and an adapter failure leaves events waiting in the outbox with their state shown to users (ADR-0005, ADR-0008). The case logic never waits on an external system.
 - Telemetry is tagged by cell and tenant and holds no personal data (ADR-0017).
 
-> [!OPEN] Response-time, throughput and per-tenant volume targets for Procurement do not exist. The product owner must set them in the cross-cutting SRS chapter before load tests can pass or fail (DG-PRC-11).
+> [!OPEN] XC-PER-001 to XC-PER-008 are proposals, and they give no per-tenant volume for Procurement. The product owner must confirm them (OI-XC-01) and state that volume before load tests can pass or fail (DG-PRC-11).
 
 ## Test design {#prc-tests}
 
@@ -765,6 +771,9 @@ The prototype is a reference, and no code moves across: it is browser JavaScript
 | OI-PRC-12 | AI scope and where the model runs | All calls pass through `AiGateway`, off by default | Product owner, data protection officer |
 | OI-PRC-13 | Full bid files | Not stored; a future change would add one file class to the existing path | Legal unit, data protection officer |
 | OI-PRC-14 | Retention periods | Retention keys per table, with no period | Procurement specialist, product owner |
+| OI-PRC-15 | Penalty rate for consulting and design | `consult` is refused at signing until a rate exists (DG-PRC-01) | Procurement specialist |
+| OI-PRC-16 | Whole baht or satang | `numeric` columns with two decimal places and a domain check (DG-PRC-02) | Procurement specialist, product owner |
+| OI-PRC-17 | Sealed RFQ replies | The Sealed bids section, under XC-SEC-028 (OI-XC-11) | Product owner, security reviewer |
 
 ### New issues from this design {#prc-open-new}
 
@@ -776,13 +785,13 @@ The DG-PRC numbers below belong to this chapter and are not SRS ids.
 | DG-PRC-02 | PRC-DR-006 holds whole baht, but real invoices carry satang, and `invoiceTol` defaults to 0, so such an invoice fails the gate. Are satang kept? | `numeric` columns with two decimal places, and a domain check for whole baht that a release can remove | Procurement specialist, product owner |
 | DG-PRC-03 | After a termination the guarantee is forfeited. Does the gate's guarantee check still apply to an accepted, unpaid phase? | The check fails and needs a release, as in the prototype | Procurement specialist |
 | DG-PRC-04 | With `guaranteePct` at 0 no guarantee is required, yet BR-PRC-15 needs one in force. Which exemptions exist? | The gate check passes when the setting requires no guarantee; the prototype would fail | Procurement specialist |
-| DG-PRC-05 | BR-PRC-08 lets a tenant switch any duty rule off. Some rules may come from law, and ADR-0007 keeps legal limits out of tenant hands. Which rules can never be off? | All switchable as in the SRS, and each switch-off notifies the auditor | Procurement specialist, legal unit |
+| DG-PRC-05 | BR-PRC-08 lets a tenant switch any duty rule off. Some rules may come from law, and ADR-0007 keeps legal limits out of tenant hands. Which rules can never be off? This is one question with OI-PLT-03, and one answer settles both | All switchable as in the SRS, and each switch-off notifies the auditor | Procurement specialist, legal unit |
 | DG-PRC-06 | Does the key-release design meet "including operators" in ADR-0013? | Key right granted by the opening job, every use logged | Security reviewer, product owner |
 | DG-PRC-07 | The SRS actor table says the auditor reads everything, and PRC-NFR-007 limits bid prices before the award. Which wins? | PRC-NFR-007 wins | Auditor, product owner |
-| DG-PRC-08 | The `platform`, `budget` and `finance` interfaces are requests, and their chapters are empty | As listed in Components | Authors of those chapters, product owner |
+| DG-PRC-08 | Platform answered in [its answer table](#plt-dg-prc), and Budget and Finance publish their interfaces. Does the product owner accept the changes they make to the requests? | This chapter follows those answers, as listed in Components | Authors of those chapters, product owner |
 | DG-PRC-09 | May a daily job move a case from step 7 to step 8 with no person, given that filed appeals come from e-GP? | The job moves it and records `system` as the actor | Product owner, procurement specialist |
 | DG-PRC-10 | Copying the penalty rate at signing differs from the prototype. Which rate does the law expect for a running contract? | The rate at signing | Procurement specialist |
-| DG-PRC-11 | No response-time or volume targets exist | No targets stated | Product owner |
+| DG-PRC-11 | XC-PER-001 to XC-PER-008 are proposed targets for every module. What per-tenant volume applies to Procurement? | Load tests use the XC-PER rows, with no volume of its own | Product owner |
 | DG-PRC-12 | How does a supplier sign in, and how is the user bound to one tax ID (PRC-IR-013)? | A Keycloak user under a supplier organization, bound by `tax_id_bidx` after an officer's check | Product owner, data protection officer |
 
 ### Known gaps in this version {#prc-open-depth}

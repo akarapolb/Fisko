@@ -1,0 +1,48 @@
+@startuml
+!include include/common.puml
+' title.th: องค์ประกอบภายในโมดูล review
+' title.en: Components inside the review module
+' desc.th: โมดูล review อยู่บนสุดของลำดับการพึ่งพา อ่านจาก api ของ budget procurement finance และ projects เก็บ projection ในสคีมาของตน และเรียก platform สำหรับสิทธิ์ audit งาน และ AI ไม่มีโมดูลใดพึ่งพา review ตัวรันเอเจนต์อยู่ใน platform ส่วน review กำกับดูแล
+' desc.en: The review module sits at the top of the dependency order. It reads the api of budget, procurement, finance and projects, keeps projections in its own schema, and calls platform for rights, audit, tasks and AI. No module depends on review. The agent runtime lives in platform, and review governs it.
+left to right direction
+skinparam nodesep 24
+skinparam ranksep 70
+actor "$t("ผู้ใช้", "Users")" as user
+package "$t("โมดูล review (ข้อเสนอ)", "Module review (proposal)")" as rev {
+  component "web" as web
+  package "$t("มุมมอง", "Views")" as v {
+    component "home, executive" as ex
+    component "scorecard, insight" as sc
+  }
+  package "$t("บันทึกของตน", "Own records")" as o {
+    component "anomaly" as an
+    component "agenda, settings" as ag
+  }
+  package "AI" as a {
+    component "assistant" as as1
+    component "governance" as go
+  }
+  component "reporting" as rp
+}
+database "$t("สคีมา review", "Schema review")" as db
+component "$t("โมดูล platform: AiGateway, AgentRuntime, สิทธิ์, Audit, งาน", "Module platform: AiGateway, AgentRuntime, rights, audit, tasks")" as plt <<sec>>
+component "$t("api ของ budget, procurement, finance, projects", "api of budget, procurement, finance, projects")" as mods <<data>>
+queue "$t("outbox และ RabbitMQ", "Outbox and RabbitMQ")" as mq
+user --> web
+web --> ex
+web --> an
+web --> ag
+web --> as1
+web --> go
+ex --> db
+sc --> db
+an --> db
+rp --> db
+mq --> rp : $t("เหตุการณ์ของโมดูล", "module events")
+rp --> mods : $t("สร้างใหม่", "rebuild")
+sc --> mods : $t("KPI พยากรณ์ สัญญาณ", "KPIs, forecasts, signals")
+as1 --> mods : $t("อ่านด้วยสิทธิ์ผู้ถาม", "read with the rights of the asker")
+as1 --> plt : $t("เรียกโมเดล", "model calls")
+go --> plt : $t("สวิตช์ ระดับ บันทึก", "switches, levels, log")
+an --> plt : $t("งาน แจ้งเตือน Audit", "tasks, notices, audit")
+@enduml

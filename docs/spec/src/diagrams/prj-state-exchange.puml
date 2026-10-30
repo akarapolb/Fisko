@@ -1,0 +1,23 @@
+@startuml
+!include include/common.puml
+' title.th: สถานะการส่งของโครงการไปยังระบบ PM
+' title.en: Send state of a project towards the PM system
+' desc.th: โครงการในขอบเขตเริ่มที่ยังไม่เคยส่ง เมื่อปลายทางรับและข้อมูลตรงกันเป็น sent เมื่อรายการใดใน 12 รายการเปลี่ยนเป็น changed ระหว่างรอส่งหรือปลายทางไม่พร้อมอยู่ที่ queued เมื่อการส่งล้มเหลวถาวรเป็น failed ซึ่งเป็นสถานะที่การออกแบบเพิ่ม
+' desc.en: A project in scope starts as new. An accepted send with matching data is sent. A change to any of the 12 items makes it changed. While it waits or the PM system is down it is queued. A final failure is failed, a state this design adds.
+hide empty description
+left to right direction
+skinparam nodesep 60
+skinparam ranksep 100
+state "new" as n
+state "queued" as q
+state "sent" as s
+state "changed" as c
+state "failed" as f
+[*] --> n : $t("โครงการเข้าขอบเขต", "project enters the scope")
+n --> q : $t("เริ่มส่ง", "send starts")
+c --> q : $t("เริ่มส่ง", "send starts")
+q --> s : $t("ปลายทางรับแล้ว", "PM system accepted")
+s --> c : $t("รายการใน 12 รายการเปลี่ยน", "one of the 12 items changed")
+q --> f : $t("ถูกปฏิเสธหรือครบจำนวนครั้ง", "rejected, or attempts used up")
+f --> q : $t("เจ้าหน้าที่สั่งส่งใหม่", "officer resends")
+@enduml

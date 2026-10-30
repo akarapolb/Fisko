@@ -1,0 +1,33 @@
+@startuml
+!include include/common.puml
+' title.th: การสร้างการมอบอำนาจ
+' title.en: Creating a delegation
+' desc.th: ผู้มอบเลือกผู้รับมอบ ขอบเขต วันที่ และเหตุผล ระบบตรวจสิทธิ์ที่จะมอบ คุณสมบัติผู้รับมอบ และลำดับวันที่ แล้วตรวจการทับซ้อนตามนโยบายที่ OI-PLT-01 จะตัดสิน จากนั้นบันทึก แจ้งผู้รับมอบ และสร้างเลขที่
+' desc.en: The delegator picks the delegate, scope, dates and reason. The system checks the right to delegate, the delegate and the date order, then checks for overlap under the policy that OI-PLT-01 will decide. It then saves, numbers the delegation and notifies the delegate.
+skinparam defaultTextAlignment left
+start
+:$t("ผู้มอบเลือกผู้รับมอบ ขอบเขต วันที่ เหตุผล", "The delegator picks delegate, scope, dates and reason");
+if ($t("ผู้มอบถือบทบาทของขอบเขตโดยตรง?", "Delegator holds the scope's role directly?")) then ($t("ไม่", "no"))
+  :$t("ปฏิเสธ มอบต่อไม่ได้", "Refuse: no re-delegation");
+  stop
+else ($t("ใช่", "yes"))
+endif
+if ($t("ผู้รับมอบและวันที่ถูกต้อง?", "Delegate and dates valid?")) then ($t("ไม่", "no"))
+  :$t("ปฏิเสธและแจ้งช่องที่ผิด", "Refuse and name the field");
+  stop
+else ($t("ใช่", "yes"))
+endif
+if ($t("ทับซ้อนการมอบอำนาจอื่น?", "Overlaps another delegation?")) then ($t("ใช่", "yes"))
+  :$t("แสดงรายการที่ทับซ้อน", "Show the overlap");
+  if ($t("นโยบายห้ามการทับซ้อน?", "Policy forbids overlap?")) then ($t("ใช่", "yes"))
+    :$t("ปฏิเสธ", "Refuse");
+    stop
+  else ($t("ไม่", "no"))
+    :$t("ขอการยืนยันพร้อมเหตุผล", "Ask to confirm, with a reason");
+  endif
+else ($t("ไม่", "no"))
+endif
+:$t("ออกเลขที่ บันทึก และเขียน audit", "Number it, save it and write the audit entry");
+:$t("แจ้งผู้รับมอบ เพิ่มงานในขอบเขตเข้างานของฉัน", "Notify the delegate and add scoped work to My Work");
+stop
+@enduml

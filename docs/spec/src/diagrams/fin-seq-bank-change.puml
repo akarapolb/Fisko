@@ -1,0 +1,35 @@
+@startuml
+!include include/common.puml
+' title.th: การแก้บัญชีธนาคารผู้ขายโดยบุคคลที่สอง
+' title.en: A supplier bank change confirmed by a second person
+' desc.th: คำขอมาจากเจ้าหน้าที่การเงินหรือพอร์ทัลผู้ขายผ่าน SPI ระบบเข้ารหัสเลขบัญชี บุคคลที่สองเปิดดู ยืนยันหรือไม่ยืนยัน ผ่าน SodGuard เมื่อยืนยันแล้วบัญชีใหม่มีผล บัญชีเดิมเก็บในประวัติ และการจ่ายครั้งแรกภายใน 30 วันมีสัญญาณเตือน
+' desc.en: A request comes from a finance officer, or from the supplier portal through an SPI. The account number is encrypted. A second person reveals it, then confirms or refuses through SodGuard. On confirmation the new account takes effect, the old one stays in the history, and the first payment within 30 days raises a signal.
+' law: TRR 20
+skinparam sequenceMessageAlign left
+actor "$t("ผู้ขาย", "Supplier")" as s
+actor "$t("เจ้าหน้าที่การเงิน", "Finance officer")" as f
+actor "$t("บุคคลที่สอง", "Second person")" as h
+participant "procurement.web" as o
+participant "finance.supplierbank" as b
+participant "platform" as p
+queue "outbox" as q
+s -> o : $t("ขอแก้บัญชี พร้อมหลักฐาน", "ask to change, with evidence")
+o -> b : BankChangeIntake.submit(supplier, sealed)
+f -> b : request(supplier, bank, account, evidence)
+b -> p : FieldCrypto.encrypt(account)
+b -> p : Notifier $t("แจ้งผู้ยืนยัน", "tell the confirmers")
+h -> b : reveal(change)
+b -> p : $t("บันทึกการเปิดดู", "log the reveal")
+alt $t("ยืนยัน", "confirm")
+  h -> b : confirm(change)
+  b -> p : SodGuard SD-14
+  b -> b : $t("ปิดบัญชีเดิม เปิดบัญชีใหม่", "end the old account, start the new")
+  b -> q : finance.supplier-bank.changed
+else $t("ไม่ยืนยัน", "refuse")
+  h -> b : refuse(change, reason)
+  b -> p : SodGuard SD-14
+end
+note over b
+  $t("ถ้า SodGuard ปฏิเสธ ไม่มีการเปลี่ยนแปลง และบันทึกความพยายาม", "If SodGuard refuses, nothing changes and the attempt is logged")
+end note
+@enduml

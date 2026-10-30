@@ -1,0 +1,75 @@
+@startuml
+!include include/common.puml
+' title.th: แบบจำลองโดเมนของ projects
+' title.en: The projects domain model
+' desc.th: Project ถือรหัสโครงการและลิงก์ไปยังระเบียนต้นทาง ตัวเลขอยู่ใน ProjectFigures ซึ่งคำนวณจากโมดูลเจ้าของ ExchangeRecord เก็บสถานะการส่งของโครงการ PmMessage เก็บข้อความที่รับเข้า DataConsumer ถือคำขอและบันทึกการส่ง
+' desc.en: Project holds the project id and links to source records. Figures live in ProjectFigures, computed from the owning modules. ExchangeRecord holds the send state of a project. PmMessage holds a received message. DataConsumer has its requests and send log.
+skinparam nodesep 34
+skinparam ranksep 46
+skinparam defaultTextAlignment left
+hide empty methods
+class Project <<aggregate>> {
+  id, projectNo, firstFy
+  name, unitId, budgetKind
+  workType, area, target
+  exchangeScope
+  --
+  link(), rename()
+}
+class ProjectLink {
+  sourceType, sourceId
+  fiscalYear, linkedAt
+}
+class ProjectFigures <<value>> {
+  annualAmount, baseAmount
+  committed, paid
+  step, routine, gfmisAsOf
+}
+class OutboundPayload <<value>> {
+  twelve items
+  canonicalHash()
+}
+class ExchangeRecord <<aggregate>> {
+  projectId, state
+  lastHash, lastSentAt
+  deliveryId
+  --
+  markChanged(), enqueue(), confirm()
+}
+class PmMessage <<aggregate>> {
+  messageId, projectId
+  dimension, text
+  days, amount, effect
+  receivedAt
+  --
+  acknowledge()
+}
+class DataConsumer <<aggregate>> {
+  id, kind, name
+  dataSets, channel, status
+  --
+  approve(), end()
+}
+class ShareRequest {
+  askedBy, askedAt, why
+  decidedBy, decidedAt, reason
+}
+class SendLogEntry {
+  sentAt, rows, gfmisAsOf
+  sentBy, approvedBy, reason
+}
+class RegistrySettings <<aggregate>> {
+  prefix, labels
+  staleDays, exchangeScopeRule
+}
+class ModuleMap <<aggregate>> {
+  modules, duties
+}
+Project "1" *-- "1..*" ProjectLink
+Project ..> ProjectFigures : $t("อ่านผ่าน cycle", "read through cycle")
+Project "1" -- "0..1" ExchangeRecord
+ExchangeRecord ..> OutboundPayload
+Project "1" -- "0..*" PmMessage
+DataConsumer "1" *-- "0..*" ShareRequest
+DataConsumer "1" *-- "0..*" SendLogEntry
+@enduml

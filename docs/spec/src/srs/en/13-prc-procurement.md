@@ -101,7 +101,7 @@ Business rules are conditions that several requirements share. The Source column
 | BR-PRC-31 | SME and MiT preference applies only with the item flag and a valid certificate, uses the higher of the two, and never changes the offered price or picks a winner | R-26 | Tenant: `smePct` and `mitPct` 0 to 50, default 5 each |
 | BR-PRC-32 | The selective method needs a minimum number of invited suppliers before the announcement | Design chapter 18 | Tenant: `rfqMin` at least 1, default 3; `rfqDays` 0 or more, default 3 |
 | BR-PRC-33 | Record numbers are never reused, including those of deleted drafts | R-C-05 | Fixed in code |
-| BR-PRC-34 | AI reads and drafts, and a person decides. AI never scores or ranks bids, selects a supplier, announces a winner or approves | Design chapter 8 | Fixed in code; each agent on or off; agent level L0 to L3, with L3 for AG-12 only |
+| BR-PRC-34 | AI reads and drafts, and a person decides. AI never scores or ranks bids, selects a supplier, announces a winner or approves | Design chapter 8 | Fixed in code; each agent on or off; agent level L0 to L3, with L3 for AG-12 only. OI-REV-04 holds the conflict with BR-PLT-25 and ADR-0016 |
 
 > [!OPEN] The stored settings have no screen and no enforced range: `warrantyMonths`, `rejectNoticeWd`, `syncDays`, `dueProgressMin`, `progressGap` and `supReportDays`. The procurement specialist must give an allowed range for each. The product owner decides which of them each tenant may change.
 
@@ -417,7 +417,7 @@ The requirements follow the order of the work. Each status rests on reading the 
 | PRC-FR-184 | The system shall score each open phase's late-delivery risk from 0 to 100 with its reasons. | - | S | T | Partial | 67-procai.js aiDelay |
 | PRC-FR-185 | The system shall draft a TOR, committee order, acceptance certificate or supplier letter for a person to edit, and shall keep the draft, the final text and the share of the draft that was edited. | - | S | T | Partial | 67-procai.js aiDraft, ai-use |
 | PRC-FR-186 | The system shall answer questions only from the defined KPIs, with the source and sample size, shall decline anything else, and shall summarise a supplier's record without ranking. | - | S | T | Partial | 67-procai.js aiAnswer, aiSupplier |
-| PRC-FR-187 | The system shall run agents AG-10 to AG-13 as plans of at most 14 steps from a register of tools per agent, shall stop for a person at each write at level L2, and shall have no approve-all action. | - | S | T | Partial | 67b-agents.js startRun, advance, TOOLS |
+| PRC-FR-187 | The system shall run agents AG-10 to AG-13 as plans of at most 14 steps from a register of tools per agent, shall stop for a person at each write at level L2, and shall have no approve-all action. The shared agent framework is in the Review chapter (REV-FR-036, REV-FR-038, REV-FR-041, REV-FR-043), and level L3 is open (OI-REV-04). | - | S | T | Partial | 67b-agents.js startRun, advance, TOOLS |
 | PRC-FR-188 | The system shall let the executive set an agent's level with a reason of at least 5 characters, shall notify the auditor, and shall accept a step's approval only from someone allowed to do that action. | - | S | T | Partial | 67b-agents.js data-aglset, canApprove |
 | PRC-FR-189 | The system shall run AI tools through the AI gateway of ADR-0016 with a tenant switch for each tool. | - | C | T | Planned | - |
 
@@ -616,7 +616,7 @@ The sweep also opens every Procurement page, tab, contract tab, AI tool and reco
 | OI-PRC-09 | The monthly summary layout and its publication channel | Procurement specialist | PRC-FR-164 |
 | OI-PRC-10 | SME and MiT preference rates, and committee fee rates and caps, are starting values | Procurement specialist | BR-PRC-31, BR-PRC-29 |
 | OI-PRC-11 | Who sees red flags, the time to explain, and how they relate to red flags in e-GP | Auditor, product owner | PRC-FR-173, PRC-FR-174 |
-| OI-PRC-12 | The AI scope and where the model runs | Product owner, data protection officer | PRC-FR-189 |
+| OI-PRC-12 | The AI scope and where the model runs. Level L3 for AG-12 is decided in OI-REV-04 | Product owner, data protection officer | PRC-FR-189, BR-PRC-34, PRC-FR-187 |
 | OI-PRC-13 | Whether full bid files stay out of Fisko | Legal unit, data protection officer | PRC-DR-007, PRC-DR-008 |
 | OI-PRC-14 | Retention of case files and contracts | Procurement specialist, product owner | PRC-DR-010 |
 | OI-PRC-15 | Daily penalty rate for consulting and design contracts, which BR-PRC-12 does not give | Procurement specialist | PRC-FR-037, BR-PRC-12 |

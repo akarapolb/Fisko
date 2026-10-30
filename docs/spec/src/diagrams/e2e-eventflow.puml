@@ -1,0 +1,31 @@
+@startuml
+!include include/common.puml
+hide stereotype
+' title.th: เหตุการณ์ที่ข้ามโมดูล
+' title.en: Events that cross modules
+' desc.th: แผนภาพแสดงกลุ่มเหตุการณ์ที่โมดูลเจ้าของประกาศและโมดูลอื่นรับ เส้นทึบอยู่ในรายการเหตุการณ์ของเจ้าของแล้ว เส้นประเป็นคำขอที่เจ้าของยังไม่ได้ระบุ ทุกเหตุการณ์ผ่าน outbox และ RabbitMQ
+' desc.en: The diagram shows the event groups that owner modules publish and other modules receive. Solid lines are in the owner's event catalogue. Dashed lines are requests the owner has not listed. Every event passes through the outbox and RabbitMQ.
+skinparam nodesep 70
+skinparam ranksep 90
+component "budget" as b <<data>>
+component "procurement" as p <<data>>
+component "finance" as f <<data>>
+component "projects" as j <<data>>
+component "review" as r <<data>>
+b --> p : request.approved\nlines.created, line.*
+b --> f : act.in-force, line.*\ntransfer.*, carry-over.approved
+p --> f : contract.*, phase.*\npenalty.waived
+f --> b : voucher.paid
+b --> j : request.*, lines.*, line.*
+p --> j : contract.signed, case.*
+f --> j : voucher.paid\ncommitment.changed\ngfmis-report.imported
+b --> r : request.*, transfer.*\nreport.*
+f --> r : voucher.paid
+j --> r : project.*
+p ..> j : contract.changed\ncontract.terminated\nphase.accepted, phase.paid
+p ..> r : contract.*\nphase.accepted, phase.paid
+note bottom of r
+  $t("เส้นประคือคำขอ ดู DG-PRJ-01 และ DG-REV-02", "Dashed lines are requests, see DG-PRJ-01 and DG-REV-02")
+  $t("platform ส่ง subject.erased และเหตุการณ์ปีงบประมาณ", "platform sends subject.erased and fiscal year events")
+end note
+@enduml

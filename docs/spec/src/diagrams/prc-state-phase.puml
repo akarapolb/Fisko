@@ -2,8 +2,8 @@
 !include include/common.puml
 ' title.th: สถานะของงวดงาน
 ' title.en: States of a phase
-' desc.th: งวดไม่มีช่องสถานะ ระบบคำนวณจากข้อมูล รอส่งมอบ ส่งมอบแล้ว ตรวจรับแล้ว และจ่ายแล้ว งวดที่ยังไม่ตรวจรับจะถูกยกเลิกเมื่อบอกเลิกสัญญา งวดที่ยังไม่ส่งมอบและเลยกำหนดแสดงว่าเกินกำหนด
-' desc.en: A phase has no status field. The state is derived from its data: Waiting, Delivered, Accepted and Paid. Unaccepted phases are cancelled when the contract is terminated. An undelivered phase past its due date shows Overdue.
+' desc.th: งวดไม่มีช่องสถานะ ระบบคำนวณจากข้อมูล รอส่งมอบ ส่งมอบแล้ว ตรวจรับแล้ว และจ่ายแล้ว งวดที่ยังไม่ตรวจรับจะถูกยกเลิกเมื่อบอกเลิกสัญญา งวดที่ยังไม่ส่งมอบและเลยกำหนดแสดงว่าเกินกำหนด งวดที่ตรวจรับแล้วว่างอีกครั้งเมื่อใบสำคัญถูกปฏิเสธหรือยกเลิก
+' desc.en: A phase has no status field. The state is derived from its data: Waiting, Delivered, Accepted and Paid. Unaccepted phases are cancelled when the contract is terminated. An undelivered phase past its due date shows Overdue. An accepted phase is free again when its voucher is rejected or cancelled.
 ' law: PPR 175; PPR 176
 hide empty description
 left to right direction
@@ -18,6 +18,7 @@ state "Cancelled" as x
 w --> d : $t("บันทึกการส่งมอบ", "delivery recorded")
 d --> ac : $t("ลายมือชื่อครบ", "signatures reach need")
 ac --> p : $t("การเงินจ่ายงวดนี้", "Finance pays the phase")
+ac --> ac : $t("ใบสำคัญถูกปฏิเสธหรือยกเลิก งวดว่างอีกครั้ง", "voucher rejected or cancelled: phase free again")
 w --> x : $t("บอกเลิกสัญญา", "contract terminated")
 d --> x : $t("บอกเลิกสัญญา", "contract terminated")
 p --> [*]

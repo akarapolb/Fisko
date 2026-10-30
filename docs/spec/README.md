@@ -2,7 +2,7 @@
 
 The Software Requirements Specification and the Software Design Specification of Fisko. Both are bilingual single-file HTML documents, with Word and PDF output built from the same Markdown sources.
 
-**Status: version 0.1 draft.** The front matter, the introductions, the SDS context view and the Procurement chapters are written. Procurement is the pilot that sets structure and depth for the other module chapters, and no person has reviewed it yet. All other chapters are placeholders.
+**Status: version 0.1 draft.** All chapters are written in draft, and no person has reviewed them. Procurement was the pilot that set structure and depth for the other module chapters, and `src/AUTHORING-BRIEF.md` holds the rules every chapter follows.
 
 ## Build
 
@@ -24,6 +24,7 @@ Outputs go to `docs/spec/dist/` and are not committed. Rendered diagrams in `doc
 
 | Path | What |
 | --- | --- |
+| `AUTHORING-BRIEF.md` | Rules for writing a chapter: structure, ids, clause references, status and how to finish |
 | `srs/`, `sds/` | `_meta.json` (order and titles) and `th/*.md`, `en/*.md`: the same blocks in the same order; the build fails if they differ |
 | `law/*.tsv` | The clause register: every legal clause Fisko must answer, and whether the SRS or the SDS answers it |
 | `diagrams/*.puml` | One PlantUML source per diagram, both languages from `$t("ไทย", "English")` labels |

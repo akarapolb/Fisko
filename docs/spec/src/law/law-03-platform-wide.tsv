@@ -1,0 +1,7 @@
+ref	doc	page	scope	kind	category	th	en	disposition	verify	notes
+PDPA 19	PDPA		PLT	rule	privacy	การเก็บ ใช้ หรือเปิดเผยข้อมูลส่วนบุคคลโดยอาศัยความยินยอมต้องเป็นไปตามเงื่อนไขของความยินยอมที่กฎหมายกำหนด	Collection, use or disclosure that rests on consent must meet the conditions the Act sets for consent	SRS	I	Clause number to be confirmed by a PDPA lawyer
+PDPA 22	PDPA		PLT	rule	privacy	การเก็บรวบรวมข้อมูลส่วนบุคคลต้องจำกัดเท่าที่จำเป็นตามวัตถุประสงค์	Collection of personal data must be limited to what the lawful purpose needs	SRS	I	Clause number to be confirmed by a PDPA lawyer
+PDPA 36	PDPA		PLT	rule	privacy	ผู้ควบคุมข้อมูลต้องดำเนินการตามคำขอแก้ไขข้อมูลให้ถูกต้อง	The controller must act on a request to correct the data	SRS	T	Clause number to be confirmed by a PDPA lawyer
+ETA 9	ETA		PLT	rule	security	ลายมือชื่ออิเล็กทรอนิกส์ที่เป็นไปตามเงื่อนไขมีผลเสมือนการลงลายมือชื่อ	An electronic signature that meets the conditions counts as a signature	SRS	T	Clause number to be confirmed by a legal reviewer
+ETA 12	ETA		PLT	rule	data	เอกสารที่กฎหมายกำหนดให้เก็บรักษา เก็บในรูปข้อมูลอิเล็กทรอนิกส์ได้เมื่อเข้าถึงและอ่านได้ ไม่เปลี่ยนแปลง และระบุที่มาและเวลาได้	A record the law requires to be kept may be held electronically if it stays accessible and unaltered, and its origin and time can be shown	SRS	T	Clause number to be confirmed by a legal reviewer
+ETA 26	ETA		PLT	rule	security	ลายมือชื่ออิเล็กทรอนิกส์ที่เชื่อถือได้ต้องมีลักษณะตามที่กฎหมายกำหนด	A reliable electronic signature must have the features the Act sets	SRS	T	Clause number to be confirmed by a legal reviewer

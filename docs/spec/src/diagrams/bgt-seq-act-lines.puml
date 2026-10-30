@@ -1,0 +1,32 @@
+@startuml
+!include include/common.puml
+' title.th: จากผลพิจารณาถึงรายการจัดสรร
+' title.en: From the Budget Bureau result to allocation lines
+' desc.th: กองแผนบันทึกผลและปิดชุด ร่าง พ.ร.บ. ตั้งต้นจากผล การตัดลดและแปรญัตติปรับยอด เมื่อ พ.ร.บ. มีผล การเงินสร้างรายการจัดสรรร่างและแผนรายเดือนจากแผนรายไตรมาสของคำขอ
+' desc.en: Planning records results and closes the batch. The bill starts from those results, and cuts and appeals change the amounts. When the act is in force, Finance creates draft lines and monthly plans from each request's quarterly plan.
+skinparam sequenceMessageAlign left
+actor "$t("กองแผน", "Planning")" as p
+actor "$t("การเงิน", "Finance")" as f
+participant "submission" as s
+participant "parliament" as b
+participant "allocation" as a
+queue "outbox" as q
+p -> s : PUT .../batches/{id}/results
+p -> s : POST .../batches/{id}/close
+s -> s : $t("ตรวจคำขอแก้ไขตอบครบ", "check revisions are answered")
+s -> q : budget.batch.closed
+p -> b : POST .../bill/stages/next
+b -> b : $t("ตรึงรายการในร่างที่ขั้นกรรมาธิการ", "fix the bill items at the committee stage")
+p -> b : POST .../bill/cuts
+p -> b : POST .../bill/appeals
+p -> b : POST .../bill/stages/next
+b -> q : budget.act.in-force
+f -> a : POST .../appropriations/{fy}/lines-from-act
+a -> b : $t("อ่านยอดสุดท้ายต่อคำขอ", "read the final amount per request")
+group $t("ธุรกรรมเดียว", "One transaction")
+  a -> a : $t("สร้างวงเงิน รายการร่าง แผนรายเดือน", "create appropriation, draft lines, monthly plans")
+  a -> q : budget.lines.created
+end
+f -> a : POST .../lines/{id}/confirm
+a -> q : budget.line.confirmed
+@enduml

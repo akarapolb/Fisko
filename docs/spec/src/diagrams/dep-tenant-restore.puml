@@ -1,0 +1,19 @@
+@startuml
+!include include/common.puml
+' title.th: การกู้คืนรายหน่วยงาน
+' title.en: Per-tenant restore
+' desc.th: ผู้ปฏิบัติการขออนุมัติพร้อมเหตุผล กู้สำเนาคลัสเตอร์ลงสภาพแวดล้อมแยก ส่งออกแถวของผู้เช่า ตรวจลูกโซ่ Audit แล้วนำเข้าเซลล์จริงในโหมดบำรุงรักษาของผู้เช่านั้น ผู้เช่าอื่นไม่ได้รับผลกระทบ
+' desc.en: An operator gets approval with a reason, restores a copy of the cluster to an isolated environment, exports the tenant's rows, checks the audit chain and imports into the live cell with that tenant in maintenance. Other tenants are not affected.
+start
+:$t("หน่วยงานขอ ผู้ปฏิบัติการบันทึกเหตุผลและรับอนุมัติ", "The agency asks; the operator records a reason and gets approval");
+:$t("ตั้งผู้เช่าเป็นโหมดบำรุงรักษา", "Put the tenant in maintenance");
+:$t("กู้สำเนาคลัสเตอร์ ณ เวลาที่ต้องการในสภาพแวดล้อมแยก", "Restore a cluster copy at the wanted time in an isolated environment");
+:$t("ส่งออกแถวของผู้เช่าด้วยเครื่องมือเดียวกับการย้ายเซลล์", "Export the tenant's rows with the cell-move tool");
+if ($t("ลูกโซ่ Audit ตรวจผ่านกับจุดตรวจ?", "Audit chain verifies against the checkpoints?")) then ($t("ไม่", "no"))
+  :$t("หยุด แจ้งผู้ตรวจสอบ", "Stop and tell the auditor");
+  stop
+endif
+:$t("นำเข้าเซลล์จริงและสร้างดัชนีค้นหาใหม่", "Import to the live cell and rebuild the search index");
+:$t("บันทึก Audit และเปิดผู้เช่า", "Write the audit entry and reopen the tenant");
+stop
+@enduml

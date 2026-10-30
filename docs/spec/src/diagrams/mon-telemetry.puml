@@ -1,0 +1,27 @@
+@startuml
+!include include/common.puml
+hide stereotype
+' title.th: เส้นทางของ telemetry
+' title.en: Telemetry path
+' desc.th: แอปและ adapter ส่งเมตริก ล็อก และ trace ผ่าน OpenTelemetry Collector ซึ่งลบข้อมูลต้องห้ามแล้วส่งเมตริกไป Prometheus และล็อกไป Loki Grafana แสดงผลรายเซลล์และรายผู้เช่า การแจ้งเตือนออกจาก Prometheus
+' desc.en: The application and adapters send metrics, logs and traces through the OpenTelemetry Collector, which drops forbidden attributes and sends metrics to Prometheus and logs to Loki. Grafana shows per-cell and per-tenant views, and alerts leave from Prometheus.
+left to right direction
+skinparam nodesep 26
+skinparam ranksep 80
+component "$t("แอปและ Relay", "App and relay")" as app
+component "Adapters" as ad
+component "$t("Kubernetes และฐานข้อมูล", "Kubernetes and databases")" as inf
+component "OpenTelemetry Collector\n$t("ติดป้าย cell และ tenant\nตัดแอตทริบิวต์ต้องห้าม", "tags cell and tenant\ndrops forbidden attributes")" as col <<ops>>
+database "Prometheus\n$t("เมตริก", "metrics")" as p
+database "Loki\n$t("ล็อก", "logs")" as l
+component "Grafana\n$t("มุมมองรายเซลล์และรายผู้เช่า", "per-cell and per-tenant views")" as g <<ops>>
+component "$t("การแจ้งเตือน\nผู้ปฏิบัติการเวร", "Alerts\non-call operator")" as a <<ops>>
+app --> col
+ad --> col
+inf --> col
+col --> p
+col --> l
+p --> g
+l --> g
+p --> a
+@enduml

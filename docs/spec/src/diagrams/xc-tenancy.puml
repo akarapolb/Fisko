@@ -1,0 +1,22 @@
+@startuml
+!include include/common.puml
+' title.th: ชั้นการบังคับแยกผู้เช่า
+' title.en: Layers of tenant enforcement
+' desc.th: tenant มาจากโทเค็นที่ตรวจแล้ว และถูกบังคับซ้ำในทุกชั้น ได้แก่ router แอปพลิเคชัน Row-Level Security กุญแจรายผู้เช่า ตัวกรองการค้นหา ที่เก็บไฟล์ เหตุการณ์ และ telemetry ความผิดพลาดในชั้นหนึ่งไม่เปิดข้อมูลของผู้เช่าอื่น
+' desc.en: The tenant comes from a verified token and is enforced again at each layer: router, application, row-level security, per-tenant keys, search filter, file storage, events and telemetry. A mistake in one layer does not expose another tenant's data.
+skinparam nodesep 20
+skinparam ranksep 30
+rectangle "$t("1. โทเค็นที่ตรวจแล้ว: claim ของ organization ไม่รับ tenant จาก path หรือ body", "1. Verified token: organization claim; never a tenant from the path or body")" as l1
+rectangle "$t("2. Router: ส่งไปเซลล์ของหน่วยงานเท่านั้น", "2. Router: sends only to the agency's cell")" as l2
+rectangle "$t("3. TenantContext: ผูกกับคำขอหรืองานหนึ่งรายการ", "3. TenantContext: bound to one request or job")" as l3
+rectangle "$t("4. PostgreSQL RLS: SET LOCAL app.tenant_id ไม่ตั้งค่าแล้วคำสั่งล้มเหลว", "4. PostgreSQL RLS: SET LOCAL app.tenant_id; unset means the statement fails")" as l4 #ECF0FA
+rectangle "$t("5. กุญแจรายผู้เช่า: กุญแจของผู้เช่าหนึ่งเปิดข้อมูลของอีกผู้เช่าไม่ได้", "5. Per-tenant keys: one tenant's key cannot open another's data")" as l5 #E8F5EC
+rectangle "$t("6. OpenSearch และ S3: ตัวกรอง tenant บนเซิร์ฟเวอร์ และ prefix ของ tenant", "6. OpenSearch and S3: server-side tenant filter and tenant prefix")" as l6
+rectangle "$t("7. เหตุการณ์และ telemetry: มี tenantId ไม่มีข้อมูลส่วนบุคคล", "7. Events and telemetry: carry tenantId, no personal data")" as l7
+l1 -down-> l2
+l2 -down-> l3
+l3 -down-> l4
+l4 -down-> l5
+l5 -down-> l6
+l6 -down-> l7
+@enduml

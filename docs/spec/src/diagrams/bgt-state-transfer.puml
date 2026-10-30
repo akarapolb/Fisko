@@ -1,0 +1,28 @@
+@startuml
+!include include/common.puml
+' title.th: สถานะของการโอนเปลี่ยนแปลง
+' title.en: States of a budget transfer
+' desc.th: คำขอโอนรออนุมัติภายใน ประเภทที่ต้องตกลงกับสำนักงบประมาณไปรอผลก่อนมีผล ประเภท T1 มีผลทันทีและต้องรายงานใน 15 วัน ประเภท T4 ค้างที่ต้องใช้คณะรัฐมนตรี
+' desc.en: A request waits for internal approval. Types that need the Budget Bureau wait for its answer before taking effect. Type T1 takes effect at once and is reported within 15 days. Type T4 stays blocked because it needs the Cabinet.
+hide empty description
+skinparam nodesep 50
+skinparam ranksep 70
+state "pending" as p
+state "blocked" as t4
+state "bb" as b
+state "approved" as a
+state "rejected" as r
+state "withdrawn" as w
+[*] --> p : $t("ขอโอน", "request")
+[*] --> t4 : $t("ประเภท T4", "type T4")
+p --> a : $t("อนุมัติ T1", "approve T1")
+p --> b : $t("อนุมัติ T2 T3 T6", "approve T2, T3, T6")
+b --> a : $t("สำนักงบประมาณตกลง", "Budget Bureau agrees")
+b --> r : $t("ไม่ตกลง", "refuses")
+p --> r : $t("ไม่อนุมัติ", "reject")
+p --> w : $t("ถอน", "withdraw")
+t4 --> w : $t("ถอน", "withdraw")
+a --> [*] : $t("มีผล T1 รายงานใน 15 วัน", "in effect; T1 reported within 15 days")
+r --> [*]
+w --> [*]
+@enduml

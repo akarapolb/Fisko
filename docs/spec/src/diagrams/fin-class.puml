@@ -1,0 +1,81 @@
+@startuml
+!include include/common.puml
+' title.th: แบบจำลองโดเมนของ finance
+' title.en: The finance domain model
+' desc.th: aggregate หลักคือ Commitment, Voucher, GfmisFile, PaymentBatch, BankChange, Advance, Receipt, Remittance, DailyCash, Fund, SpendingPlan, BankReconciliation, Period และ AuditQuery ใบขอเบิกอ้างผูกพัน งวดของสัญญา หรือรายการแผนนอกงบประมาณ
+' desc.en: The main aggregates are Commitment, Voucher, GfmisFile, PaymentBatch, BankChange, Advance, Receipt, Remittance, DailyCash, Fund, SpendingPlan, BankReconciliation, Period and AuditQuery. A voucher refers to a commitment, a contract phase or a non-budget plan line.
+skinparam nodesep 30
+skinparam ranksep 44
+skinparam defaultTextAlignment left
+hide empty methods
+class Commitment <<aggregate>> {
+  id, kind, lineId, amount
+  released, paid, gfPo
+}
+class Voucher <<aggregate>> {
+  id, type, state, payee
+  gross, penalty, other, vat
+  route, method, due
+}
+class TaxCertificate {
+  no, base, tax, sent
+}
+class GfmisFile <<aggregate>> {
+  id, state, rows, results
+}
+class PaymentBatch <<aggregate>> {
+  id, state, rows, total
+}
+class BankChange <<aggregate>> {
+  id, supplierId, status
+  requestedBy, decidedBy
+}
+class SupplierBankAccount <<aggregate>> {
+  supplierId, bank, acctEnc
+  from, until
+}
+class Advance <<aggregate>> {
+  id, borrower, type, state
+  items, amount, approvedAmt
+  clearing, demand
+}
+class Receipt <<aggregate>> {
+  id, bookId, n, kind
+  amount, method, fundId
+}
+class ReceiptBook <<aggregate>> {
+  id, no, from, to, holder
+}
+class Remittance <<aggregate>> {
+  id, cls, rows, ref
+}
+class DailyCash <<aggregate>> {
+  date, sys, counts, status
+}
+class Fund <<aggregate>> {
+  id, name, openA, openT
+}
+class SpendingPlan <<aggregate>> {
+  id, fundId, lines, status
+}
+class BankReconciliation <<aggregate>> {
+  acct, month, status, diff
+}
+class Period <<aggregate>> {
+  month, status, checks
+}
+class AuditQuery <<aggregate>> {
+  id, subject, due, answer
+}
+Commitment "1" o-- "*" Voucher
+Voucher "1" *-- "0..1" TaxCertificate
+GfmisFile "1" o-- "*" Voucher
+PaymentBatch "1" o-- "*" Voucher
+BankChange --> SupplierBankAccount : $t("เมื่อยืนยัน", "on confirm")
+Advance "1" --> "0..1" Voucher : $t("จ่ายเพิ่ม", "top-up")
+ReceiptBook "1" o-- "*" Receipt
+Remittance "1" o-- "*" Receipt
+Fund "1" *-- "*" SpendingPlan
+SpendingPlan "1" o-- "*" Voucher
+Period "1" o-- "*" BankReconciliation
+@enduml

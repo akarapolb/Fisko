@@ -10,7 +10,7 @@ This document is the Software Design Specification (SDS) of Fisko. It says how t
 | Title | Software Design Specification (SDS), Fisko |
 | Version | 0.1 (draft) |
 | Date | 2026-10-30 |
-| Status | Draft: front matter, introduction, context view and the Procurement chapter are written; other chapters are placeholders |
+| Status | Draft: all chapters are written, and no person has reviewed them |
 | Standards applied | IEEE 1016-2009 and ISO/IEC/IEEE 42010:2022, with arc42 and C4 habits for architecture |
 | Delivery format | One bilingual HTML file, with PDF and Word output built from the same Markdown sources |
 | Source location | `docs/spec/src/sds/` |
@@ -24,6 +24,7 @@ This document is the Software Design Specification (SDS) of Fisko. It says how t
 | --- | --- | --- |
 | 0.1 | 2026-10-30 | Document structure, front matter, introduction and context view |
 | 0.1 | 2026-10-30 | Procurement chapter as the pilot for the module chapters |
+| 0.1 | 2026-10-30 | All chapters written in draft and reconciled between the SRS and the SDS. No person has reviewed them |
 
 ## Reading guide {#reading-guide}
 

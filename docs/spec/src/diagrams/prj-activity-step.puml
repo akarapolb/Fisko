@@ -1,0 +1,38 @@
+@startuml
+!include include/common.puml
+' title.th: การหาขั้นปัจจุบันของโครงการ
+' title.en: Deriving the current step of a project
+' desc.th: ระบบเริ่มจากแหล่งของโครงการ คำขอได้ขั้น 1 หรือ 2 เงินกันได้ขั้น 8 บรรทัดจัดสรรเริ่มที่ขั้น 3 แล้วเลื่อนตามงวดเงิน การก่อหนี้ การตรวจรับ และการเบิกจ่าย
+' desc.en: The system starts from the source of the project. A request is step 1 or 2 and a carry-over is step 8. An allocation line starts at step 3 and moves with allotment, commitment, acceptance and payment.
+start
+if ($t("แหล่งของโครงการเป็นคำขอ", "The source is a request")) then ($t("ใช่", "yes"))
+  if ($t("อนุมัติแล้ว", "Approved")) then ($t("ใช่", "yes"))
+    :$t("ขั้น 2", "Step 2");
+  else ($t("ไม่", "no"))
+    :$t("ขั้น 1", "Step 1");
+  endif
+  stop
+elseif ($t("แหล่งเป็นเงินกัน", "The source is a carry-over")) then ($t("ใช่", "yes"))
+  :$t("ขั้น 8", "Step 8");
+  stop
+else ($t("บรรทัดจัดสรร", "allocation line"))
+  :$t("ขั้น 3", "Step 3");
+endif
+if ($t("อนุมัติงวดเงินแล้ว", "Allotment approved")) then ($t("ใช่", "yes"))
+  :$t("ขั้น 4", "Step 4");
+else ($t("ไม่", "no"))
+endif
+if ($t("มีสัญญาที่ลงนามหรือก่อหนี้อื่น", "A signed contract or other commitment")) then ($t("ใช่", "yes"))
+  :$t("ขั้น 5", "Step 5");
+else ($t("ไม่", "no"))
+endif
+if ($t("มีงวดที่ตรวจรับแล้ว", "A phase is accepted")) then ($t("ใช่", "yes"))
+  :$t("ขั้น 6", "Step 6");
+else ($t("ไม่", "no"))
+endif
+if ($t("จ่ายแล้ว และตรวจรับแล้ว หรือเป็นรายจ่ายประจำ หรือไม่มีสัญญา", "Paid, and accepted, routine or with no contract")) then ($t("ใช่", "yes"))
+  :$t("ขั้น 7", "Step 7");
+else ($t("ไม่", "no"))
+endif
+stop
+@enduml

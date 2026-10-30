@@ -11,8 +11,8 @@
   "version": "0.1",
   "date": "2026-10-30",
   "status": {
-    "th": "ร่าง บทนำร่องจัดซื้อจัดจ้าง",
-    "en": "Draft, Procurement pilot"
+    "th": "ร่าง ครบทุกบท รอทบทวน",
+    "en": "Draft, all chapters, awaiting review"
   },
   "files": [
     "00-front.md",

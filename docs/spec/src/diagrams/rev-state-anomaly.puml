@@ -1,0 +1,18 @@
+@startuml
+!include include/common.puml
+' title.th: สถานะของรายการผิดปกติ
+' title.en: States of an anomaly
+' desc.th: ตัวตรวจสร้างรายการใหม่ ผู้ตรวจสอบปิดเมื่อมีคำชี้แจง หรือส่งตรวจสอบเพิ่มเติมพร้อมบันทึก และเปิดใหม่ได้พร้อมเหตุผล ผลเดิมยังเก็บไว้ ไม่มีสถานะใดปิดกั้นงาน
+' desc.en: A detector raises a new item. The auditor closes it as explained or escalates it, with a note, and can reopen it with a reason. The earlier result is kept. No state blocks any work.
+hide empty description
+skinparam nodesep 60
+skinparam ranksep 60
+state "new" as n
+state "explained" as e
+state "escalated" as s
+[*] --> n : $t("กฎตรวจพบ", "a rule fires")
+n --> e : $t("ผู้ตรวจสอบบันทึกคำชี้แจง", "auditor records the explanation")
+n --> s : $t("ผู้ตรวจสอบส่งตรวจเพิ่ม แจ้งผู้บริหารและการเงิน", "auditor escalates; executive and Finance told")
+e --> n : $t("เปิดใหม่พร้อมเหตุผล", "reopen with a reason")
+s --> n : $t("เปิดใหม่พร้อมเหตุผล", "reopen with a reason")
+@enduml

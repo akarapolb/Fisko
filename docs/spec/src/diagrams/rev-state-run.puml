@@ -1,0 +1,22 @@
+@startuml
+!include include/common.puml
+' title.th: สถานะของการทำงานเอเจนต์
+' title.en: States of an agent run
+' desc.th: การทำงานเริ่มที่ running หยุดรอคนที่ขั้นที่เขียนหรือแจ้งเตือน กลับมาทำต่อเมื่อคนตัดสินหนึ่งขั้น จบเมื่อไม่มีขั้นเหลือ และหยุดได้พร้อมเหตุผล ขั้นที่อนุมัติแล้วยังมีผล
+' desc.en: A run starts as running, waits for a person at a step that writes or notifies, and goes on when a person decides that one step. It ends when no step is left, and can be stopped with a reason. Approved steps stay in effect.
+hide empty description
+skinparam nodesep 60
+skinparam ranksep 60
+state "running" as r
+state "waiting" as w
+state "done" as d
+state "stopped" as s
+[*] --> r : $t("เอเจนต์และ AI เปิดอยู่", "agent and AI on")
+r --> w : $t("ขั้นเขียนหรือแจ้งเตือน", "a step writes or notifies")
+w --> r : $t("คนตัดสินหนึ่งขั้น", "a person decides one step")
+r --> d : $t("ไม่มีขั้นเหลือ", "no step left")
+r --> s : $t("ขั้นทำไม่ได้ หรือคนหยุด", "blocked, or a person stops it")
+w --> s : $t("คนหยุดพร้อมเหตุผล", "a person stops it, with a reason")
+d --> [*]
+s --> [*]
+@enduml

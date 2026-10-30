@@ -1,0 +1,34 @@
+@startuml
+!include include/common.puml
+' title.th: จากการส่งคำขอถึงมติคณะกรรมการ
+' title.en: From sending a request to the committee resolution
+' desc.th: เจ้าของส่งคำขอ ระบบตรวจกฎ ผู้อำนวยการกองเห็นชอบ กองแผนส่งต่อตามเงื่อนไข คณะกรรมการลงมติเมื่อครบองค์ประชุม และวงเงินที่เห็นชอบถูกเก็บเป็นยอดที่ตัดสิน
+' desc.en: The owner sends the request and the system runs the rules. The director approves, Planning routes it by the condition, the committee resolves once it has a quorum, and the approved amount is stored as the decided amount.
+skinparam sequenceMessageAlign left
+actor "$t("เจ้าของคำขอ", "Owner")" as o
+actor "$t("ผอ.กอง", "Director")" as h
+actor "$t("กองแผน", "Planning")" as p
+actor "$t("คณะกรรมการ", "Committee")" as c
+participant "request" as r
+participant "review" as v
+participant "platform" as t
+queue "outbox" as q
+o -> r : POST .../requests/{id}/send
+r -> r : $t("ตรวจกฎ block ทุกข้อ", "run every blocking rule")
+r -> q : budget.request.sent
+h -> r : POST .../requests/{id}/director-approve
+r -> v : $t("เปิดแถววงเงินรายรอบ", "open the review row")
+p -> v : POST .../requests/{id}/forward
+v -> v : $t("ตรวจเงื่อนไข w3", "check condition w3")
+== $t("เมื่อเข้าเงื่อนไข", "When the condition applies") ==
+p -> v : POST .../meetings
+c -> v : PUT .../meetings/{id}/votes
+v -> t : $t("ตรวจ SD-10", "check SD-10")
+p -> v : POST .../meetings/{id}/resolve
+v -> v : $t("ตรวจองค์ประชุม คำนวณผลกระทบ", "check quorum, compute impact")
+group $t("ธุรกรรมเดียว", "One transaction")
+  v -> r : $t("อนุมัติ เก็บ decided", "approve, store decided")
+  v -> q : budget.meeting.resolved
+end
+v -> t : $t("เขียน Audit", "write audit entry")
+@enduml

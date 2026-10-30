@@ -1,0 +1,40 @@
+@startuml
+!include include/common.puml
+' title.th: ไฟล์ขอเบิกและผลจาก GFMIS
+' title.en: The GFMIS request file and its results
+' desc.th: เจ้าหน้าที่ที่มีหนังสือมอบหมายเลือกใบที่พร้อม ระบบสร้างไฟล์และส่งผ่าน outbox เมื่อผลผ่านรายการกลับมา ใบเป็นบันทึกแล้ว ผลการจ่ายทำให้ใบเป็นจ่ายแล้วและออก 50 ทวิ ผลล้มเหลวกลับไปพร้อมส่งและไม่เปลี่ยนรายการที่อนุมัติ
+' desc.en: An officer with a written assignment picks ready vouchers. The system makes a file and sends it through the outbox. A posting result marks the voucher posted, and a payment result marks it paid and issues the 50 Tawi. A failure goes back to ready and never changes the approved record by itself.
+' law: TRR 12; TRR 28
+skinparam sequenceMessageAlign left
+actor "$t("เจ้าหน้าที่การเงิน", "Finance officer")" as f
+participant "payment" as pay
+queue "outbox" as q
+participant "GfmisGateway" as g
+participant "GFMIS" as x
+participant "voucher" as v
+participant "platform" as p
+f -> pay : createFile(vouchers)
+pay -> pay : $t("ตรวจหนังสือมอบหมาย record", "check the record assignment")
+pay -> q : finance.gfmis-file.created
+q -> g : $t("ส่งมอบ", "delivery")
+g -> x : submit(entries)
+alt $t("ผ่านรายการ", "posted")
+  x --> g : $t("เลขเอกสาร", "document number")
+  g -> v : posted(doc)
+else $t("ถูกปฏิเสธ", "rejected")
+  x --> g : $t("เหตุผล", "reason")
+  g -> v : $t("กลับพร้อมส่ง ออกจากไฟล์", "back to ready, out of the file")
+  g -> p : $t("สร้างงานให้เจ้าหน้าที่", "open a task for the officer")
+end
+x --> g : $t("ผลการจ่าย", "payment result")
+alt $t("จ่ายตรงสำเร็จ", "paid direct")
+  g -> v : paid(ref)
+  v -> v : $t("ออก 50 ทวิ", "issue the 50 Tawi")
+else $t("เงินเข้าบัญชีหน่วยงาน", "reached the agency")
+  g -> v : funded()
+  v -> v : $t("เริ่มนาฬิกาคืนเงิน", "start the return clock")
+else $t("จ่ายไม่สำเร็จ", "payment failed")
+  g -> v : $t("กลับพร้อมส่ง", "back to ready")
+  g -> p : $t("แจ้งเจ้าหน้าที่", "notify the officer")
+end
+@enduml

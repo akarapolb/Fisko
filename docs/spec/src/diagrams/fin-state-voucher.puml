@@ -1,0 +1,47 @@
+@startuml
+!include include/common.puml
+' title.th: สถานะของใบขอเบิก
+' title.en: States of a voucher
+' desc.th: ใบขอเบิกเริ่มเป็นร่าง ส่งตรวจ รออนุมัติ พร้อมส่ง บันทึกใน GFMIS จ่ายแล้ว และกระทบยอดแล้ว เงินนอกงบประมาณไม่ผ่าน GFMIS ผู้จัดทำดึงกลับได้ ผู้ตรวจและผู้อนุมัติส่งกลับได้ ไม่อนุมัติและยกเลิกเป็นสถานะสุดท้าย
+' desc.en: A voucher starts as a draft, then evidence check, approval, ready, posted in GFMIS, paid and reconciled. Non-budget money skips GFMIS. The maker can recall it, the checker and the approver can return it, and rejected and cancelled are final.
+' law: TRR 36
+hide empty description
+skinparam nodesep 34
+skinparam ranksep 56
+state "draft V1" as d
+state "returned V1" as rt
+state "check V2" as c
+state "approve V3" as a
+state "ready V4" as r
+state "nbready V4" as n
+state "posted V5" as p
+state "paid V6" as pd
+state "recon V7" as rc
+state "rejected" as x
+state "cancelled" as y
+[*] --> d
+d --> c : $t("ส่งตรวจ", "send")
+c --> a : $t("ตรวจผ่าน P-F05", "checked, P-F05")
+a --> r : $t("อนุมัติ SD-11 SD-04", "approve, SD-11, SD-04")
+a --> n : $t("อนุมัติ เงินนอกงบ", "approve, non-budget")
+r --> p : $t("GFMIS ผ่านรายการ", "GFMIS posted")
+p --> pd : $t("ผลการจ่าย", "payment result")
+n --> pd : $t("จ่ายจากบัญชี", "paid from account")
+pd --> rc : $t("กระทบยอด (คำนวณ)", "matched, derived")
+c --> rt : $t("ส่งกลับ", "return")
+a --> rt : $t("ส่งกลับ", "return")
+rt --> c : $t("ส่งใหม่", "send again")
+c --> d : $t("ดึงกลับ", "recall")
+a --> d : $t("ดึงกลับ", "recall")
+p --> r : $t("จ่ายไม่สำเร็จ", "payment failed")
+a --> x : $t("ไม่อนุมัติ", "reject")
+d --> y : $t("ยกเลิก", "cancel")
+rt --> y : $t("ยกเลิก", "cancel")
+c --> y : $t("หัวหน้ายกเลิก", "head cancels")
+a --> y : $t("หัวหน้ายกเลิก", "head cancels")
+r --> y : $t("หัวหน้ายกเลิก ก่อนเข้าไฟล์", "head cancels, before a file")
+n --> y : $t("หัวหน้ายกเลิก", "head cancels")
+x --> [*]
+y --> [*]
+rc --> [*]
+@enduml

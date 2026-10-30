@@ -1,0 +1,25 @@
+@startuml
+!include include/common.puml
+' title.th: สถานะของขั้นอนุมัติ
+' title.en: States of an approval step
+' desc.th: เมื่อเอกสารเข้าสาย ขั้นที่เงื่อนไขไม่ตรงถูกข้าม ขั้นที่ตรงรอการตัดสิน ผู้ตัดสินอนุมัติ ส่งกลับ หรือไม่อนุมัติ การอนุมัติเปิดขั้นถัดไป การส่งกลับเปิดขั้นก่อนหน้าที่เลือก
+' desc.en: When a document enters a chain, steps whose condition does not match are skipped and the others wait for a decision. A decider approves, returns or rejects. Approval opens the next step, and a return reopens the chosen earlier step.
+hide empty description
+left to right direction
+skinparam nodesep 60
+skinparam ranksep 100
+state "$t("ข้าม", "Skipped")" as sk
+state "$t("รอการตัดสิน", "Waiting")" as w
+state "$t("อนุมัติ", "Approved")" as a
+state "$t("ส่งกลับ", "Returned")" as t
+state "$t("ไม่อนุมัติ", "Rejected")" as r
+[*] --> sk : $t("เงื่อนไขไม่ตรง", "condition not met")
+[*] --> w : $t("เงื่อนไขตรง", "condition met")
+w --> a : $t("ผู้ตัดสินอนุมัติ", "decider approves")
+w --> t : $t("ผู้ตัดสินส่งกลับ พร้อมเหตุผล", "decider returns, with a reason")
+w --> r : $t("ผู้ตัดสินไม่อนุมัติ พร้อมเหตุผล", "decider rejects, with a reason")
+t --> w : $t("ส่งใหม่", "sent again")
+sk --> [*]
+a --> [*]
+r --> [*]
+@enduml

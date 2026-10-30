@@ -1,0 +1,28 @@
+@startuml
+!include include/common.puml
+' title.th: สถานะของการมอบอำนาจ
+' title.en: States of a delegation
+' desc.th: การมอบอำนาจคำนวณสถานะจากวันที่และการยกเลิก รอเริ่มเมื่อยังไม่ถึงวันเริ่ม มีผลเมื่ออยู่ในช่วงวันที่ หมดอายุเมื่อพ้นวันสิ้นสุด และยกเลิกแล้วเมื่อผู้มอบหรือผู้ดูแลระบบยกเลิก ระบบจริงเพิ่มสถานะพักไว้เมื่อผู้มอบหรือผู้รับมอบถูกระงับหรือเปลี่ยนบทบาท
+' desc.en: A delegation's state is derived from its dates and revocation. It is future before the start date, active within the dates, expired after the end date and revoked when the delegator or the administrator revokes it. Production adds a held state while either person is suspended or has changed role.
+hide empty description
+left to right direction
+skinparam nodesep 60
+skinparam ranksep 110
+state "future" as f
+state "active" as a
+state "held" as h
+state "expired" as e
+state "revoked" as r
+[*] --> f : $t("สร้าง วันเริ่มในอนาคต", "created, start in the future")
+[*] --> a : $t("สร้าง เริ่มวันนี้", "created, starts today")
+f --> a : $t("ถึงวันเริ่ม", "start date arrives")
+a --> e : $t("พ้นวันสิ้นสุด", "end date passes")
+a --> h : $t("ผู้เกี่ยวข้องถูกระงับหรือเปลี่ยนบทบาท", "a party is suspended or changes role")
+h --> a : $t("เปิดใช้งานอีกครั้ง", "party reactivated")
+h --> e : $t("พ้นวันสิ้นสุด", "end date passes")
+f --> r : $t("ยกเลิก", "revoked")
+a --> r : $t("ยกเลิก", "revoked")
+h --> r : $t("ยกเลิก", "revoked")
+e --> [*]
+r --> [*]
+@enduml

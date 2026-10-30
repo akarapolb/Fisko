@@ -1,0 +1,32 @@
+@startuml
+!include include/common.puml
+' title.th: เส้นทางของคำขอหนึ่งรายการ
+' title.en: The path of one request
+' desc.th: เบราว์เซอร์ส่งคำขอพร้อมโทเค็น edge ตรวจ WAF และ router หาเซลล์จากแผนที่ แอปตรวจโทเค็นอีกครั้ง ผูก tenant ในธุรกรรม ตรวจสิทธิ์และการแยกหน้าที่ แล้วบันทึกข้อมูล Audit และ outbox พร้อมกัน
+' desc.en: The browser sends a request with a token. The edge applies the WAF and the router finds the cell from the map. The application checks the token again, binds the tenant in the transaction, checks authority and duties, and saves the data, audit entry and outbox row together.
+skinparam sequenceMessageAlign left
+actor "$t("เบราว์เซอร์", "Browser")" as b
+participant "$t("Edge และ WAF", "Edge and WAF")" as e
+participant "$t("Tenant router", "Tenant router")" as r
+box "$t("เซลล์ของหน่วยงาน", "The agency's cell")"
+participant "$t("web ของโมดูล", "Module web")" as w
+participant "platform" as p
+participant "$t("โดเมนของโมดูล", "Module domain")" as d
+database "PostgreSQL" as db
+end box
+b -> e : $t("HTTPS, TLS 1.3 พร้อมโทเค็น", "HTTPS, TLS 1.3, with token")
+e -> r : $t("อ่าน claim ของ organization", "read the organization claim")
+r -> r : $t("หาเซลล์จากแผนที่ที่แคชไว้", "find the cell in the cached map")
+r -> w : mTLS
+w -> p : $t("ตรวจลายเซ็นโทเค็น สร้าง TenantContext", "verify the token, build TenantContext")
+group $t("ธุรกรรมเดียว", "One transaction")
+  w -> db : $t("BEGIN แล้ว SET LOCAL app.tenant_id", "BEGIN, then SET LOCAL app.tenant_id")
+  w -> p : $t("Authorizer แล้ว SodGuard", "Authorizer, then SodGuard")
+  w -> d : $t("คำสั่งธุรกิจ", "business command")
+  d -> d : $t("ตรวจกฎและสถานะ", "check rules and state")
+  d -> db : $t("บันทึก aggregate (RLS ใช้บังคับ)", "save the aggregate (RLS applies)")
+  d -> db : $t("เพิ่ม Audit และ outbox", "add audit entry and outbox row")
+  w -> db : COMMIT
+end
+w --> b : $t("JSON หรือ Problem Details", "JSON or Problem Details")
+@enduml

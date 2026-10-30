@@ -1,0 +1,32 @@
+@startuml
+!include include/common.puml
+' title.th: การอนุมัติและส่งข้อมูลให้ผู้รับภายนอก
+' title.en: Approving and sending data to an external consumer
+' desc.th: ฝ่ายแผนขอแชร์ข้อมูล ผู้บริหารอนุมัติพร้อมเหตุผล ระบบบันทึกทะเบียนการส่งแบบเพิ่มอย่างเดียวพร้อมเวลาข้อมูล GFMIS ล่าสุด แล้วส่งผ่าน outbox
+' desc.en: Planning asks to share data. The executive approves with a reason. The system adds a row to the append-only send log, with the time of the latest GFMIS data, and sends through the outbox.
+skinparam sequenceMessageAlign left
+actor "$t("ฝ่ายแผน", "Planning")" as o
+actor "$t("ผู้บริหาร", "Executive")" as x
+participant "web" as w
+participant "sharing" as s
+participant "platform" as p
+participant "finance" as f
+database "PostgreSQL" as db
+queue "outbox" as q
+
+o -> w : POST /consumers/{id}/requests
+w -> s : ask(why)
+s -> p : ApprovalRoutes.start
+s -> db : $t("บันทึกคำขอ สถานะ pending", "save the request, status pending")
+x -> w : POST /share-requests/{id}/approve
+w -> p : $t("ตรวจสิทธิ์ ผู้ขอต้องไม่ใช่ผู้อนุมัติ", "check authority; the asker is not the approver")
+w -> s : approve(reason)
+s -> s : $t("ตรวจเหตุผลอย่างน้อย 10 ตัวอักษร", "check a reason of at least 10 characters")
+s -> f : latestGfmisAsOf()
+group $t("ธุรกรรมเดียว", "One transaction")
+  s -> db : $t("ผู้รับเป็น active เพิ่มแถว send_log", "consumer active, send_log row added")
+  s -> p : AuditLog.record
+  s -> q : projects.share.approved
+end
+q -> s : $t("adapter ส่งชุดข้อมูลตามช่องทาง", "the adapter sends the data set by its channel")
+@enduml

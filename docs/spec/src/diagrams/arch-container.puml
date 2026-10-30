@@ -1,0 +1,42 @@
+@startuml
+!include include/common.puml
+hide stereotype
+' title.th: มุมมองคอนเทนเนอร์ของ Fisko
+' title.en: Fisko container view
+' desc.th: ผู้ใช้เข้าทาง edge ซึ่งส่งคำขอไปยังเซลล์ของหน่วยงาน ในเซลล์มีแอปพลิเคชันแบบ modular monolith ตัวส่งต่อ outbox และ adapter พร้อม PostgreSQL RabbitMQ OpenSearch และที่เก็บไฟล์ Keycloak และ KMS อยู่นอกเซลล์ ระบบภายนอกอยู่นอกคลาวด์
+' desc.en: Users reach the edge, which sends each request to the agency's cell. A cell holds the modular monolith, the outbox relay and adapters, with PostgreSQL, RabbitMQ, OpenSearch and file storage. Keycloak and KMS sit outside the cell, and external systems sit outside the cloud.
+left to right direction
+skinparam nodesep 22
+skinparam ranksep 70
+actor "$t("เจ้าหน้าที่และผู้ขาย\n(เบราว์เซอร์ React)", "Staff and suppliers\n(React in a browser)")" as user
+package "$t("คลาวด์เชิงพาณิชย์ในไทย: ข้อมูล สำรอง และบันทึกอยู่ในไทย", "Thai commercial cloud: data, backups and logs stay in Thailand")" as cloud {
+  component "$t("Edge\nWAF, TLS 1.3, ส่งไปยังเซลล์", "Edge\nWAF, TLS 1.3, routes to a cell")" as edge
+  component "Keycloak\nOIDC, SAML, MFA" as kc <<sec>>
+  component "KMS\n$t("กุญแจหลัก", "master keys")" as kms <<sec>>
+  package "$t("เซลล์หนึ่งในหลายเซลล์", "One cell of many")" as cell {
+    component "$t("แอปพลิเคชัน Fisko\nJava 25, Spring Boot 4.1\nmodular monolith", "Fisko application\nJava 25, Spring Boot 4.1\nmodular monolith")" as app
+    component "$t("Relay และ Adapter\nส่งซ้ำได้ แสดงสถานะ", "Relay and adapters\nretry, show status")" as ad
+    database "PostgreSQL\n$t("RLS, outbox, Audit", "RLS, outbox, audit")" as pg
+    queue "RabbitMQ" as mq
+    component "OpenSearch\n$t("ค้นหาภาษาไทย", "Thai search")" as os <<data>>
+    component "$t("ที่เก็บ S3 API\nและ ClamAV", "S3 API storage\nand ClamAV")" as s3 <<data>>
+  }
+}
+component "$t("ThaID และไดเรกทอรี", "ThaID and directories")" as idp <<ext>>
+component "$t("GFMIS และ e-GP", "GFMIS and e-GP")" as gov <<ext>>
+component "$t("อีเมลและช่องทางอื่น", "E-mail and other channels")" as mail <<ext>>
+component "$t("ผู้ให้บริการ AI\nปิดเป็นค่าเริ่มต้น", "AI provider\noff by default")" as ai <<ai>>
+user --> edge : HTTPS
+user --> kc : $t("เข้าสู่ระบบ", "sign-in")
+edge --> app : mTLS
+app --> pg : SQL
+app --> os : $t("ค้นหา", "search")
+app --> s3 : $t("ไฟล์", "files")
+app ..> kms : $t("แกะกุญแจ", "unwrap keys")
+pg --> ad : outbox
+ad --> mq : $t("เผยแพร่", "publish")
+ad --> gov : $t("ยังต้องยืนยัน", "to confirm")
+ad --> mail
+app ..> ai : $t("เมื่อเลือกใช้", "opt-in")
+kc --> idp : $t("สหพันธ์", "federation")
+@enduml

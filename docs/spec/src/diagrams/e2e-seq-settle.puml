@@ -1,0 +1,44 @@
+@startuml
+!include include/common.puml
+' title.th: จากการตรวจรับถึงการปิดงวด
+' title.en: From acceptance to closing
+' desc.th: กรรมการตรวจรับงวดงาน การเงินอ่านงวดที่รอจ่ายและเรียกประตูเบิกจ่าย ถ้าผ่านจึงสร้างใบขอเบิก การอนุมัติบันทึกการจ่ายลงบัญชีคุมและแจ้ง procurement ในธุรกรรมเดียว ไฟล์ส่ง GFMIS ผ่าน outbox ผลการจ่ายทำให้เกิดเหตุการณ์ voucher.paid การนำเข้ารายงานบันทึกยอดเบิกจ่าย แล้วปิดงวด
+' desc.en: The committee accepts a phase. Finance reads waiting phases and calls the payment gate, and a pass creates the voucher. Approval records the payment on the ledger and tells procurement in one transaction. The GFMIS file leaves through the outbox. A payment result raises voucher.paid. Imported reports record disbursement, then the period closes.
+skinparam sequenceMessageAlign left
+actor "$t("กรรมการตรวจรับ", "Acceptance member")" as m
+participant "procurement" as p
+actor "$t("เจ้าหน้าที่การเงิน", "Finance officer")" as o
+participant "finance" as f
+participant "budget" as b
+queue "outbox" as q
+participant "GFMIS" as g
+
+m -> p : $t("ลงนามจนครบ", "sign until complete")
+p -> q : procurement.phase.accepted
+o -> f : $t("เปิดรายการรอจ่าย", "open the waiting list")
+f -> p : AcceptedPhaseQuery, PaymentGate.evaluate
+p -> f : $t("SPI: FinanceFacts มี PO หรือไม่", "SPI: FinanceFacts, is a PO recorded")
+f --> p : $t("ผลตรวจ", "result")
+p --> f : $t("ผ่าน พร้อมยอดสุทธิ", "pass, with the net amount")
+f -> f : Voucher.fromPhase
+f -> p : PhasePayment.started
+o -> f : Voucher.send
+group $t("อนุมัติในธุรกรรมเดียว", "approval in one transaction")
+  f -> b : LineLedger.recordPayment
+  f -> p : PhasePayment.approved
+end
+p -> q : procurement.phase.paid
+o -> f : $t("สร้างไฟล์ GFMIS", "create the GFMIS file")
+f -> q : finance.gfmis-file.created
+q -> g : $t("GfmisGateway ส่งแบบไม่ซ้ำ", "GfmisGateway, idempotent delivery")
+g --> f : $t("ผลบันทึกและผลการจ่าย", "posting and payment results")
+f -> q : finance.voucher.paid
+q -> b : $t("ติดตามการใช้จ่าย", "monitoring")
+o -> f : $t("นำเข้ารายงาน GFMIS", "import GFMIS reports")
+f -> b : LineLedger.recordDisbursement
+f -> q : finance.gfmis-report.imported
+o -> f : $t("ปิดเดือน CloseChecks", "month close, CloseChecks")
+f -> q : finance.period.closed
+f -> b : $t("CarryOverIntake (คำขอ)", "CarryOverIntake (a request)")
+b -> q : budget.carry-over.approved
+@enduml

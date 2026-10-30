@@ -1,0 +1,25 @@
+@startuml
+!include include/common.puml
+' title.th: วงจรงบประมาณจากยุทธศาสตร์ถึงผลสัมฤทธิ์
+' title.en: The budget cycle from strategy to results
+' desc.th: กองแผนกำหนดยุทธศาสตร์และกรอบ กองจัดทำคำขอ กองแผนรวบรวม ผู้พิจารณาเห็นชอบ ส่งสำนักงบประมาณ ผ่านรัฐสภา สร้างรายการจัดสรร บริหารระหว่างปี รายงานผล แล้วส่งผลกลับไปปีถัดไป
+' desc.en: Planning sets strategy and ceilings, units prepare requests, Planning consolidates, reviewers approve, the batch goes to the Budget Bureau, the bill passes parliament, lines are created, the year is managed, results are reported, and they feed next year.
+start
+:$t("ยุทธศาสตร์ ตัวชี้วัด คลังโครงการ (B2)", "Strategy, KPIs, project bank (B2)");
+:$t("ออกกรอบวงเงิน (B4)", "Issue ceilings (B4)");
+:$t("จัดทำคำขอและผ่าน ผอ.กอง (B3)", "Prepare requests, director approves (B3)");
+:$t("รวบรวม จัดลำดับ 3R ฐานศูนย์ (B4)", "Consolidate, rank, 3R, zero-based (B4)");
+if ($t("เข้าเงื่อนไขคณะกรรมการ?", "Committee condition applies?")) then ($t("ใช่", "yes"))
+  :$t("คณะกรรมการลงมติ (B5)", "Committee resolves (B5)");
+else ($t("ไม่", "no"))
+  :$t("ผู้บริหารเห็นชอบ (B5)", "Executive approves (B5)");
+endif
+:$t("รัฐมนตรีเห็นชอบ ส่งชุด รับผล (B6)", "Minister approves, batch sent, results (B6)");
+:$t("รัฐสภา ตัดลด แปรญัตติ (B6)", "Parliament, cuts, appeals (B6)");
+:$t("สร้างรายการจัดสรรจาก พ.ร.บ. (B7)", "Lines from the act (B7)");
+:$t("แผนการใช้จ่าย งวดเงิน โอน กันเงิน (B7)", "Plan, releases, transfers, carry-over (B7)");
+:$t("ติดตามการใช้จ่าย (B8)", "Monitor spending (B8)");
+:$t("รายงานผลและประเมิน (B9)", "Report and evaluate (B9)");
+:$t("ข้อเสนอแนะเข้าคลังโครงการปีถัดไป", "Recommendations enter the next project bank");
+stop
+@enduml

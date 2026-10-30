@@ -1,0 +1,37 @@
+@startuml
+!include include/common.puml
+hide stereotype
+' title.th: เซลล์และบริการระดับรวม
+' title.en: Cells and the global services
+' desc.th: Router ระดับรวมส่งแต่ละหน่วยงานไปยังเซลล์ของตน หน่วยงานขนาดเล็กใช้เซลล์ร่วม หน่วยงานขนาดใหญ่มีเซลล์เฉพาะ Control plane ทยอยปล่อยรุ่นทีละเซลล์ และย้ายหน่วยงานระหว่างเซลล์ได้
+' desc.en: A global router sends each agency to its cell. Small agencies share cells, and a large agency has its own. The control plane rolls out one cell at a time and can move an agency between cells.
+skinparam nodesep 34
+skinparam ranksep 60
+component "$t("Tenant router\nแผนที่หน่วยงานถึงเซลล์", "Tenant router\nagency-to-cell map")" as r
+package "$t("เซลล์ร่วม 1, รุ่น N+1", "Shared cell 1, release N+1")" as c1 {
+  component "$t("อินสแตนซ์แอป", "App instances")" as a1
+  database "PostgreSQL\n$t("RLS ตาม tenant_id", "RLS by tenant_id")" as d1
+}
+package "$t("เซลล์ร่วม 2, รุ่น N", "Shared cell 2, release N")" as c2 {
+  component "$t("อินสแตนซ์แอป", "App instances")" as a2
+  database "PostgreSQL\n$t("RLS ตาม tenant_id", "RLS by tenant_id")" as d2
+}
+package "$t("เซลล์เฉพาะ, รุ่น N", "Dedicated cell, release N")" as c3 {
+  component "$t("อินสแตนซ์แอป", "App instances")" as a3
+  database "PostgreSQL\n$t("คลัสเตอร์ของตนเอง", "its own cluster")" as d3
+}
+component "$t("Control plane\nรับหน่วยงานใหม่ ส่งออกและกู้คืนรายหน่วยงาน\nย้ายหน่วยงาน ปล่อยรุ่นทีละเซลล์", "Control plane\nonboarding, per-tenant export and restore\ntenant moves, one-cell-at-a-time rollout")" as cp <<ops>>
+r --> a1 : $t("ส่งไปเซลล์เดียว", "sends to one cell")
+r --> a2
+r --> a3
+a1 --> d1
+a2 --> d2
+a3 --> d3
+d1 <-- cp : $t("ปล่อยรุ่น", "rollout")
+d2 <-- cp
+d3 <-- cp
+note bottom of cp
+  $t("เซลล์ละประมาณ 50 ถึง 100 หน่วยงานขนาดเล็ก", "About 50 to 100 small agencies per cell")
+  $t("เป็นค่าเริ่มต้นที่ต้องพิสูจน์ด้วย load test", "is a starting figure to prove with load tests")
+end note
+@enduml

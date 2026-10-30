@@ -1,0 +1,23 @@
+@startuml
+!include include/common.puml
+' title.th: สถานะของคำขอแก้บัญชีธนาคารผู้ขาย
+' title.en: States of a supplier bank change
+' desc.th: คำขอรอยืนยัน บุคคลที่สองยืนยันหรือไม่ยืนยัน ผู้ขอถอนคำขอได้ เมื่อยืนยันแล้วบัญชีใหม่มีผลและบัญชีเดิมเก็บไว้ในประวัติ
+' desc.en: A request waits for confirmation. A second person confirms or refuses it, and the requester may withdraw it. On confirmation the new account takes effect and the old one stays in the history.
+' law: TRR 20
+hide empty description
+left to right direction
+skinparam nodesep 50
+skinparam ranksep 110
+state "pending" as p
+state "confirmed" as c
+state "rejected" as r
+state "withdrawn" as w
+[*] --> p : $t("ผู้ขอ พร้อมหลักฐาน", "requester, with evidence")
+p --> c : $t("บุคคลที่สองยืนยัน SD-14", "second person confirms, SD-14")
+p --> r : $t("บุคคลที่สองไม่ยืนยัน", "second person refuses")
+p --> w : $t("ผู้ขอถอน", "requester withdraws")
+c --> [*]
+r --> [*]
+w --> [*]
+@enduml

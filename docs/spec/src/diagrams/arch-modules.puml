@@ -1,0 +1,30 @@
+@startuml
+!include include/common.puml
+hide stereotype
+' title.th: ทิศทางการพึ่งพาของโมดูล
+' title.en: Module dependency direction
+' desc.th: โมดูลพึ่งพาลงล่างผ่าน api ที่เผยแพร่เท่านั้น ทุกโมดูลพึ่ง platform โมดูล procurement พึ่ง budget โมดูล finance พึ่ง procurement.api และ budget ส่วนข้อเท็จจริงจากล่างขึ้นบนผ่าน SPI หรือเหตุการณ์ จึงไม่มีวงจร
+' desc.en: Modules depend downward through published api packages only. Every module depends on platform. Procurement depends on budget. Finance depends on procurement.api and budget. Facts that travel upward use an SPI or events, so there is no cycle.
+skinparam nodesep 40
+skinparam ranksep 56
+component "review" as rev <<data>>
+component "projects" as prj <<data>>
+component "finance" as fin <<data>>
+component "procurement" as prc <<data>>
+component "budget" as bgt <<data>>
+component "platform" as plt <<sec>>
+rev --> prj
+rev --> fin
+rev --> prc
+prj --> fin
+prj --> prc
+fin --> prc : $t("procurement.api", "procurement.api")
+prc --> bgt : LineLedger
+fin --> bgt
+bgt --> plt
+fin ..> prc : $t("ติดตั้ง SPI FinanceFacts", "implements SPI FinanceFacts")
+note right of plt
+  $t("ทุกโมดูลพึ่ง platform", "Every module depends on platform")
+  $t("เส้นประคือการติดตั้ง SPI ของโมดูลล่าง", "The dashed line implements a lower module's SPI")
+end note
+@enduml

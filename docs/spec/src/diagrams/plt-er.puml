@@ -1,0 +1,79 @@
+@startuml
+!include include/common.puml
+' title.th: ตารางหลักของ platform (ข้อเสนอ)
+' title.en: Core platform tables (proposal)
+' desc.th: ตารางหลักทุกตารางมี tenant_id ยกเว้น tenant ผู้ใช้อ้างถึง subject ซึ่งเก็บรายละเอียดบุคคลที่เข้ารหัส การมอบอำนาจอ้างถึงผู้ใช้สองคน สายอนุมัติมีขั้น และอินสแตนซ์มีการตัดสิน รายการงานผูกกับขั้น บันทึกการใช้งานอ้างถึงรหัสอ้างอิงบุคคลเท่านั้น
+' desc.en: Every core table has tenant_id, except tenant itself. A user points to a subject, which holds encrypted personal details. A delegation points to two users. A chain has steps and an instance has decisions. A work item links to an instance. The audit log points only to the subject reference.
+skinparam nodesep 40
+skinparam ranksep 60
+skinparam defaultTextAlignment left
+hide circle
+hide empty methods
+entity tenant {
+  *id
+  cell_id, status, name
+}
+entity unit {
+  *tenant_id, *id
+  code, parent_id, retired_on
+}
+entity subject {
+  *tenant_id, *subject_ref
+  details_enc, key_ref, erased_at
+}
+entity user_account {
+  *tenant_id, *id
+  subject_ref, role_id, unit_id
+  status, version
+}
+entity delegation {
+  *tenant_id, *id
+  no, delegator_id, delegate_id
+  scope, start_on, end_on
+  revoked_at
+}
+entity sod_block {
+  *tenant_id, *id
+  rule_id, actor_ref, clash_ref
+  item, delegation_id
+}
+entity approval_chain {
+  *tenant_id, *id
+  key, version, effective_from
+}
+entity approval_step {
+  *tenant_id, *id
+  chain_id, seq, owner_role
+  sla_days, condition
+}
+entity approval_instance {
+  *tenant_id, *id
+  chain_id, subject_type
+  subject_id, current_seq
+}
+entity step_decision {
+  *tenant_id, *id
+  instance_id, seq, decider_ref
+  holder_ref, delegation_id
+}
+entity work_item {
+  *tenant_id, *id
+  kind, assignee, due_on
+  instance_id, state
+}
+entity audit_entry {
+  *tenant_id, *seq
+  subject_ref, action, item
+  prev_hash, hash
+}
+tenant ||--o{ unit
+unit ||--o{ user_account
+subject ||--|| user_account
+user_account ||--o{ delegation
+delegation |o--o{ sod_block
+approval_chain ||--o{ approval_step
+approval_chain ||--o{ approval_instance
+approval_instance ||--o{ step_decision
+approval_instance ||--o{ work_item
+subject ||--o{ audit_entry
+@enduml

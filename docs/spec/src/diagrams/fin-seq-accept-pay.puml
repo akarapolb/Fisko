@@ -1,0 +1,43 @@
+@startuml
+!include include/common.puml
+' title.th: จากงวดที่ตรวจรับถึงใบขอเบิกและการอนุมัติ
+' title.en: From an accepted phase to the voucher and its approval
+' desc.th: การเงินอ่านงวดที่รอจ่าย เรียกประตูเบิกจ่าย ซึ่งถาม FinanceFacts ว่ามี PO หรือไม่ ถ้าผ่านสร้างใบขอเบิกพร้อมค่าปรับและแจ้ง PhasePayment.started ผู้ตรวจและผู้อนุมัติทำงานตามลำดับ การอนุมัติเรียก PhasePayment.approved ในธุรกรรมเดียวกันและบันทึกการเบิกจ่ายในบัญชีวงเงิน
+' desc.en: Finance reads waiting phases and calls the payment gate, which asks FinanceFacts about the PO. A pass creates the voucher with the penalty and calls PhasePayment.started. The checker and approver act in turn. Approval calls PhasePayment.approved in the same transaction and records the spending on the ledger.
+' law: PPR 162; PPR 175; TRR 28; TRR 36
+skinparam sequenceMessageAlign left
+actor "$t("เจ้าหน้าที่การเงิน", "Finance officer")" as f
+actor "$t("ผู้ตรวจ", "Checker")" as c
+actor "$t("ผู้มีอำนาจ", "Authority")" as a
+participant "finance.voucher" as v
+participant "procurement.api" as api
+participant "FinanceFacts" as spi
+participant "platform" as p
+participant "budget" as b
+queue "outbox" as q
+f -> v : $t("เปิดงวดที่รอทำใบ", "open waiting phases")
+v -> api : AcceptedPhaseQuery.waiting()
+api --> v : $t("งวด ยอดสุทธิ ค่าปรับ ผลประตู", "phases, net, penalty, gate result")
+f -> v : createFromPhase(contract, phase)
+v -> api : PaymentGate.evaluate(contract, phase)
+api -> spi : purchaseOrderRecorded(contract)
+spi --> api : $t("มีหรือไม่มี", "yes or no")
+alt $t("ผ่าน หรือปลดแล้ว", "pass, or released")
+  api --> v : GateResult(ok, accepted, penalty, net)
+  v -> v : $t("สร้างใบ คำนวณภาษีและทางจ่าย", "create the voucher, tax and route")
+  v -> api : PhasePayment.started(contract, phase)
+else $t("ไม่มี PO", "no PO")
+  api --> v : PRC_GATE_PO_MISSING
+else $t("ไม่ผ่าน", "fail")
+  api --> v : PRC_GATE_NOT_PASSED
+end
+f -> v : submit
+c -> v : checked
+v -> p : SodGuard P-F05
+a -> v : approve
+v -> p : SodGuard SD-11, SD-04
+v -> v : $t("ตรวจวงเงินอำนาจ", "check the authority limit")
+v -> b : LineLedger $t("บันทึกยอดเบิกจ่าย", "record spending")
+v -> api : PhasePayment.approved(contract, phase, amount)
+v -> q : finance.voucher.approved
+@enduml

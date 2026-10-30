@@ -1,0 +1,30 @@
+@startuml
+!include include/common.puml
+' title.th: การลบข้อมูลบุคคลโดยไม่ทำให้ห่วงโซ่บันทึกขาด
+' title.en: Erasing a person with the audit chain intact
+' desc.th: เจ้าหน้าที่คุ้มครองข้อมูลอนุมัติคำขอลบ ระบบถามทุกโมดูลว่ามีรายการที่กฎหมายกำหนดให้เก็บหรือไม่ หากมีให้ปฏิเสธพร้อมเหตุผล หากไม่มีให้ทำลายกุญแจของบุคคลนั้น บันทึกยังคงรหัสอ้างอิงเดิมและรายงานแสดงข้อความแทน
+' desc.en: The data protection officer approves an erasure. The system asks every module whether law requires a record to be kept. If so, it refuses with the reason. Otherwise it destroys the person's key. The log keeps the same reference, and reports show a placeholder.
+' law: PDPA 33
+skinparam sequenceMessageAlign left
+actor "$t("เจ้าหน้าที่คุ้มครองข้อมูล", "Data protection officer")" as o
+participant "privacy" as p
+participant "RetentionRegistry" as r
+participant "$t("โมดูลธุรกิจ", "Business modules")" as m
+participant "crypto" as c
+participant "audit" as a
+participant "KMS" as k
+
+o -> p : POST .../requests/{id}/fulfil
+p -> r : holdsFor(subjectRef)
+r -> m : $t("ถามการเก็บตามกฎหมาย", "ask for legal holds")
+m --> r : $t("รายการที่ต้องเก็บ", "records that must stay")
+alt $t("มีรายการที่ต้องเก็บ", "a legal hold exists")
+  p --> o : $t("ปฏิเสธบางส่วนพร้อมเหตุผล", "refuse in part, with the reason")
+else $t("ไม่มี", "none")
+  p -> c : destroySubjectKey(subjectRef)
+  c -> k : $t("ทำลายกุญแจ", "destroy the key")
+  p -> a : $t("บันทึกการลบด้วยรหัสอ้างอิง", "log the erasure by reference")
+  a -> a : $t("ต่อห่วงโซ่ hash ตามปกติ", "extend the hash chain as usual")
+  p --> o : $t("เสร็จสิ้น พร้อมหลักฐาน", "fulfilled, with evidence")
+end
+@enduml

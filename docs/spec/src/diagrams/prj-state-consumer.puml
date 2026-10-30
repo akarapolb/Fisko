@@ -1,0 +1,20 @@
+@startuml
+!include include/common.puml
+' title.th: สถานะของผู้รับข้อมูล
+' title.en: States of a data consumer
+' desc.th: ผู้รับข้อมูลภายนอกเริ่มที่รออนุมัติ เมื่อผู้บริหารอนุมัติพร้อมเหตุผลเป็นใช้งาน ผู้รับข้อมูลภายในเริ่มที่ใช้งาน สถานะสิ้นสุดเป็นข้อเสนอของการออกแบบ
+' desc.en: An external consumer starts as pending and becomes active when the executive approves with a reason. An internal consumer starts as active. The ended state is a proposal of this design.
+hide empty description
+left to right direction
+skinparam nodesep 60
+skinparam ranksep 110
+state "pending" as p
+state "active" as a
+state "ended" as e
+[*] --> p : $t("ผู้รับภายนอก", "external consumer")
+[*] --> a : $t("ผู้รับภายใน", "internal consumer")
+p --> a : $t("อนุมัติพร้อมเหตุผล", "approved with a reason")
+p --> e : $t("ไม่อนุมัติ", "refused")
+a --> e : $t("ยุติการแชร์", "sharing ended")
+e --> [*]
+@enduml

@@ -1,0 +1,86 @@
+@startuml
+!include include/common.puml
+' title.th: แบบจำลองโดเมนของ platform
+' title.en: The platform domain model
+' desc.th: aggregate หลักคือ Tenant, Unit, UserAccount, Delegation, ApprovalChain, ApprovalInstance, WorkItem และ DataSubjectRequest ผู้ใช้ถือบทบาทหนึ่งบทบาทและหน่วยงานหนึ่งหน่วย การมอบอำนาจผูกผู้ใช้สองคน กฎแยกหน้าที่มาจากแคตตาล็อกในโค้ดและมีสวิตช์ของ tenant
+' desc.en: The main aggregates are Tenant, Unit, UserAccount, Delegation, ApprovalChain, ApprovalInstance, WorkItem and DataSubjectRequest. A user holds one role and one unit. A delegation joins two users. Duty rules come from a catalogue in code, with a tenant switch.
+skinparam nodesep 34
+skinparam ranksep 46
+skinparam defaultTextAlignment left
+hide empty methods
+class Tenant <<aggregate>> {
+  id, cellId, status
+  name, contacts, dpoContact
+  idleMin, warnMin
+}
+class Unit <<aggregate>> {
+  code, parentId, name
+  retiredOn
+  --
+  retire(), reinstate()
+}
+class UserAccount <<aggregate>> {
+  subjectRef, roleId, unitId
+  status, suspendedWhy
+  --
+  suspend(), reactivate()
+}
+class Delegation <<aggregate>> {
+  no, delegator, delegate
+  scope, startOn, endOn, why
+  revokedAt
+  --
+  state(), revoke()
+}
+class SodRule {
+  ruleId, firstStep, nextStep
+  lockedOn
+}
+class SodSwitch {
+  ruleId, enabled, why
+}
+class SodBlock {
+  at, actorRef, roleId, ruleId
+  item, clashRef, delegationNo
+}
+class ApprovalChain <<aggregate>> {
+  key, version, effectiveFrom
+}
+class ApprovalStep {
+  seq, ownerRole, slaDays
+  condition, amount, locked
+}
+class ApprovalInstance <<aggregate>> {
+  chainVersion, subjectType
+  subjectId, currentSeq
+  --
+  decide(), returnTo()
+}
+class StepDecision {
+  seq, deciderRef, holderRef
+  delegationNo, result, why
+}
+class WorkItem <<aggregate>> {
+  kind, title, dueOn, link
+  assignee, state
+}
+class Notification {
+  templateKey, params
+  audience, link
+}
+class DataSubjectRequest <<aggregate>> {
+  kind, dueOn, state
+  evidence, refusalBasis
+}
+Tenant "1" *-- "many" Unit
+Unit "1" o-- "many" UserAccount
+UserAccount "1" -- "many" Delegation : $t("มอบหรือรับ", "gives or receives")
+SodRule "1" -- "1" SodSwitch
+SodRule "1" -- "many" SodBlock
+Delegation "0..1" -- "many" SodBlock
+ApprovalChain "1" *-- "many" ApprovalStep
+ApprovalChain "1" -- "many" ApprovalInstance
+ApprovalInstance "1" *-- "many" StepDecision
+ApprovalInstance "1" -- "many" WorkItem
+WorkItem "1" -- "many" Notification
+@enduml

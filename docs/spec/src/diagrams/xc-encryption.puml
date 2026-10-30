@@ -1,0 +1,30 @@
+@startuml
+!include include/common.puml
+hide stereotype
+' title.th: ลำดับชั้นของกุญแจ
+' title.en: Key hierarchy
+' desc.th: กุญแจหลักอยู่ใน KMS, HSM หรือ OpenBao และห่อกุญแจข้อมูลรายผู้เช่า กุญแจเหล่านี้เข้ารหัสฟิลด์ Restricted ไฟล์ และ blind index ซึ่งมีกุญแจของตนเอง กุญแจรายบุคคลเข้ารหัสรายละเอียดบุคคล กุญแจผนึกเข้ารหัสใบเสนอราคาที่ปิดผนึก ฐานข้อมูลเห็นเฉพาะข้อความเข้ารหัส
+' desc.en: A master key in KMS, an HSM or OpenBao wraps the per-tenant data keys. These encrypt restricted fields and files, and the blind index has its own key. Per-subject keys encrypt personal details, and sealing keys encrypt sealed replies. The database sees ciphertext only.
+left to right direction
+skinparam nodesep 24
+skinparam ranksep 80
+component "$t("กุญแจหลัก\nKMS, HSM หรือ OpenBao\nไม่ออกจากที่เก็บ", "Master key\nKMS, HSM or OpenBao\nnever leaves")" as mk <<sec>>
+component "$t("กุญแจข้อมูลของผู้เช่า", "Tenant data keys")" as dk <<sec>>
+component "$t("กุญแจ blind index", "Blind index key")" as bk <<sec>>
+component "$t("กุญแจรายบุคคล", "Per-subject keys")" as sk <<sec>>
+component "$t("กุญแจผนึกราย RFQ", "Per-RFQ sealing keys")" as rk <<sec>>
+database "$t("ฟิลด์ Restricted\nAES-256-GCM ผ่าน Tink", "Restricted fields\nAES-256-GCM through Tink")" as f
+database "$t("ไฟล์ใน S3 API", "Files in S3 API storage")" as o
+database "$t("ค่า blind index\nจับคู่ตรงตัวเท่านั้น", "Blind index values\nexact match only")" as b
+database "$t("รายละเอียดบุคคล\nทำลายกุญแจคือการลบ", "Personal details\ndestroying the key erases")" as s
+database "$t("คำตอบ RFQ ที่ปิดผนึก\nเปิดได้หลังวันกำหนด", "Sealed RFQ replies\nopen after the date")" as r
+mk --> dk : $t("ห่อ", "wraps")
+mk --> bk : $t("ห่อ", "wraps")
+mk --> sk : $t("ห่อ", "wraps")
+mk --> rk : $t("ห่อ", "wraps")
+dk --> f
+dk --> o
+bk --> b
+sk --> s
+rk --> r
+@enduml

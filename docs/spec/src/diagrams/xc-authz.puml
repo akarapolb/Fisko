@@ -1,0 +1,30 @@
+@startuml
+!include include/common.puml
+' title.th: ลำดับการตรวจของทุกคำสั่ง
+' title.en: The checks on every command
+' desc.th: ทุกคำสั่งบนเซิร์ฟเวอร์ผ่านการตรวจตามลำดับ ได้แก่ โทเค็น tenant สิทธิ์ การแยกหน้าที่ กฎธุรกิจ แล้วจึงบันทึก การปฏิเสธจากการแยกหน้าที่เขียนบันทึกในธุรกรรมแยก
+' desc.en: Every command on the server passes the checks in order: token, tenant, authority, separation of duties and business rules, before it saves. A separation-of-duties refusal writes its log in its own transaction.
+start
+:$t("ตรวจโทเค็น", "Verify the token");
+if ($t("ถูกต้องและไม่หมดอายุ?", "Valid and not expired?")) then ($t("ไม่", "no"))
+  :401;
+  stop
+endif
+:$t("สร้าง TenantContext และผูก app.tenant_id", "Build TenantContext and bind app.tenant_id");
+:$t("รวมการมอบอำนาจที่มีผลอยู่", "Add delegations in force");
+if ($t("Authorizer: มีสิทธิ์?", "Authorizer: has the authority?")) then ($t("ไม่", "no"))
+  :$t("บันทึกและตอบ 403", "Log and answer 403");
+  stop
+endif
+if ($t("SodGuard: ผ่านทุกกฎ?", "SodGuard: passes every rule?")) then ($t("ไม่", "no"))
+  :$t("บันทึกการปฏิเสธในธุรกรรมแยก", "Log the refusal in its own transaction");
+  :403;
+  stop
+endif
+if ($t("โดเมน: สถานะและกฎธุรกิจผ่าน?", "Domain: state and business rules pass?")) then ($t("ไม่", "no"))
+  :$t("409 หรือ 422 พร้อมเงื่อนไขแรกที่ไม่ผ่าน", "409 or 422 with the first unmet check");
+  stop
+endif
+:$t("บันทึกข้อมูล Audit และ outbox ในธุรกรรมเดียว", "Save data, audit entry and outbox row in one transaction");
+stop
+@enduml

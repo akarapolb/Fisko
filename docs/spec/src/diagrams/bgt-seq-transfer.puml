@@ -1,0 +1,29 @@
+@startuml
+!include include/common.puml
+' title.th: การโอนเปลี่ยนแปลงกับบัญชีแยกประเภท
+' title.en: A budget transfer and the ledger
+' desc.th: การเงินขอโอน ระบบจำแนกประเภทและกันยอดต้นทาง ผู้อนุมัติที่ไม่ใช่ผู้ขออนุมัติ ถ้าต้องตกลงกับสำนักงบประมาณจะรอผล เมื่อมีผลระบบย้ายวงเงินและปรับแผนในธุรกรรมเดียว
+' desc.en: Finance requests a transfer. The system classifies it and holds the source amount. An approver other than the requester approves. If the Budget Bureau must agree, the request waits. On effect the system moves the money and rescales the plans in one transaction.
+skinparam sequenceMessageAlign left
+actor "$t("การเงิน", "Finance")" as f
+actor "$t("ผู้อนุมัติ", "Approver")" as e
+participant "transfer" as t
+participant "ledger" as l
+participant "platform" as p
+queue "outbox" as q
+f -> t : POST .../transfers
+t -> l : $t("อ่านยอดใช้ได้ กันยอดโอนออก", "read available, hold the amount out")
+t -> t : $t("จำแนก T1 ถึง T6", "classify T1 to T6")
+t -> q : budget.transfer.requested
+e -> t : POST .../transfers/{id}/approve
+t -> p : $t("ตรวจ SD-09 และอำนาจ", "check SD-09 and authority")
+alt $t("ต้องตกลงกับสำนักงบประมาณ", "The Budget Bureau must agree")
+  t -> t : $t("สถานะ bb ยอดยังถูกกัน", "status bb, amount still held")
+  f -> t : POST .../transfers/{id}/record-agreement
+end
+group $t("ธุรกรรมเดียว", "One transaction")
+  t -> l : $t("ล็อกแถวตามลำดับ ย้ายวงเงิน", "lock rows in order, move the amount")
+  t -> t : $t("ปรับแผนทั้งสองรายการ", "rescale both plans")
+  t -> q : budget.transfer.effective
+end
+@enduml

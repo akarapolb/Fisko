@@ -1,0 +1,22 @@
+@startuml
+!include include/common.puml
+' title.th: เส้นทางของคำขอ AI
+' title.en: The path of an AI request
+' desc.th: ทุกการเรียก AI ผ่าน gateway ตรวจว่าหน่วยงานเปิดใช้และนโยบายอนุญาต ปฏิเสธข้อมูล Restricted ลบข้อมูลส่วนบุคคล เรียกผู้ให้บริการที่หน่วยงานเลือก บันทึกการเรียก และคืนคำแนะนำให้คนตัดสินใจ
+' desc.en: Every AI call passes the gateway. It checks that the agency has opted in and that policy allows the call, refuses restricted data, removes personal data, calls the agency's provider, logs the call and returns advice for a person to decide on.
+start
+:$t("โมดูลเรียก AiGateway", "A module calls AiGateway");
+if ($t("หน่วยงานเปิดใช้เครื่องมือนี้?", "Agency opted in to this tool?")) then ($t("ไม่", "no"))
+  :$t("ปฏิเสธ คุณสมบัติหลักยังทำงาน", "Refuse; the main feature still works");
+  stop
+endif
+if ($t("มีข้อมูล Restricted?", "Holds restricted data?")) then ($t("มี", "yes"))
+  :$t("ปฏิเสธและบันทึก", "Refuse and log");
+  stop
+endif
+:$t("ลบข้อมูลส่วนบุคคลตามนโยบายของหน่วยงาน", "Remove personal data under tenant policy");
+:$t("เรียกผู้ให้บริการที่หน่วยงานเลือก", "Call the provider the agency chose");
+:$t("บันทึกการเรียกและผู้ให้บริการ", "Log the call and the provider");
+:$t("คืนคำแนะนำ คนเป็นผู้ตัดสินใจ", "Return advice; a person decides");
+stop
+@enduml

@@ -1,0 +1,54 @@
+@startuml
+!include include/common.puml
+' title.th: องค์ประกอบภายในโมดูล platform
+' title.en: Components inside the platform module
+' desc.th: โมดูล platform แบ่งเป็นแพ็กเกจภายในสี่กลุ่ม ได้แก่ ตัวตนและสิทธิ์ งาน ข้อมูลและการกำกับ และบริการร่วม เปิดเฉพาะแพ็กเกจ api ให้โมดูลธุรกิจ และไม่พึ่งพาโมดูลธุรกิจ Keycloak ให้ตัวตน ส่วนอีเมล SIEM และ AI เชื่อมผ่าน adapter
+' desc.en: The platform module has four groups of internal packages: identity and access, work, data and governance, and shared services. It publishes only its api package to the business modules and depends on none of them. Keycloak supplies identity, and e-mail, SIEM and AI connect through adapters.
+left to right direction
+skinparam nodesep 26
+skinparam ranksep 80
+actor "$t("ผู้ใช้", "User")" as u
+component "budget, procurement, finance,\nprojects, review" as mods
+package "$t("โมดูล platform (ข้อเสนอ)", "Module platform (proposal)")" as plt {
+  component "web" as web
+  component "api, api.events" as api
+  package "$t("ตัวตนและสิทธิ์", "Identity and access")" as a {
+    component "tenancy, identity" as ti
+    component "org, access" as oa
+    component "sod, delegation" as sd
+  }
+  package "$t("งาน", "Work")" as b {
+    component "approval" as ap
+    component "notification" as no
+    component "work" as wk
+  }
+  package "$t("ข้อมูลและการกำกับ", "Data and governance")" as c {
+    component "audit" as au
+    component "masterdata, calendar" as md
+    component "privacy, site" as pr
+  }
+  package "$t("บริการร่วม", "Shared services")" as d {
+    component "documents, files, crypto" as dc
+    component "search, ai, admin" as sa
+    component "outbox" as ob
+  }
+}
+component "Keycloak" as kc <<ext>>
+component "SMTP, LINE, SIEM" as ext <<ext>>
+component "$t("ผู้ให้บริการโมเดล", "Model provider")" as llm <<ai>>
+database "PostgreSQL\nschema platform" as db
+u --> web
+web --> ti
+web --> ap
+web --> au
+mods --> api
+api --> sd
+api --> wk
+api --> md
+api --> dc
+ti --> kc
+no --> ob
+ob --> ext
+sa --> llm
+au --> db
+@enduml

@@ -1,0 +1,68 @@
+@startuml
+!include include/common.puml
+' title.th: ตารางหลักของ review และตารางเอเจนต์ที่ขอใน platform (ข้อเสนอ)
+' title.en: Core review tables and the agent tables requested in platform (proposal)
+' desc.th: ทุกตารางมี tenant_id ตารางข้อเท็จจริงสร้างใหม่ได้จากโมดูลอื่น รายการผิดปกติมีหลักฐานและเหตุการณ์ วาระมีรายการและการตัดสิน ใน platform โปรไฟล์เอเจนต์ผูกกับการทำงาน และการทำงานมีหลายขั้น ตารางอื่นอยู่ในตารางข้อมูล
+' desc.en: Every table has tenant_id. Fact tables can be rebuilt from other modules. An anomaly has evidence and events. An agenda has items and decisions. In platform, an agent profile links to runs, and a run has many steps. Other tables are listed in the data tables.
+skinparam nodesep 40
+skinparam ranksep 60
+skinparam defaultTextAlignment left
+hide circle
+hide empty methods
+package "review" {
+  entity spending_fact {
+    *tenant_id, *fiscal_year
+    *month, *line_id
+    plan, reserved
+    committed, paid, as_of
+  }
+  entity project_fact {
+    *tenant_id, *project_id
+    line_id, output_result
+  }
+  entity anomaly {
+    *tenant_id, *id
+    kind, risk, status
+    finding_key
+  }
+  entity anomaly_evidence {
+    *tenant_id, *id
+    anomaly_id, source_ref
+  }
+  entity anomaly_event {
+    *tenant_id, *id
+    anomaly_id, action
+    actor_ref, reason
+  }
+  entity agenda {
+    *tenant_id, *id
+    title, meeting_on, status
+  }
+  entity agenda_item {
+    *tenant_id, *id
+    agenda_id
+    source_module, source_ref
+  }
+}
+package "platform $t("(ขอเพิ่ม)", "(requested)")" {
+  entity agent_profile {
+    *tenant_id, *agent
+    enabled, level
+  }
+  entity agent_run {
+    *tenant_id, *id
+    agent, status, starter_ref
+  }
+  entity agent_step {
+    *tenant_id, *id
+    run_id, tool, status
+    decided_by_ref
+  }
+}
+project_fact }o--|| spending_fact : line_id
+anomaly ||--o{ anomaly_evidence
+anomaly ||--o{ anomaly_event
+agenda ||--o{ agenda_item
+agent_profile ||--o{ agent_run
+agent_run ||--o{ agent_step
+@enduml

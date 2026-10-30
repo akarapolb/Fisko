@@ -1,0 +1,40 @@
+@startuml
+!include include/common.puml
+hide stereotype
+' title.th: แผนที่วงจรจากงบประมาณถึงการปิดงวด
+' title.en: Map of the cycle from budget to closing
+' desc.th: วงจรเริ่มในโมดูล budget จากคำขอถึงรายการจัดสรร โมดูล procurement วางแผน ขอซื้อ ทำสัญญา และตรวจรับ โมดูล finance ออกใบขอเบิก ส่ง GFMIS กระทบยอด และปิดงวด เงินกันเหลื่อมปีกลับไปที่ budget
+' desc.en: The cycle starts in budget, from requests to allocation lines. Procurement plans, requisitions, contracts and accepts. Finance raises vouchers, sends to GFMIS, reconciles and closes. Carry-over returns to budget.
+skinparam nodesep 30
+skinparam ranksep 34
+package "budget" as B {
+  component "$t("1 คำขอและการกลั่นกรอง", "1 Requests and review")" as b1
+  component "$t("2 พ.ร.บ. และรายการจัดสรร", "2 Act and allocation lines")" as b2
+  component "$t("3 แผนการใช้จ่ายและการโอน", "3 Spending plans and transfers")" as b3
+}
+package "procurement" as P {
+  component "$t("4 แผนและใบขอซื้อขอจ้าง", "4 Plan and requisition")" as p1
+  component "$t("5 แฟ้ม วิธี และผู้ชนะ", "5 Case, method and award")" as p2
+  component "$t("6 สัญญา", "6 Contract")" as p3
+  component "$t("7 ส่งมอบและตรวจรับ", "7 Delivery and acceptance")" as p4
+  component "$t("8 ประตูเบิกจ่าย", "8 Payment gate")" as p5
+}
+package "finance" as F {
+  component "$t("9 ใบขอเบิกและการอนุมัติ", "9 Voucher and approval")" as f1
+  component "$t("10 ไฟล์ GFMIS และการจ่าย", "10 GFMIS file and payment")" as f2
+  component "$t("11 กระทบยอด", "11 Reconciliation")" as f3
+  component "$t("12 ปิดงวดและกันเงิน", "12 Closing and carry-over")" as f4
+}
+b1 --> b2
+b2 --> b3
+b2 --> p1 : $t("รายการจัดสรร", "lines")
+p1 --> p2
+p2 --> p3
+p3 --> p4
+p4 --> p5
+p5 --> f1
+f1 --> f2
+f2 --> f3
+f3 --> f4
+f4 ..> b3 : $t("เสนอกันเงิน", "carry-over")
+@enduml

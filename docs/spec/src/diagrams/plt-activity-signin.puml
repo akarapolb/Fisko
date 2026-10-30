@@ -1,0 +1,36 @@
+@startuml
+!include include/common.puml
+' title.th: การเข้าสู่ระบบและการหมดเวลา
+' title.en: Sign-in and idle timeout
+' desc.th: ผู้ใช้ไปยังผู้ให้บริการบัญชีผ่าน Keycloak ระบบหยุดบัญชีที่ถูกระงับ บังคับตั้งค่า MFA แล้วตรวจรหัส จากนั้นเริ่มเซสชันและบันทึก เมื่อไม่ใช้งานใกล้ครบเวลา ระบบเตือน และจบเซสชันเมื่อครบเวลา
+' desc.en: The user goes to the identity provider through Keycloak. The system stops a suspended account, requires MFA setup, checks the code, then starts a session and logs it. When idle time nears the limit it warns, and it ends the session at the limit.
+skinparam defaultTextAlignment left
+start
+:$t("ผู้ใช้เปิด Fisko เห็นประกาศความเป็นส่วนตัว", "The user opens Fisko and sees the privacy notice");
+:$t("ไปยังผู้ให้บริการบัญชีของหน่วยงานผ่าน Keycloak", "Go to the organisation's identity provider through Keycloak");
+if ($t("บัญชีถูกระงับ?", "Account suspended?")) then ($t("ใช่", "yes"))
+  :$t("ปฏิเสธและแจ้งให้ติดต่อผู้ดูแลระบบ", "Refuse and say to contact the administrator");
+  stop
+else ($t("ไม่", "no"))
+endif
+if ($t("ตั้งค่า MFA แล้ว?", "MFA set up?")) then ($t("ไม่", "no"))
+  :$t("บังคับตั้งค่าและบันทึก", "Require setup and log it");
+else ($t("ใช่", "yes"))
+endif
+repeat
+  :$t("กรอกรหัส 6 หลัก", "Enter the 6-digit code");
+repeat while ($t("รหัสถูกต้อง?", "Code correct?")) is ($t("ไม่", "no")) not ($t("ใช่", "yes"))
+:$t("ผูก tenant เริ่มเซสชัน และบันทึก", "Bind the tenant, start the session and log it");
+:$t("ใช้งาน", "Work");
+if ($t("ใกล้ครบเวลาไม่ใช้งาน?", "Idle time near the limit?")) then ($t("ใช่", "yes"))
+  :$t("เตือนพร้อมปุ่มใช้งานต่อ", "Warn, with a button to stay");
+  if ($t("ใช้งานต่อ?", "Stay?")) then ($t("ไม่", "no"))
+    :$t("จบเซสชันและบันทึก", "End the session and log it");
+    stop
+  else ($t("ใช่", "yes"))
+  endif
+else ($t("ไม่", "no"))
+endif
+:$t("ออกจากระบบ จบเซสชันและบันทึก", "Sign out, end the session and log it");
+stop
+@enduml

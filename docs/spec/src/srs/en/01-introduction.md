@@ -47,6 +47,22 @@ The clause register plays the part a TOR plays in a contract project. Each row i
 | e-GP | Electronic Government Procurement |
 | PDPA | Personal Data Protection Act B.E. 2562 |
 | ROPA | Records of processing activities |
+| RPO | Recovery point objective: the most data, measured in time, that a failure may lose |
+| RTO | Recovery time objective: the longest a service may stay down after a failure |
+| KMS | Key management service, which holds master encryption keys |
+| HSM | Hardware security module |
+| MFA | Multi-factor authentication |
+| OIDC | OpenID Connect |
+| SAML | Security Assertion Markup Language |
+| SIEM | Security information and event management |
+| SLA | Service level agreement: the time allowed for a step or a service |
+| ADR | Architecture decision record |
+| KPI | Key performance indicator |
+| TOR | Terms of reference |
+| RFQ | Request for quotation |
+| OCDS | Open Contracting Data Standard |
+| SME | Small and medium-sized enterprise |
+| MiT | Made in Thailand |
 
 ## References {#references}
 
@@ -57,6 +73,13 @@ The clause register plays the part a TOR plays in a contract project. Each row i
 | PPA | Public Procurement and Supplies Administration Act B.E. 2560 |
 | PPR | Ministry of Finance Regulation on Public Procurement B.E. 2560 |
 | PDPA | Personal Data Protection Act B.E. 2562 |
+| BPA | Budget Procedures Act B.E. 2561 |
+| BMR | Regulation on Budget Administration B.E. 2562 |
+| TRR | Ministry of Finance Treasury Regulation B.E. 2562 |
+| ETA | Electronic Transactions Act B.E. 2544 |
+| DGA | Digital Government Administration Act B.E. 2562 |
+| CSA | Cybersecurity Act B.E. 2562 |
+| มสพร. 11-2566 | Government Website Standard |
 | OWASP ASVS 5.0 | Application Security Verification Standard |
 | WCAG 2.1 | Web Content Accessibility Guidelines |
 | `docs/adr/` | Architecture decision records |

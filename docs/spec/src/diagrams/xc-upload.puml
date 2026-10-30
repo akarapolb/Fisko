@@ -1,0 +1,15 @@
+@startuml
+!include include/common.puml
+' title.th: สถานะของไฟล์ที่อัปโหลด
+' title.en: States of an uploaded file
+' desc.th: ไฟล์เข้าพื้นที่กักกัน ผ่านการตรวจชนิดและ ClamAV หากสะอาดจึงดาวน์โหลดได้ หากพบมัลแวร์จะถูกปฏิเสธ หากตรวจไม่ได้จะคงกักกันและลองใหม่
+' desc.en: A file enters quarantine, then passes type checks and ClamAV. Only a clean file can be downloaded. A file with malware is refused, and one that cannot be scanned stays in quarantine and is tried again.
+hide empty description
+[*] --> quarantined : $t("อัปโหลด", "upload")
+quarantined --> scanning : $t("เหตุการณ์ใน outbox", "outbox event")
+scanning --> clean : $t("ผ่าน", "passed")
+scanning --> infected : $t("พบมัลแวร์", "malware found")
+scanning --> quarantined : $t("สแกนไม่สำเร็จ ลองใหม่", "scan failed, retry")
+clean --> [*] : $t("ดาวน์โหลดได้", "can be downloaded")
+infected --> [*] : $t("ปฏิเสธ แจ้งผู้อัปโหลด บันทึก Audit", "refused, uploader told, audited")
+@enduml

@@ -1,0 +1,34 @@
+@startuml
+!include include/common.puml
+' title.th: สถานะของเงินยืม
+' title.en: States of an advance
+' desc.th: คำขอรออนุมัติ อนุมัติแล้วรอจ่าย จ่ายแล้วรอส่งใช้ ส่งใบสำคัญแล้วรอตรวจ ถ้าถูกทักท้วงผู้ยืมแก้แล้วส่งใหม่ เมื่อรับใบสำคัญแล้วเป็นส่งใช้ครบ เลยกำหนดเป็นค่าที่คำนวณ ไม่ใช่สถานะ
+' desc.en: A request waits for approval, an approved advance waits for payment, a paid advance waits for clearing, and sent evidence waits for a check. An objection goes back to the borrower. An accepted clearing ends it. Overdue is computed and is not a state.
+' law: TRR 59; TRR 65; TRR 68
+hide empty description
+left to right direction
+skinparam nodesep 46
+skinparam ranksep 84
+state "request A1" as q
+state "approved A2" as a
+state "paid A3" as p
+state "clearing A4" as c
+state "objected A4" as o
+state "cleared A5" as d
+state "rejected" as r
+state "cancelled" as x
+[*] --> q
+q --> a : $t("อนุมัติ SD-12", "approve, SD-12")
+q --> r : $t("ไม่อนุมัติ", "reject")
+q --> x : $t("ยกเลิก", "cancel")
+a --> x : $t("ยกเลิกก่อนจ่าย", "cancel before paying")
+a --> p : $t("จ่าย", "pay")
+p --> c : $t("ส่งใบสำคัญ", "send evidence")
+c --> p : $t("ดึงกลับ", "take back")
+c --> o : $t("ทักท้วง", "object")
+o --> c : $t("ส่งใหม่", "send again")
+c --> d : $t("รับใบสำคัญ SD-12", "accept, SD-12")
+d --> [*]
+r --> [*]
+x --> [*]
+@enduml

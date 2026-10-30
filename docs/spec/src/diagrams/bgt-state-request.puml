@@ -1,0 +1,40 @@
+@startuml
+!include include/common.puml
+' title.th: สถานะของคำของบประมาณ
+' title.en: States of a budget request
+' desc.th: คำขอเริ่มเป็นร่าง ผู้อำนวยการกองเห็นชอบ กองแผนกลั่นกรอง แล้วไปคณะกรรมการเมื่อเข้าเงื่อนไข หรือไปผู้บริหาร คำขอถูกส่งคืน ถอน ยกเลิก หรือไม่เห็นชอบได้
+' desc.en: A request starts as a draft. The division director approves it, Planning reviews it, and it goes to the committee when the condition applies, otherwise to the executive. It can be returned, withdrawn, cancelled or rejected.
+hide empty description
+skinparam nodesep 34
+skinparam ranksep 60
+state "draft" as d
+state "unit" as u
+state "plan" as p
+state "committee" as c
+state "exec" as e
+state "approved" as a
+state "returned" as r
+state "rejected" as x
+state "cancelled" as k
+[*] --> d
+d --> u : $t("ส่ง", "send")
+u --> p : $t("ผอ.กองเห็นชอบ", "director approves")
+p --> c : $t("เข้าเงื่อนไข w3", "w3 applies")
+p --> e : $t("ไม่เข้าเงื่อนไข", "w3 does not apply")
+c --> a : $t("มติเห็นชอบ", "resolution approves")
+e --> a : $t("ผู้บริหารเห็นชอบ", "executive approves")
+u --> r : $t("ส่งคืน", "return")
+p --> r : $t("ส่งคืน", "return")
+c --> r : $t("เลื่อน", "defer")
+e --> r : $t("ส่งคืน", "return")
+r --> u : $t("ส่งอีกครั้ง", "send again")
+c --> x : $t("ไม่เห็นชอบ", "reject")
+d --> k : $t("ยกเลิก ถ้าเคยส่ง", "cancel, if sent before")
+r --> k : $t("ยกเลิก", "cancel")
+a --> [*]
+x --> [*]
+k --> [*]
+note right of d
+  $t("เจ้าของถอนจาก unit plan committee exec กลับเป็นร่างได้", "The owner can withdraw from unit, plan, committee or exec back to draft")
+end note
+@enduml

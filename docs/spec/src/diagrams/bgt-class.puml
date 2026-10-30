@@ -1,0 +1,56 @@
+@startuml
+!include include/common.puml
+' title.th: aggregate หลักของงบประมาณ
+' title.en: Main budget aggregates
+' desc.th: คำของบประมาณถูกรวมในชุดส่ง ผลจากชุดส่งและรัฐสภาเป็นวงเงินของรายการจัดสรร รายการจัดสรรมีบัญชีแยกประเภทของยอดจองและผูกพัน การโอนย้ายวงเงินระหว่างรายการจัดสรร
+' desc.en: A budget request joins a submission batch. Batch results and the bill set the amount of an allocation line. Each line has a ledger of reserved and committed amounts, and a transfer moves money between lines.
+hide empty methods
+skinparam nodesep 40
+skinparam ranksep 50
+class BudgetRequest {
+  no, unitId, activityId
+  status, decided
+  quarterPlan[4]
+}
+class RequestLine {
+  type, qty, unitPrice
+}
+class ReviewRow {
+  requested, round2, round3
+}
+class SubmissionBatch {
+  no, status
+}
+class BudgetBill {
+  stage, items
+}
+class Appropriation {
+  fy, act, byType
+}
+class AllocationLine {
+  no, type, amount
+  status, extended, newProject
+}
+class SpendingPlan {
+  version, months[12]
+}
+class LedgerEntry {
+  kind, amount, sourceRef
+}
+class Transfer {
+  type, reason, status
+}
+class CarryOver {
+  amount, due, status
+}
+BudgetRequest "1" *-- "1..*" RequestLine
+BudgetRequest "1" *-- "1" ReviewRow
+SubmissionBatch "1" o-- "1..*" BudgetRequest
+BudgetBill "1" o-- "*" BudgetRequest
+Appropriation "1" *-- "*" AllocationLine
+AllocationLine "*" --> "0..1" BudgetRequest
+AllocationLine "1" *-- "1..*" SpendingPlan
+AllocationLine "1" *-- "*" LedgerEntry
+Transfer "*" --> "2" AllocationLine
+CarryOver "*" --> "1" AllocationLine
+@enduml

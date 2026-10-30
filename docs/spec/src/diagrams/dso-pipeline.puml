@@ -1,0 +1,32 @@
+@startuml
+!include include/common.puml
+' title.th: สายงาน CI และ CD
+' title.en: The CI and CD pipeline
+' desc.th: ทุก pull request ผ่านการสร้าง การทดสอบ ขอบเขตโมดูล RLS การสแกนและใบอนุญาต รุ่นที่ปล่อยจะมี SBOM และลายเซ็น ทดสอบทั้งสองชุดติดตั้ง แล้ว Argo CD นำไปใช้ทีละเซลล์
+' desc.en: Each pull request passes build, tests, module boundaries, RLS checks, scans and the licence audit. A release gains an SBOM and signatures, is tested on both setups, and Argo CD applies it one cell at a time.
+start
+partition "$t("Pull request", "Pull request")" {
+  :$t("สร้าง หน่วยทดสอบ ขอบเขตโมดูล", "Build, unit tests, module boundaries");
+  :$t("Integration กับ Testcontainers และ RLS ทุกตาราง", "Integration with Testcontainers, RLS on every table");
+  :$t("SonarQube สแกน dependency ตรวจใบอนุญาต", "SonarQube, dependency scan, licence audit");
+  :$t("ตรวจความลับ ตรวจข้อมูลส่วนบุคคลในล็อก", "Secret scan, personal data in logs check");
+}
+partition "$t("สาขาหลัก", "Main branch")" {
+  :$t("Playwright ไทยและอังกฤษ และการเข้าถึง", "Playwright in Thai and English, accessibility");
+  :OWASP ZAP;
+}
+partition "$t("รุ่นปล่อย", "Release")" {
+  :$t("สร้าง image และ CycloneDX SBOM", "Build images and a CycloneDX SBOM");
+  :$t("ลงนาม artifact", "Sign the artifacts");
+  :$t("ทดสอบชุดเล็กและชุดองค์กร", "Test the small and enterprise setups");
+  if ($t("รุ่นหลัก?", "Major release?")) then ($t("ใช่", "yes"))
+    :$t("k6 ตามช่วงสูงสุดวันที่ 30 กันยายน", "k6 against the 30 September peak");
+    :$t("ทดสอบเจาะระบบอิสระ", "Independent penetration test");
+  else ($t("ไม่", "no"))
+  endif
+}
+partition "$t("นำไปใช้", "Deploy")" {
+  :$t("Argo CD ปล่อยทีละเซลล์", "Argo CD rolls out one cell at a time");
+}
+stop
+@enduml

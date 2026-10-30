@@ -1,0 +1,65 @@
+@startuml
+!include include/common.puml
+' title.th: แบบจำลองโดเมนของ review และตัวรันเอเจนต์
+' title.en: The review domain model and the agent runtime
+' desc.th: aggregate ของ review คือ Anomaly และ Agenda ส่วน BandPolicy และ ScorePolicy คำนวณจาก ReviewSettings ตัวรันใน platform.ai ถือ AgentProfile และ AgentRun ซึ่งมีหลายขั้น แต่ละขั้นใช้เครื่องมือหนึ่งรายการจากทะเบียนของโมดูลเจ้าของ
+' desc.en: The review aggregates are Anomaly and Agenda. BandPolicy and ScorePolicy compute from ReviewSettings. The runtime in platform.ai holds AgentProfile and AgentRun, which has many steps, and each step uses one tool from the owning module's register.
+skinparam nodesep 34
+skinparam ranksep 46
+skinparam defaultTextAlignment left
+hide empty methods
+package "review" {
+  class Anomaly <<aggregate>> {
+    kind, unitId, risk
+    status, findingKey
+    explain(), escalate()
+    reopen()
+  }
+  class AnomalyEvent {
+    action, actorRef, reason
+  }
+  class Agenda <<aggregate>> {
+    title, meetingOn, status
+    issue(), close()
+  }
+  class AgendaItem {
+    sourceModule, sourceRef
+    decision, ownerRef
+  }
+  class ReviewSettings <<aggregate>> {
+    bands, weights, limits
+  }
+  class BandPolicy {
+    band(percent)
+  }
+  class ScorePolicy {
+    score(spend, output)
+    grade(score)
+  }
+}
+package "platform.ai $t("(ขอเพิ่ม)", "(requested)")" {
+  class AgentProfile <<aggregate>> {
+    agent, module
+    enabled, level
+  }
+  class AgentRun <<aggregate>> {
+    agent, starterRef
+    level, status
+    start(), decide(), stop()
+  }
+  class AgentStep {
+    tool, kind, status
+    change, decidedByRef
+  }
+  interface AgentTool {
+    kind, run(context)
+  }
+}
+Anomaly "1" *-- "*" AnomalyEvent
+Agenda "1" *-- "*" AgendaItem
+BandPolicy ..> ReviewSettings
+ScorePolicy ..> ReviewSettings
+AgentRun "1" *-- "*" AgentStep
+AgentRun ..> AgentProfile : $t("ระดับ สวิตช์", "level, switch")
+AgentStep ..> AgentTool
+@enduml

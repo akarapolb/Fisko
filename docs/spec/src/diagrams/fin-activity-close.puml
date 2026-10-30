@@ -1,0 +1,29 @@
+@startuml
+!include include/common.puml
+' title.th: การปิดวันและปิดเดือน
+' title.en: Closing the day and the month
+' desc.th: สิ้นวันตรวจใบเสร็จ รายงานเงินคงเหลือ และการจ่าย สิ้นเดือนนำเข้ารายการธนาคารและงบทดลอง ลงนามงบพิสูจน์ยอด ตรวจ 6 รายการ แล้วหัวหน้าการเงินปิดงวด
+' desc.en: At the end of a day receipts, the cash report and payments are checked. At the end of a month the bank statement and trial balance are imported, the bank reconciliation is signed, six checks run, and the head of finance closes the period.
+' law: TRR 43; TRR 81; TRR 92; TRR 108
+skinparam defaultTextAlignment left
+start
+:$t("บันทึกใบเสร็จของวันใน GFMIS", "Record the day's receipts in GFMIS");
+:$t("กรรมการนับเงินและลงนามรายงาน", "The committee counts and signs the report");
+:$t("ตรวจการจ่ายของวันกับหลักฐาน", "Check the day's payments against evidence");
+if ($t("รายการตรวจของวันผ่าน", "Day checks pass")) then ($t("ใช่", "yes"))
+else ($t("ไม่", "no"))
+  :$t("ใส่เหตุผลอย่างน้อย 5 ตัวอักษร", "Give a reason of at least 5 characters");
+endif
+:$t("หัวหน้าการเงินปิดวัน", "The head of finance closes the day");
+:$t("สิ้นเดือน นำเข้ารายการธนาคาร", "At month end, import the bank statements");
+:$t("เทียบสามทาง บันทึกรายการเฉพาะธนาคาร", "Match three ways, book bank-only items");
+:$t("ลงนามงบพิสูจน์ยอด SD-15", "Sign the bank reconciliation, SD-15");
+:$t("นำเข้ารายงานรายได้และงบทดลอง", "Import the revenue report and trial balance");
+:$t("ทบทวนเงินยืมค้าง", "Review open advances");
+if ($t("ครบ 6 รายการ", "All 6 checks pass")) then ($t("ใช่", "yes"))
+else ($t("ไม่", "no"))
+  :$t("ใส่เหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters");
+endif
+:$t("หัวหน้าการเงินปิดงวด แจ้งผู้บริหารและผู้ตรวจสอบ", "The head of finance closes; the executive and auditor are told");
+stop
+@enduml

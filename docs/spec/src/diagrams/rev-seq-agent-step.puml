@@ -1,0 +1,31 @@
+@startuml
+!include include/common.puml
+' title.th: คนตัดสินขั้นของเอเจนต์ ซึ่งเรียกคำสั่งปกติของโมดูล
+' title.en: A person decides an agent step, which runs the normal command of the module
+' desc.th: ผู้มีสิทธิ์เปิดขั้นที่รอ เห็นค่าก่อนและหลัง แล้วอนุมัติ ตัวรันเรียกคำสั่งของโมดูลเจ้าของด้วยโทเค็นของคนนั้น คำสั่งตรวจสิทธิ์ การแยกหน้าที่ และกฎธุรกิจ แล้วบันทึกในธุรกรรมเดียว ถ้าถูกปฏิเสธ ขั้นยังรออยู่และแสดงเหตุผล
+' desc.en: A permitted person opens the waiting step, sees the before and after values, and approves. The runtime calls the command of the owning module with the token of that person. The command checks rights, duties and business rules and saves in one transaction. If refused, the step stays waiting and shows the reason.
+skinparam sequenceMessageAlign left
+actor "$t("ผู้มีสิทธิ์", "Permitted person")" as o
+participant "web" as w
+participant "AgentRuntime" as r
+participant "$t("โมดูลเจ้าของ", "Owning module")" as m
+database "PostgreSQL" as db
+queue "outbox" as q
+o -> w : $t("อนุมัติขั้นพร้อมค่าที่แก้", "approve the step, with any edit")
+w -> r : decide(run, step, value)
+r -> r : $t("ตรวจสถานะและระดับ", "check state and level")
+r -> m : $t("เรียกคำสั่งปกติด้วยโทเค็นของคนนั้น", "normal command, with the token of that person")
+m -> m : $t("ตรวจสิทธิ์ แยกหน้าที่ กฎธุรกิจ", "rights, duties, business rules")
+alt $t("ผ่าน", "passes")
+  m -> db : $t("บันทึกระเบียน", "save the record")
+  m -> q : $t("เหตุการณ์", "event")
+  m --> r : $t("สำเร็จ", "ok")
+  r -> db : $t("ขั้น approved เวลาตัดสิน", "step approved, decision time")
+  r -> r : $t("ไปขั้นถัดไป", "go to the next step")
+  r --> w : $t("สถานะการทำงาน", "run state")
+else $t("ถูกปฏิเสธ", "refused")
+  m --> r : $t("รหัสข้อผิดพลาดของโมดูล", "the error code of the module")
+  r --> w : $t("ขั้นยังรอ พร้อมเหตุผล", "step still waiting, with the reason")
+end
+w --> o : $t("แสดงผล", "show the result")
+@enduml

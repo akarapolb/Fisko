@@ -1,0 +1,33 @@
+@startuml
+!include include/common.puml
+' title.th: Outbox ไปยังระบบภายนอก
+' title.en: From the outbox to an external system
+' desc.th: คำสั่งธุรกิจเขียน outbox ในธุรกรรมเดียวกับข้อมูล Relay เผยแพร่ไป RabbitMQ Adapter ตัดรายการซ้ำด้วย eventId เรียกระบบภายนอก ลองใหม่เมื่อล้มเหลว และบันทึกสถานะให้ผู้ใช้เห็น
+' desc.en: A business command writes the outbox in the same transaction as the data. The relay publishes to RabbitMQ. The adapter drops duplicates by eventId, calls the external system, retries on failure and records a status users can see.
+skinparam sequenceMessageAlign left
+participant "$t("คำสั่งของโมดูล", "Module command")" as c
+database "PostgreSQL" as db
+participant "Relay" as r
+queue "RabbitMQ" as q
+participant "Adapter" as a
+participant "$t("ระบบภายนอก", "External system")" as x
+group $t("ธุรกรรมเดียว", "One transaction")
+  c -> db : $t("บันทึกข้อมูลธุรกิจ", "save the business data")
+  c -> db : $t("เพิ่มแถว outbox_event", "add an outbox_event row")
+end
+r -> db : $t("อ่านแถวที่ยังไม่ส่ง", "read unsent rows")
+r -> q : $t("เผยแพร่", "publish")
+q --> r : $t("ยืนยันการรับ", "publisher confirm")
+r -> db : $t("ตั้ง published_at", "set published_at")
+q -> a : $t("ส่งเหตุการณ์", "deliver the event")
+a -> db : $t("ตรวจ eventId ในตาราง inbox", "check eventId in the inbox table")
+a -> x : $t("เรียกพร้อมคีย์ idempotency", "call with an idempotency key")
+alt $t("สำเร็จ", "Success")
+  x --> a : $t("รับแล้ว", "accepted")
+  a -> db : $t("สถานะ delivered", "status delivered")
+else $t("ล้มเหลวชั่วคราว", "Temporary failure")
+  a -> db : $t("สถานะ retrying และเวลาลองใหม่", "status retrying, next attempt time")
+else $t("ถูกปฏิเสธ หรือครบจำนวนครั้ง", "Rejected, or attempts used up")
+  a -> db : $t("สถานะ failed และสร้างงานให้เจ้าหน้าที่", "status failed, task for an officer")
+end
+@enduml

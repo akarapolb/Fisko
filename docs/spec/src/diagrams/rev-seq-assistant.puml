@@ -1,0 +1,30 @@
+@startuml
+!include include/common.puml
+' title.th: ผู้ช่วยตอบจากเครื่องมือผ่าน gateway
+' title.en: The assistant answers from tools through the gateway
+' desc.th: ผู้ใช้ถาม AssistantRouter ปฏิเสธคำขอที่ AI ทำไม่ได้ เครื่องมือของ review อ่านจากโมดูลด้วยสิทธิ์ผู้ถาม ถ้า AI ปิด ระบบแสดงตารางจากเครื่องมือพร้อมแหล่งที่มา ถ้าเปิด gateway ใช้นโยบาย ลบข้อมูลส่วนบุคคล และบันทึก แล้วตรวจตัวเลขในคำตอบกับผลของเครื่องมือก่อนแสดง
+' desc.en: The user asks. AssistantRouter refuses what AI may not do. Review tools read from modules with the rights of the asker. With AI off, the system shows the tool results as a table with sources. With AI on, the gateway applies policy, removes personal data and logs the call, and the figures in the reply are checked against the tool results before showing.
+skinparam sequenceMessageAlign left
+actor "$t("ผู้ใช้", "User")" as u
+participant "AssistantRouter" as a
+participant "$t("เครื่องมือ review", "review tools")" as t
+participant "$t("โมดูลเจ้าของข้อมูล", "Owning modules")" as m
+participant "AiGateway" as g
+participant "$t("ผู้ให้บริการ", "Provider")" as p
+u -> a : $t("คำถาม", "question")
+a -> a : $t("ตรวจขอบเขต BR-PLT-25", "check limits, BR-PLT-25")
+a -> t : $t("เลือกเครื่องมืออ่าน", "pick read tools")
+t -> m : $t("อ่านด้วยโทเค็นของผู้ถาม", "read with the token of the asker")
+m --> t : $t("ตัวเลข ขนาดตัวอย่าง แหล่งที่มา", "figures, sample size, source")
+alt $t("AI ปิด หรือผู้ให้บริการขัดข้อง", "AI off, or provider failed")
+  t --> u : $t("ตารางจากเครื่องมือพร้อมแหล่งที่มา", "table from the tools, with sources")
+else $t("AI เปิด", "AI on")
+  t -> g : $t("ผลของเครื่องมือเป็นข้อมูล", "tool results, marked as data")
+  g -> g : $t("นโยบาย ลบข้อมูลส่วนบุคคล บันทึก", "policy, remove personal data, log")
+  g -> p : $t("เรียกโมเดล", "call the model")
+  p --> g : $t("ข้อความ", "text")
+  g --> t : $t("ร่างคำตอบ", "draft answer")
+  t -> t : $t("ตรวจตัวเลขกับผลของเครื่องมือ", "check figures against tool results")
+  t --> u : $t("คำตอบ ป้าย AI และแหล่งที่มา", "answer, AI label and sources")
+end
+@enduml

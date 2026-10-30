@@ -1,0 +1,39 @@
+@startuml
+!include include/common.puml
+' title.th: การทำงานของเอเจนต์ตั้งแต่เริ่มจนจบ
+' title.en: An agent run from start to end
+' desc.th: ระบบตรวจว่า AI และเอเจนต์เปิดอยู่ สร้างแผนจากแม่แบบของโมดูล แล้วทำทีละขั้น ตรวจว่าเครื่องมืออยู่ในทะเบียน ขั้นอ่านและร่างทำทันทีตามระดับ ขั้นเขียนหรือแจ้งเตือนรอคนที่มีสิทธิ์ เมื่ออนุมัติจะเรียกคำสั่งปกติของโมดูล ทุกขั้นถูกบันทึก
+' desc.en: The system checks that AI and the agent are on, builds a plan from the module's template, and works step by step. It checks that the tool is registered. Reads and drafts run at once within the level. A write or a notice waits for a permitted person, and approval calls the module's normal command. Every step is logged.
+skinparam defaultTextAlignment left
+start
+if ($t("AI และเอเจนต์เปิดอยู่?", "AI and the agent on?")) then ($t("ไม่", "no"))
+  :$t("ปฏิเสธ หน้าปกติของโมดูลยังใช้งานได้", "Refuse; the normal pages of the module still work");
+  stop
+else ($t("ใช่", "yes"))
+endif
+:$t("สร้างแผนจากแม่แบบของโมดูล", "Build the plan from the template of the module");
+repeat
+  if ($t("เครื่องมืออยู่ในทะเบียนของเอเจนต์?", "Tool in the register of the agent?")) then ($t("ไม่", "no"))
+    :$t("ขั้นนี้ทำไม่ได้ หยุดการทำงาน", "Step blocked; stop the run");
+    stop
+  else ($t("ใช่", "yes"))
+  endif
+  if ($t("ขั้นนี้เขียนหรือแจ้งเตือน?", "Does the step write or notify?")) then ($t("ไม่", "no"))
+    :$t("อ่านหรือร่างตามระดับ", "Read or draft, within the level");
+  else ($t("ใช่", "yes"))
+    if ($t("ระดับ L0 หรือ L1?", "Level L0 or L1?")) then ($t("ใช่", "yes"))
+      :$t("แสดงเป็นข้อเสนอเท่านั้น", "Show as a suggestion only");
+    else ($t("ไม่", "no"))
+      :$t("แสดงค่าก่อนและหลัง รอคนที่มีสิทธิ์", "Show before and after; wait for a permitted person");
+      if ($t("คนอนุมัติ?", "Approved?")) then ($t("ใช่", "yes"))
+        :$t("เรียกคำสั่งปกติด้วยสิทธิ์ของคนนั้น", "Call the normal command with the rights of that person");
+      else ($t("ไม่", "no"))
+        :$t("ข้ามหรือไม่อนุมัติขั้นนี้", "Skip or reject the step");
+      endif
+    endif
+  endif
+  :$t("บันทึกขั้น", "Log the step");
+repeat while ($t("มีขั้นถัดไป?", "Another step?")) is ($t("มี", "yes")) not ($t("ไม่มี", "no"))
+:$t("การทำงานเสร็จ", "The run is done");
+stop
+@enduml

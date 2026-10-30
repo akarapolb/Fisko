@@ -1,0 +1,81 @@
+@startuml
+!include include/common.puml
+' title.th: ตารางหลักด้านการจ่ายของ finance (ข้อเสนอ)
+' title.en: Core spending tables of finance (proposal)
+' desc.th: ตารางหลักทุกตารางมี tenant_id ใบขอเบิกอ้างผูกพันหรืองวดสัญญา แถวในไฟล์ GFMIS และชุดจ่ายอ้างใบขอเบิก เงินยืมมีรายการและการส่งใช้ บัญชีธนาคารผู้ขายเก็บแยกตามผู้ขาย
+' desc.en: Every core table has tenant_id. A voucher refers to a commitment or a contract phase. GFMIS file rows and payment batch rows refer to vouchers. An advance has items and a clearing. Supplier bank accounts are kept per supplier.
+skinparam nodesep 36
+skinparam ranksep 56
+skinparam defaultTextAlignment left
+hide circle
+hide empty methods
+entity commitment {
+  *tenant_id, *id
+  kind, line_id, amount
+  released, paid, gf_po_no
+}
+entity voucher {
+  *tenant_id, *id
+  no, type, state, commitment_id
+  contract_id, phase_no
+  plan_line_id, line_id
+  gross, penalty, other, wht, net
+  route, method, due_on
+}
+entity voucher_log {
+  *tenant_id, *id
+  voucher_id, action, actor_ref
+}
+entity tax_certificate {
+  *tenant_id, *id
+  voucher_id, no, base, tax
+}
+entity gfmis_file {
+  *tenant_id, *id
+  no, state, sent_at
+}
+entity gfmis_file_row {
+  *tenant_id, *file_id, *voucher_id
+  posting_result, payment_result
+}
+entity payment_batch {
+  *tenant_id, *id
+  no, state, total
+}
+entity supplier_bank_account {
+  *tenant_id, *id
+  supplier_id, bank
+  acct_enc, acct_bidx
+  from_at, until_at
+}
+entity bank_change {
+  *tenant_id, *id
+  supplier_id, status
+  acct_enc, requested_by_ref
+  decided_by_ref
+}
+entity advance {
+  *tenant_id, *id
+  no, borrower_ref, type, state
+  amount, approved_amt
+  line_id, plan_line_id
+}
+entity advance_item {
+  *tenant_id, *advance_id, *n
+  kind, amount
+}
+entity advance_clearing {
+  *tenant_id, *id
+  advance_id, spent, sent_at
+}
+commitment ||--o{ voucher
+voucher ||--o{ voucher_log
+voucher ||--o| tax_certificate
+gfmis_file ||--o{ gfmis_file_row
+voucher ||--o{ gfmis_file_row
+payment_batch ||--o{ voucher
+bank_change }o--|| supplier_bank_account
+advance ||--o{ advance_item
+advance ||--o{ advance_clearing
+advance |o--o| voucher
+@enduml

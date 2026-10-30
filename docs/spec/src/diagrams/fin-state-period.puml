@@ -1,0 +1,19 @@
+@startuml
+!include include/common.puml
+' title.th: สถานะของงวดบัญชี
+' title.en: States of an accounting period
+' desc.th: งวดเปิดอยู่ หัวหน้าการเงินปิดงวดเมื่อรายการตรวจผ่านหรือมีเหตุผลยกเว้น การเปิดใหม่ต้องเป็นคนละคนกับผู้ปิดและมีเหตุผล
+' desc.en: A period is open. The head of finance closes it when the checks pass or with a reason. Reopening needs someone other than the closer, and a reason.
+hide empty description
+left to right direction
+skinparam nodesep 60
+skinparam ranksep 120
+state "open" as o
+state "closed" as c
+[*] --> o
+o --> c : $t("ปิดงวด 6 รายการตรวจ", "close, 6 checks")
+c --> o : $t("เปิดใหม่ SD-16 มีเหตุผล", "reopen, SD-16, reason")
+note bottom of c
+  $t("แก้รายการในงวดที่ปิดไม่ได้", "Records of a closed period cannot change")
+end note
+@enduml

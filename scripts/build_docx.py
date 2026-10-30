@@ -424,18 +424,17 @@ def status_rows(reg: bs.Registry, prefix: str, lang: str) -> list[list[str]]:
 
 def matrix_rows(reg: bs.Registry, lang: str) -> list[list[str]]:
     rows, grand = [], {s: 0 for s in bs.STATUSES}
-    xc = sum(1 for k in reg.reqs if k.startswith('XC-') and bs.REQ_ID.match(k))
-    rows.append(['ข้อกำหนดร่วมที่สร้างจากทะเบียนข้อกฎหมาย (XC)' if lang == 'th' else 'Cross-cutting (XC) generated from the clause register', str(xc),
-                 'ไม่ประเมินสถานะ' if lang == 'th' else 'not assessed', '', ''])
-    for n in list(range(1, 14)) + ['MOB']:
-        prefix = 'MOB' if n == 'MOB' else f'S{n:02d}'
+    xc = bs.xc_counts(reg)
+    for s in bs.STATUSES:
+        grand[s] += xc[s]
+    rows.append(['ข้อกำหนดร่วม (XC)' if lang == 'th' else 'Cross-cutting (XC)', str(sum(xc.values()))] + [str(xc[s]) for s in bs.STATUSES])
+    for prefix, mod_th, mod_en in bs.MODULES:
         c = bs.status_counts(reg, prefix)
         tot = {s: sum(c[t][s] for t in c) for s in bs.STATUSES}
         for s in bs.STATUSES:
             grand[s] += tot[s]
-        label = ('แอปมือถือ (MOB)' if lang == 'th' else 'Mobile apps (MOB)') if n == 'MOB' else (f'ระบบที่ {n}' if lang == 'th' else f'System {n}')
-        rows.append([label, str(sum(tot.values()))] + [str(tot[s]) for s in bs.STATUSES])
-    rows.append(['**' + ('รวมทุกระบบ (ไม่รวม XC)' if lang == 'th' else 'All systems (without XC)') + '**', f'**{sum(grand.values())}**']
+        rows.append([mod_th if lang == 'th' else mod_en, str(sum(tot.values()))] + [str(tot[s]) for s in bs.STATUSES])
+    rows.append(['**' + ('รวมทั้งหมด' if lang == 'th' else 'All requirements') + '**', f'**{sum(grand.values())}**']
                 + [f'**{grand[s]}**' for s in bs.STATUSES])
     return rows
 

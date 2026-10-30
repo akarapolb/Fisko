@@ -1,0 +1,39 @@
+@startuml
+!include include/common.puml
+' title.th: จากรายการจัดสรรถึงการลงนามสัญญา
+' title.en: From allocation lines to contract signing
+' desc.th: เจ้าหน้าที่งบประมาณสร้างรายการจัดสรรจาก พ.ร.บ. โมดูล procurement อ่านรายการ สร้างใบขอซื้อขอจ้างและกันวงเงิน แฟ้มผ่านวิธีจัดซื้อและบันทึกผลจาก e-GP เมื่อลงนามสัญญา วงเงินกันแปลงเป็นผูกพันในธุรกรรมเดียว แล้วเหตุการณ์แจ้ง finance และ projects
+' desc.en: Budget staff build allocation lines from the act. Procurement reads the lines, raises a requisition and reserves money. The case moves through its method, and e-GP results are recorded. At signing the reservation becomes a commitment in one transaction, and an event tells finance and projects.
+skinparam sequenceMessageAlign left
+actor "$t("เจ้าหน้าที่งบประมาณ", "Budget staff")" as u
+participant "budget" as b
+actor "$t("เจ้าหน้าที่พัสดุ", "Procurement officer")" as o
+participant "procurement" as p
+participant "e-GP" as e
+queue "outbox" as q
+participant "finance" as f
+participant "projects" as j
+
+u -> b : $t("บันทึก พ.ร.บ. และสร้างรายการ", "record the act, build lines")
+b -> q : budget.lines.created
+q -> j : $t("ผูกโครงการกับรายการ", "link project to line")
+u -> b : $t("ยืนยันรายการ", "confirm the line")
+b -> q : budget.line.confirmed
+o -> p : $t("รายการแผนและใบขอซื้อ", "plan item and requisition")
+p -> b : AllocationQuery, LineLedger.room
+o -> p : Requisition.send
+p -> b : LineLedger.reserve
+p -> p : $t("แฟ้ม 12 ขั้น วิธีจัดซื้อ", "12-step case, method")
+e --> p : $t("ไฟล์สถานะ นำเข้าโดยเจ้าหน้าที่", "status file, imported by an officer")
+o -> p : $t("บันทึกผู้ชนะและช่วงอุทธรณ์", "record award and appeal period")
+p -> q : procurement.award.recorded
+o -> p : Contract.sign
+group $t("ธุรกรรมเดียว", "one transaction")
+  p -> b : LineLedger.commit
+  b --> p : $t("แปลงวงเงินกันเป็นผูกพัน", "reservation becomes commitment")
+  p -> p : $t("สัญญา active แฟ้มขั้น 9", "contract active, case step 9")
+end
+p -> q : procurement.contract.signed
+q -> f : $t("รับทราบสัญญา", "contract known to Finance")
+q -> j : $t("ปรับขั้นและตัวเลข", "refresh step and figures")
+@enduml

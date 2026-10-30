@@ -1,0 +1,47 @@
+@startuml
+!include include/common.puml
+' title.th: องค์ประกอบภายในโมดูล projects
+' title.en: Components inside the projects module
+' desc.th: โมดูล projects แบ่งเป็นแพ็กเกจ registry cycle exchange sharing tormap settings และ reporting เปิดเฉพาะแพ็กเกจ api ให้โมดูล review โมดูลนี้อ่านข้อมูลจาก budget procurement และ finance ผ่าน interface ที่เผยแพร่ ไม่มีโมดูลล่างเรียกกลับ การเชื่อมต่อระบบ PM และการส่งให้ผู้รับข้อมูลผ่าน outbox และ adapter
+' desc.en: The projects module has the packages registry, cycle, exchange, sharing, tormap, settings and reporting, and publishes only its api package, to review. It reads Budget, Procurement and Finance through their published interfaces, and no lower module calls back. Links to the PM system and to data consumers run through the outbox and adapters.
+left to right direction
+skinparam nodesep 24
+skinparam ranksep 80
+actor "$t("เจ้าหน้าที่", "Staff")" as staff
+package "$t("โมดูล projects (ข้อเสนอ)", "Module projects (proposal)")" as prj {
+  component "web" as web
+  component "registry" as reg
+  component "cycle" as cyc
+  component "exchange" as ex
+  component "sharing" as sh
+  component "tormap, settings" as cfg
+  component "reporting" as rep
+  component "api" as api
+}
+component "$t("โมดูล platform", "Module platform")" as plt <<sec>>
+component "$t("โมดูล budget", "Module budget")" as bgt <<data>>
+component "$t("โมดูล procurement", "Module procurement")" as prc <<data>>
+component "$t("โมดูล finance", "Module finance")" as fin <<data>>
+component "$t("โมดูล review", "Module review")" as rev <<data>>
+queue "$t("outbox และ RabbitMQ", "Outbox and RabbitMQ")" as mq
+component "$t("ระบบ PM ของหน่วยงาน", "Tenant PM system")" as pm <<ext>>
+component "$t("ผู้รับข้อมูลภายนอก", "External data consumers")" as cons <<ext>>
+staff --> web
+web --> reg
+web --> ex
+web --> sh
+web --> cfg
+reg --> cyc
+cyc --> bgt : $t("บรรทัด โอน งวดเงิน", "lines, transfers, allotment")
+cyc --> prc : $t("แผน แฟ้ม สัญญา งวดงาน", "plan, case, contract, phases")
+cyc --> fin : $t("เบิกจ่าย ก่อหนี้อื่น", "payments, other commitments")
+mq --> rep : $t("เหตุการณ์", "events")
+rep --> reg
+ex --> mq : $t("เหตุการณ์และการส่ง", "events, deliveries")
+sh --> mq : $t("การส่ง", "deliveries")
+ex --> pm : $t("12 รายการ / 4 มิติ", "12 items, 4 dimensions")
+sh --> cons : $t("ไฟล์หรือ API", "file or API")
+sh --> plt : $t("สิทธิ์ เส้นทางอนุมัติ Audit", "rights, approval route, audit")
+rev --> api : $t("อ่านอย่างเดียว", "read only")
+api --> rep
+@enduml

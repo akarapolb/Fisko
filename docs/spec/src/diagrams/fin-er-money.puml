@@ -1,0 +1,75 @@
+@startuml
+!include include/common.puml
+' title.th: ตารางหลักด้านการรับเงิน กระทบยอด และปิดงวด (ข้อเสนอ)
+' title.en: Core tables for receipts, reconciliation and closing (proposal)
+' desc.th: ใบเสร็จอยู่ในเล่มและรวมอยู่ในการนำส่ง กองทุนมีแผนและรายการแผน รายการธนาคารอยู่ใต้ใบแจ้งยอด งบพิสูจน์และงวดอ้างเดือนเดียวกัน
+' desc.en: A receipt sits in a book and joins a remittance. A fund has plans and plan lines. Bank lines sit under a statement. Reconciliations and periods refer to the same month.
+skinparam nodesep 36
+skinparam ranksep 56
+skinparam defaultTextAlignment left
+hide circle
+hide empty methods
+entity receipt_book {
+  *tenant_id, *id
+  no, fiscal_year
+  from_no, to_no, holder_ref
+}
+entity receipt {
+  *tenant_id, *id
+  book_id, n, kind, amount
+  method, fund_id, remittance_id
+}
+entity remittance {
+  *tenant_id, *id
+  no, cls, amount, bank_ref
+}
+entity daily_cash {
+  *tenant_id, *on_date
+  sys_cash, sys_cheque, status
+}
+entity cash_count {
+  *tenant_id, *on_date, *member_ref
+  cash, cheque, round_no
+}
+entity fund {
+  *tenant_id, *id
+  name, open_agency, open_treasury
+}
+entity spending_plan {
+  *tenant_id, *id
+  fund_id, fiscal_year, status
+}
+entity spending_plan_line {
+  *tenant_id, *id
+  plan_id, name, cat, amount
+}
+entity treasury_withdrawal {
+  *tenant_id, *id
+  fund_id, amount, status
+}
+entity bank_statement {
+  *tenant_id, *id
+  acct, month, opening
+}
+entity bank_line {
+  *tenant_id, *id
+  statement_id, ref, amount
+}
+entity bank_reconciliation {
+  *tenant_id, *acct, *month
+  status, diff, signed_by_ref
+}
+entity period {
+  *tenant_id, *month
+  status, closed_by_ref
+}
+receipt_book ||--o{ receipt
+remittance |o--o{ receipt
+daily_cash ||--o{ cash_count
+fund ||--o{ spending_plan
+spending_plan ||--o{ spending_plan_line
+fund ||--o{ treasury_withdrawal
+fund |o--o{ receipt
+bank_statement ||--o{ bank_line
+period ||--o{ bank_reconciliation
+@enduml

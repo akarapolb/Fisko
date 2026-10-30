@@ -12,7 +12,7 @@ rectangle "Fisko" as fisko #E8F5EC
 rectangle "$t("ThaID และไดเรกทอรีของหน่วยงาน", "ThaID and agency directories")" as idp
 rectangle "GFMIS" as gfmis
 rectangle "e-GP" as egp
-rectangle "$t("อีเมลและ SMS", "E-mail and SMS")" as mail
+rectangle "$t("อีเมลและช่องทางอื่น", "E-mail and other channels")" as mail
 rectangle "$t("ผู้ให้บริการ AI (ปิดเป็นค่าเริ่มต้น)", "AI provider (off by default)")" as ai
 staff --> fisko : $t("ใช้งาน", "uses")
 sup --> fisko : $t("ยื่นเอกสาร", "submits documents")

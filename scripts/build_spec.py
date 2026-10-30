@@ -316,7 +316,15 @@ def merge_items(a: list[dict], b: list[dict], at: str) -> list[dict]:
 LAW_COLS = ['ref', 'doc', 'page', 'scope', 'kind', 'category', 'th', 'en', 'disposition', 'verify', 'notes']
 DOC_NAMES = {'PPA': ('PPA', 'พ.ร.บ.การจัดซื้อจัดจ้างฯ พ.ศ. 2560', 'Public Procurement Act B.E. 2560'),
              'PPR': ('PPR', 'ระเบียบกระทรวงการคลังว่าด้วยการจัดซื้อจัดจ้างฯ พ.ศ. 2560', 'Ministry of Finance Procurement Regulation B.E. 2560'),
-             'PDPA': ('PDPA', 'พ.ร.บ.คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562', 'Personal Data Protection Act B.E. 2562')}
+             'PDPA': ('PDPA', 'พ.ร.บ.คุ้มครองข้อมูลส่วนบุคคล พ.ศ. 2562', 'Personal Data Protection Act B.E. 2562'),
+             'BPA': ('BPA', 'พ.ร.บ.วิธีการงบประมาณ พ.ศ. 2561', 'Budget Procedures Act B.E. 2561'),
+             'BMR': ('BMR', 'ระเบียบว่าด้วยการบริหารงบประมาณ พ.ศ. 2562', 'Regulation on Budget Administration B.E. 2562'),
+             'TRR': ('TRR', 'ระเบียบกระทรวงการคลังว่าด้วยการเบิกเงินจากคลังฯ พ.ศ. 2562', 'Ministry of Finance Treasury Regulation B.E. 2562'),
+             'ADV': ('ADV', 'ระเบียบว่าด้วยเงินทดรองราชการ พ.ศ. 2562', 'Regulation on Advance Funds B.E. 2562'),
+             'FDA': ('FDA', 'พ.ร.บ.วินัยการเงินการคลังของรัฐ พ.ศ. 2561', 'State Fiscal and Financial Disciplines Act B.E. 2561'),
+             'DGA': ('DGA', 'พ.ร.บ.การบริหารงานและการให้บริการภาครัฐผ่านระบบดิจิทัล พ.ศ. 2562', 'Digital Government Administration Act B.E. 2562'),
+             'CSA': ('CSA', 'พ.ร.บ.การรักษาความมั่นคงปลอดภัยไซเบอร์ พ.ศ. 2562', 'Cybersecurity Act B.E. 2562'),
+             'ETA': ('ETA', 'พ.ร.บ.ว่าด้วยธุรกรรมทางอิเล็กทรอนิกส์ พ.ศ. 2544', 'Electronic Transactions Act B.E. 2544')}
 CAT_CODE = {'functional': 'FUN', 'security': 'SEC', 'privacy': 'PRV', 'performance': 'PER', 'availability': 'AVL',
             'scalability': 'SCL', 'usability': 'USA', 'accessibility': 'ACC', 'i18n': 'I18', 'data': 'DAT',
             'integration': 'INT', 'api': 'API', 'search': 'SRC', 'ai': 'AI', 'mobile': 'MOB', 'deployment': 'DEP',
@@ -426,8 +434,8 @@ def expand_law_table(args: dict, law: list[dict], lock: dict[str, str]) -> dict:
 # ----------------------------------------------------------------------------------------------------------
 
 CODE_RE = re.compile(r'`([^`]+)`')
-ID_RE = re.compile(r'\b((?:XC|PLT|BGT|PRC|FIN|PRJ|REV)-(?:[A-Z]{2,3}-)?\d{3}|UC-[A-Z]{3}-\d{2}|BR-[A-Z]{3}-\d{2}|AC-[A-Z]{3}-\d{3}|TC-[A-Z0-9]+-\d{3}|ADR-\d{4}|FIG-[A-Za-z0-9.-]+)\b')
-LAW_RE = re.compile(r'((?:PPA|PPR|PDPA) \d+(?:\.\d+)*)')
+ID_RE = re.compile(r'\b((?:XC|PLT|BGT|PRC|FIN|PRJ|REV)-(?:[A-Z0-9]{2,3}-)?\d{3}|UC-[A-Z]{3}-\d{2}|BR-[A-Z]{3}-\d{2}|AC-[A-Z]{3}-\d{3}|TC-[A-Z0-9]+-\d{3}|ADR-\d{4}|FIG-[A-Za-z0-9.-]+)\b')
+LAW_RE = re.compile(r'((?:PPA|PPR|PDPA|BPA|BMR|TRR|ADV|FDA|DGA|CSA|ETA) \d+(?:\.\d+)*)')
 
 
 CUR = {'doc': 'srs'}
@@ -817,6 +825,15 @@ def status_counts(reg: Registry, prefix: str) -> dict[str, dict[str, int]]:
     return out
 
 
+def xc_counts(reg: Registry) -> dict[str, int]:
+    """Cross-cutting rows have a category where modules have a type, so they are counted by status alone."""
+    out = {k: 0 for k in STATUSES}
+    for rid, r in reg.reqs.items():
+        if rid.startswith('XC-') and REQ_ID.match(rid) and r['status'].strip() in out:
+            out[r['status'].strip()] += 1
+    return out
+
+
 def render_status_summary(reg: Registry, prefix: str) -> str:
     c = status_counts(reg, prefix)
     head = ''.join(f'<th>{bi_plain(*h)}</th>' for h in (('ชนิด', 'Type'), ('มีในต้นแบบ (Prototyped)', 'Prototyped'),
@@ -839,9 +856,11 @@ def render_status_matrix(reg: Registry) -> str:
     head = ''.join(f'<th>{bi_plain(*h)}</th>' for h in (('ชุดข้อกำหนด', 'Set'), ('จำนวน', 'Rows'), ('มีในต้นแบบ', 'Prototyped'),
                                                        ('บางส่วน', 'Partial'), ('วางแผน', 'Planned')))
     rows, grand = [], {s: 0 for s in STATUSES}
-    xc = sum(1 for k in reg.reqs if k.startswith('XC-') and REQ_ID.match(k))
-    rows.append(f'<tr><td>{bi_plain("ข้อกำหนดร่วมที่สร้างจากทะเบียนข้อกฎหมาย (XC)", "Cross-cutting (XC) generated from the clause register")}</td><td>{xc}</td>'
-                f'<td colspan="3">{bi_plain("ไม่ประเมินสถานะ", "not assessed")}</td></tr>')
+    xc = xc_counts(reg)
+    for k in STATUSES:
+        grand[k] += xc[k]
+    rows.append(f'<tr><td>{bi_plain("ข้อกำหนดร่วม (XC)", "Cross-cutting (XC)")}</td><td>{sum(xc.values())}</td>'
+                + ''.join(f'<td>{xc[k]}</td>' for k in STATUSES) + '</tr>')
     for prefix, mod_th, mod_en in MODULES:
         c = status_counts(reg, prefix)
         tot = {s: sum(c[t][s] for t in c) for s in STATUSES}
@@ -849,7 +868,7 @@ def render_status_matrix(reg: Registry) -> str:
         for s in STATUSES:
             grand[s] += tot[s]
         rows.append(f'<tr><td>{label}</td><td>{sum(tot.values())}</td>' + ''.join(f'<td>{tot[s]}</td>' for s in STATUSES) + '</tr>')
-    rows.append(f'<tr><td><strong>{bi_plain("รวมทุกระบบ (ไม่รวม XC)", "All systems (without XC)")}</strong></td><td><strong>{sum(grand.values())}</strong></td>'
+    rows.append(f'<tr><td><strong>{bi_plain("รวมทั้งหมด", "All requirements")}</strong></td><td><strong>{sum(grand.values())}</strong></td>'
                 + ''.join(f'<td><strong>{grand[s]}</strong></td>' for s in STATUSES) + '</tr>')
     return f'<div class="tw"><table><thead><tr>{head}</tr></thead><tbody>{"".join(rows)}</tbody></table></div>'
 
@@ -964,7 +983,7 @@ def render(doc: dict, reg: Registry, law: list[dict], css: str, js: str, fonts_c
 # outputs
 # ----------------------------------------------------------------------------------------------------------
 
-REQ_ID = re.compile(r'^((PLT|BGT|PRC|FIN|PRJ|REV)-(FR|NFR|IR|DR|CR)-\d+|XC-[A-Z]+-\d+)$')
+REQ_ID = re.compile(r'^((PLT|BGT|PRC|FIN|PRJ|REV)-(FR|NFR|IR|DR|CR)-\d+|XC-[A-Z0-9]+-\d+)$')
 
 
 def write_rtm(reg: Registry) -> pathlib.Path:

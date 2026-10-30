@@ -1,0 +1,45 @@
+@startuml
+!include include/common.puml
+' title.th: องค์ประกอบภายในโมดูล budget
+' title.en: Components inside the budget module
+' desc.th: โมดูล budget แบ่งเป็นแพ็กเกจตามวงจรงบประมาณ เปิดเฉพาะแพ็กเกจ api ให้โมดูลอื่น โมดูล procurement และ finance เรียก LineLedger ในธุรกรรมเดียวกัน ส่วน budget เรียกเฉพาะ platform การแลกเปลี่ยนกับระบบภายนอกผ่าน adapter และ outbox
+' desc.en: The budget module is split into packages that follow the budget cycle and publishes only its api package. Procurement and finance call LineLedger in their own transaction. Budget calls only platform. Exchanges with outside systems run through adapters and the outbox.
+left to right direction
+skinparam nodesep 24
+skinparam ranksep 80
+actor "$t("เจ้าหน้าที่", "Staff")" as staff
+package "$t("โมดูล budget (ข้อเสนอ)", "Module budget (proposal)")" as bgt {
+  component "web" as web
+  package "$t("จัดทำ", "Formulation")" as a {
+    component "strategy, request" as rq
+    component "consolidation, review" as cs
+    component "submission, parliament" as sb
+  }
+  package "$t("บริหาร", "Execution")" as b {
+    component "allocation, plan" as al
+    component "ledger" as le
+    component "transfer, carryover" as tr
+  }
+  package "$t("ผลและการวิเคราะห์", "Results and analysis")" as c {
+    component "monitoring, performance" as mo
+    component "settings, assistant" as st
+  }
+  component "api" as api
+}
+component "$t("โมดูล platform", "Module platform")" as plt <<sec>>
+component "$t("โมดูล procurement", "Module procurement")" as prc <<data>>
+component "$t("โมดูล finance", "Module finance")" as fin <<data>>
+queue "$t("outbox และ RabbitMQ", "Outbox and RabbitMQ")" as mq
+component "e-Budgeting, BBL, BB EvMIS" as ext <<ext>>
+staff --> web
+web --> rq
+web --> al
+web --> mo
+prc --> api : $t("จอง ผูกพัน", "reserve, commit")
+fin --> api : $t("ยอดเบิกจ่าย", "payments")
+api --> le
+cs --> plt : $t("สิทธิ์ Audit", "rights, audit")
+tr --> mq : $t("เหตุการณ์", "events")
+sb --> ext : $t("ไฟล์", "files")
+st --> plt : $t("AI gateway", "AI gateway")
+@enduml
