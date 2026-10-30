@@ -1,0 +1,5 @@
+ref	doc	page	scope	kind	category	th	en	disposition	verify	notes
+PPA 11	PPA		PRC	rule	functional	หน่วยงานของรัฐต้องจัดทำแผนการจัดซื้อจัดจ้างประจำปีและประกาศเผยแพร่	A state agency must prepare its annual procurement plan and publish it	SRS	T	To be confirmed by a procurement specialist
+PPA 56	PPA		PRC	rule	functional	การเลือกวิธีซื้อหรือจ้างต้องเป็นไปตามเงื่อนไขของกฎหมาย รวมทั้งวงเงินของวิธีเฉพาะเจาะจง	The choice of purchasing method must meet the conditions of the Act, including the value limit of the specific method	SRS	T	To be confirmed by a procurement specialist
+PPR 175	PPR		PRC	rule	functional	คณะกรรมการตรวจรับพัสดุต้องตรวจรับ ทำใบตรวจรับ และแจ้งผลตามที่ระเบียบกำหนด รวมทั้งกรณีรับบางส่วนและความเห็นแย้ง	The acceptance committee must inspect, issue certificates and report as the regulation sets, including partial acceptance and dissent	SRS	T	To be confirmed by a procurement specialist
+PPR 176	PPR		PRC	rule	functional	การตรวจรับงานจ้างก่อสร้างต้องเป็นไปตามกำหนดเวลาที่ระเบียบกำหนด	Acceptance of construction work must follow the time limits the regulation sets	SRS	T	To be confirmed by a procurement specialist

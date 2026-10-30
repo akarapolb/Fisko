@@ -1,0 +1,107 @@
+@startuml
+!include include/common.puml
+' title.th: แบบจำลองโดเมนของ procurement
+' title.en: The procurement domain model
+' desc.th: aggregate หลักคือ PlanItem, PlanVersion, Requisition, ProcurementCase, SourcingRound, Contract และ Supplier แฟ้มผูกกับรายการในแผนหนึ่งรายการ และมีหลายรอบ สัญญาถืองวด ลายมือชื่อ ฉบับ การแก้ไข และหลักประกัน
+' desc.en: The main aggregates are PlanItem, PlanVersion, Requisition, ProcurementCase, SourcingRound, Contract and Supplier. A case belongs to one plan item and has many rounds. A contract owns its phases, signatures, versions, changes and guarantee.
+skinparam nodesep 34
+skinparam ranksep 46
+skinparam defaultTextAlignment left
+hide empty methods
+class PlanItem <<aggregate>> {
+  id, lineId, name
+  estimate, plannedDate
+  category, kind, status
+}
+class PlanVersion <<aggregate>> {
+  version, status, why
+  snapshot, egpNoticeNo
+}
+class Requisition <<aggregate>> {
+  id, planItemId, amount
+  neededBy, status, splitWhy
+}
+class ProcurementCase <<aggregate>> {
+  id, step, kind, method
+  methodDecision, referencePrice
+  tor, cancelled, closure
+  --
+  move(), fail(), cancel()
+}
+class SourcingRound <<aggregate>> {
+  roundNo, outcome, egpNotice
+  criteria, award, appeal
+  --
+  recordAward(), fileAppeal()
+}
+class Committee {
+  type, orderNo, orderDate, chair
+}
+class Declaration {
+  memberRef, roundNo, conflict, bidder
+}
+class Bid {
+  bidderName, price
+}
+class Score {
+  memberRef, criterion, value
+}
+class Contract <<aggregate>> {
+  id, no, status, supplierId
+  signedAmount, amount, version
+  penaltyRate, warrantyMonths
+  --
+  sign(), propose(), terminate()
+}
+class Phase {
+  no, due, amount, need
+  ext, extV, delivered
+  result, okAmount
+  --
+  state(), lateDays()
+}
+class Signature {
+  memberRef, signedAt
+}
+class Dissent {
+  memberRef, note, resolved
+}
+class Invoice {
+  no, amount, returned
+}
+class Waiver {
+  amount, status, reason
+}
+class Guarantee {
+  type, amount, expires, status
+}
+class Variation {
+  kind, delta, days, code
+  decider, status
+}
+class ContractVersion {
+  version, amount, why
+}
+class Supplier <<aggregate>> {
+  id, name, type
+  taxIdEnc, taxIdIndex, status
+}
+PlanItem "1" -- "1" ProcurementCase
+PlanItem "1" -- "0..*" Requisition
+PlanVersion "1" ..> "0..*" PlanItem : $t("สำเนา", "snapshot")
+ProcurementCase "1" -- "1..*" SourcingRound
+ProcurementCase "1" *-- "0..*" Committee
+Committee "1" *-- "1..*" Declaration
+SourcingRound "1" *-- "0..*" Bid
+Bid "1" *-- "0..*" Score
+ProcurementCase "1" -- "0..1" Contract
+Contract "1" *-- "1..6" Phase
+Contract "1" *-- "0..1" Guarantee
+Contract "1" *-- "0..*" Variation
+Contract "1" *-- "1..*" ContractVersion
+Phase "1" *-- "0..*" Signature
+Phase "1" *-- "0..*" Dissent
+Phase "1" *-- "0..1" Invoice
+Phase "1" *-- "0..1" Waiver
+Contract "0..*" --> "1" Supplier
+@enduml

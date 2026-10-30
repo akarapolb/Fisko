@@ -1,0 +1,25 @@
+@startuml
+!include include/common.puml
+' title.th: บริบทของระบบ Fisko
+' title.en: Fisko system context
+' desc.th: ผู้ใช้เข้าสู่ Fisko ผ่านเบราว์เซอร์ และ Fisko เชื่อมต่อกับระบบภายนอกสำหรับการยืนยันตัวตน ระบบการเงินภาครัฐ และบริการ AI ที่หน่วยงานเลือกเปิดใช้
+' desc.en: Users reach Fisko through a browser. Fisko connects to external systems for identity, government finance and procurement, and an optional AI service.
+left to right direction
+actor "$t("เจ้าหน้าที่หน่วยงาน", "Agency staff")" as staff
+actor "$t("ผู้ขาย", "Suppliers")" as sup
+actor "$t("ผู้ดูแลหน่วยงาน", "Agency administrator")" as adm
+rectangle "Fisko" as fisko #E8F5EC
+rectangle "$t("ThaID และไดเรกทอรีของหน่วยงาน", "ThaID and agency directories")" as idp
+rectangle "GFMIS" as gfmis
+rectangle "e-GP" as egp
+rectangle "$t("อีเมลและ SMS", "E-mail and SMS")" as mail
+rectangle "$t("ผู้ให้บริการ AI (ปิดเป็นค่าเริ่มต้น)", "AI provider (off by default)")" as ai
+staff --> fisko : $t("ใช้งาน", "uses")
+sup --> fisko : $t("ยื่นเอกสาร", "submits documents")
+adm --> fisko : $t("ตั้งค่าหน่วยงาน", "configures agency")
+fisko --> idp : $t("ยืนยันตัวตน", "signs in")
+fisko --> gfmis : $t("ส่งรายการ", "posts entries")
+fisko --> egp : $t("ส่งข้อมูลจัดซื้อ", "sends procurement data")
+fisko --> mail : $t("แจ้งเตือน", "notifies")
+fisko ..> ai : $t("เมื่อหน่วยงานเลือกใช้", "when an agency opts in")
+@enduml

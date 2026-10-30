@@ -1,0 +1,49 @@
+@startuml
+!include include/common.puml
+' title.th: จากการส่งมอบถึงการตรวจรับและคำขอเบิกจ่าย
+' title.en: From delivery to acceptance and payment request
+' desc.th: เจ้าหน้าที่บันทึกการส่งมอบ กรรมการลงนามตรวจรับจนครบ ระบบออกใบตรวจรับและแจ้งการเงิน การเงินอ่านงวดที่รอจ่ายและเรียกประตูเบิกจ่าย ถ้าผ่านจึงสร้างคำขอ ถ้าไม่ผ่านพักเป็นข้อยกเว้น เมื่ออนุมัติจ่ายแล้ว การเงินแจ้งกลับเพื่อเปลี่ยนงวดเป็นจ่ายแล้ว
+' desc.en: The officer records the delivery, members sign until the phase is accepted, the system issues certificates and tells Finance. Finance reads waiting phases and calls the payment gate. A pass creates the request; a failure is held as an exception. After approval Finance reports back and the phase becomes Paid.
+' law: PPR 162; PPR 175; PPR 176
+skinparam sequenceMessageAlign left
+actor "$t("เจ้าหน้าที่พัสดุ", "Procurement officer")" as o
+actor "$t("กรรมการตรวจรับ", "Acceptance member")" as m
+actor "$t("เจ้าหน้าที่การเงิน", "Finance officer")" as f
+participant "acceptance" as a
+participant "platform" as p
+participant "procurement.api" as api
+participant "finance" as n
+queue "outbox" as q
+
+o -> a : recordDelivery(phase, date, noticeNo)
+a -> a : $t("เรียงงวด วันที่ วันต้องตรวจรับ ค่าปรับ", "phase order, date, accept-by, penalty")
+a -> q : procurement.phase.delivered
+a -> p : $t("แจ้งกรรมการ", "notify the committee")
+loop $t("จนกว่าจะครบ need", "until signatures reach need")
+  m -> a : sign(result, amount, note)
+  a -> p : SodGuard SD-02
+  a -> a : $t("สมาชิก งวดก่อนหน้า ความเห็นแย้ง ยอด", "member, previous phase, dissent, amount")
+end
+a -> p : $t("สร้างใบตรวจรับ PDF ลงนาม PAdES", "certificate PDF, PAdES signature")
+a -> q : procurement.phase.accepted
+a -> p : $t("แจ้งการเงินและพัสดุ", "notify Finance and procurement")
+o -> a : recordInvoice(no, amount)
+f -> n : $t("เปิดรายการรอจ่าย", "open the waiting list")
+n -> api : AcceptedPhaseQuery.waiting()
+api --> n : $t("งวด ยอดสุทธิ ค่าปรับ", "phases, net, penalty")
+f -> n : $t("ขออนุมัติเบิกจ่าย", "request payment")
+n -> api : PaymentGate.evaluate(contract, phase)
+api -> n : $t("SPI: มี PO ใน GFMIS หรือไม่", "SPI: is a GFMIS PO recorded")
+n --> api : $t("ผลตรวจ", "result")
+alt $t("ผ่าน หรือปลดข้อยกเว้นแล้ว", "pass, or exception released")
+  api --> n : GateResult(ok, net)
+  n -> n : $t("สร้างคำขอเบิกจ่าย", "create the payment request")
+  n -> api : PhasePayment.started(contract, phase)
+else $t("ไม่ผ่าน", "fail")
+  api --> n : GateResult(held, failures)
+  api -> q : procurement.phase.gate-held
+end
+n -> api : PhasePayment.approved(contract, phase)
+api -> a : $t("งวดเป็น Paid ปรับขั้นแฟ้ม", "phase Paid, case step updated")
+a -> q : procurement.phase.paid
+@enduml

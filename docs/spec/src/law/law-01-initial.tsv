@@ -1,0 +1,7 @@
+ref	doc	page	scope	kind	category	th	en	disposition	verify	notes
+PPR 162	PPR		PRC	rule	functional	ค่าปรับตามสัญญาต้องอยู่ในอัตราที่ระเบียบกำหนดตามประเภทสัญญา	Contract penalties must stay within the rates the regulation sets for each contract type	SRS	T	Clause number to be confirmed by a procurement specialist
+PDPA 26	PDPA		PLT	rule	privacy	ข้อมูลส่วนบุคคลอ่อนไหวต้องมีฐานทางกฎหมายเฉพาะ	Sensitive personal data needs a specific legal basis	SRS	I	Clause number to be confirmed by a PDPA lawyer
+PDPA 28	PDPA		PLT	rule	privacy	การส่งข้อมูลส่วนบุคคลไปต่างประเทศต้องเป็นไปตามเงื่อนไขของกฎหมาย	Transfer of personal data abroad must meet the conditions of the Act	SDS	I	Clause number to be confirmed by a PDPA lawyer
+PDPA 37	PDPA		PLT	rule	privacy	ผู้ควบคุมข้อมูลต้องแจ้งเหตุละเมิดต่อสำนักงานภายใน 72 ชั่วโมงเมื่อมีความเสี่ยง	The controller must report a breach that poses a risk to the PDPC within 72 hours	SRS	T	Limit taken from published summaries
+PDPA 39	PDPA		PLT	rule	privacy	ต้องจัดทำบันทึกรายการกิจกรรมการประมวลผล	Records of processing activities must be kept	SRS	I	Clause number to be confirmed by a PDPA lawyer
+PDPA 40	PDPA		PLT	rule	privacy	ผู้ประมวลผลข้อมูลต้องปฏิบัติตามคำสั่งของผู้ควบคุมข้อมูลและรักษาความมั่นคงปลอดภัย	The processor must follow the controller's instructions and keep data secure	SDS	I	Clause number to be confirmed by a PDPA lawyer

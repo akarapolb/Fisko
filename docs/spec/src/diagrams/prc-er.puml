@@ -1,0 +1,89 @@
+@startuml
+!include include/common.puml
+' title.th: ตารางหลักของ procurement (ข้อเสนอ)
+' title.en: Core procurement tables (proposal)
+' desc.th: ตารางหลักทุกตารางมี tenant_id แผนและใบขอเชื่อมกับแฟ้ม แฟ้มมีรอบ ข้อเสนอ และคำสั่งแต่งตั้ง สัญญาเชื่อมกับแฟ้มและผู้ขาย และมีงวด ลายมือชื่อ ฉบับ และหลักประกัน ตารางอื่นอยู่ในตารางข้อมูล
+' desc.en: Every core table has tenant_id. Plan items and requisitions link to the case. A case has rounds, bids and committee orders. A contract links to the case and the supplier and has phases, signatures, versions and a guarantee. Other tables are listed in the data tables.
+skinparam nodesep 40
+skinparam ranksep 60
+skinparam defaultTextAlignment left
+hide circle
+hide empty methods
+entity plan_item {
+  *tenant_id, *id
+  line_id, status
+}
+entity requisition {
+  *tenant_id, *id
+  plan_item_id, amount
+  status
+}
+entity procurement_case {
+  *tenant_id, *id
+  plan_item_id, requisition_id
+  stored_step, method
+  version
+}
+entity sourcing_round {
+  *tenant_id, *id
+  case_id, round_no
+  outcome
+}
+entity bid {
+  *tenant_id, *id
+  round_id, bidder_name
+  price
+}
+entity committee {
+  *tenant_id, *id
+  case_id, type, order_no
+}
+entity committee_member {
+  *tenant_id, *id
+  committee_id, subject_ref
+  role
+}
+entity supplier {
+  *tenant_id, *id
+  name, tax_id_enc
+  tax_id_bidx, status
+}
+entity contract {
+  *tenant_id, *id
+  case_id, supplier_id
+  status, amount, version
+}
+entity contract_version {
+  *tenant_id, *id
+  contract_id, version_no
+  amount
+}
+entity phase {
+  *tenant_id, *id
+  contract_id, phase_no
+  due_on, amount
+  delivered_on
+}
+entity acceptance_signature {
+  *tenant_id, *id
+  phase_id, subject_ref
+  signed_at
+}
+entity guarantee {
+  *tenant_id, *id
+  contract_id, amount
+  expires_on, status
+}
+plan_item ||--o{ requisition
+plan_item ||--|| procurement_case
+procurement_case ||--|{ sourcing_round
+procurement_case ||--o{ committee
+committee ||--|{ committee_member
+sourcing_round ||--o{ bid
+procurement_case ||--o| contract
+supplier ||--o{ contract
+contract ||--|{ contract_version
+contract ||--|{ phase
+contract ||--o| guarantee
+phase ||--o{ acceptance_signature
+@enduml

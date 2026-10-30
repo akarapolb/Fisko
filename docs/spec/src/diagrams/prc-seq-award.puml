@@ -1,0 +1,43 @@
+@startuml
+!include include/common.puml
+' title.th: จากการประกาศผู้ชนะถึงการลงนามสัญญา
+' title.en: From award to contract signing
+' desc.th: เจ้าหน้าที่บันทึกผู้ชนะ ระบบตรวจการแยกหน้าที่ ส่วนได้เสีย และรายชื่อผู้ทิ้งงาน แล้วเริ่มนับระยะอุทธรณ์ เมื่อพ้นกำหนด เจ้าหน้าที่ร่างสัญญา บันทึกหลักประกัน และบันทึกการลงนาม ซึ่งเปลี่ยนการจองเป็นภาระผูกพันและเขียน outbox ในธุรกรรมเดียว
+' desc.en: The officer records the award; the system checks duties, declarations and the abandoned-work list, then starts the appeal period. When it ends, the officer drafts the contract, records the guarantee and records the signing, which converts the reservation to a commitment and writes the outbox in one transaction.
+skinparam sequenceMessageAlign left
+actor "$t("เจ้าหน้าที่พัสดุ", "Procurement officer")" as o
+participant "web" as w
+participant "evaluation" as e
+participant "contract" as c
+participant "platform" as p
+participant "budget" as b
+database "PostgreSQL" as db
+queue "outbox" as q
+
+o -> w : POST .../cases/{id}/award
+w -> p : $t("ตรวจสิทธิ์และ tenant", "check authority and tenant")
+w -> e : recordAward()
+e -> p : $t("ตรวจ SD-07 และรายชื่อผู้ทิ้งงาน", "check SD-07 and the abandoned-work list")
+e -> e : $t("ตรวจเกณฑ์ คำนวณวันสิ้นสุดอุทธรณ์", "check criteria, compute the appeal end")
+e -> db : $t("บันทึกผล เหตุการณ์แฟ้ม", "save award and case event")
+e -> q : procurement.award.recorded
+== $t("งานประจำวันพบว่าพ้นกำหนดอุทธรณ์และไม่มีอุทธรณ์ค้าง", "A daily job finds the appeal period over and no appeal open") ==
+e -> db : $t("แฟ้มไปขั้น 8", "case moves to step 8")
+o -> w : POST .../contracts
+w -> c : draft(caseId, phases, committee)
+c -> p : $t("ตรวจ SD-02 และ SD-06", "check SD-02 and SD-06")
+c -> db : $t("บันทึกร่าง ไม่ผูกพันวงเงิน", "save the draft, nothing committed")
+o -> w : POST .../contracts/{id}/guarantee
+w -> c : recordGuarantee()
+o -> w : POST .../contracts/{id}/sign
+w -> c : sign(version)
+c -> c : $t("ตรวจวันที่ลงนาม หลักประกัน ผลรวมงวด", "check signing date, guarantee, phase total")
+group $t("ธุรกรรมเดียว", "One transaction")
+  c -> b : commit(reservationRef, amount)
+  b --> c : $t("ผูกพันแล้ว", "committed")
+  c -> db : $t("สัญญา active ใบขอ contracted แฟ้มขั้น 9", "contract active, requisition contracted, case step 9")
+  c -> q : procurement.contract.signed
+end
+c -> p : $t("เขียน Audit", "write audit entry")
+c --> o : 200
+@enduml

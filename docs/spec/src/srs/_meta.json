@@ -1,0 +1,33 @@
+{
+  "code": "Fisko-SRS",
+  "title": {
+    "th": "ข้อกำหนดความต้องการซอฟต์แวร์ (SRS)",
+    "en": "Software Requirements Specification (SRS)"
+  },
+  "subtitle": {
+    "th": "ระบบบริหารงบประมาณ จัดซื้อจัดจ้าง และการเงินสำหรับหน่วยงานภาครัฐ",
+    "en": "Budget, procurement and finance platform for government agencies"
+  },
+  "version": "0.1",
+  "date": "2026-10-30",
+  "status": {
+    "th": "ร่าง บทนำร่องจัดซื้อจัดจ้าง",
+    "en": "Draft, Procurement pilot"
+  },
+  "files": [
+    "00-front.md",
+    "01-introduction.md",
+    "02-overall.md",
+    "03-interfaces.md",
+    "04-cross-cutting.md",
+    "05-modules.md",
+    "11-plt-platform.md",
+    "12-bgt-budget.md",
+    "13-prc-procurement.md",
+    "14-fin-finance.md",
+    "15-prj-projects.md",
+    "16-rev-review.md",
+    "80-verification.md",
+    "90-appendices.md"
+  ]
+}

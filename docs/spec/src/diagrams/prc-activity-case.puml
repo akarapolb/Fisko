@@ -1,0 +1,38 @@
+@startuml
+!include include/common.puml
+' title.th: กระบวนการจัดซื้อตั้งแต่แผนถึงปิดแฟ้ม
+' title.en: The procurement case from plan to closing
+' desc.th: กิจกรรมเริ่มจากรายการในแผนและแผนที่ประกาศ ผ่านใบขอซื้อ การเลือกวิธี แล้วแยกเป็นเส้นทางเฉพาะเจาะจงกับเส้นทางแข่งขัน จากนั้นรวมกันที่ผู้ชนะ สัญญา การตรวจรับ การจ่าย และการปิดแฟ้ม
+' desc.en: The activity starts from a plan item and the published plan, passes the requisition and the method decision, splits into the specific and competitive routes, then joins at the winner, contract, acceptance, payment and closing.
+' law: PPA 11; PPA 56; PPR 175
+skinparam defaultTextAlignment left
+start
+:$t("เพิ่มรายการในแผน สร้างแฟ้มขั้น 1", "Add a plan item, create the case at step 1");
+:$t("เสนอ อนุมัติ และประกาศแผน บันทึกเลขประกาศ e-GP", "Propose, approve and publish the plan, record the e-GP notice");
+:$t("ขอซื้อขอจ้าง จองวงเงินบนรายการจัดสรร", "Raise a requisition, reserve the amount on the line");
+if ($t("ผู้มีอำนาจอนุมัติ?", "Authorised approver approves?")) then ($t("ไม่", "no"))
+  :$t("ส่งคืน หรือไม่อนุมัติ คืนวงเงินที่จอง", "Return or reject, release the reservation");
+  stop
+else ($t("ใช่", "yes"))
+endif
+:$t("ระบบแนะนำวิธี เจ้าหน้าที่เลือก หัวหน้าอนุมัติเมื่อต่างจากคำแนะนำ", "Advise the method, officer chooses, head approves a differing choice");
+:$t("ราคากลาง TOR คณะกรรมการ", "Reference price, TOR, committees");
+if ($t("วิธีเฉพาะเจาะจง?", "Specific method?")) then ($t("ใช่", "yes"))
+  :$t("บันทึกใบเสนอราคา เลือกผู้เสนอราคา", "Record quotations, choose one");
+else ($t("ไม่", "no"))
+  :$t("บันทึกประกาศ e-GP ปิดรับและจำนวนผู้ยื่น", "Record the e-GP notice, closing and bidder count");
+  :$t("กรอกสรุปข้อเสนอ แจ้งส่วนได้เสีย ให้คะแนน", "Enter bid summaries, declare conflicts, score");
+  :$t("บันทึกผู้ชนะ นับระยะอุทธรณ์", "Record the award, start the appeal period");
+endif
+:$t("ร่างสัญญาและงวด บันทึกหลักประกัน", "Draft the contract and phases, record the guarantee");
+:$t("ลงนาม เปลี่ยนการจองเป็นภาระผูกพัน", "Sign, convert the reservation to a commitment");
+repeat
+  :$t("บันทึกการส่งมอบ คำนวณค่าปรับ", "Record the delivery, compute the penalty");
+  :$t("คณะกรรมการตรวจรับ ลงนาม ออกใบตรวจรับ", "Committee accepts, signs, certificates issued");
+  :$t("บันทึกใบแจ้งหนี้ ผ่านประตูเบิกจ่าย", "Record the invoice, pass the payment gate");
+  :$t("การเงินขอและอนุมัติจ่าย", "Finance requests and approves payment");
+repeat while ($t("ยังมีงวดเหลือ?", "Phases left?")) is ($t("มี", "yes")) not ($t("ไม่มี", "no"))
+:$t("พ้นระยะรับประกัน คืนหรือริบหลักประกัน", "Warranty ends, guarantee returned or forfeited");
+:$t("บันทึกบทเรียนและคะแนนผู้ขาย ปิดแฟ้ม", "Write lessons, score the supplier, close the case");
+stop
+@enduml

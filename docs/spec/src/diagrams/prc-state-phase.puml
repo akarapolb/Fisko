@@ -1,0 +1,31 @@
+@startuml
+!include include/common.puml
+' title.th: สถานะของงวดงาน
+' title.en: States of a phase
+' desc.th: งวดไม่มีช่องสถานะ ระบบคำนวณจากข้อมูล รอส่งมอบ ส่งมอบแล้ว ตรวจรับแล้ว และจ่ายแล้ว งวดที่ยังไม่ตรวจรับจะถูกยกเลิกเมื่อบอกเลิกสัญญา งวดที่ยังไม่ส่งมอบและเลยกำหนดแสดงว่าเกินกำหนด
+' desc.en: A phase has no status field. The state is derived from its data: Waiting, Delivered, Accepted and Paid. Unaccepted phases are cancelled when the contract is terminated. An undelivered phase past its due date shows Overdue.
+' law: PPR 175; PPR 176
+hide empty description
+left to right direction
+skinparam nodesep 70
+skinparam ranksep 120
+state "Waiting" as w
+state "Delivered" as d
+state "Accepted" as ac
+state "Paid" as p
+state "Cancelled" as x
+[*] --> w : $t("ลงนามสัญญา", "contract signed")
+w --> d : $t("บันทึกการส่งมอบ", "delivery recorded")
+d --> ac : $t("ลายมือชื่อครบ", "signatures reach need")
+ac --> p : $t("การเงินจ่ายงวดนี้", "Finance pays the phase")
+w --> x : $t("บอกเลิกสัญญา", "contract terminated")
+d --> x : $t("บอกเลิกสัญญา", "contract terminated")
+p --> [*]
+x --> [*]
+note top of w
+  $t("แสดง Overdue เมื่อเลยกำหนดส่งมอบ", "Shows Overdue past the due date")
+end note
+note bottom of d
+  $t("ความเห็นแย้งค้างหยุดการลงนาม", "An open dissent stops further signatures")
+end note
+@enduml

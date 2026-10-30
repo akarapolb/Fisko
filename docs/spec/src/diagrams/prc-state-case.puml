@@ -1,0 +1,47 @@
+@startuml
+!include include/common.puml
+' title.th: สถานะของแฟ้มจัดซื้อ
+' title.en: States of the procurement case
+' desc.th: แฟ้มเดินจากขั้น 1 ถึง 12 ขั้น 1 ถึง 9 บันทึกโดยคำสั่ง ขั้น 10 ถึง 12 ได้จากการตรวจรับ การจ่าย และการปิดแฟ้ม ขั้น 2 ถึง 8 ยกเลิกได้ ขั้น 4 ถึง 7 ล้มเหลวแล้วกลับขั้น 4 วิธีเฉพาะเจาะจงข้ามจากขั้น 4 ไปขั้น 7
+' desc.en: A case moves from step 1 to step 12. Steps 1 to 9 are set by commands. Steps 10 to 12 follow from acceptance, payment and closing. Steps 2 to 8 can be cancelled, steps 4 to 7 can fail back to step 4, and the specific method jumps from step 4 to step 7.
+' law: PPA 56
+hide empty description
+skinparam nodesep 40
+skinparam ranksep 34
+state "1 PLANNED" as s1
+state "2 REQUESTED" as s2
+state "3 APPROVED" as s3
+state "4 SPECIFYING" as s4
+state "5 SOURCING" as s5
+state "6 EVALUATING" as s6
+state "7 AWARDED" as s7
+state "8 CONTRACTING" as s8
+state "9 IN DELIVERY" as s9
+state "10 ACCEPTED" as s10
+state "11 PAYMENT" as s11
+state "12 CLOSED" as s12
+state "$t("0 ยกเลิก", "0 cancelled")" as s0
+[*] --> s1 : $t("เพิ่มรายการในแผน", "plan item added")
+s1 --> s2 : $t("ส่งใบขอ", "requisition sent")
+s2 --> s3 : $t("อนุมัติ", "approved")
+s2 --> s1 : $t("ไม่อนุมัติ ส่งคืน ถอน", "rejected, returned, withdrawn")
+s3 --> s4 : $t("กำหนดวิธีแล้ว", "method settled")
+s4 --> s5 : $t("ผ่านเงื่อนไขแข่งขัน", "competitive checks pass")
+s4 --> s7 : $t("เฉพาะเจาะจง เลือกใบเสนอราคาแล้ว", "specific, quotation chosen")
+s5 --> s6 : $t("ปิดรับ นับผู้ยื่นแล้ว", "bids closed and counted")
+s5 --> s4 : $t("ไม่มีผู้ยื่น หรือล้มเหลว", "no bidder or failed")
+s6 --> s7 : $t("บันทึกผู้ชนะ", "award recorded")
+s6 --> s4 : $t("ล้มเหลว", "failed")
+s7 --> s8 : $t("พ้นกำหนดอุทธรณ์", "appeal period over")
+s7 --> s6 : $t("รับอุทธรณ์ หรือถอนผล", "appeal upheld or award withdrawn")
+s7 --> s4 : $t("ล้มเหลว", "failed")
+s8 --> s9 : $t("ลงนามสัญญา", "signing recorded")
+s9 --> s10 : $t("ตรวจรับครบทุกงวด", "every live phase accepted")
+s10 --> s11 : $t("มีการจ่าย", "a payment exists")
+s11 --> s12 : $t("จ่ายครบและปิดแฟ้ม", "all paid and case closed")
+s12 --> [*]
+s0 --> s2 : $t("ใบขอใหม่", "new requisition")
+note right of s0
+  $t("ขั้น 2 ถึง 8 ยกเลิกได้พร้อมเหตุผล", "Steps 2 to 8 can be cancelled with a reason")
+end note
+@enduml

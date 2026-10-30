@@ -1,0 +1,52 @@
+@startuml
+!include include/common.puml
+' title.th: องค์ประกอบภายในโมดูล procurement
+' title.en: Components inside the procurement module
+' desc.th: โมดูล procurement แบ่งเป็นแพ็กเกจภายในตามงาน เปิดเฉพาะแพ็กเกจ api ให้โมดูลอื่น โมดูล finance เรียก procurement ส่วน procurement เรียก platform และ budget และรับข้อเท็จจริงของการเงินผ่าน SPI ที่ finance เป็นผู้ติดตั้ง การเชื่อมต่อภายนอกผ่าน outbox และ adapter
+' desc.en: The procurement module is split into internal packages by work area and publishes only its api package. Finance calls procurement. Procurement calls platform and budget, and receives Finance facts through an SPI that finance implements. External links run through the outbox and adapters.
+left to right direction
+skinparam nodesep 26
+skinparam ranksep 80
+actor "$t("เจ้าหน้าที่", "Staff")" as staff
+actor "$t("ผู้ขาย", "Supplier")" as sup
+package "$t("โมดูล procurement (ข้อเสนอ)", "Module procurement (proposal)")" as prc {
+  component "web" as web
+  package "$t("แผนและการจัดหา", "Plan and sourcing")" as a {
+    component "plan, requisition" as plan
+    component "casefile, method" as cf
+    component "sourcing, evaluation" as so
+    component "committee" as co
+  }
+  package "$t("สัญญาและการตรวจรับ", "Contract and acceptance")" as b {
+    component "contract" as ct
+    component "acceptance" as ac
+    component "penalty" as pe
+  }
+  package "$t("ข้อมูลสนับสนุน", "Support")" as c {
+    component "supplier, documents" as su
+    component "settings, reporting" as st
+    component "assistant" as ai
+    component "egp" as eg
+  }
+  component "api" as api
+}
+component "$t("โมดูล platform", "Module platform")" as plt <<sec>>
+component "$t("โมดูล budget", "Module budget")" as bgt <<data>>
+component "$t("โมดูล finance", "Module finance")" as fin <<data>>
+queue "$t("outbox และ RabbitMQ", "Outbox and RabbitMQ")" as mq
+component "e-GP" as egp <<ext>>
+staff --> web
+sup --> web
+web --> plan
+web --> ac
+web --> su
+so --> plt : $t("สิทธิ์ แยกหน้าที่ Audit", "rights, SoD, audit")
+plan --> bgt : $t("จอง", "reserve")
+ct --> bgt : $t("ผูกพัน", "commit")
+ac --> mq : $t("เหตุการณ์", "events")
+fin --> api : $t("ประตูเบิกจ่าย ผลการจ่าย", "gate, payment result")
+api --> ac
+fin ..> api : $t("ติดตั้ง SPI ข้อเท็จจริงการเงิน", "implements the Finance facts SPI")
+eg --> egp : $t("ไฟล์ก่อน API ภายหลัง", "file first, API later")
+ai --> plt : $t("AI gateway", "AI gateway")
+@enduml

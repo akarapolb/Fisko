@@ -1,0 +1,25 @@
+@startuml
+!include include/common.puml
+' title.th: สถานะของสัญญา
+' title.en: States of a contract
+' desc.th: สัญญาเริ่มเป็นร่างซึ่งยังไม่ผูกพันวงเงิน การลงนามทำให้มีผลและผูกพันวงเงิน สัญญาปิดเมื่อปิดแฟ้ม และถูกบอกเลิกเมื่อผู้มีอำนาจอนุมัติการบอกเลิก
+' desc.en: A contract starts as a draft that commits nothing. Signing makes it active and commits the line. It closes with the case, or ends as terminated when the authorised approver approves a termination.
+hide empty description
+left to right direction
+skinparam nodesep 60
+skinparam ranksep 110
+state "draft" as d
+state "active" as a
+state "closed" as c
+state "terminated" as t
+[*] --> d : $t("ร่างจากแฟ้มขั้น 8", "drafted from a case at step 8")
+d --> [*] : $t("ลบร่าง เลขไม่ถูกใช้ซ้ำ", "draft deleted, number kept")
+d --> a : $t("บันทึกการลงนาม", "signing recorded")
+a --> c : $t("แฟ้มปิด", "case closes")
+a --> t : $t("อนุมัติการบอกเลิก", "termination approved")
+c --> [*]
+t --> [*]
+note bottom of a
+  $t("การเปลี่ยนวงเงินหรือเวลาสร้างฉบับใหม่ สถานะไม่เปลี่ยน", "A change of amount or time adds a version; the status stays")
+end note
+@enduml

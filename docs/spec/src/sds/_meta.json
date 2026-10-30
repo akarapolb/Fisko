@@ -1,0 +1,38 @@
+{
+  "code": "Fisko-SDS",
+  "title": {
+    "th": "ข้อกำหนดการออกแบบซอฟต์แวร์ (SDS)",
+    "en": "Software Design Specification (SDS)"
+  },
+  "subtitle": {
+    "th": "ระบบบริหารงบประมาณ จัดซื้อจัดจ้าง และการเงินสำหรับหน่วยงานภาครัฐ",
+    "en": "Budget, procurement and finance platform for government agencies"
+  },
+  "version": "0.1",
+  "date": "2026-10-30",
+  "status": {
+    "th": "ร่าง บทนำร่องจัดซื้อจัดจ้าง",
+    "en": "Draft, Procurement pilot"
+  },
+  "files": [
+    "00-front.md",
+    "01-introduction.md",
+    "02-architecture.md",
+    "03-cross-cutting.md",
+    "04-deployment.md",
+    "05-devsecops.md",
+    "06-monitoring.md",
+    "07-integration.md",
+    "08-modules.md",
+    "09-end-to-end.md",
+    "11-plt-platform.md",
+    "12-bgt-budget.md",
+    "13-prc-procurement.md",
+    "14-fin-finance.md",
+    "15-prj-projects.md",
+    "16-rev-review.md",
+    "25-prototype-screens.md",
+    "90-appendices.md",
+    "91-data-dictionary.md"
+  ]
+}

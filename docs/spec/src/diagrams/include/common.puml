@@ -1,0 +1,107 @@
+' Shared theme and the language switch for every SDS diagram.
+' Include with:   !include include/common.puml
+' Write every label as $t("ภาษาไทย", "English"). The renderer builds both languages from one source:
+' without a flag the Thai text is used, with -DLANG_EN the English text.
+!pragma layout smetana
+!function $t($th, $en)
+!ifdef LANG_EN
+!return $en
+!else
+!return $th
+!endif
+!endfunction
+
+skinparam shadowing false
+skinparam defaultFontName "Leelawadee UI"
+skinparam defaultFontSize 13
+skinparam defaultTextAlignment center
+skinparam roundCorner 10
+skinparam dpi 150
+skinparam BackgroundColor #FFFFFF
+skinparam ArrowColor #5B6270
+skinparam ArrowFontSize 12
+skinparam ArrowThickness 1.2
+skinparam NoteBackgroundColor #E8F5EC
+skinparam NoteBorderColor #15803D
+skinparam NoteFontSize 12
+skinparam TitleFontSize 16
+skinparam TitleFontStyle bold
+skinparam LegendBackgroundColor #FFFFFF
+skinparam LegendBorderColor #D7DAE0
+skinparam LegendFontSize 12
+
+skinparam rectangle {
+  BackgroundColor #FFFFFF
+  BorderColor #15803D
+  FontColor #111827
+}
+skinparam component {
+  BackgroundColor #FFFFFF
+  BorderColor #15803D
+  FontColor #111827
+  BackgroundColor<<ext>> #F4F5F7
+  BorderColor<<ext>> #5B6270
+  BackgroundColor<<ai>> #ECF0FA
+  BorderColor<<ai>> #34498C
+  BackgroundColor<<data>> #ECF0FA
+  BorderColor<<data>> #4A5FA3
+  BackgroundColor<<sec>> #E8F5EC
+  BorderColor<<sec>> #15803D
+  BackgroundColor<<ops>> #E8F5EC
+  BorderColor<<ops>> #15803D
+}
+skinparam node {
+  BackgroundColor #FFFFFF
+  BorderColor #5B6270
+}
+skinparam database {
+  BackgroundColor #ECF0FA
+  BorderColor #4A5FA3
+}
+skinparam queue {
+  BackgroundColor #E8F5EC
+  BorderColor #15803D
+}
+skinparam package {
+  BackgroundColor #F7F8FA
+  BorderColor #D7DAE0
+  FontColor #5B6270
+}
+skinparam actor {
+  BackgroundColor #E8F5EC
+  BorderColor #15803D
+}
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #15803D
+}
+skinparam sequence {
+  ParticipantBackgroundColor #FFFFFF
+  ParticipantBorderColor #15803D
+  LifeLineBorderColor #D7DAE0
+  GroupBackgroundColor #F4F5F7
+  BoxBackgroundColor #F7F8FA
+  BoxBorderColor #D7DAE0
+}
+skinparam activity {
+  BackgroundColor #FFFFFF
+  BorderColor #15803D
+  DiamondBackgroundColor #E8F5EC
+  DiamondBorderColor #15803D
+}
+skinparam state {
+  BackgroundColor #FFFFFF
+  BorderColor #15803D
+  StartColor #111827
+  EndColor #111827
+}
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #15803D
+  HeaderBackgroundColor #E8F5EC
+  AttributeFontSize 12
+}
+skinparam entity {
+  BackgroundColor #FFFFFF
+  BorderColor #4A5FA3
+}

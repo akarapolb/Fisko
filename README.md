@@ -24,6 +24,7 @@ This repository holds the conceptual design material and a clickable prototype p
 | `ROADMAP.md` | The deeper feature planned for each module (all built). |
 | `docs/adr/` | Architecture decision records for the production build: licence, stack, tenancy, hosting, encryption, PDPA and audit. |
 | `docs/architecture/Fisko_Architecture.html` | Production architecture diagrams: request paths, tenant cells, field encryption and audit erasure, with review questions. |
+| `docs/spec/` | SRS and SDS sources and build (version 0.1 skeleton), bilingual, with the clause register. See `docs/spec/README.md`. |
 | `src/` | Prototype source. |
 
 ## Prototype
