@@ -38,7 +38,7 @@ const canSpend = () => acting("exec", "spend");
 const nextId = (prefix, list, fy = FAM_FY) => `${prefix}-${fy}-${String(Math.max(0, ...[...list.map(x => x.id), ...(S.delIds || [])].filter(x => x.startsWith(`${prefix}-${fy}-`)).map(x => Number(x.split("-")[2]) || 0)) + 1).padStart(3, "0")}`;
 // A phase is waiting for Finance when it is accepted and has neither a live payment nor a live voucher (round FN2).
 const famAcceptedUnpaid = () => S.contracts.flatMap(c => c.phases.filter(ph => phaseAccepted(ph) && !S.payreqs.some(p => p.contract === c.id && p.phase === ph.n && p.status !== "rejected")
-  && !(S.vouchers || []).some(v => v.contract === c.id && v.phase === ph.n && v.state !== "cancelled")).map(ph => ({ c, ph })));
+  && !(S.vouchers || []).some(v => v.contract === c.id && v.phase === ph.n && !["cancelled", "rejected"].includes(v.state))).map(ph => ({ c, ph })));
 
 function famTasks(R) {
   if (!S.pplan) return;

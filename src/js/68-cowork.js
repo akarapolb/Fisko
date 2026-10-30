@@ -160,7 +160,7 @@ function cwAnswer(agentId, text, files, recs) {
   if (id === "AG-05" || id === "AG-06" && /ช้า|behind/i.test(t)) {
     if (/ผิดปกติ|anomal/i.test(t) && S.anoms) {
       steps.push(step("anomalies.read", L("อ่านสัญญาณความผิดปกติ", "Read the anomaly signals")));
-      return { agent: id, steps, html: `<p>${L("สัญญาณความผิดปกติที่ยังเปิดอยู่", "Open anomaly signals")}:</p><ul>${S.anoms.map(x => `<li><span class="mono">${x.id}</span> ${esc(tx(x.title || x.what || x.kind))} · ${esc(String(x.status))}</li>`).join("")}</ul>`, actions: [cwAct(L("เปิดความผิดปกติ", "Open anomalies"), "jump", "intel-anoms", true)] };
+      return { agent: id, steps, html: `<p>${L("สัญญาณความผิดปกติที่ยังเปิดอยู่", "Open anomaly signals")}:</p><ul>${S.anoms.filter(x => ROLE !== "div" || x.unit === me().unit).map(x => `<li><span class="mono">${x.id}</span> ${esc(tx(x.title || x.what || x.kind))} · ${esc(String(x.status))}</li>`).join("")}</ul>`, actions: [cwAct(L("เปิดความผิดปกติ", "Open anomalies"), "jump", "intel-anoms", true)] };
     }
     steps.push(step("execution.read", L("อ่านแผนและผลการเบิกจ่าย M07", "Read M07 plan and spending")));
     return { agent: id, steps, html: answer(0), actions: [cwAct(L("เปิดติดตามการใช้จ่าย", "Open execution monitoring"), "go", "dashboard", true)] };
@@ -210,6 +210,8 @@ function cwAnswer(agentId, text, files, recs) {
   const ag = cwAgents().filter(x => x.id !== "FA");
   return { agent: id, steps, html: `<p>${L("ฉันช่วยได้หลายเรื่อง ลองถามแบบนี้ หรือเลือกผู้ช่วยเฉพาะทาง", "I can help with lots of things. Try one of these, or pick a specialist.")}</p><ul>${cwSuggest().map(s => `<li>${esc(s)}</li>`).join("")}</ul><p class="sub">${L("ผู้ช่วยที่คุณใช้ได้", "Specialists you can use")}: ${ag.map(x => tx(x.name)).join(" · ")}</p>`, actions: [cwAct(L("ดูผู้ช่วยทั้งหมด", "See all agents"), "agents", "", true)] };
 }
+// An agent switched off answers nothing, and the front agent follows AG-06, the assistant it stands for.
+const cwOff = res => (agentOn(res.agent === "FA" ? "AG-06" : res.agent) ? null : { agent: res.agent, off: true, steps: [], actions: [], html: `<p>${L("ผู้ช่วยนี้ถูกปิดใช้งาน ผู้ดูแลเปิดได้ที่แท็บเอเจนต์ AI", "This assistant is switched off. An administrator can turn it on in the AI agents tab.")}</p>` });
 const CW_DRAFTS = {};
 
 function cwSend(text) {
@@ -222,11 +224,11 @@ function cwSend(text) {
   const ctx = CW_CTX ? cwContext() : null, files = CW_FILES.splice(0), recs = CW_RECS.splice(0);
   th.msgs.push({ role: "u", text, files: files.map(f => ({ name: f.name, size: f.size, kind: f.kind, key: f.key })), recs, ctx: ctx ? { label: ctx.label, rec: ctx.rec } : null, t: nowIso() });
   th.t = nowIso();
-  const prevFiles = files.length ? files : [], res = cwAnswer(th.agent, text, prevFiles, recs.concat(ctx && ctx.rec ? [ctx.rec] : []));
+  const prevFiles = files.length ? files : [], ans = cwAnswer(th.agent, text, prevFiles, recs.concat(ctx && ctx.rec ? [ctx.rec] : [])), res = cwOff(ans) || ans;
   const msg = { role: "a", agent: res.agent, html: "", steps: res.steps.map(s => ({ ...s, done: false })), actions: res.actions, t: nowIso(), pending: true };
   th.msgs.push(msg); CW_BUSY = true; cwRender();
   const ag = cwAgent(res.agent);
-  S.aiLog.unshift({ t: nowIso(), agent: res.agent === "FA" ? "AG-06" : res.agent, user: me().id, action: ["ตอบในแชตร่วมทำงาน", "Answered in co-work chat"], target: (text || files.map(f => f.name).join(", ")).slice(0, 60), sources: res.steps.length, ok: true });
+  if (!res.off) S.aiLog.unshift({ t: nowIso(), agent: res.agent === "FA" ? "AG-06" : res.agent, user: me().id, action: ["ตอบในแชตร่วมทำงาน", "Answered in co-work chat"], target: (text || files.map(f => f.name).join(", ")).slice(0, 60), sources: res.steps.length, ok: true });
   let i = 0;
   const tick = () => {
     if (i < msg.steps.length) { msg.steps[i].done = true; i++; cwRender(); setTimeout(tick, 260); return; }

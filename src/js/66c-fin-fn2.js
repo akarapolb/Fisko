@@ -64,7 +64,8 @@ const vHasPo = v => { const c = vcCon(v), m = vcCommit(v); return !!((c && c.gfP
 function vEvidence(v) {
   if (v.type === "proc") {
     const c = vcCon(v), ph = vcPh(v); if (!c || !ph) return [];
-    return payGate(c, ph).checks.map(k => ({ k: "", label: k.label, ok: k.ok, auto: true }));
+    const g = payGate(c, ph);
+    return g.checks.map(k => ({ k: "", label: k.ok || !g.released ? k.label : `${k.label} (${L("ปลดข้อยกเว้นแล้ว", "exception released")})`, ok: k.ok || g.released, auto: true }));
   }
   return VT[v.type].ev.map(([k, label]) => ({ k, label: tx(label), ok: !!(v.ev || {})[k], auto: false }));
 }
@@ -395,7 +396,7 @@ function vcAct(v, a, why0) {
     if (!vcCanApprove(v)) return;
     if (!vRules(v).every(r => r.ok || r.warn)) { toast(L("ยังมีกฎที่ไม่ผ่าน (เช่น วงเงินถูกใช้ไปแล้ว) ดูหัวข้อ กฎ", "A rule is no longer met (for example the amount is used up); see Rules")); return; }
     const head = !canSpend(), actors = head ? [me().id] : sodActors("exec", "spend"), au = head ? { holder: null, via: null } : famAuth(), x = vCalc(v);
-    if (!sodCheck("SD-11", actors, [v.maker, v.checker].filter(Boolean), v.id)) return;
+    if (!sodCheck("SD-11", actors, [v.maker, v.checker].filter(Boolean), v.id) || !sodCheck("SD-03", actors, [v.maker], v.id)) return;
     const c = vcCon(v);
     if (c && !sodCheck("SD-04", actors, [...new Set([...c.inspectors, ...phaseSigners(c)])], v.id)) return;
     const row = vcAuth(x.spend, head ? "finhead" : "exec");

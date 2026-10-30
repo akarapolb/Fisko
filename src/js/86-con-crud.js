@@ -52,7 +52,9 @@ CRUD.def("pcCon", {
   },
   check: (v, r) => {
     const insp = Object.keys(v).filter(k => k.startsWith("i_") && v[k]).map(k => k.slice(2)), e = [];
-    if (r && r.status !== "draft") { if (insp.length < conInspN(r.amount)) e.push({ f: null, m: L("กรรมการตรวจรับไม่ครบ", "Not enough acceptance committee members") }); return e; }
+    if (r && r.status !== "draft") { if (insp.length < conInspN(r.amount)) e.push({ f: null, m: L("กรรมการตรวจรับไม่ครบ", "Not enough acceptance committee members") });
+      const rc = conCaseOf(r); if (rc && sodOn("SD-06") && insp.some(id => caseJudges(rc).includes(id))) e.push({ f: null, m: L("กรรมการตรวจรับซ้ำกับกรรมการพิจารณาผล (SD-06)", "An acceptance member sat on the evaluation committee (SD-06)") });
+      return e; }
     const cs = r ? conCaseOf(r) : caseOf(v.cs); if (!cs) return [{ f: "cs", m: L("เลือกแฟ้ม", "Choose a case") }];
     if (!(v.amount > 0) || v.amount > conCapOf(cs)) e.push({ f: "amount", m: L("วงเงินต้องไม่เกินราคาที่ชนะและวงเงินที่ขอ", "Can't exceed the winning price or the requisition") });
     const sched = conSched(v, r, v.amount, v.signed);

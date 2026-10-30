@@ -504,9 +504,9 @@ The sweep also opens every Finance page, tab and record drawer for the listed ro
 | OI-FIN-06 | The code cites clauses 55 to 68 of the treasury regulation for advances, so this chapter uses TRR. Does the Regulation on Advance Funds (ADV) apply to any Finance work? | Finance specialist | Advances group |
 | OI-FIN-07 | May a reason override a failed close check, or must some checks be hard stops? | Finance specialist, auditor | BR-FIN-26, BR-FIN-27 |
 | OI-FIN-08 | Does a phase become Paid at approval, as the code does, or when money is paid? | Product owner, Procurement owner | FIN-FR-039, PRC-FR-142 |
-| OI-FIN-09 | A released phase never passes the evidence check, because `vEvidence` copies the failed gate check | Development team | FIN-FR-021 |
-| OI-FIN-10 | A rejected contract voucher blocks its phase, because `famAcceptedUnpaid` and `phPayStarted` count any voucher not cancelled | Development team | FIN-FR-034 |
-| OI-FIN-11 | SD-03 has no check. SD-11 and P-F05 cover its purpose, so it should be removed or merged | Finance owner, Platform owner | OI-PLT-04 |
+| OI-FIN-09 | A released phase never passes the evidence check, because `vEvidence` copies the failed gate check Fixed in round 67, with a sweep check. | Development team | FIN-FR-021 |
+| OI-FIN-10 | A rejected contract voucher blocks its phase, because `famAcceptedUnpaid` and `phPayStarted` count any voucher not cancelled Fixed in round 67, with a sweep check. | Development team | FIN-FR-034 |
+| OI-FIN-11 | SD-03 is checked at voucher approval since round 67. With SD-11 on it never fires first, so it may still be merged | Finance owner, Platform owner | OI-PLT-04 |
 | OI-FIN-12 | Retention of vouchers, receipts, advances and statements | Finance specialist, product owner | FIN-DR-007 |
 | OI-FIN-13 | How does a confirmer verify a change from the portal, and who is the second person when the requester is the supplier? | Finance specialist, security reviewer | FIN-FR-057 |
 | OI-FIN-14 | The payroll file: scope and layout | Product owner | FIN-IR-010 |

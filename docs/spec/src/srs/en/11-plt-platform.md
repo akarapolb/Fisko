@@ -8,7 +8,7 @@ No production code exists yet, so this chapter was read from the prototype code 
 
 | Component | State in the prototype | Evidence |
 | --- | --- | --- |
-| Duty rule engine and blocked-attempt log | Built; SD-03 is listed and has no check | Sweep FC1, FC2, FC4 and FC5 walks |
+| Duty rule engine and blocked-attempt log | Built | Sweep FC1, FC2, FC4 and FC5 walks |
 | Idle sign-out, footer and policy pages, review step, opening a fiscal year | Built, with specific checks | Sweep shell section, rounds 65 and 66, E2E walk |
 | Users, units, master data, approval route, delegation, audit page | Built, with no action walk | Page-open sweep only |
 | System rail, launcher, My Workspace, approvals inbox, exception centre | Built, with no action walk | Sweep shell section checks text only |
@@ -115,19 +115,19 @@ Business rules are conditions that several requirements share. The Source column
 
 ### Duty rule register {#plt-rules-sod}
 
-This is every duty rule that exists in the code, by its code id. Fifteen rules are listed in the shared engine in `64-duties.js`. SD-10 sits in the budget meeting page, and SD-09 exists only in a design document. The defaults are a proposal (decision D-F04) and an agency adjusts them to its internal control policy.
+This is every duty rule that exists in the code, by its code id. Sixteen rules are listed in the shared engine in `64-duties.js`, and SD-10 sits in the budget meeting page. The defaults are a proposal (decision D-F04) and an agency adjusts them to its internal control policy.
 
 | Rule | First step | Next step, by another person | Enforced in the code | Delegator checked | Owner |
 | --- | --- | --- | --- | --- | --- |
 | SD-01 | Raise a requisition | Approve the requisition | `60-procurement.js`, `84-proc-crud.js` sodCheck | Yes | PRC |
 | SD-02 | Run the procurement and create the contract | Accept the work | `60-procurement.js`, `63-contracts.js` sodCheck | No | PRC |
-| SD-03 | Request the payment | Approve the payment | None. The rule is listed and has a switch, and no code calls it | No | FIN |
+| SD-03 | Request the payment | Approve the payment | Voucher approval, `66c-fin-fn2.js` | Yes | FIN |
 | SD-04 | Accept the work | Approve the payment | `66c-fin-fn2.js` sodCheck | Yes | FIN |
 | SD-05 | Approve the payment | Reconcile with GFMIS | `62-finance.js` sodCheck | No, it compares the approver and the holder of the authority | FIN |
 | SD-06 | Sit on the evaluation or purchasing committee | Accept the work | `60-procurement.js` sodCheck; `86-con-crud.js` form check that logs nothing | No | PRC |
 | SD-07 | Declare a conflict with a bidder | Evaluate that case | `61b-sourcing.js` coiOk reads the switch; no blocked-attempt log | No | PRC |
 | SD-08 | Propose a contract change | Approve the change | `63-contracts.js`, `63b-contract-late.js`, `87-proc-e2e.js` sodCheck | Yes, for an executive decision | PRC |
-| SD-09 | Prepare a transfer request | Approve it | None. Budget design only | No | BGT |
+| SD-09 | Prepare a transfer request | Approve it | Transfer approval, `47d-alloc-b4.js` and `77-alloc-crud.js` | Yes | BGT |
 | SD-10 | Belong to the requesting unit | Vote on that request | `42d-review-b3.js` marks the member as abstaining. No switch and no log | No | BGT |
 | SD-11 | Prepare or check a voucher | Approve the payment | `66c-fin-fn2.js`, `88-fin-nb-crud.js` sodCheck | Yes | FIN |
 | SD-12 | Borrow an advance | Approve the advance or check its clearing | `66d-fin-fn3.js` sodCheck | Yes, at approval | FIN |
@@ -137,7 +137,7 @@ This is every duty rule that exists in the code, by its code id. Fifteen rules a
 | SD-16 | Close a period, day or reconciliation | Reopen it | `66f-fin-fn5.js` sodCheck | No | FIN |
 | P-F05 | Prepare a voucher | Check its evidence | `66c-fin-fn2.js` sodCheck | No | FIN |
 
-> [!WARN] SD-03 shows as a working rule on the duty page, yet nothing checks it. A voucher's maker is refused by SD-11, so the rule may be redundant. The FIN owner must either wire the rule or remove it (OI-PLT-04).
+> [!NOTE] SD-03 has a check at voucher approval since round 67. A voucher's maker is refused by SD-11 first, so SD-03 acts only when SD-11 is switched off, and the rule may be redundant. The FIN owner decides whether to keep it (OI-PLT-04).
 
 ## Functional requirements {#plt-fr}
 
@@ -212,7 +212,7 @@ Each status rests on reading the code and the sweep, as explained in the status 
 | PLT-FR-043 | The system shall apply BR-PLT-09 on a page that shows the administrator switches and shows the auditor the same page as read only. | - | M | T | Partial | 64-duties.js ADMIN.duties, BIND_ADMIN.duties |
 | PLT-FR-044 | The system shall require a reason of at least 10 characters to switch a duty rule off. | - | M | T | Planned | - |
 | PLT-FR-045 | The system shall show blocked attempts to the administrator and the auditor. The prototype keeps the latest 100, and production shall keep them all. | - | M | T | Partial | 64-duties.js ADMIN.duties |
-| PLT-FR-046 | Every rule in the register shall have at least one enforced check, and every enforced check shall log its blocks through the engine. | - | M | T | Partial | SD-03, SD-07 and the second SD-06 path do not comply |
+| PLT-FR-046 | Every rule in the register shall have at least one enforced check, and every enforced check shall log its blocks through the engine. | - | M | T | Partial | SD-07 and the second SD-06 path do not comply |
 
 ### Delegation and acting {#plt-fr-deleg}
 
@@ -234,7 +234,7 @@ Each status rests on reading the code and the sweep, as explained in the status 
 | PLT-FR-060 | The system shall stop a delegation from taking effect when the delegator or the delegate is suspended or changes role. The code stops it for a role change of the delegator only. | - | M | T | Partial | 54-identity.js delegFor |
 | PLT-FR-061 | The system shall warn the delegator at creation when a delegation overlaps another of theirs in the same scope, and shall apply the rule that OI-PLT-01 decides. | - | M | T | Planned | - |
 
-> [!OPEN] Two overlapping delegations from one person are allowed, and this is unresolved. The code has no overlap check: the form validates only the date order, and the seeded data itself holds one person delegating the same scope to two people for the same dates. Both delegates can then act at once, and the delegator can too (BR-PLT-14). When one delegate holds the same authority twice, `delegFor` returns the first match, so the log can name a delegation other than the one the user meant, and revoking that one leaves the other in force. When a user holds a scope from two people, `sodActors` checks only the first, so a duty clash with the second is missed (PLT-FR-042). The product owner and the legal unit must decide whether an overlap is forbidden, allowed with a warning, or allowed only for different delegates (OI-PLT-01).
+> [!OPEN] Two overlapping delegations from one person are allowed, and this is unresolved. The code has no overlap check: the form validates only the date order, and the seeded data itself holds one person delegating the same scope to two people for the same dates. Both delegates can then act at once, and the delegator can too (BR-PLT-14). When one delegate holds the same authority twice, `delegFor` returns the first match, so the log can name a delegation other than the one the user meant, and revoking that one leaves the other in force. Since round 67 `sodActors` checks everyone whose authority the user holds, so a duty clash with the second person is no longer missed (PLT-FR-042). The product owner and the legal unit must decide whether an overlap is forbidden, allowed with a warning, or allowed only for different delegates (OI-PLT-01).
 
 ### Approval chains {#plt-fr-approval}
 
@@ -536,7 +536,7 @@ The sweep also opens every page and tab for every role, language and organisatio
 | OI-PLT-01 | Two overlapping delegations from one person are allowed. Should an overlap be forbidden, allowed with a warning, or allowed only for different delegates? | Product owner, legal unit | PLT-FR-061, PLT-FR-042 |
 | OI-PLT-02 | Which approvals may be delegated under the rules, for how long, and is a maximum length needed? (D-09) | Executives, legal unit | BR-PLT-10, BR-PLT-11 |
 | OI-PLT-03 | Which duty rules come from law and can never be switched off? This is one question with DG-PRC-05 in the SDS, and one answer settles both | Procurement specialist, finance specialist, legal unit | BR-PLT-09, PLT-CR-006 |
-| OI-PLT-04 | SD-03 has no check, SD-09 is not built, SD-10 has no switch or log, and SD-07 and one SD-06 path do not log blocks. Wire each one or remove it | Development team, FIN and BGT owners | PLT-FR-046 |
+| OI-PLT-04 | SD-03 and SD-09 have checks since round 67. SD-10 still has no switch or log, and SD-07 and one SD-06 path still do not log blocks. Wire each one or remove it | Development team, FIN and BGT owners | PLT-FR-046 |
 | OI-PLT-05 | Does one person need several roles or several units, for example an acting head? | Product owner | BR-PLT-02 |
 | OI-PLT-06 | Confirm the range XC-SEC-008 proposes for `idleMin`, set one for `warnMin`, and say whether 0 is allowed | Product owner, security reviewer | BR-PLT-05 |
 | OI-PLT-07 | MFA for every staff account, as the code and XC-SEC-006 do, or only for executives, Planning, Finance and administrators, as the design says? | Product owner, security reviewer | BR-PLT-03 |

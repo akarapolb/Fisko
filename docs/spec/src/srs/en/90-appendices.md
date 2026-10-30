@@ -117,7 +117,7 @@ The 112 open issues of the cross-cutting and module chapters are listed here by 
 | OI-FIN-04 | Withholding table for compensation | Finance specialist, tax adviser | FIN-FR-029 |
 | OI-FIN-06 | The code cites clauses 55 to 68 of the treasury regulation for advances, so this chapter uses TRR. Does the Regulation on Advance Funds (ADV) apply to any Finance work? | Finance specialist | Advances group |
 | OI-FIN-07 | May a reason override a failed close check, or must some checks be hard stops? | Finance specialist, auditor | BR-FIN-26, BR-FIN-27 |
-| OI-FIN-11 | SD-03 has no check. SD-11 and P-F05 cover its purpose, so it should be removed or merged | Finance owner, Platform owner | OI-PLT-04 |
+| OI-FIN-11 | SD-03 is checked at voucher approval since round 67. With SD-11 on it never fires first, so it may still be merged | Finance owner, Platform owner | OI-PLT-04 |
 | OI-FIN-12 | Retention of vouchers, receipts, advances and statements | Finance specialist, product owner | FIN-DR-007 |
 | OI-FIN-13 | How does a confirmer verify a change from the portal, and who is the second person when the requester is the supplier? | Finance specialist, security reviewer | FIN-FR-057 |
 | OI-FIN-15 | Should the system check the rank of cash committee members? | Finance specialist | BR-FIN-22 |
@@ -147,18 +147,18 @@ The 112 open issues of the cross-cutting and module chapters are listed here by 
 | Issue | Question | Needed from | Affects |
 | --- | --- | --- | --- |
 | OI-XC-13 | The category code `I18` has a digit, and the id patterns in `scripts/build_spec.py` accept letters only, so an `XC-I18` row would drop out of the requirement list. Fix the patterns, or keep language rows under `XC-ACC` | Development team | XC-ACC-012 to XC-ACC-018 |
-| OI-PLT-04 | SD-03 has no check, SD-09 is not built, SD-10 has no switch or log, and SD-07 and one SD-06 path do not log blocks. Wire each one or remove it | Development team, FIN and BGT owners | PLT-FR-046 |
+| OI-PLT-04 | SD-03 and SD-09 have checks since round 67. SD-10 still has no switch or log, and SD-07 and one SD-06 path still do not log blocks. Wire each one or remove it | Development team, FIN and BGT owners | PLT-FR-046 |
 | OI-PLT-09 | Undo removes the audit entry of the undone action. Replace it with compensating actions | Development team | BR-PLT-19, PLT-FR-143 |
-| OI-BGT-05 | A transfer at `bb` holds no money. Fix it and add a check | Development team | BGT-FR-117, BGT-FR-114 |
-| OI-BGT-06 | SD-09 has no check, so one Finance officer can request and approve a T1. SD-10 has no switch or log. Wire each one (OI-PLT-04) | Development team, BGT owner | BGT-FR-124, BGT-FR-070 |
+| OI-BGT-05 | A transfer at `bb` holds no money. Fix it and add a check Fixed in round 67, with a sweep check. | Development team | BGT-FR-117, BGT-FR-114 |
+| OI-BGT-06 | SD-09 has a check since round 67, so one person cannot request and approve the same transfer. SD-10 still has no switch or log (OI-PLT-04) | Development team, BGT owner | BGT-FR-124, BGT-FR-070 |
 | OI-BGT-07 | `nextReqId` takes the highest live number plus one, so deleting the newest draft reuses its number. A transfer from AG-15 numbers from the list length while the screen uses a counter, so the two can clash. Use one counter | Development team | BGT-FR-034, BGT-DR-005 |
 | OI-BGT-08 | A draft line offers activities from the year being formulated even for the year being spent, so its programme and output may come from another year's structure | Development team | BGT-FR-098 |
 | OI-BGT-09 | The carry-over page fixes the text of the deadline date, and investment quarterly targets stay in code | Development team | BGT-CR-002, BGT-FR-134 |
-| OI-PRC-04 | Fix the settings form so that it can save, and add a sweep check | Development team | PRC-FR-042 |
-| OI-PRC-05 | The contract drawer lets an active contract change its acceptance committee with no SD-06 check, while the older control checks it. One path must remain | Development team | PRC-FR-086 |
+| OI-PRC-04 | Fix the settings form so that it can save, and add a sweep check Fixed in round 67, with a sweep check. | Development team | PRC-FR-042 |
+| OI-PRC-05 | The contract drawer now checks SD-06 as the older control does (round 67). It shows the block as a form error and logs no blocked attempt, and two paths remain where one should | Development team | PRC-FR-086 |
 | OI-FIN-05 | The voucher fixes VAT at 7 percent, while the procurement profile holds `vatPct`. One dated rule must serve both | Development team, finance specialist | BR-FIN-07 |
-| OI-FIN-09 | A released phase never passes the evidence check, because `vEvidence` copies the failed gate check | Development team | FIN-FR-021 |
-| OI-FIN-10 | A rejected contract voucher blocks its phase, because `famAcceptedUnpaid` and `phPayStarted` count any voucher not cancelled | Development team | FIN-FR-034 |
+| OI-FIN-09 | A released phase never passes the evidence check, because `vEvidence` copies the failed gate check Fixed in round 67, with a sweep check. | Development team | FIN-FR-021 |
+| OI-FIN-10 | A rejected contract voucher blocks its phase, because `famAcceptedUnpaid` and `phPayStarted` count any voucher not cancelled Fixed in round 67, with a sweep check. | Development team | FIN-FR-034 |
 | OI-FIN-17 | Closed-period protection covers payment matching and reconciliation reopening only | Development team | FIN-FR-124 |
 | OI-FIN-18 | Only contract payments can reach V7; `v.recon` is never set, so KPI-F06 leaves out other vouchers | Development team | FIN-FR-114 |
 | OI-FIN-19 | The advance approval does not read the authority table, and the clause 60 check always passes | Development team | FIN-FR-068 |
@@ -193,23 +193,25 @@ Each module chapter ends its open issues with a table of places where the design
 
 ## Defects found in the prototype {#app-defects}
 
+> [!NOTE] Round 67 fixed OI-PRC-04, OI-BGT-05, OI-FIN-09 and OI-FIN-10 in full, and part of OI-PRC-05, OI-BGT-06, OI-PLT-04 and OI-FIN-11. It also made the duty check cover every delegator and limited the assistant by unit. Rows below stay for the record; the open issues hold the current state.
+
 Chapter authors found these while reading the code. Each is an open issue with a fix to make. None was reproduced by running the prototype, and a developer should confirm each one when fixing it. The production design already closes most of them, as each SDS module chapter shows, so the fix in the prototype matters only while the prototype is used for demonstration.
 
 | Issue | Defect or fix | Needed from | Affects |
 | --- | --- | --- | --- |
-| OI-PLT-04 | SD-03 has no check, SD-09 is not built, SD-10 has no switch or log, and SD-07 and one SD-06 path do not log blocks. Wire each one or remove it | Development team, FIN and BGT owners | PLT-FR-046 |
+| OI-PLT-04 | SD-03 and SD-09 have checks since round 67. SD-10 still has no switch or log, and SD-07 and one SD-06 path still do not log blocks. Wire each one or remove it | Development team, FIN and BGT owners | PLT-FR-046 |
 | OI-PLT-09 | Undo removes the audit entry of the undone action. Replace it with compensating actions | Development team | BR-PLT-19, PLT-FR-143 |
-| OI-BGT-05 | A transfer at `bb` holds no money. Fix it and add a check | Development team | BGT-FR-117, BGT-FR-114 |
-| OI-BGT-06 | SD-09 has no check, so one Finance officer can request and approve a T1. SD-10 has no switch or log. Wire each one (OI-PLT-04) | Development team, BGT owner | BGT-FR-124, BGT-FR-070 |
+| OI-BGT-05 | A transfer at `bb` holds no money. Fix it and add a check Fixed in round 67, with a sweep check. | Development team | BGT-FR-117, BGT-FR-114 |
+| OI-BGT-06 | SD-09 has a check since round 67, so one person cannot request and approve the same transfer. SD-10 still has no switch or log (OI-PLT-04) | Development team, BGT owner | BGT-FR-124, BGT-FR-070 |
 | OI-BGT-07 | `nextReqId` takes the highest live number plus one, so deleting the newest draft reuses its number. A transfer from AG-15 numbers from the list length while the screen uses a counter, so the two can clash. Use one counter | Development team | BGT-FR-034, BGT-DR-005 |
 | OI-BGT-08 | A draft line offers activities from the year being formulated even for the year being spent, so its programme and output may come from another year's structure | Development team | BGT-FR-098 |
 | OI-BGT-09 | The carry-over page fixes the text of the deadline date, and investment quarterly targets stay in code | Development team | BGT-CR-002, BGT-FR-134 |
-| OI-PRC-04 | Fix the settings form so that it can save, and add a sweep check | Development team | PRC-FR-042 |
-| OI-PRC-05 | The contract drawer lets an active contract change its acceptance committee with no SD-06 check, while the older control checks it. One path must remain | Development team | PRC-FR-086 |
+| OI-PRC-04 | Fix the settings form so that it can save, and add a sweep check Fixed in round 67, with a sweep check. | Development team | PRC-FR-042 |
+| OI-PRC-05 | The contract drawer now checks SD-06 as the older control does (round 67). It shows the block as a form error and logs no blocked attempt, and two paths remain where one should | Development team | PRC-FR-086 |
 | OI-FIN-05 | The voucher fixes VAT at 7 percent, while the procurement profile holds `vatPct`. One dated rule must serve both | Development team, finance specialist | BR-FIN-07 |
-| OI-FIN-09 | A released phase never passes the evidence check, because `vEvidence` copies the failed gate check | Development team | FIN-FR-021 |
-| OI-FIN-10 | A rejected contract voucher blocks its phase, because `famAcceptedUnpaid` and `phPayStarted` count any voucher not cancelled | Development team | FIN-FR-034 |
-| OI-FIN-11 | SD-03 has no check. SD-11 and P-F05 cover its purpose, so it should be removed or merged | Finance owner, Platform owner | OI-PLT-04 |
+| OI-FIN-09 | A released phase never passes the evidence check, because `vEvidence` copies the failed gate check Fixed in round 67, with a sweep check. | Development team | FIN-FR-021 |
+| OI-FIN-10 | A rejected contract voucher blocks its phase, because `famAcceptedUnpaid` and `phPayStarted` count any voucher not cancelled Fixed in round 67, with a sweep check. | Development team | FIN-FR-034 |
+| OI-FIN-11 | SD-03 is checked at voucher approval since round 67. With SD-11 on it never fires first, so it may still be merged | Finance owner, Platform owner | OI-PLT-04 |
 | OI-FIN-17 | Closed-period protection covers payment matching and reconciliation reopening only | Development team | FIN-FR-124 |
 | OI-FIN-18 | Only contract payments can reach V7; `v.recon` is never set, so KPI-F06 leaves out other vouchers | Development team | FIN-FR-114 |
 | OI-FIN-19 | The advance approval does not read the authority table, and the clause 60 check always passes | Development team | FIN-FR-068 |

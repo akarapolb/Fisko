@@ -19,7 +19,7 @@ const clip = (a, n) => (String(a).length > n ? String(a).slice(0, n) + "…" : S
 
 // ---------- allocation lines ----------
 const lineFloor = l => { const b = ALLOC_FY === B4_FY ? bal(l) : { res: 0, com: 0 }; return b.res + b.com + pendingOut(l.id); };
-const lineUsed = l => ALLOC_FY === B4_FY && (lineFloor(l) > 0 || AL().transfers.some(t => t.status === "pending" && (t.from === l.id || t.to === l.id)));
+const lineUsed = l => ALLOC_FY === B4_FY && (lineFloor(l) > 0 || AL().transfers.some(t => TR_HELD.includes(t.status) && (t.from === l.id || t.to === l.id)));
 CRUD.def("alLine", {
   noun: ["บรรทัดจัดสรร", "Allocation line"], st: CR_ST, live: true,
   list: () => [...(AL().drafts || []), ...AL().lines], id: l => l.id, title: l => tx(l.name),
@@ -147,13 +147,14 @@ CRUD.def("alTr", {
     const apply = () => { const a = lineOf(t.from), b = lineOf(t.to); a.amount -= t.amount; b.amount += t.amount; scalePlan(a, a.amount); scalePlan(b, b.amount); if (a.type !== b.type) { A.byType[a.type] -= t.amount; A.byType[b.type] = (A.byType[b.type] || 0) + t.amount; } };
     if (t.status === "pending" && ty !== "T4" && acting(trApprover(t) === "fin" ? "fin" : "exec", "transfer")) {
       out.push({ id: "ok", label: L("อนุมัติ", "Approve"), kind: "primary", impact: () => (TR_TYPE[ty][2] ? L("อนุมัติภายในแล้วส่งสำนักงบประมาณ", "Approve internally, then it goes to the Budget Bureau") : `${L("ปรับวงเงินทั้งสองบรรทัดทันที", "Both lines change now")}: −${mb(t.amount)} / +${mb(t.amount)}`),
-        run: () => { if (TR_TYPE[ty][2]) { t.status = "bb"; notify(["plan", "fin"], [`${t.id} อนุมัติภายในแล้ว รอตกลงสำนักงบประมาณ`, `${t.id} approved internally; waiting for the Budget Bureau`], "alloc-transfers"); } else { t.status = "approved"; t.reportDue = addDays(TODAY, 15); apply(); }
+        run: () => { if (!sodCheck("SD-09", sodActors(trApprover(t) === "fin" ? "fin" : "exec", "transfer"), [t.by], t.id)) return "";
+          if (TR_TYPE[ty][2]) { t.status = "bb"; notify(["plan", "fin"], [`${t.id} อนุมัติภายในแล้ว รอตกลงสำนักงบประมาณ`, `${t.id} approved internally; waiting for the Budget Bureau`], "alloc-transfers"); } else { t.status = "approved"; t.reportDue = addDays(TODAY, 15); apply(); }
           audit(["อนุมัติการโอนเปลี่ยนแปลง", "Approved a transfer"], `${t.id} · ${ty}`); return L("อนุมัติแล้ว", "Approved"); } });
       out.push({ id: "no", label: L("ไม่อนุมัติ", "Reject"), kind: "danger", why: true,
         run: (_, why) => { t.status = "rejected"; t.decision = why; audit(["ไม่อนุมัติการโอนเปลี่ยนแปลง", "Rejected a transfer"], `${t.id} · ${why}`); notify(["fin"], [`${t.id} ไม่อนุมัติ: ${why}`, `${t.id} rejected: ${why}`], "alloc-transfers"); return L("ไม่อนุมัติแล้ว", "Rejected"); } });
     }
     if (t.status === "bb" && (ROLE === "plan" || canAlloc())) {
-      out.push({ id: "bbok", label: L("บันทึกว่าสำนักงบประมาณเห็นชอบ", "Record Budget Bureau agreement"), kind: "primary", run: () => { t.status = "approved"; t.bbAgreed = TODAY; apply(); audit(["บันทึกความเห็นชอบของสำนักงบประมาณต่อการโอน", "Recorded the Budget Bureau's agreement to a transfer"], t.id); return L("บันทึกแล้ว · การโอนมีผล", "Recorded · the transfer is in effect"); } });
+      out.push({ id: "bbok", label: L("บันทึกว่าสำนักงบประมาณเห็นชอบ", "Record Budget Bureau agreement"), kind: "primary", run: () => { if (!trRoom(t)) { trNoRoom(t); return ""; } t.status = "approved"; t.bbAgreed = TODAY; apply(); audit(["บันทึกความเห็นชอบของสำนักงบประมาณต่อการโอน", "Recorded the Budget Bureau's agreement to a transfer"], t.id); return L("บันทึกแล้ว · การโอนมีผล", "Recorded · the transfer is in effect"); } });
       out.push({ id: "bbno", label: L("บันทึกว่าสำนักงบประมาณไม่เห็นชอบ", "Record Budget Bureau refusal"), kind: "danger", why: true, run: (_, why) => { t.status = "rejected"; t.decision = why; audit(["สำนักงบประมาณไม่เห็นชอบการโอน", "The Budget Bureau refused a transfer"], `${t.id} · ${why}`); return L("บันทึกแล้ว", "Recorded"); } });
     }
     if (t.status === "pending" && canAlloc()) out.push({ id: "wd", label: L("ถอนคำขอ", "Withdraw"), kind: "ghost", why: true, run: (_, why) => { t.status = "withdrawn"; t.decision = why; audit(["ถอนคำขอโอนเปลี่ยนแปลง", "Withdrew a transfer request"], `${t.id} · ${why}`); return L("ถอนคำขอแล้ว", "Withdrawn"); } });

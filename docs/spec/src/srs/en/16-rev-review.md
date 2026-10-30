@@ -177,7 +177,7 @@ The chat itself is PLT-FR-127 to PLT-FR-136. This group states what an answer mu
 | REV-FR-033 | The system shall say so when a question is outside what it can answer, and shall log it as not answered. | - | S | T | Partial | 44-assistant.js ask |
 | REV-FR-034 | With AI off, the assistant shall show that it is off, and every dashboard, KPI, forecast, what-if and anomaly page shall work unchanged (XC-AI-003). | - | M | T | Partial | 44b-intel-tabs.js agentOn; 44-assistant.js ask |
 
-> [!WARN] The assistant page says it answers only from data the role can access, but `44-assistant.js` answer reads every unit whatever the role. REV-FR-031 stays Planned, and the sentence must not reach a production screen until the row is met.
+> [!NOTE] Since round 67 the assistant shows a unit role only its own unit's spending, requests and anomalies, and it stops when its agent is off. Role limits beyond that are not built, so REV-FR-031 stays Planned, and the page sentence must not reach a production screen until the row is met.
 
 ### Agent framework {#rev-fr-agents}
 

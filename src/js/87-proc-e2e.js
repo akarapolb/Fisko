@@ -3,7 +3,7 @@
 // invoice) and the demo itself, P-E01 to P-E15 in the in-app guide.
 
 // A phase has started payment once a live voucher or payment request exists for it.
-const phPayStarted = (c, ph) => (S.vouchers || []).some(v => v.contract === c.id && v.phase === ph.n && v.state !== "cancelled") || S.payreqs.some(p => p.contract === c.id && p.phase === ph.n && p.status !== "rejected");
+const phPayStarted = (c, ph) => (S.vouchers || []).some(v => v.contract === c.id && v.phase === ph.n && !["cancelled", "rejected"].includes(v.state)) || S.payreqs.some(p => p.contract === c.id && p.phase === ph.n && p.status !== "rejected");
 
 // ---------- penalty waivers (FR-PC-28, FL-PC-08) ----------
 // Procurement proposes to waive or reduce a phase's penalty with a reason and a supporting document; the executive

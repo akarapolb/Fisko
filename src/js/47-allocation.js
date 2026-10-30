@@ -14,7 +14,11 @@ const sumv = a => a.reduce((x, y) => x + y, 0);
 const allocated = t => sumv(AL().lines.filter(l => !t || l.type === t).map(l => l.amount));
 const lineOf = id => AL().lines.find(l => l.id === id);
 const lineLabel = l => `${unitName(l.unit)} · ${tx(l.name)}`;
-const pendingOut = id => sumv(AL().transfers.filter(t => t.status === "pending" && t.from === id).map(t => t.amount));
+const TR_HELD = ["pending", "bb"];
+const pendingOut = id => sumv(AL().transfers.filter(t => TR_HELD.includes(t.status) && t.from === id).map(t => t.amount));
+// Commitments can grow while a transfer waits, so agreement is refused when the source line no longer has the money.
+const trRoom = t => { const l = lineOf(t.from); return (ALLOC_FY === B4_FY ? bal(l).avail : l.amount) >= t.amount; };
+const trNoRoom = t => { toast(L(`รายการต้นทางของ ${t.id} มีเงินไม่พอแล้ว`, `The source line of ${t.id} no longer has enough money`)); };
 function scalePlan(l, newAmt) {
   const old = sumv(l.plan) || 1;
   l.plan = l.plan.map(v => Math.round(v * newAmt / old));

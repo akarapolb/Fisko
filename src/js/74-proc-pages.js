@@ -211,7 +211,7 @@ function conPoTag(c) {
   return `<span class="sub">·</span>${tag(L("ยังไม่มี PO ใน GFMIS", "No GFMIS PO yet"), "p-warn")}${allowed("finance") ? ` <button class="btn ghost" type="button" data-jump="fnc-chain">${L("บันทึก PO", "Record the PO")}</button>` : ""}`;
 }
 function phVoucher(c, ph) {
-  const v = (S.vouchers || []).find(x => x.contract === c.id && x.phase === ph.n && x.state !== "cancelled");
+  const v = (S.vouchers || []).find(x => x.contract === c.id && x.phase === ph.n && !["cancelled", "rejected"].includes(x.state));
   if (!v || typeof vTag !== "function") return "";
   return `<div>${vTag(v)} ${allowed("finance") ? `<button class="btn ghost" type="button" data-vcgo="${v.id}">${v.id}</button>` : `<span class="mono sub">${v.id}</span>`}</div>`;
 }

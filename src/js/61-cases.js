@@ -465,7 +465,7 @@ BIND_ADMIN.procrules = () => {
     commit(); route(); toast(L("บันทึกแล้ว", "Saved")); }; });
   const sv = $("#pc-save");
   if (sv) sv.onclick = () => {
-    const v = {}; for (const k of ["specificMax", "singleInspectorMax", "minMembers", "appealDays", "splitDays", "penGoods", "penService", "penCons", "penaltyMin", "penaltyCapPct", "guaranteePct", "guaranteeWarnDays", "ladderPct", "extDaysHead", "acceptWd", "acceptWdLast", "invoiceTol", "rfMinAnnounce", "rfRatioPct", "rfGrowthPct", "rfRepeatWins", "rfNearPct"]) { const x = Number($("#pc-" + k).value); v[k] = k === "penaltyPct" ? x : Math.round(x); }
+    const v = {}; for (const k of ["specificMax", "singleInspectorMax", "minMembers", "appealDays", "splitDays", "penGoods", "penService", "penCons", "penaltyMin", "penaltyCapPct", "guaranteePct", "guaranteeWarnDays", "ladderPct", "extDaysHead", "acceptWd", "acceptWdLast", "invoiceTol", "rfMinAnnounce", "rfRatioPct", "rfGrowthPct", "rfRepeatWins", "rfNearPct"]) { const x = Number($("#pc-" + k).value); v[k] = /^pen(Goods|Service|Cons)$/.test(k) ? x : Math.round(x); }
     if (Object.values(v).some(x => !(x >= 0)) || v.minMembers < 2 || v.specificMax < 1 || v.singleInspectorMax < 1) { toast(L("ค่าไม่ถูกต้อง", "Check the values")); return; }
     if ([v.penGoods, v.penService].some(x => x < 0.01 || x > 0.2) || v.penCons < 0.01 || v.penCons > 0.1) { toast(L("อัตราค่าปรับต้องอยู่ในช่วงตามข้อ 162", "Penalty rates must be within the clause 162 ranges")); return; }
     v.penaltyPct = v.penGoods;

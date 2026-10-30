@@ -156,12 +156,13 @@ const qTotals = A => [0, 1, 2, 3].map(q => sumv(A.lines.map(l => sumv(l.plan.sli
     const apply = t => { const a = lineOf(t.from), b = lineOf(t.to); a.amount -= t.amount; b.amount += t.amount; scalePlan(a, a.amount); scalePlan(b, b.amount); if (a.type !== b.type) { A.byType[a.type] -= t.amount; A.byType[b.type] = (A.byType[b.type] || 0) + t.amount; } };
     $$("[data-tap2]").forEach(btn => (btn.onclick = () => {
       const t = A.transfers.find(x => x.id === btn.dataset.tap2), ty = t.type || classifyTransfer(t);
+      if (!sodCheck("SD-09", sodActors(TR_TYPE[ty][1] === "fin" ? "fin" : "exec", "transfer"), [t.by], t.id)) return;
       if (TR_TYPE[ty][2]) { t.status = "bb"; notify(["plan", "fin"], [`${t.id} อนุมัติภายในแล้ว รอตกลงสำนักงบประมาณ`, `${t.id} approved internally; waiting for the Budget Bureau`], "alloc-transfers"); }
       else { t.status = "approved"; t.reportDue = addDays(TODAY, 15); apply(t); }
       audit(["อนุมัติการโอนเปลี่ยนแปลง", "Approved a transfer"], `${t.id} · ${ty}`); re();
     }));
     $$("[data-trj2]").forEach(btn => (btn.onclick = () => { const t = A.transfers.find(x => x.id === btn.dataset.trj2); t.status = "rejected"; audit(["ไม่อนุมัติการโอนเปลี่ยนแปลง", "Rejected a transfer"], t.id); re(); }));
-    $$("[data-trbb]").forEach(btn => (btn.onclick = () => { const t = A.transfers.find(x => x.id === btn.dataset.trbb); t.status = "approved"; t.bbAgreed = TODAY; apply(t); audit(["บันทึกความเห็นชอบของสำนักงบประมาณต่อการโอน", "Recorded the Budget Bureau's agreement to a transfer"], t.id); re(); }));
+    $$("[data-trbb]").forEach(btn => (btn.onclick = () => { const t = A.transfers.find(x => x.id === btn.dataset.trbb); if (!trRoom(t)) { trNoRoom(t); return; } t.status = "approved"; t.bbAgreed = TODAY; apply(t); audit(["บันทึกความเห็นชอบของสำนักงบประมาณต่อการโอน", "Recorded the Budget Bureau's agreement to a transfer"], t.id); re(); }));
     $$("[data-trrep]").forEach(btn => (btn.onclick = () => { const t = A.transfers.find(x => x.id === btn.dataset.trrep); t.reported = TODAY; audit(["รายงานการโอนต่อสำนักงบประมาณ", "Reported a transfer to the Budget Bureau"], t.id); re(); }));
     $$("[data-bal]").forEach(tr => { const t = () => { BAL_OPEN = BAL_OPEN === tr.dataset.bal ? null : tr.dataset.bal; route(); }; tr.onclick = e => { if (!e.target.closest("button")) t(); }; tr.onkeydown = e => { if (e.key === "Enter") t(); }; });
     $$("[data-allsend]").forEach(btn => (btn.onclick = () => { const l = lineOf(btn.dataset.allsend); l.allot.sent = TODAY; audit(["ส่งเงินจัดสรรต่อส่วนภูมิภาค", "Sent the allotment on to the region"], l.id); re(); }));

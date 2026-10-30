@@ -174,7 +174,7 @@ The requirements follow the order of the work. Each status rests on reading the 
 | PRC-FR-044 | The system shall store with each method decision the id and effective date of the rule that was used, as separate fields. | - | S | I | Planned | - |
 | PRC-FR-045 | The system shall offer the small-budget method to tenants that enable it in the profile. | - | C | T | Planned | 70-profile.js PROF_FEATS smallBudget, switch only |
 
-> [!WARN] The settings form cannot save at present. `61-cases.js` rounds every value to a whole number before it checks the penalty rates, so a rate such as 0.10 becomes 0 and the form always answers that the rates are outside the clause 162 range. PRC-FR-042 stays Partial until this is fixed, and the sweep does not exercise the form.
+> [!NOTE] Before round 67 the settings form could not save, because `61-cases.js` rounded each penalty rate to a whole number. Rates now keep their decimals, and the sweep saves one. It does not yet test a refused value, so PRC-FR-042 stays Partial.
 
 ### TOR and market research {#prc-fr-tor}
 
@@ -608,8 +608,8 @@ The sweep also opens every Procurement page, tab, contract tab, AI tool and reco
 | OI-PRC-01 | Confirm every clause in the register for this chapter, and supply clauses for appeals, abandoned work, conflicts of interest, guarantees, contract changes, waivers and the monthly summary, whose rows show a dash | Procurement specialist | Clause column; PRC-FR-008, PRC-FR-036, PRC-FR-109, PRC-FR-120 |
 | OI-PRC-02 | The specific-method ceiling and thresholds for the selective method and e-bidding are not fully confirmed | Procurement specialist | BR-PRC-01, PRC-FR-040 |
 | OI-PRC-03 | The e-GP contracts in the interface section | Comptroller General's Department | PRC-IR-001, PRC-IR-005, PRC-IR-014 |
-| OI-PRC-04 | Fix the settings form so that it can save, and add a sweep check | Development team | PRC-FR-042 |
-| OI-PRC-05 | The contract drawer lets an active contract change its acceptance committee with no SD-06 check, while the older control checks it. One path must remain | Development team | PRC-FR-086 |
+| OI-PRC-04 | Fix the settings form so that it can save, and add a sweep check Fixed in round 67, with a sweep check. | Development team | PRC-FR-042 |
+| OI-PRC-05 | The contract drawer now checks SD-06 as the older control does (round 67). It shows the block as a form error and logs no blocked attempt, and two paths remain where one should | Development team | PRC-FR-086 |
 | OI-PRC-06 | Penalty base, and whether a partial acceptance reduces it | Procurement specialist | PRC-FR-120 |
 | OI-PRC-07 | Allowed ranges of the stored settings | Procurement specialist, product owner | Business rules |
 | OI-PRC-08 | Who owns the method rules table and how often it is reviewed | Legal unit, product owner | PRC-FR-040 |

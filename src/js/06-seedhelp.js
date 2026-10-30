@@ -267,7 +267,7 @@ function buildOrg(cfg) {
     decided: { by: EX, holder: EX, via: null, t: "2026-10-15T10:00" }, recon: { state: "matched", file: `GF-2570-01`, t: "2026-10-16T08:00" } }];
   s.gfmisFiles = [{ id: `GF-2570-01`, t: "2026-10-16T08:00", by: FN, rows: [{ pay: `PY-2570-001`, doc: "GF-70-000417", amount: s.payreqs[0].amount, date: "2026-10-16", state: "matched" }] }];
   s.egpImports = [];
-  s.sod = { rules: ["SD-01", "SD-02", "SD-03", "SD-04", "SD-05", "SD-06", "SD-07", "SD-08"].map(id => ({ id, on: true })), blocks: [] };
+  s.sod = { rules: ["SD-01", "SD-02", "SD-03", "SD-04", "SD-05", "SD-06", "SD-07", "SD-08", "SD-09"].map(id => ({ id, on: true })), blocks: [] };
   seedCases(s, { PO, PL, DV, EX, FN, vend });
   seedContracts(s, { PO, FN });
   seedAnalytics(s);

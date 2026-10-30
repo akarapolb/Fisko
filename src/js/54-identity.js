@@ -14,10 +14,8 @@ const userById = id => S.users.find(u => u.id === id) || { name: ["-", "-"], rol
 const delegState = d => d.status === "revoked" ? "revoked" : TODAY < d.start ? "future" : TODAY > d.end ? "expired" : "active";
 const DSTATE = { active: [["มีผล", "Active"], "p-ok"], future: [["ยังไม่ถึงกำหนด", "Scheduled"], "p-info"], expired: [["หมดอายุ", "Expired"], "p-mute"], revoked: [["ยกเลิกแล้ว", "Revoked"], "p-bad"] };
 // Active delegations that let the current user act for someone holding `role`, for `scope`.
-function delegFor(role, scope) {
-  if (!S.delegations) return null;
-  return S.delegations.find(d => delegState(d) === "active" && d.to === me().id && d.scopes.includes(scope) && userById(d.from).role === role) || null;
-}
+const delegAll = (role, scope) => (S.delegations || []).filter(d => delegState(d) === "active" && d.to === me().id && d.scopes.includes(scope) && userById(d.from).role === role);
+function delegFor(role, scope) { return delegAll(role, scope)[0] || null; }
 // True when the current user holds `role` or acts for it through an active delegation.
 const acting = (role, scope) => ROLE === role || !!delegFor(role, scope);
 const onBehalf = (role, scope) => { const d = ROLE === role ? null : delegFor(role, scope); return d ? ` · ${L("แทน", "on behalf of")} ${tx(userById(d.from).name)} (${d.id})` : ""; };

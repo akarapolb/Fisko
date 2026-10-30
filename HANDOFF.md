@@ -1183,4 +1183,18 @@ Source: the doc "Fisko business test: personas and end-to-end scenarios (DPT ten
 - **Agenda task:** only budget-committee members whose role can open the meetings page get "vote on the agenda" (`42d-review-b3.js`).
 - **DPT demo state:** `96-data-dpt-demo.js` closes the riverbank e-bidding for bids (the procurement officer records them) and puts the online building-permit system (PP-2570-005) at the specific method with an RFQ waiting for the sample supplier.
 - **Still open from the test:** one executive authority delegated to two people for the same dates (D4); record checks that rely on the form for the transfer limit and the published plan.
-- **Next round number on `main`:** 67.
+- **Next round number on `main`:** 68 (see section 67).
+
+## 67. Round 67: fixes from the SRS and SDS review (30 October 2026)
+
+Source: the defects listed in the SRS appendix "Defects found in the prototype". The sweep passes with 15,118 checks, and round 67 adds checks for each fix below.
+
+- **Procurement settings:** penalty rates keep their decimals, so the form can save (`61-cases.js`).
+- **Contract drawer:** an active contract's acceptance committee is checked against SD-06 (`86-con-crud.js`).
+- **Budget transfer hold:** a transfer waiting for the Budget Bureau holds its money (`TR_HELD`), and agreement is refused when the source line no longer has it (`trRoom`).
+- **SD-09 and SD-03:** SD-09 is a listed rule, checked when a transfer is approved. SD-03 is checked at voucher approval.
+- **Vouchers:** a released phase can pass its evidence check, and a rejected voucher frees its phase.
+- **Delegation:** `delegAll` returns every active delegation, so `sodActors` checks every delegator. Whether overlapping delegations are allowed is still OI-PLT-01.
+- **Assistant:** a unit role sees only its own unit's spending, requests and anomalies, and co-work chat stops when its agent is off (`cwOff`).
+- **Not fixed:** the penalty base (OI-PRC-06, a specialist's call), the AGPL footer link (waits for the public repository), Google Fonts loading, SD-10 and the other rows in the SRS appendix.
+- **Next round number on `main`:** 68.

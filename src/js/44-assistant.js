@@ -6,7 +6,7 @@ const QUESTIONS = [
 ];
 function answer(i) {
   if (i === 0) {
-    const rows = S.dash.units.slice().sort((a, b) => a.actual / a.plan - b.actual / b.plan).slice(0, 3);
+    const rows = S.dash.units.filter(x => ROLE !== "div" || x.unit === me().unit).sort((a, b) => a.actual / a.plan - b.actual / b.plan).slice(0, 3);
     return `<p>${L("ข้อมูลสะสมถึง", "Cumulative to")} ${fdate(S.dash.asOf)} ${L("หน่วยงานที่เบิกจ่ายต่ำกว่าแผนมากที่สุด 3 อันดับ:", "— the 3 units furthest behind plan:")}</p>
       <table><thead><tr><th>${L("หน่วยงาน", "Unit")}</th><th class="n">${L("แผนสะสม", "Plan")}</th><th class="n">${L("ผล", "Actual")}</th><th class="n">${L("% ตามแผน", "% of plan")}</th></tr></thead><tbody>
       ${rows.map(x => `<tr><td>${unitName(x.unit)}</td><td class="n">${fmt(x.plan)}</td><td class="n">${fmt(x.actual)}</td><td class="n">${fmt(x.actual / x.plan * 100, 1)}%</td></tr>`).join("")}</tbody></table>
@@ -17,7 +17,7 @@ function answer(i) {
       <h4>${L("ข้อควรทราบ", "Note")}</h4><span class="sub">${L("เป็นข้อเสนอเพื่อประกอบการตัดสินใจ การปรับวงเงินจริงต้องผ่านการกลั่นกรอง (M04) โดยผู้มีอำนาจ", "This is decision support. Real changes go through review (M04) by authorised officials.")}</span>`;
   if (i === 2) {
     const lim = (rule("BR-04") || {}).param || 20;
-    const rows = S.requests.filter(r => r.prev > 0 && (r.amount / r.prev - 1) * 100 > lim);
+    const rows = S.requests.filter(r => (ROLE !== "div" || r.unit === me().unit) && r.prev > 0 && (r.amount / r.prev - 1) * 100 > lim);
     return rows.length ? `<p>${L(`มีคำขอ ${rows.length} รายการที่เพิ่มขึ้นเกิน ${lim}% จากปี ${CUR_FY}:`, `${rows.length} requests grew more than ${lim}% over FY${CUR_FY}:`)}</p>
       <ul>${rows.map(r => `<li><b>${esc(tx(r.name))}</b> +${fmt((r.amount / r.prev - 1) * 100, 1)}% (${mb(r.prev)} → ${mb(r.amount)} ${L("ลบ.", "M")})</li>`).join("")}</ul>
       <h4>${L("ข้อแนะนำ", "Suggestion")}</h4><span class="sub">${L("ขอคำอธิบายส่วนเพิ่มก่อนกลั่นกรองรอบที่ 2 · เกณฑ์จากกฎ BR-04 ใน M10", "Ask for an explanation before review round 2 · threshold from rule BR-04 in M10")}</span>`

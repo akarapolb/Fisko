@@ -891,6 +891,21 @@
           if (SESSION) errs.push(`site ${org}/${lang}: no sign-out after the idle time`);
           SESSION = s0; document.getElementById("signin").hidden = true; SITE_SEEN = Date.now();
           ROLE = "fin"; S.vouchers.filter(v => v.state === "approve").forEach(v => { if (vcSodClash(v) && vcActs(v).some(a => a[0] === "approve")) errs.push(`site ${org}: ${v.id} offers Approve that SD-11 refuses`); });
+          // round 67: fixes from the SRS review
+          ROLE = "admin"; go2("admin-procrules"); const pg = document.getElementById("pc-penGoods"); pg.value = "0.15"; document.getElementById("pc-save").click();
+          if (S.pcfg.penGoods !== 0.15) errs.push(`site ${org}: procurement settings did not save a penalty rate`);
+          const tl = AL().lines, h0 = pendingOut(tl[0].id); AL().transfers.push({ id: "TR-T", from: tl[0].id, to: tl[1].id, amount: 7, status: "bb" });
+          if (pendingOut(tl[0].id) !== h0 + 7) errs.push(`site ${org}: a transfer waiting for the Budget Bureau holds no money`);
+          AL().transfers.pop();
+          const tc = S.contracts.find(c => c.phases.length), tp = tc.phases[0], tv = { id: "VC-T", contract: tc.id, phase: tp.n, type: "proc", state: "rejected" }, pk = S.payreqs; S.payreqs = []; S.vouchers.length = 0; S.vouchers.push(tv);
+          if (phPayStarted(tc, tp)) errs.push(`site ${org}: a rejected voucher still blocks its phase`);
+          tv.state = "draft"; if (!phPayStarted(tc, tp)) errs.push(`site ${org}: a live voucher does not hold its phase`);
+          S.payreqs = pk; tp.release = { by: "t" }; if (!vEvidence(tv).every(e => e.ok)) errs.push(`site ${org}: a released phase cannot pass its voucher check`);
+          ROLE = "div"; const du = me().id, ex = S.users.filter(u => u.id !== du).slice(0, 2); ex.forEach(u => (u.role = "exec")); S.delegations = ex.map((u, i) => ({ id: `DG-T${i}`, from: u.id, to: du, scopes: ["spend"], start: TODAY, end: TODAY, status: "active" }));
+          ex.forEach(u => { if (!sodActors("exec", "spend").includes(u.id)) errs.push(`site ${org}: a delegated duty check missed ${u.id}`); });
+          const other = S.dash.units.find(x => x.unit !== me().unit); if (other && answer(0).includes(unitName(other.unit))) errs.push(`site ${org}: the assistant showed another unit to a unit role`);
+          ROLE = "exec"; S.agents.filter(a => a.id === "AG-06").forEach(a => (a.on = false)); if (!cwOff({ agent: "FA" })) errs.push(`site ${org}: the assistant answers with its agent off`);
+          ["SD-03", "SD-09"].forEach(id => { if (!SOD_RULES.some(r => r[0] === id)) errs.push(`site ${org}: duty rule ${id} is missing`); });
           ROLE = "exec";
           go2("home"); $$("#view .head .eyebrow").forEach(e => { if (/(^|·\s*)(B|M|F|P)\d{1,2}(\s*·|$)/.test(e.textContent)) errs.push(`site ${org}/${lang}: a design code left in an eyebrow`); });
           S = SEEDS[org].seed();

@@ -2318,7 +2318,7 @@ function buildOrg(cfg) {
     decided: { by: EX, holder: EX, via: null, t: "2026-10-15T10:00" }, recon: { state: "matched", file: `GF-2570-01`, t: "2026-10-16T08:00" } }];
   s.gfmisFiles = [{ id: `GF-2570-01`, t: "2026-10-16T08:00", by: FN, rows: [{ pay: `PY-2570-001`, doc: "GF-70-000417", amount: s.payreqs[0].amount, date: "2026-10-16", state: "matched" }] }];
   s.egpImports = [];
-  s.sod = { rules: ["SD-01", "SD-02", "SD-03", "SD-04", "SD-05", "SD-06", "SD-07", "SD-08"].map(id => ({ id, on: true })), blocks: [] };
+  s.sod = { rules: ["SD-01", "SD-02", "SD-03", "SD-04", "SD-05", "SD-06", "SD-07", "SD-08", "SD-09"].map(id => ({ id, on: true })), blocks: [] };
   seedCases(s, { PO, PL, DV, EX, FN, vend });
   seedContracts(s, { PO, FN });
   seedAnalytics(s);
@@ -5285,7 +5285,7 @@ const QUESTIONS = [
 ];
 function answer(i) {
   if (i === 0) {
-    const rows = S.dash.units.slice().sort((a, b) => a.actual / a.plan - b.actual / b.plan).slice(0, 3);
+    const rows = S.dash.units.filter(x => ROLE !== "div" || x.unit === me().unit).sort((a, b) => a.actual / a.plan - b.actual / b.plan).slice(0, 3);
     return `<p>${L("ข้อมูลสะสมถึง", "Cumulative to")} ${fdate(S.dash.asOf)} ${L("หน่วยงานที่เบิกจ่ายต่ำกว่าแผนมากที่สุด 3 อันดับ:", "— the 3 units furthest behind plan:")}</p>
       <table><thead><tr><th>${L("หน่วยงาน", "Unit")}</th><th class="n">${L("แผนสะสม", "Plan")}</th><th class="n">${L("ผล", "Actual")}</th><th class="n">${L("% ตามแผน", "% of plan")}</th></tr></thead><tbody>
       ${rows.map(x => `<tr><td>${unitName(x.unit)}</td><td class="n">${fmt(x.plan)}</td><td class="n">${fmt(x.actual)}</td><td class="n">${fmt(x.actual / x.plan * 100, 1)}%</td></tr>`).join("")}</tbody></table>
@@ -5296,7 +5296,7 @@ function answer(i) {
       <h4>${L("ข้อควรทราบ", "Note")}</h4><span class="sub">${L("เป็นข้อเสนอเพื่อประกอบการตัดสินใจ การปรับวงเงินจริงต้องผ่านการกลั่นกรอง (M04) โดยผู้มีอำนาจ", "This is decision support. Real changes go through review (M04) by authorised officials.")}</span>`;
   if (i === 2) {
     const lim = (rule("BR-04") || {}).param || 20;
-    const rows = S.requests.filter(r => r.prev > 0 && (r.amount / r.prev - 1) * 100 > lim);
+    const rows = S.requests.filter(r => (ROLE !== "div" || r.unit === me().unit) && r.prev > 0 && (r.amount / r.prev - 1) * 100 > lim);
     return rows.length ? `<p>${L(`มีคำขอ ${rows.length} รายการที่เพิ่มขึ้นเกิน ${lim}% จากปี ${CUR_FY}:`, `${rows.length} requests grew more than ${lim}% over FY${CUR_FY}:`)}</p>
       <ul>${rows.map(r => `<li><b>${esc(tx(r.name))}</b> +${fmt((r.amount / r.prev - 1) * 100, 1)}% (${mb(r.prev)} → ${mb(r.amount)} ${L("ลบ.", "M")})</li>`).join("")}</ul>
       <h4>${L("ข้อแนะนำ", "Suggestion")}</h4><span class="sub">${L("ขอคำอธิบายส่วนเพิ่มก่อนกลั่นกรองรอบที่ 2 · เกณฑ์จากกฎ BR-04 ใน M10", "Ask for an explanation before review round 2 · threshold from rule BR-04 in M10")}</span>`
@@ -6289,7 +6289,11 @@ const sumv = a => a.reduce((x, y) => x + y, 0);
 const allocated = t => sumv(AL().lines.filter(l => !t || l.type === t).map(l => l.amount));
 const lineOf = id => AL().lines.find(l => l.id === id);
 const lineLabel = l => `${unitName(l.unit)} · ${tx(l.name)}`;
-const pendingOut = id => sumv(AL().transfers.filter(t => t.status === "pending" && t.from === id).map(t => t.amount));
+const TR_HELD = ["pending", "bb"];
+const pendingOut = id => sumv(AL().transfers.filter(t => TR_HELD.includes(t.status) && t.from === id).map(t => t.amount));
+// Commitments can grow while a transfer waits, so agreement is refused when the source line no longer has the money.
+const trRoom = t => { const l = lineOf(t.from); return (ALLOC_FY === B4_FY ? bal(l).avail : l.amount) >= t.amount; };
+const trNoRoom = t => { toast(L(`รายการต้นทางของ ${t.id} มีเงินไม่พอแล้ว`, `The source line of ${t.id} no longer has enough money`)); };
 function scalePlan(l, newAmt) {
   const old = sumv(l.plan) || 1;
   l.plan = l.plan.map(v => Math.round(v * newAmt / old));
@@ -6843,12 +6847,13 @@ const qTotals = A => [0, 1, 2, 3].map(q => sumv(A.lines.map(l => sumv(l.plan.sli
     const apply = t => { const a = lineOf(t.from), b = lineOf(t.to); a.amount -= t.amount; b.amount += t.amount; scalePlan(a, a.amount); scalePlan(b, b.amount); if (a.type !== b.type) { A.byType[a.type] -= t.amount; A.byType[b.type] = (A.byType[b.type] || 0) + t.amount; } };
     $$("[data-tap2]").forEach(btn => (btn.onclick = () => {
       const t = A.transfers.find(x => x.id === btn.dataset.tap2), ty = t.type || classifyTransfer(t);
+      if (!sodCheck("SD-09", sodActors(TR_TYPE[ty][1] === "fin" ? "fin" : "exec", "transfer"), [t.by], t.id)) return;
       if (TR_TYPE[ty][2]) { t.status = "bb"; notify(["plan", "fin"], [`${t.id} อนุมัติภายในแล้ว รอตกลงสำนักงบประมาณ`, `${t.id} approved internally; waiting for the Budget Bureau`], "alloc-transfers"); }
       else { t.status = "approved"; t.reportDue = addDays(TODAY, 15); apply(t); }
       audit(["อนุมัติการโอนเปลี่ยนแปลง", "Approved a transfer"], `${t.id} · ${ty}`); re();
     }));
     $$("[data-trj2]").forEach(btn => (btn.onclick = () => { const t = A.transfers.find(x => x.id === btn.dataset.trj2); t.status = "rejected"; audit(["ไม่อนุมัติการโอนเปลี่ยนแปลง", "Rejected a transfer"], t.id); re(); }));
-    $$("[data-trbb]").forEach(btn => (btn.onclick = () => { const t = A.transfers.find(x => x.id === btn.dataset.trbb); t.status = "approved"; t.bbAgreed = TODAY; apply(t); audit(["บันทึกความเห็นชอบของสำนักงบประมาณต่อการโอน", "Recorded the Budget Bureau's agreement to a transfer"], t.id); re(); }));
+    $$("[data-trbb]").forEach(btn => (btn.onclick = () => { const t = A.transfers.find(x => x.id === btn.dataset.trbb); if (!trRoom(t)) { trNoRoom(t); return; } t.status = "approved"; t.bbAgreed = TODAY; apply(t); audit(["บันทึกความเห็นชอบของสำนักงบประมาณต่อการโอน", "Recorded the Budget Bureau's agreement to a transfer"], t.id); re(); }));
     $$("[data-trrep]").forEach(btn => (btn.onclick = () => { const t = A.transfers.find(x => x.id === btn.dataset.trrep); t.reported = TODAY; audit(["รายงานการโอนต่อสำนักงบประมาณ", "Reported a transfer to the Budget Bureau"], t.id); re(); }));
     $$("[data-bal]").forEach(tr => { const t = () => { BAL_OPEN = BAL_OPEN === tr.dataset.bal ? null : tr.dataset.bal; route(); }; tr.onclick = e => { if (!e.target.closest("button")) t(); }; tr.onkeydown = e => { if (e.key === "Enter") t(); }; });
     $$("[data-allsend]").forEach(btn => (btn.onclick = () => { const l = lineOf(btn.dataset.allsend); l.allot.sent = TODAY; audit(["ส่งเงินจัดสรรต่อส่วนภูมิภาค", "Sent the allotment on to the region"], l.id); re(); }));
@@ -7971,10 +7976,8 @@ const userById = id => S.users.find(u => u.id === id) || { name: ["-", "-"], rol
 const delegState = d => d.status === "revoked" ? "revoked" : TODAY < d.start ? "future" : TODAY > d.end ? "expired" : "active";
 const DSTATE = { active: [["มีผล", "Active"], "p-ok"], future: [["ยังไม่ถึงกำหนด", "Scheduled"], "p-info"], expired: [["หมดอายุ", "Expired"], "p-mute"], revoked: [["ยกเลิกแล้ว", "Revoked"], "p-bad"] };
 // Active delegations that let the current user act for someone holding `role`, for `scope`.
-function delegFor(role, scope) {
-  if (!S.delegations) return null;
-  return S.delegations.find(d => delegState(d) === "active" && d.to === me().id && d.scopes.includes(scope) && userById(d.from).role === role) || null;
-}
+const delegAll = (role, scope) => (S.delegations || []).filter(d => delegState(d) === "active" && d.to === me().id && d.scopes.includes(scope) && userById(d.from).role === role);
+function delegFor(role, scope) { return delegAll(role, scope)[0] || null; }
 // True when the current user holds `role` or acts for it through an active delegation.
 const acting = (role, scope) => ROLE === role || !!delegFor(role, scope);
 const onBehalf = (role, scope) => { const d = ROLE === role ? null : delegFor(role, scope); return d ? ` · ${L("แทน", "on behalf of")} ${tx(userById(d.from).name)} (${d.id})` : ""; };
@@ -8259,7 +8262,7 @@ const canSpend = () => acting("exec", "spend");
 const nextId = (prefix, list, fy = FAM_FY) => `${prefix}-${fy}-${String(Math.max(0, ...[...list.map(x => x.id), ...(S.delIds || [])].filter(x => x.startsWith(`${prefix}-${fy}-`)).map(x => Number(x.split("-")[2]) || 0)) + 1).padStart(3, "0")}`;
 // A phase is waiting for Finance when it is accepted and has neither a live payment nor a live voucher (round FN2).
 const famAcceptedUnpaid = () => S.contracts.flatMap(c => c.phases.filter(ph => phaseAccepted(ph) && !S.payreqs.some(p => p.contract === c.id && p.phase === ph.n && p.status !== "rejected")
-  && !(S.vouchers || []).some(v => v.contract === c.id && v.phase === ph.n && v.state !== "cancelled")).map(ph => ({ c, ph })));
+  && !(S.vouchers || []).some(v => v.contract === c.id && v.phase === ph.n && !["cancelled", "rejected"].includes(v.state))).map(ph => ({ c, ph })));
 
 function famTasks(R) {
   if (!S.pplan) return;
@@ -8927,7 +8930,7 @@ BIND_ADMIN.procrules = () => {
     commit(); route(); toast(L("บันทึกแล้ว", "Saved")); }; });
   const sv = $("#pc-save");
   if (sv) sv.onclick = () => {
-    const v = {}; for (const k of ["specificMax", "singleInspectorMax", "minMembers", "appealDays", "splitDays", "penGoods", "penService", "penCons", "penaltyMin", "penaltyCapPct", "guaranteePct", "guaranteeWarnDays", "ladderPct", "extDaysHead", "acceptWd", "acceptWdLast", "invoiceTol", "rfMinAnnounce", "rfRatioPct", "rfGrowthPct", "rfRepeatWins", "rfNearPct"]) { const x = Number($("#pc-" + k).value); v[k] = k === "penaltyPct" ? x : Math.round(x); }
+    const v = {}; for (const k of ["specificMax", "singleInspectorMax", "minMembers", "appealDays", "splitDays", "penGoods", "penService", "penCons", "penaltyMin", "penaltyCapPct", "guaranteePct", "guaranteeWarnDays", "ladderPct", "extDaysHead", "acceptWd", "acceptWdLast", "invoiceTol", "rfMinAnnounce", "rfRatioPct", "rfGrowthPct", "rfRepeatWins", "rfNearPct"]) { const x = Number($("#pc-" + k).value); v[k] = /^pen(Goods|Service|Cons)$/.test(k) ? x : Math.round(x); }
     if (Object.values(v).some(x => !(x >= 0)) || v.minMembers < 2 || v.specificMax < 1 || v.singleInspectorMax < 1) { toast(L("ค่าไม่ถูกต้อง", "Check the values")); return; }
     if ([v.penGoods, v.penService].some(x => x < 0.01 || x > 0.2) || v.penCons < 0.01 || v.penCons > 0.1) { toast(L("อัตราค่าปรับต้องอยู่ในช่วงตามข้อ 162", "Penalty rates must be within the clause 162 ranges")); return; }
     v.penaltyPct = v.penGoods;
@@ -10482,6 +10485,7 @@ const SOD_RULES = [
   ["SD-05", ["ผู้กระทบยอดต้องไม่เป็นผู้อนุมัติเบิกจ่ายรายการนั้น", "The person reconciling can't be the one who approved the payment"]],
   ["SD-07", ["กรรมการที่แจ้งว่ามีส่วนได้เสียกับผู้ยื่นรายใด ห้ามร่วมพิจารณาแฟ้มนั้น และต้องแจ้งก่อนพิจารณา", "A committee member who declares a conflict with a bidder can't take part in that case, and everyone must declare before the evaluation"]],
   ["SD-08", ["ผู้เสนอแก้ไขสัญญาต้องไม่เป็นผู้อนุมัติการแก้ไขนั้น", "Whoever proposes a contract change can't approve it"]],
+  ["SD-09", ["ผู้จัดทำคำขอโอนเปลี่ยนแปลงต้องไม่เป็นผู้อนุมัติคำขอของตนเอง", "Whoever prepares a transfer request must not approve it"]],
   ["SD-06", ["กรรมการพิจารณาผลหรือกรรมการซื้อจ้างต้องไม่เป็นกรรมการตรวจรับของสัญญาเดียวกัน", "A member of the evaluation or purchasing committee can't sit on the acceptance committee of the same contract"]],
 ];
 const SOD_STEPS = [
@@ -10492,11 +10496,12 @@ const SOD_STEPS = [
   [["อนุมัติเบิกจ่าย", "Approve the payment"], ["กระทบยอดกับ GFMIS", "Reconcile with GFMIS"], "SD-05"],
   [["พิจารณาผลหรือซื้อจ้างเป็นกรรมการ", "Sit on the evaluation or purchasing committee"], ["ตรวจรับงาน", "Accept the work"], "SD-06"],
   [["แจ้งส่วนได้เสียกับผู้ยื่น", "Declare a conflict with a bidder"], ["พิจารณาข้อเสนอของแฟ้มนั้น", "Evaluate that case"], "SD-07"],
+  [["จัดทำคำขอโอนเปลี่ยนแปลง", "Prepare a transfer request"], ["อนุมัติคำขอโอน", "Approve the transfer"], "SD-09"],
   [["เสนอแก้ไขสัญญา", "Propose a contract change"], ["อนุมัติการแก้ไขสัญญา", "Approve the change"], "SD-08"],
 ];
 const sodOn = id => { const r = ((S.sod || {}).rules || []).find(x => x.id === id); return !r || r.on; };
-// The people acting on a step: the signed-in user, plus the person whose authority they hold when acting by delegation.
-function sodActors(role, scope) { const ids = [me().id]; if (ROLE !== role) { const d = delegFor(role, scope); if (d) ids.push(d.from); } return ids; }
+// The people acting on a step: the signed-in user, plus everyone whose authority they hold when acting by delegation.
+function sodActors(role, scope) { const ids = [me().id]; if (ROLE !== role) delegAll(role, scope).forEach(d => ids.push(d.from)); return ids; }
 function sodCheck(rule, actors, others, item) {
   if (!sodOn(rule)) return true;
   const clash = actors.find(a => others.includes(a));
@@ -11496,7 +11501,8 @@ const vHasPo = v => { const c = vcCon(v), m = vcCommit(v); return !!((c && c.gfP
 function vEvidence(v) {
   if (v.type === "proc") {
     const c = vcCon(v), ph = vcPh(v); if (!c || !ph) return [];
-    return payGate(c, ph).checks.map(k => ({ k: "", label: k.label, ok: k.ok, auto: true }));
+    const g = payGate(c, ph);
+    return g.checks.map(k => ({ k: "", label: k.ok || !g.released ? k.label : `${k.label} (${L("ปลดข้อยกเว้นแล้ว", "exception released")})`, ok: k.ok || g.released, auto: true }));
   }
   return VT[v.type].ev.map(([k, label]) => ({ k, label: tx(label), ok: !!(v.ev || {})[k], auto: false }));
 }
@@ -11827,7 +11833,7 @@ function vcAct(v, a, why0) {
     if (!vcCanApprove(v)) return;
     if (!vRules(v).every(r => r.ok || r.warn)) { toast(L("ยังมีกฎที่ไม่ผ่าน (เช่น วงเงินถูกใช้ไปแล้ว) ดูหัวข้อ กฎ", "A rule is no longer met (for example the amount is used up); see Rules")); return; }
     const head = !canSpend(), actors = head ? [me().id] : sodActors("exec", "spend"), au = head ? { holder: null, via: null } : famAuth(), x = vCalc(v);
-    if (!sodCheck("SD-11", actors, [v.maker, v.checker].filter(Boolean), v.id)) return;
+    if (!sodCheck("SD-11", actors, [v.maker, v.checker].filter(Boolean), v.id) || !sodCheck("SD-03", actors, [v.maker], v.id)) return;
     const c = vcCon(v);
     if (c && !sodCheck("SD-04", actors, [...new Set([...c.inspectors, ...phaseSigners(c)])], v.id)) return;
     const row = vcAuth(x.spend, head ? "finhead" : "exec");
@@ -14207,7 +14213,7 @@ function cwAnswer(agentId, text, files, recs) {
   if (id === "AG-05" || id === "AG-06" && /ช้า|behind/i.test(t)) {
     if (/ผิดปกติ|anomal/i.test(t) && S.anoms) {
       steps.push(step("anomalies.read", L("อ่านสัญญาณความผิดปกติ", "Read the anomaly signals")));
-      return { agent: id, steps, html: `<p>${L("สัญญาณความผิดปกติที่ยังเปิดอยู่", "Open anomaly signals")}:</p><ul>${S.anoms.map(x => `<li><span class="mono">${x.id}</span> ${esc(tx(x.title || x.what || x.kind))} · ${esc(String(x.status))}</li>`).join("")}</ul>`, actions: [cwAct(L("เปิดความผิดปกติ", "Open anomalies"), "jump", "intel-anoms", true)] };
+      return { agent: id, steps, html: `<p>${L("สัญญาณความผิดปกติที่ยังเปิดอยู่", "Open anomaly signals")}:</p><ul>${S.anoms.filter(x => ROLE !== "div" || x.unit === me().unit).map(x => `<li><span class="mono">${x.id}</span> ${esc(tx(x.title || x.what || x.kind))} · ${esc(String(x.status))}</li>`).join("")}</ul>`, actions: [cwAct(L("เปิดความผิดปกติ", "Open anomalies"), "jump", "intel-anoms", true)] };
     }
     steps.push(step("execution.read", L("อ่านแผนและผลการเบิกจ่าย M07", "Read M07 plan and spending")));
     return { agent: id, steps, html: answer(0), actions: [cwAct(L("เปิดติดตามการใช้จ่าย", "Open execution monitoring"), "go", "dashboard", true)] };
@@ -14257,6 +14263,8 @@ function cwAnswer(agentId, text, files, recs) {
   const ag = cwAgents().filter(x => x.id !== "FA");
   return { agent: id, steps, html: `<p>${L("ฉันช่วยได้หลายเรื่อง ลองถามแบบนี้ หรือเลือกผู้ช่วยเฉพาะทาง", "I can help with lots of things. Try one of these, or pick a specialist.")}</p><ul>${cwSuggest().map(s => `<li>${esc(s)}</li>`).join("")}</ul><p class="sub">${L("ผู้ช่วยที่คุณใช้ได้", "Specialists you can use")}: ${ag.map(x => tx(x.name)).join(" · ")}</p>`, actions: [cwAct(L("ดูผู้ช่วยทั้งหมด", "See all agents"), "agents", "", true)] };
 }
+// An agent switched off answers nothing, and the front agent follows AG-06, the assistant it stands for.
+const cwOff = res => (agentOn(res.agent === "FA" ? "AG-06" : res.agent) ? null : { agent: res.agent, off: true, steps: [], actions: [], html: `<p>${L("ผู้ช่วยนี้ถูกปิดใช้งาน ผู้ดูแลเปิดได้ที่แท็บเอเจนต์ AI", "This assistant is switched off. An administrator can turn it on in the AI agents tab.")}</p>` });
 const CW_DRAFTS = {};
 
 function cwSend(text) {
@@ -14269,11 +14277,11 @@ function cwSend(text) {
   const ctx = CW_CTX ? cwContext() : null, files = CW_FILES.splice(0), recs = CW_RECS.splice(0);
   th.msgs.push({ role: "u", text, files: files.map(f => ({ name: f.name, size: f.size, kind: f.kind, key: f.key })), recs, ctx: ctx ? { label: ctx.label, rec: ctx.rec } : null, t: nowIso() });
   th.t = nowIso();
-  const prevFiles = files.length ? files : [], res = cwAnswer(th.agent, text, prevFiles, recs.concat(ctx && ctx.rec ? [ctx.rec] : []));
+  const prevFiles = files.length ? files : [], ans = cwAnswer(th.agent, text, prevFiles, recs.concat(ctx && ctx.rec ? [ctx.rec] : [])), res = cwOff(ans) || ans;
   const msg = { role: "a", agent: res.agent, html: "", steps: res.steps.map(s => ({ ...s, done: false })), actions: res.actions, t: nowIso(), pending: true };
   th.msgs.push(msg); CW_BUSY = true; cwRender();
   const ag = cwAgent(res.agent);
-  S.aiLog.unshift({ t: nowIso(), agent: res.agent === "FA" ? "AG-06" : res.agent, user: me().id, action: ["ตอบในแชตร่วมทำงาน", "Answered in co-work chat"], target: (text || files.map(f => f.name).join(", ")).slice(0, 60), sources: res.steps.length, ok: true });
+  if (!res.off) S.aiLog.unshift({ t: nowIso(), agent: res.agent === "FA" ? "AG-06" : res.agent, user: me().id, action: ["ตอบในแชตร่วมทำงาน", "Answered in co-work chat"], target: (text || files.map(f => f.name).join(", ")).slice(0, 60), sources: res.steps.length, ok: true });
   let i = 0;
   const tick = () => {
     if (i < msg.steps.length) { msg.steps[i].done = true; i++; cwRender(); setTimeout(tick, 260); return; }
@@ -15903,7 +15911,7 @@ function conPoTag(c) {
   return `<span class="sub">·</span>${tag(L("ยังไม่มี PO ใน GFMIS", "No GFMIS PO yet"), "p-warn")}${allowed("finance") ? ` <button class="btn ghost" type="button" data-jump="fnc-chain">${L("บันทึก PO", "Record the PO")}</button>` : ""}`;
 }
 function phVoucher(c, ph) {
-  const v = (S.vouchers || []).find(x => x.contract === c.id && x.phase === ph.n && x.state !== "cancelled");
+  const v = (S.vouchers || []).find(x => x.contract === c.id && x.phase === ph.n && !["cancelled", "rejected"].includes(x.state));
   if (!v || typeof vTag !== "function") return "";
   return `<div>${vTag(v)} ${allowed("finance") ? `<button class="btn ghost" type="button" data-vcgo="${v.id}">${v.id}</button>` : `<span class="mono sub">${v.id}</span>`}</div>`;
 }
@@ -16394,7 +16402,7 @@ const clip = (a, n) => (String(a).length > n ? String(a).slice(0, n) + "…" : S
 
 // ---------- allocation lines ----------
 const lineFloor = l => { const b = ALLOC_FY === B4_FY ? bal(l) : { res: 0, com: 0 }; return b.res + b.com + pendingOut(l.id); };
-const lineUsed = l => ALLOC_FY === B4_FY && (lineFloor(l) > 0 || AL().transfers.some(t => t.status === "pending" && (t.from === l.id || t.to === l.id)));
+const lineUsed = l => ALLOC_FY === B4_FY && (lineFloor(l) > 0 || AL().transfers.some(t => TR_HELD.includes(t.status) && (t.from === l.id || t.to === l.id)));
 CRUD.def("alLine", {
   noun: ["บรรทัดจัดสรร", "Allocation line"], st: CR_ST, live: true,
   list: () => [...(AL().drafts || []), ...AL().lines], id: l => l.id, title: l => tx(l.name),
@@ -16522,13 +16530,14 @@ CRUD.def("alTr", {
     const apply = () => { const a = lineOf(t.from), b = lineOf(t.to); a.amount -= t.amount; b.amount += t.amount; scalePlan(a, a.amount); scalePlan(b, b.amount); if (a.type !== b.type) { A.byType[a.type] -= t.amount; A.byType[b.type] = (A.byType[b.type] || 0) + t.amount; } };
     if (t.status === "pending" && ty !== "T4" && acting(trApprover(t) === "fin" ? "fin" : "exec", "transfer")) {
       out.push({ id: "ok", label: L("อนุมัติ", "Approve"), kind: "primary", impact: () => (TR_TYPE[ty][2] ? L("อนุมัติภายในแล้วส่งสำนักงบประมาณ", "Approve internally, then it goes to the Budget Bureau") : `${L("ปรับวงเงินทั้งสองบรรทัดทันที", "Both lines change now")}: −${mb(t.amount)} / +${mb(t.amount)}`),
-        run: () => { if (TR_TYPE[ty][2]) { t.status = "bb"; notify(["plan", "fin"], [`${t.id} อนุมัติภายในแล้ว รอตกลงสำนักงบประมาณ`, `${t.id} approved internally; waiting for the Budget Bureau`], "alloc-transfers"); } else { t.status = "approved"; t.reportDue = addDays(TODAY, 15); apply(); }
+        run: () => { if (!sodCheck("SD-09", sodActors(trApprover(t) === "fin" ? "fin" : "exec", "transfer"), [t.by], t.id)) return "";
+          if (TR_TYPE[ty][2]) { t.status = "bb"; notify(["plan", "fin"], [`${t.id} อนุมัติภายในแล้ว รอตกลงสำนักงบประมาณ`, `${t.id} approved internally; waiting for the Budget Bureau`], "alloc-transfers"); } else { t.status = "approved"; t.reportDue = addDays(TODAY, 15); apply(); }
           audit(["อนุมัติการโอนเปลี่ยนแปลง", "Approved a transfer"], `${t.id} · ${ty}`); return L("อนุมัติแล้ว", "Approved"); } });
       out.push({ id: "no", label: L("ไม่อนุมัติ", "Reject"), kind: "danger", why: true,
         run: (_, why) => { t.status = "rejected"; t.decision = why; audit(["ไม่อนุมัติการโอนเปลี่ยนแปลง", "Rejected a transfer"], `${t.id} · ${why}`); notify(["fin"], [`${t.id} ไม่อนุมัติ: ${why}`, `${t.id} rejected: ${why}`], "alloc-transfers"); return L("ไม่อนุมัติแล้ว", "Rejected"); } });
     }
     if (t.status === "bb" && (ROLE === "plan" || canAlloc())) {
-      out.push({ id: "bbok", label: L("บันทึกว่าสำนักงบประมาณเห็นชอบ", "Record Budget Bureau agreement"), kind: "primary", run: () => { t.status = "approved"; t.bbAgreed = TODAY; apply(); audit(["บันทึกความเห็นชอบของสำนักงบประมาณต่อการโอน", "Recorded the Budget Bureau's agreement to a transfer"], t.id); return L("บันทึกแล้ว · การโอนมีผล", "Recorded · the transfer is in effect"); } });
+      out.push({ id: "bbok", label: L("บันทึกว่าสำนักงบประมาณเห็นชอบ", "Record Budget Bureau agreement"), kind: "primary", run: () => { if (!trRoom(t)) { trNoRoom(t); return ""; } t.status = "approved"; t.bbAgreed = TODAY; apply(); audit(["บันทึกความเห็นชอบของสำนักงบประมาณต่อการโอน", "Recorded the Budget Bureau's agreement to a transfer"], t.id); return L("บันทึกแล้ว · การโอนมีผล", "Recorded · the transfer is in effect"); } });
       out.push({ id: "bbno", label: L("บันทึกว่าสำนักงบประมาณไม่เห็นชอบ", "Record Budget Bureau refusal"), kind: "danger", why: true, run: (_, why) => { t.status = "rejected"; t.decision = why; audit(["สำนักงบประมาณไม่เห็นชอบการโอน", "The Budget Bureau refused a transfer"], `${t.id} · ${why}`); return L("บันทึกแล้ว", "Recorded"); } });
     }
     if (t.status === "pending" && canAlloc()) out.push({ id: "wd", label: L("ถอนคำขอ", "Withdraw"), kind: "ghost", why: true, run: (_, why) => { t.status = "withdrawn"; t.decision = why; audit(["ถอนคำขอโอนเปลี่ยนแปลง", "Withdrew a transfer request"], `${t.id} · ${why}`); return L("ถอนคำขอแล้ว", "Withdrawn"); } });
@@ -18888,7 +18897,9 @@ CRUD.def("pcCon", {
   },
   check: (v, r) => {
     const insp = Object.keys(v).filter(k => k.startsWith("i_") && v[k]).map(k => k.slice(2)), e = [];
-    if (r && r.status !== "draft") { if (insp.length < conInspN(r.amount)) e.push({ f: null, m: L("กรรมการตรวจรับไม่ครบ", "Not enough acceptance committee members") }); return e; }
+    if (r && r.status !== "draft") { if (insp.length < conInspN(r.amount)) e.push({ f: null, m: L("กรรมการตรวจรับไม่ครบ", "Not enough acceptance committee members") });
+      const rc = conCaseOf(r); if (rc && sodOn("SD-06") && insp.some(id => caseJudges(rc).includes(id))) e.push({ f: null, m: L("กรรมการตรวจรับซ้ำกับกรรมการพิจารณาผล (SD-06)", "An acceptance member sat on the evaluation committee (SD-06)") });
+      return e; }
     const cs = r ? conCaseOf(r) : caseOf(v.cs); if (!cs) return [{ f: "cs", m: L("เลือกแฟ้ม", "Choose a case") }];
     if (!(v.amount > 0) || v.amount > conCapOf(cs)) e.push({ f: "amount", m: L("วงเงินต้องไม่เกินราคาที่ชนะและวงเงินที่ขอ", "Can't exceed the winning price or the requisition") });
     const sched = conSched(v, r, v.amount, v.signed);
@@ -19181,7 +19192,7 @@ FS.auditQ = () => {
 // invoice) and the demo itself, P-E01 to P-E15 in the in-app guide.
 
 // A phase has started payment once a live voucher or payment request exists for it.
-const phPayStarted = (c, ph) => (S.vouchers || []).some(v => v.contract === c.id && v.phase === ph.n && v.state !== "cancelled") || S.payreqs.some(p => p.contract === c.id && p.phase === ph.n && p.status !== "rejected");
+const phPayStarted = (c, ph) => (S.vouchers || []).some(v => v.contract === c.id && v.phase === ph.n && !["cancelled", "rejected"].includes(v.state)) || S.payreqs.some(p => p.contract === c.id && p.phase === ph.n && p.status !== "rejected");
 
 // ---------- penalty waivers (FR-PC-28, FL-PC-08) ----------
 // Procurement proposes to waive or reduce a phase's penalty with a reason and a supporting document; the executive

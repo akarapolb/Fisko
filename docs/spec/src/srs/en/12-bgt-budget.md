@@ -549,8 +549,8 @@ The sweep also opens every Budget page, tab, request step, record drawer and for
 | OI-BGT-02 | Read the regulation with its second amendment of 2567, and confirm clauses 9, 15, 16, 18, 21, 25 to 29, 33 to 36. The design marks clauses 25 to 29 and 34 as the ones to check first | Budget specialist | BR-BGT-26 to BR-BGT-33 |
 | OI-BGT-03 | Which rule values are legal limits, the allowed range of the others, and whether the transfer table is a yearly setting. The full criteria under clause 28 were not read, so T1 and T2 may differ | Budget specialist, product owner | BR-BGT-09, BR-BGT-10, BR-BGT-26, BGT-FR-161 |
 | OI-BGT-04 | File layouts and API access for e-Budgeting, BBL, BB EvMIS and GFMIS | Budget Bureau, Comptroller General's Department | BGT-IR-003, BGT-IR-004, BGT-IR-005 |
-| OI-BGT-05 | A transfer at `bb` holds no money. Fix it and add a check | Development team | BGT-FR-117, BGT-FR-114 |
-| OI-BGT-06 | SD-09 has no check, so one Finance officer can request and approve a T1. SD-10 has no switch or log. Wire each one (OI-PLT-04) | Development team, BGT owner | BGT-FR-124, BGT-FR-070 |
+| OI-BGT-05 | A transfer at `bb` holds no money. Fix it and add a check Fixed in round 67, with a sweep check. | Development team | BGT-FR-117, BGT-FR-114 |
+| OI-BGT-06 | SD-09 has a check since round 67, so one person cannot request and approve the same transfer. SD-10 still has no switch or log (OI-PLT-04) | Development team, BGT owner | BGT-FR-124, BGT-FR-070 |
 | OI-BGT-07 | `nextReqId` takes the highest live number plus one, so deleting the newest draft reuses its number. A transfer from AG-15 numbers from the list length while the screen uses a counter, so the two can clash. Use one counter | Development team | BGT-FR-034, BGT-DR-005 |
 | OI-BGT-08 | A draft line offers activities from the year being formulated even for the year being spent, so its programme and output may come from another year's structure | Development team | BGT-FR-098 |
 | OI-BGT-09 | The carry-over page fixes the text of the deadline date, and investment quarterly targets stay in code | Development team | BGT-CR-002, BGT-FR-134 |

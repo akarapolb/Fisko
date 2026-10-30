@@ -9,6 +9,7 @@ const SOD_RULES = [
   ["SD-05", ["ผู้กระทบยอดต้องไม่เป็นผู้อนุมัติเบิกจ่ายรายการนั้น", "The person reconciling can't be the one who approved the payment"]],
   ["SD-07", ["กรรมการที่แจ้งว่ามีส่วนได้เสียกับผู้ยื่นรายใด ห้ามร่วมพิจารณาแฟ้มนั้น และต้องแจ้งก่อนพิจารณา", "A committee member who declares a conflict with a bidder can't take part in that case, and everyone must declare before the evaluation"]],
   ["SD-08", ["ผู้เสนอแก้ไขสัญญาต้องไม่เป็นผู้อนุมัติการแก้ไขนั้น", "Whoever proposes a contract change can't approve it"]],
+  ["SD-09", ["ผู้จัดทำคำขอโอนเปลี่ยนแปลงต้องไม่เป็นผู้อนุมัติคำขอของตนเอง", "Whoever prepares a transfer request must not approve it"]],
   ["SD-06", ["กรรมการพิจารณาผลหรือกรรมการซื้อจ้างต้องไม่เป็นกรรมการตรวจรับของสัญญาเดียวกัน", "A member of the evaluation or purchasing committee can't sit on the acceptance committee of the same contract"]],
 ];
 const SOD_STEPS = [
@@ -19,11 +20,12 @@ const SOD_STEPS = [
   [["อนุมัติเบิกจ่าย", "Approve the payment"], ["กระทบยอดกับ GFMIS", "Reconcile with GFMIS"], "SD-05"],
   [["พิจารณาผลหรือซื้อจ้างเป็นกรรมการ", "Sit on the evaluation or purchasing committee"], ["ตรวจรับงาน", "Accept the work"], "SD-06"],
   [["แจ้งส่วนได้เสียกับผู้ยื่น", "Declare a conflict with a bidder"], ["พิจารณาข้อเสนอของแฟ้มนั้น", "Evaluate that case"], "SD-07"],
+  [["จัดทำคำขอโอนเปลี่ยนแปลง", "Prepare a transfer request"], ["อนุมัติคำขอโอน", "Approve the transfer"], "SD-09"],
   [["เสนอแก้ไขสัญญา", "Propose a contract change"], ["อนุมัติการแก้ไขสัญญา", "Approve the change"], "SD-08"],
 ];
 const sodOn = id => { const r = ((S.sod || {}).rules || []).find(x => x.id === id); return !r || r.on; };
-// The people acting on a step: the signed-in user, plus the person whose authority they hold when acting by delegation.
-function sodActors(role, scope) { const ids = [me().id]; if (ROLE !== role) { const d = delegFor(role, scope); if (d) ids.push(d.from); } return ids; }
+// The people acting on a step: the signed-in user, plus everyone whose authority they hold when acting by delegation.
+function sodActors(role, scope) { const ids = [me().id]; if (ROLE !== role) delegAll(role, scope).forEach(d => ids.push(d.from)); return ids; }
 function sodCheck(rule, actors, others, item) {
   if (!sodOn(rule)) return true;
   const clash = actors.find(a => others.includes(a));
