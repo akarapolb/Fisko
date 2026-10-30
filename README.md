@@ -22,6 +22,7 @@ This repository holds the conceptual design material and a clickable prototype p
 | `HANDOFF.md` | Where things stand, how to run and change the prototype, decisions, limits and next steps. |
 | `NEXT_SESSION.md` | Short start-here note for the next working session: state, workflow, commands, gotchas and what to do next. |
 | `ROADMAP.md` | The deeper feature planned for each module (all built). |
+| `docs/adr/` | Architecture decision records for the production build: licence, stack, tenancy, hosting, encryption, PDPA and audit. |
 | `src/` | Prototype source. |
 
 ## Prototype
