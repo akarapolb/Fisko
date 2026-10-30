@@ -7,6 +7,8 @@ const CR_ST = {
   pending: [["รออนุมัติ", "Pending"], "p-warn"], approved: [["อนุมัติแล้ว", "Approved"], "p-ok"], rejected: [["ไม่อนุมัติ", "Rejected"], "p-bad"], withdrawn: [["ถอนแล้ว", "Withdrawn"], "p-mute"],
 };
 const crSeq = (A, k) => { A.seq = A.seq || {}; A.seq[k] = (A.seq[k] || 0) + 1; return A.seq[k]; };
+// One counter for every way a transfer is raised; it steps past the transfers made before the counter existed.
+const trNo = (A, fy) => { let id; do id = `TR-${fy}-${String(crSeq(A, "tr")).padStart(3, "0")}`; while (A.transfers.some(x => x.id === id)); return id; };
 const crNo = (A, k, pre, w = 3) => `${pre}-${ALLOC_FY}-${String(crSeq(A, k)).padStart(w, "0")}`;
 const actOpts = () => (S.structure[FORM_FY] || []).filter(n => n.lvl === "activity").map(n => [n.id, `${n.code} · ${tx(n.name)}`]);
 const unitOpts = () => S.units.filter(u => u.parent).map(u => [u.id, tx(u.name)]);

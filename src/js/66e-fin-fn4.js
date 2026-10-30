@@ -153,6 +153,7 @@ const bindRecv = () => {
   }));
   const rec = $("#rc-rec");
   if (rec) rec.onclick = () => {
+    if (!gfOk("record")) return;
     const xs = (S.receipts || []).filter(r => rcLive(r) && !r.recorded), late = xs.filter(r => r.date < TODAY).length;
     xs.forEach(r => { S.gfSeq = (S.gfSeq || 3600000400) + 1; r.recorded = { t: nowIso(), by: me().id, doc: String(S.gfSeq) }; });
     audit(["บันทึกรับเงินในระบบ GFMIS", "Recorded receipts in GFMIS"], `${xs.length}${late ? ` · ${late} ${L("รายการบันทึกช้า", "late")}` : ""}`);

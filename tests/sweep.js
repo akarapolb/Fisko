@@ -906,6 +906,15 @@
           const other = S.dash.units.find(x => x.unit !== me().unit); if (other && answer(0).includes(unitName(other.unit))) errs.push(`site ${org}: the assistant showed another unit to a unit role`);
           ROLE = "exec"; S.agents.filter(a => a.id === "AG-06").forEach(a => (a.on = false)); if (!cwOff({ agent: "FA" })) errs.push(`site ${org}: the assistant answers with its agent off`);
           ["SD-03", "SD-09"].forEach(id => { if (!SOD_RULES.some(r => r[0] === id)) errs.push(`site ${org}: duty rule ${id} is missing`); });
+          // round 68: the registry and the numbering
+          if (typeof prjList === "function") {
+            const A8 = S.allocs[CUR_FY], tl8 = { id: "AL-2570-009", unit: A8.lines[0].unit, name: ["t", "t"], type: "ope", amount: 1, plan: [], act: "" }; A8.lines.push(tl8);
+            const pr = prjList().find(p => p.ref === tl8.id); if (!pr || !/-\d{4}$/.test(pr.id) || pr.id.includes("NaN")) errs.push(`site ${org}: a form line has a broken project id`);
+            A8.lines.pop();
+            const pl8 = prjList().find(p => p.pm), h8 = prjHash(pl8), lang0 = LANG; LANG = LANG === "th" ? "en" : "th"; if (prjHash(pl8) !== h8) errs.push(`site ${org}: the send comparison depends on the language`); LANG = lang0;
+            const rq8 = S.requests[0]; if (rq8) { const st8 = rq8.status; rq8.status = "rejected"; const e8 = prjList().find(p => p.ref === rq8.id); if (!e8 || !e8.ended) errs.push(`site ${org}: a rejected request is not ended`); rq8.status = st8; }
+          }
+          { const n0 = nextReqId(); S.delIds = (S.delIds || []).concat(n0); if (nextReqId() === n0) errs.push(`site ${org}: a deleted request number came back`); S.delIds.pop(); }
           ROLE = "exec";
           go2("home"); $$("#view .head .eyebrow").forEach(e => { if (/(^|·\s*)(B|M|F|P)\d{1,2}(\s*·|$)/.test(e.textContent)) errs.push(`site ${org}/${lang}: a design code left in an eyebrow`); });
           S = SEEDS[org].seed();

@@ -10,7 +10,7 @@ const CRIT = [[["สอดคล้องยุทธศาสตร์", "Strat
 const ideaScore = i => (i.scores ? Math.round(i.scores.reduce((s, v, n) => s + v / 5 * CRIT[n][1], 0)) : null);
 const findKpi = id => (allKpis().find(x => x.k.id === id) || {}).k;
 let IDEA_OPEN = null; // idea being scored
-const nextReqId = () => `REQ-${FORM_FY}-${String(Math.max(0, ...S.requests.map(r => Number(r.id.split("-")[2]) || 0)) + 1).padStart(3, "0")}`;
+const nextReqId = () => `REQ-${FORM_FY}-${String(Math.max(0, ...[...S.requests.map(r => r.id), ...(S.delIds || []).filter(x => x.startsWith("REQ-"))].map(x => Number(x.split("-")[2]) || 0)) + 1).padStart(3, "0")}`;
 
 STRAT.bank = () => {
   const ideas = S.ideas || [], canAdd = ROLE === "div" || ROLE === "plan", pl = ROLE === "plan";

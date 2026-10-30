@@ -98,14 +98,14 @@ Each status rests on reading the code and the sweep. A page-open check is not en
 
 | ID | Requirement | Clause | Priority | Verify | Status | Prototype |
 | --- | --- | --- | --- | --- | --- | --- |
-| PRJ-FR-001 | The system shall give a project id in the form prefix, two-digit fiscal year and four-digit number to each allocation line, budget request and carry-over. | - | M | T | Partial | 95-projects.js prjList |
+| PRJ-FR-001 | The system shall give a project id in the form prefix, two-digit fiscal year and four-digit number to each allocation line, budget request and carry-over. | - | M | T | Prototyped | 95-projects.js prjLineNo |
 | PRJ-FR-002 | The system shall keep the same project id when a request becomes an allocation line and when a line becomes a carry-over. | - | M | T | Planned | - |
 | PRJ-FR-003 | The system shall never reuse a project id. | - | M | T | Planned | - |
 | PRJ-FR-004 | The system shall show the GFMIS budget code beside the project id, and shall not join any record on that code. | - | M | I | Partial | 95-projects.js prjGf, prjTable |
 | PRJ-FR-005 | The system shall list each project with id, GFMIS code, name, unit, budget kind, current step, amount, committed, paid and PM send state. | - | M | D | Partial | 95-projects.js prjTable |
 | PRJ-FR-006 | The system shall filter the register by fiscal year and search it by id, GFMIS code, source reference, name and unit. | - | S | T | Partial | 95-projects.js VIEWS prj-registry |
 | PRJ-FR-007 | The system shall show the number of projects, the number exchanged, and the budget and paid totals of the current fiscal year. | - | S | D | Partial | 95-projects.js VIEWS prj-registry |
-| PRJ-FR-008 | The system shall mark the project of a cancelled line, or of a rejected or withdrawn request, as ended, and shall leave it out of the totals. | - | S | T | Planned | - |
+| PRJ-FR-008 | The system shall mark the project of a cancelled line, or of a rejected or withdrawn request, as ended, and shall leave it out of the totals. | - | S | T | Prototyped | 95-projects.js prjList ended |
 | PRJ-FR-009 | The system shall label each project single-year, multi-year or carry-over, and shall take multi-year from the Budget record. | - | S | T | Partial | 95-projects.js prjList kind; PRJ_CFG multi |
 | PRJ-FR-010 | The system shall set the work type from the procurement kind of the case, otherwise routine for routine spending, construction for an investment line and services for the rest. | - | C | T | Partial | 95-projects.js prjList wtype |
 | PRJ-FR-011 | The system shall show the roles `div` and `divhead` only the projects of their own unit. | - | M | T | Planned | - |
@@ -116,7 +116,7 @@ Each status rests on reading the code and the sweep. A page-open check is not en
 | --- | --- | --- | --- | --- | --- | --- |
 | PRJ-FR-012 | The system shall show the 8 steps of the budget cycle, each with its name, owner and exchange point: budget request, Appropriation Act, allotment and transfers, procurement, commitment, acceptance, disbursement, carry-over and lapse. | - | M | D | Partial | 95-projects.js PRJ_CYCLE |
 | PRJ-FR-013 | The system shall derive the current step of a project under BR-PRJ-03 at each read. | - | M | T | Partial | 95-projects.js prjList step |
-| PRJ-FR-014 | The system shall count a phase as accepted for BR-PRJ-03 only when Procurement holds it as accepted, and a delivered phase alone shall not count. | - | M | T | Partial | 95-projects.js prjList accepted |
+| PRJ-FR-014 | The system shall count a phase as accepted for BR-PRJ-03 only when Procurement holds it as accepted, and a delivered phase alone shall not count. | - | M | T | Prototyped | 95-projects.js prjList phaseAccepted |
 | PRJ-FR-015 | The system shall show the owner of each step from the organization chart under BR-PRJ-16, with a generic label when the chart has no such user. | - | S | T | Partial | 95-projects.js prjOwnUnit |
 | PRJ-FR-016 | The system shall show the number of projects and their amount at each step, and at step 8 the amount less what was paid. | - | S | D | Partial | 95-projects.js VIEWS prj-cycle |
 | PRJ-FR-017 | The system shall list the projects of a chosen step, and shall link to the page where that step is done when the role may open it. | - | S | D | Partial | 95-projects.js VIEWS prj-cycle, pJump |
@@ -126,7 +126,7 @@ Each status rests on reading the code and the sweep. A page-open check is not en
 | ID | Requirement | Clause | Priority | Verify | Status | Prototype |
 | --- | --- | --- | --- | --- | --- | --- |
 | PRJ-FR-018 | The system shall compute the annual amount under BR-PRJ-04, so that approving a transfer changes the amount of both lines. | - | M | T | Prototyped | 95-projects.js prjList annual; sweep round 64 |
-| PRJ-FR-019 | The system shall compute committed under BR-PRJ-05 and shall count no draft contract. | - | M | T | Partial | 95-projects.js prjList committed |
+| PRJ-FR-019 | The system shall compute committed under BR-PRJ-05 and shall count no draft contract. | - | M | T | Prototyped | 95-projects.js prjList bal |
 | PRJ-FR-020 | The system shall compute paid under BR-PRJ-06. | - | M | T | Partial | 95-projects.js prjList paid |
 | PRJ-FR-021 | The system shall mark routine spending under BR-PRJ-07 and shall show that it needs no procurement. | - | S | T | Partial | 95-projects.js prjList routine, prjTimeline |
 | PRJ-FR-022 | The system shall state the date and time of the latest GFMIS data on the register and on the sharing page. | - | M | D | Partial | 95-projects.js prjAsOf |
@@ -226,8 +226,8 @@ The registry stores little. Field names below are those of the code. Project row
 | PRJ-DR-001 | The system shall store each project id with links to its budget requests, allocation lines and carry-overs, and an id shall outlive any one of them. | - | M | T | Planned | - |
 | PRJ-DR-002 | The system shall keep no amount, step or status as a source of truth in the registry. A copy kept for lists shall be rebuildable from the owning modules. | - | M | I | Partial | 95-projects.js prjList |
 | PRJ-DR-003 | The system shall refuse any edit or deletion of a send log row. | - | M | T | Partial | 95-projects.js; no delete action exists |
-| PRJ-DR-004 | Each send log row shall hold the time, receiver, number of rows, the time of the latest GFMIS data, the sender and, for an approval, the approver and reason. | - | M | T | Partial | 95-projects.js log; asOf holds today |
-| PRJ-DR-005 | The system shall compare the 12 items in a form that does not depend on the display language. | - | M | T | Partial | 95-projects.js prjHash; target and area follow the language |
+| PRJ-DR-004 | Each send log row shall hold the time, receiver, number of rows, the time of the latest GFMIS data, the sender and, for an approval, the approver and reason. | - | M | T | Prototyped | 95-projects.js log, prjGfT |
+| PRJ-DR-005 | The system shall compare the 12 items in a form that does not depend on the display language. | - | M | T | Prototyped | 95-projects.js prjHash |
 | PRJ-DR-006 | The system shall keep each PM message with its time received, and the person and time of its acknowledgement. | - | M | T | Partial | 95-projects.js inb |
 | PRJ-DR-007 | A data set shared outside shall hold no personal data unless the data protection officer has approved that data set. | - | M | I | Planned | - |
 | PRJ-DR-008 | The system shall apply a retention period to PM messages and send log rows as the tenant setting states. | - | S | I | Planned | - |
@@ -309,8 +309,8 @@ The registry meets all rows of the cross-cutting chapter, and they are not repea
 | PRJ-CR-001 | Projects shall be a module of the monolith in ADR-0002, shall reach other modules only through their published interfaces, and no module except Review shall depend on it. | - | M | I | Planned | - |
 | PRJ-CR-002 | Agency specifics shall live only in tenant settings, with no branch on a tenant in code (PLT-CR-007). | - | M | I | Partial | 95-projects.js PRJ_CFG, PRJ_DEF |
 | PRJ-CR-003 | The system shall offer no way to enter physical progress in the registry. | - | M | I | Partial | 95-projects.js; no such form exists |
-| PRJ-CR-004 | Fiscal years and dates shall come from the fiscal calendar and the records, and no year or date shall be fixed in code. | - | M | I | Planned | - |
-| PRJ-CR-005 | Sample data and tenant module numbers shall not sit in generic code. | - | S | I | Partial | 95-projects.js PRJ_CYCLE mods, prjState log |
+| PRJ-CR-004 | Fiscal years and dates shall come from the fiscal calendar and the records, and no year or date shall be fixed in code. | - | M | I | Prototyped | 95-projects.js |
+| PRJ-CR-005 | Sample data and tenant module numbers shall not sit in generic code. | - | S | I | Partial | 95-projects.js PRJ_CYCLE mods |
 
 ## Test evidence {#prj-tests}
 
@@ -342,13 +342,13 @@ The sweep also opens every cycle step, the exchange, sharing and map pages and t
 | OI-PRJ-09 | The prototype builds the GFMIS code by joining a unit code and an activity code, as a placeholder. What is the real code, and where does it come from? | Comptroller General's Department, FIN author | PRJ-FR-004 |
 | OI-PRJ-10 | The code gives the PM exchange the interface id IF-08, which the Solution Design gives to other message channels. Which id stands? | Product owner | PRJ-IR-007 |
 | OI-PRJ-11 | Is a module and duty map a product feature, or does it end with the tenant acceptance? | Product owner | PRJ-FR-060 to PRJ-FR-062 |
-| OI-PRJ-12 | Fix the id of a line created in the allocation form: the code reads a number from the id, gets none, and gives such lines the same broken project id | Development team | PRJ-FR-001 |
-| OI-PRJ-13 | Stop counting draft contracts as committed, and released amounts as still committed. Today a project can differ from the line ledger and can reach step 5 on a draft | Development team | PRJ-FR-019 |
-| OI-PRJ-14 | Make the send comparison independent of the language. Target and area are compared as display text, so switching language marks projects with those fields as changed | Development team | PRJ-DR-005 |
-| OI-PRJ-15 | Count a phase as accepted only on acceptance. The code also counts a delivered phase, in the step and in the accepted count on Project 360 | Development team | PRJ-FR-014 |
-| OI-PRJ-16 | Record the latest GFMIS time in the send log. The code records today | Development team | PRJ-DR-004, BR-PRJ-17 |
-| OI-PRJ-17 | Remove fixed years and dates, and sample log rows, from `95-projects.js`. The file fixes three fiscal years, the year-end date, a task due date and the opening send log | Development team | PRJ-CR-004, PRJ-CR-005 |
-| OI-PRJ-18 | The asker in the log is the first user of the asking role, and a cancelled line or a rejected request still shows as a live project | Development team | PRJ-FR-008, PRJ-FR-053 |
+| OI-PRJ-12 | Fix the id of a line created in the allocation form: the code reads a number from the id, gets none, and gives such lines the same broken project id Fixed in round 68. | Development team | PRJ-FR-001 |
+| OI-PRJ-13 | Stop counting draft contracts as committed, and released amounts as still committed. Today a project can differ from the line ledger and can reach step 5 on a draft Fixed in round 68. | Development team | PRJ-FR-019 |
+| OI-PRJ-14 | Make the send comparison independent of the language. Target and area are compared as display text, so switching language marks projects with those fields as changed Fixed in round 68. | Development team | PRJ-DR-005 |
+| OI-PRJ-15 | Count a phase as accepted only on acceptance. The code also counts a delivered phase, in the step and in the accepted count on Project 360 Fixed in round 68. | Development team | PRJ-FR-014 |
+| OI-PRJ-16 | Record the latest GFMIS time in the send log. The code records today Fixed in round 68. | Development team | PRJ-DR-004, BR-PRJ-17 |
+| OI-PRJ-17 | Remove fixed years and dates, and sample log rows, from `95-projects.js`. The file fixes three fiscal years, the year-end date, a task due date and the opening send log Fixed in round 68. | Development team | PRJ-CR-004, PRJ-CR-005 |
+| OI-PRJ-18 | The asker in the log is the first user of the asking role, and a cancelled line or a rejected request still shows as a live project Round 68 marks ended projects, leaves them out of the totals, and logs the asking role. A named asker needs PRJ-FR-053. | Development team | PRJ-FR-008, PRJ-FR-053 |
 
 The design documents, page text and code differ in the following places. The code says what exists, and each difference is carried by the row named.
 
@@ -362,7 +362,7 @@ The design documents, page text and code differ in the following places. The cod
 | Received progress | The PM system owns physical progress | Plan and actual percent come from Fisko contract phases | PRJ-FR-047 |
 | Own data per unit | Every unit gets its own data back | Every role but the supplier sees every unit | PRJ-FR-011 |
 | External approval | External sends need approval first | One approval per consumer; later sends need none | PRJ-FR-049 |
-| Neutral defaults | The file holds only neutral defaults | Module numbers of one map, and sample log rows, sit in the file | PRJ-CR-005 |
+| Neutral defaults | The file holds only neutral defaults | Module numbers of one map sit in the file | PRJ-CR-005 |
 
 ## Status summary {#prj-status}
 

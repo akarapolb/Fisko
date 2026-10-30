@@ -27,6 +27,7 @@ const PRJ_DEF = {
   feed: {}, // the tenant's wording of the scripted PM messages, by dimension: [th, en] with {phase}
   modules: null, // the ToR module map; only organizations with a ToR sheet have one
   duties: null,
+  log: [], // the send log the tenant starts with
 };
 const prjCfg = () => Object.assign({}, PRJ_DEF, PRJ_CFG[ORG] || {});
 const pmN = () => tx(prjCfg().pmRef);
@@ -52,18 +53,23 @@ const prjArrow = k => (k === "out" ? "→" : k === "both" ? "↔" : "←");
 const prjSum = a => a.reduce((x, y) => x + (y || 0), 0);
 const pad4 = n => String(n).padStart(4, "0");
 function prjGf(unit, act) { const u = S.units.find(x => x.id === unit); return `00${u ? u.code : "00"}-${String(act || "").replace(/-/g, ".")}`; }
+const prjNo = (c, fy, n) => `${c.prefix}-${String(fy).slice(-2)}-${pad4(n)}`;
+// A line from the Act is Ln; a line drafted in the allocation form is AL-yyyy-nnn and numbers from 5000, so the two never meet.
+const prjLineNo = l => { const m = /(\d+)$/.exec(l.id); return (m ? Number(m[1]) : 0) + (/^L\d/.test(l.id) ? 0 : 5000); };
+const PRJ_ENDED = ["rejected", "cancelled", "withdrawn"];
+const prjYearEnd = () => `${CUR_FY - 543}-09-30`;
 function prjList() {
   const c = prjCfg(), out = [], A = S.allocs && S.allocs[CUR_FY];
   const scope = c.pmScope || (A ? A.lines.filter(l => l.type === "inv").map(l => l.id) : []);
   if (A) A.lines.forEach(l => {
     const plan = (S.pplan || []).find(p => p.line === l.id), cs = (S.cases || []).find(x => x.line === l.id);
-    const cons = (S.contracts || []).filter(x => x.line === l.id), cms = (S.fcommit || []).filter(x => x.line === l.id);
+    const cons = (S.contracts || []).filter(x => x.line === l.id && x.status !== "draft"), cms = (S.fcommit || []).filter(x => x.line === l.id);
     const tr = (A.transfers || []).filter(t => t.status === "approved");
     const annual = l.amount + prjSum(tr.filter(t => t.to === l.id).map(t => t.amount)) - prjSum(tr.filter(t => t.from === l.id).map(t => t.amount));
     // the month's GFMIS figures lag approved payments by a few days; take whichever is further along
     const paid = Math.max(prjSum(((S.disb || {})[l.id] || []).filter(v => v != null)), prjSum((S.payreqs || []).filter(y => y.status === "approved" && cons.some(x => x.id === y.contract)).map(y => y.amount)));
-    const committed = prjSum(cons.map(x => x.amount)) + prjSum(cms.map(x => x.amount));
-    const accepted = cons.some(x => (x.phases || []).some(p => p.result === "ok" || p.delivered));
+    const committed = bal(l).com; // the same figure the line ledger shows
+    const accepted = cons.some(x => (x.phases || []).some(phaseAccepted));
     const routine = l.type === "per" || (!plan && !cons.length && cms.length > 0);
     const allotted = l.allot && l.allot.status === "approved";
     let step = 3;
@@ -72,17 +78,16 @@ function prjList() {
     if (accepted) step = 6;
     if (paid > 0 && (accepted || routine || !cons.length)) step = 7;
     if (routine && paid > 0) step = 7;
-    const n = Number(l.id.slice(1));
-    out.push({ id: `${c.prefix}-70-${pad4(n)}`, fy: 2570, src: "line", ref: l.id, line: l, name: l.name, unit: l.unit, type: l.type, amount: annual, base: l.amount, paid, committed, step, routine,
+    out.push({ id: prjNo(c, CUR_FY, prjLineNo(l)), fy: CUR_FY, src: "line", ref: l.id, line: l, ended: !!l.cancelled, name: l.name, unit: l.unit, type: l.type, amount: annual, base: l.amount, paid, committed, step, routine,
       plan, cs, cons, cms, pm: scope.includes(l.id), gf: prjGf(l.unit, l.act), kind: c.multi.includes(l.id) ? "multi" : "single",
       wtype: cs ? cs.kind : routine ? "routine" : l.type === "inv" ? "construction" : "service", loc: c.loc[l.id] || null, allotT: allotted ? l.allot.t : null });
   });
   (S.requests || []).forEach(r => {
     const st = r.status === "approved" ? 2 : 1;
-    out.push({ id: `${c.prefix}-71-${pad4(Number(r.id.split("-").pop()))}`, fy: 2571, src: "req", ref: r.id, req: r, name: r.name, unit: r.unit, type: (r.items[0] || {}).type || "ope", amount: r.amount, paid: 0, committed: 0, step: st,
+    out.push({ id: prjNo(c, FORM_FY, Number(r.id.split("-").pop())), fy: FORM_FY, src: "req", ref: r.id, req: r, ended: PRJ_ENDED.includes(r.status), name: r.name, unit: r.unit, type: (r.items[0] || {}).type || "ope", amount: r.amount, paid: 0, committed: 0, step: st,
       routine: (r.items[0] || {}).type === "per", pm: false, gf: prjGf(r.unit, r.act), kind: r.years && Object.keys(r.years).length > 1 ? "multi" : "single", wtype: (r.items[0] || {}).type === "inv" ? "construction" : "service", loc: null, cons: [], cms: [] });
   });
-  ((S.carry && S.carry.prev) || []).forEach((k, i) => out.push({ id: `${c.prefix}-69-${pad4(i + 1)}`, fy: 2569, src: "carry", ref: k.id, carry: k, name: k.name, unit: k.unit, type: "inv", amount: k.amount, paid: k.paid, committed: k.amount, step: 8,
+  ((S.carry && S.carry.prev) || []).forEach((k, i) => out.push({ id: prjNo(c, CUR_FY - 1, i + 1), fy: CUR_FY - 1, src: "carry", ref: k.id, carry: k, name: k.name, unit: k.unit, type: "inv", amount: k.amount, paid: k.paid, committed: k.amount, step: 8,
     routine: false, pm: false, gf: prjGf(k.unit, "C" + (i + 1)), kind: "carry", wtype: "construction", loc: null, cons: [], cms: [] }));
   return out;
 }
@@ -100,16 +105,12 @@ function prjState() {
     const list = prjList().filter(p => p.pm);
     S.prj = { online: true, out: {}, inb: [], feed: 0, log: [], cons: {} };
     // Everything was sent when the budget was allotted; the last project waited in the buffer while the PM system was down.
-    list.forEach((p, i) => (S.prj.out[p.id] = { h: prjHash(p), t: (p.allotT || "2026-10-01") + "T18:00", st: i === list.length - 1 ? "queued" : "sent" }));
-    S.prj.log = [
-      { t: "2026-10-16T07:00", to: "exec", rows: 214, asOf: "2026-10-15", by: "system", ok: null },
-      { t: "2026-10-15T22:00", to: "ai", rows: 1260, asOf: "2026-10-15", by: "system", ok: null },
-      { t: "2026-10-05T10:00", to: "bb", rows: 13, asOf: "2026-09-30", by: "u2", ok: "u3" },
-    ];
+    list.forEach((p, i) => (S.prj.out[p.id] = { h: prjHash(p), t: (p.allotT || fyStart(CUR_FY)) + "T18:00", st: i === list.length - 1 ? "queued" : "sent" }));
+    S.prj.log = prjCfg().log.map(x => Object.assign({}, x));
   }
   // the exchange shows in Administration › Interfaces too
   if (S.integrations && !S.integrations.some(g => g.id === "IF-08")) S.integrations.push(
-    { id: "IF-08", sys: (prjCfg().pmShort)[1], dir: [ "ส่งออก / นำเข้า", "Export / import"], method: ["API ตามมาตรฐานที่ระบบนี้กำหนด", "API to the standard this system sets"], freq: ["เมื่องบอนุมัติและทุกครั้งที่ข้อมูลเปลี่ยน", "On approval and on every change"], status: "ok", last: "2026-10-16T06:00", records: 12, msg: ["สำเร็จ · ไม่มีข้อมูลค้างส่ง", "Succeeded · nothing waiting"] },
+    { id: "IF-08", sys: (prjCfg().pmShort)[1], dir: [ "ส่งออก / นำเข้า", "Export / import"], method: ["API ตามมาตรฐานที่ระบบนี้กำหนด", "API to the standard this system sets"], freq: ["เมื่องบอนุมัติและทุกครั้งที่ข้อมูลเปลี่ยน", "On approval and on every change"], status: "ok", last: `${TODAY}T06:00`, records: 12, msg: ["สำเร็จ · ไม่มีข้อมูลค้างส่ง", "Succeeded · nothing waiting"] },
   );
   return S.prj;
 }
@@ -121,13 +122,13 @@ function prjOutFields(p) {
     [L("รหัสโครงการเดียว", "Project id"), `<b class="mono">${esc(p.id)}</b> <span class="sub">${L("(กุญแจเชื่อม)", "(the join key)")}</span>`, p.id],
     [L("รหัสงบประมาณ GFMIS", "GFMIS budget code"), `<span class="mono">${esc(p.gf)}</span>`, p.gf],
     [L("ชื่อโครงการตาม พ.ร.บ.", "Name in the Act"), esc(tx(p.name)), (p.name)[0]],
-    [L("เป้าหมาย", "Target"), prjTarget(p), prjTarget(p)],
+    [L("เป้าหมาย", "Target"), prjTarget(p), p.loc ? p.loc.target || null : null],
     [L("วงเงินรายปี", "Annual amount"), `${fmt(p.amount)} ${L("บาท", "baht")}${pend.length ? ` <span class="pill p-warn">${L("มีโอนรออนุมัติ", "transfer pending")}</span>` : ""}`, p.amount],
     [L("ลักษณะงบ", "Budget kind"), tx(PRJ_KIND[p.kind]), p.kind],
     [L("ปีงบประมาณ", "Fiscal year"), String(p.fy), p.fy],
     [L("หน่วยงานรับผิดชอบ", "Responsible unit"), esc(unitName(p.unit)), p.unit],
     [L("ประเภทงาน / ภาระงาน", "Work type"), prjWt(p.wtype), p.wtype],
-    [L("พื้นที่ จังหวัด อำเภอ ตำบล", "Province, district, subdistrict"), esc(prjArea(p)), prjArea(p)],
+    [L("พื้นที่ จังหวัด อำเภอ ตำบล", "Province, district, subdistrict"), esc(prjArea(p)), p.loc ? p.loc.area : null],
     [L("สถานะ / วันที่อนุมัติงบ", "Status / approval date"), l && l.allot ? `${l.allot.status === "approved" ? L("อนุมัติงวดเงินแล้ว", "Allotment approved") : L("รออนุมัติงวดเงิน", "Allotment pending")} · ${fdate(l.allot.t)}` : "–", l && l.allot ? l.allot.status + l.allot.t : ""],
     [L("งวดเงินที่ได้รับ", "Allotment received"), `${fmt(p.allotT ? p.amount : 0)} ${L("บาท", "baht")}`, p.allotT ? p.amount : 0],
   ];
@@ -223,7 +224,7 @@ const pJump = (l, label) => (linkOk(l) ? `<a href="#" data-pjump="${esc(l)}">${l
 let PRJ_STEP = 0;
 VIEWS["prj-cycle"] = () => {
   const list = prjList(), c = prjCfg();
-  const at = n => list.filter(p => p.step === n);
+  const at = n => list.filter(p => p.step === n && !p.ended);
   const box = s => { const ps = at(s.n), amt = prjSum(ps.map(p => (s.n === 8 ? p.amount - p.paid : p.amount)));
     return `<li class="pc-step ${s.own} ${PRJ_STEP === s.n ? "on" : ""}"><button type="button" data-pstep="${s.n}" aria-pressed="${PRJ_STEP === s.n}"><span class="pc-n">${L("ขั้น", "Step")} ${s.n} · ${prjOwn(s.own)}</span><b>${tx(s.name)}</b>
       <span class="pc-v"><b>${ps.length}</b> ${L("โครงการ", "projects")} · ${mb(amt)} ${L("ลบ.", "M")}</span><span class="pc-m">${s.mods.map(m => `<i>${m}</i>`).join("")}</span></button>
@@ -242,7 +243,7 @@ function prjTable(ps) {
   if (!ps.length) return `<div class="body empty">${L("ไม่มีโครงการในขั้นนี้", "No project at this step")}</div>`;
   return `<div class="tbl-wrap"><table><thead><tr><th>${L("รหัสโครงการ", "Project id")}</th><th>${L("โครงการ", "Project")}</th><th>${L("ขั้นปัจจุบัน", "Current step")}</th><th class="num">${L("วงเงิน (ลบ.)", "Amount (M)")}</th><th class="num">${L("ก่อหนี้", "Committed")}</th><th class="num">${L("เบิกจ่าย", "Paid")}</th><th>${pmN()}</th></tr></thead>
     <tbody>${ps.map(p => `<tr><td>${prjLink(p)}<div class="sub mono">${esc(p.gf)}</div></td><td><b style="font-weight:600">${esc(tx(p.name))}</b><div class="sub">${esc(unitName(p.unit))} · ${tx(PRJ_KIND[p.kind])}${p.routine ? ` · ${prjWt("routine")}` : ""}</div></td>
-      <td><span class="pstep">${p.step}</span> ${prjStepName(p.step)}</td><td class="num">${mb(p.amount)}</td><td class="num">${p.committed ? mb(p.committed) : "–"}</td><td class="num">${p.paid ? mb(p.paid) : "–"}</td>
+      <td>${p.ended ? tag(L("สิ้นสุดแล้ว", "Ended"), "p-mute") : `<span class="pstep">${p.step}</span> ${prjStepName(p.step)}`}</td><td class="num">${mb(p.amount)}</td><td class="num">${p.committed ? mb(p.committed) : "–"}</td><td class="num">${p.paid ? mb(p.paid) : "–"}</td>
       <td>${p.pm ? prjOutPill(prjOut(p).st) : `<span class="sub">${L("ไม่แลกเปลี่ยน", "Not exchanged")}</span>`}</td></tr>`).join("")}</tbody></table></div>`;
 }
 
@@ -251,9 +252,9 @@ let PRJ_Q = "", PRJ_FY = "all";
 VIEWS["prj-registry"] = () => {
   const all = prjList(), q = PRJ_Q.trim().toLowerCase();
   const ps = all.filter(p => (PRJ_FY === "all" || String(p.fy) === PRJ_FY) && (!q || `${p.id} ${p.gf} ${p.ref} ${tx(p.name)} ${unitName(p.unit)}`.toLowerCase().includes(q)));
-  const fys = [["all", `${L("ทุกปี", "All years")} · ${all.length}`], ...[2571, 2570, 2569].map(fy => [String(fy), `${fy} · ${all.filter(p => p.fy === fy).length}`])];
+  const fys = [["all", `${L("ทุกปี", "All years")} · ${all.length}`], ...[FORM_FY, CUR_FY, CUR_FY - 1].map(fy => [String(fy), `${fy} · ${all.filter(p => p.fy === fy).length}`])];
   return `${prjHead(L("ทะเบียนโครงการกลาง", "Central project register"), L("หนึ่งโครงการ หนึ่งรหัส ใช้เชื่อมทุกระบบ ห้ามใช้รหัส GFMIS เป็นกุญแจ เพราะรหัสงบเปลี่ยนได้เมื่อโอนหรือปรับโครงสร้าง", "One project, one id, used to join every system. The GFMIS code is never the key: it changes with transfers and restructuring."))}
-  <section class="stats">${statCard({ label: L("โครงการในทะเบียน", "Projects registered"), value: all.length, icon: "list", sub: L("3 ปีงบประมาณ", "3 fiscal years") })}${statCard({ label: L("แลกเปลี่ยนกับระบบ PM", "Exchanged with the PM system"), value: all.filter(p => p.pm).length, icon: "share", tone: "info", sub: tx(prjCfg().pmShort) })}${statCard({ label: L("วงเงินปี 2570", "FY2570 budget"), value: mb(prjSum(all.filter(p => p.fy === 2570).map(p => p.amount))), unit: L("ลบ.", "M"), icon: "wallet", sub: "" })}${statCard({ label: L("เบิกจ่ายแล้ว", "Paid so far"), value: mb(prjSum(all.filter(p => p.fy === 2570).map(p => p.paid))), unit: L("ลบ.", "M"), icon: "coins", tone: "ok", sub: L("ตาม GFMIS ล่าสุด", "per the latest GFMIS") })}</section>
+  <section class="stats">${statCard({ label: L("โครงการในทะเบียน", "Projects registered"), value: all.filter(p => !p.ended).length, icon: "list", sub: L("3 ปีงบประมาณ", "3 fiscal years") })}${statCard({ label: L("แลกเปลี่ยนกับระบบ PM", "Exchanged with the PM system"), value: all.filter(p => p.pm).length, icon: "share", tone: "info", sub: tx(prjCfg().pmShort) })}${statCard({ label: L(`วงเงินปี ${CUR_FY}`, `FY${CUR_FY} budget`), value: mb(prjSum(all.filter(p => p.fy === CUR_FY && !p.ended).map(p => p.amount))), unit: L("ลบ.", "M"), icon: "wallet", sub: "" })}${statCard({ label: L("เบิกจ่ายแล้ว", "Paid so far"), value: mb(prjSum(all.filter(p => p.fy === CUR_FY && !p.ended).map(p => p.paid))), unit: L("ลบ.", "M"), icon: "coins", tone: "ok", sub: L("ตาม GFMIS ล่าสุด", "per the latest GFMIS") })}</section>
   <section class="panel"><header>${segBar(fys, PRJ_FY, "pfy")}<span class="sp"></span><input type="search" id="prj-q" value="${esc(PRJ_Q)}" placeholder="${L("ค้นหารหัส ชื่อ หน่วยงาน หรือรหัส GFMIS", "Search id, name, unit or GFMIS code")}" aria-label="${L("ค้นหาโครงการ", "Search projects")}" style="max-width:300px"></header>
     ${prjTable(ps)}<div class="body sub">${L("ข้อมูลอยู่ฐานเดียว ระบบอื่นเรียกใช้ ไม่ทำสำเนา · ทุกรายงานบอกวันเวลาข้อมูล GFMIS ล่าสุด", "One copy of the data; other systems read it, never copy it · every report states the time of the latest GFMIS data")}: ${prjAsOf()}</div></section>`;
 };
@@ -262,23 +263,25 @@ BIND["prj-registry"] = () => {
   $$("[data-pfy]").forEach(b => (b.onclick = () => { PRJ_FY = b.dataset.pfy; route(); }));
   const q = $("#prj-q"); if (q) q.oninput = () => { const pos = q.selectionStart; PRJ_Q = q.value; route(); const n = $("#prj-q"); n.focus(); try { n.setSelectionRange(pos, pos); } catch (e) {} };
 };
-const prjAsOf = () => { const f = (S.gfmisFiles || []).map(x => x.t).sort().pop(); return f ? fdate(f.slice(0, 10)) + " " + f.slice(11, 16) : fdate(TODAY); };
+// The time of the latest GFMIS data: the newest file not undone, or today when no file has come in.
+const prjGfT = () => (S.gfmisFiles || []).filter(x => !x.undone).map(x => x.t).sort().pop() || TODAY;
+const prjAsOf = () => { const f = prjGfT(); return f.length > 10 ? fdate(f.slice(0, 10)) + " " + f.slice(11, 16) : fdate(f); };
 
 // ---------- 3. one project across the cycle ----------
 let PRJ_SEL = null;
 function prjTimeline(p) {
   const l = p.line, A = S.allocs[CUR_FY], tr = l ? (A.transfers || []).filter(t => t.from === l.id || t.to === l.id) : [];
-  const ph = prjSum(p.cons.map(c => (c.phases || []).length)), acc = prjSum(p.cons.map(c => (c.phases || []).filter(x => x.result === "ok" || x.delivered).length));
+  const ph = prjSum(p.cons.map(c => (c.phases || []).length)), acc = prjSum(p.cons.map(c => (c.phases || []).filter(phaseAccepted).length));
   const pays = (S.payreqs || []).filter(y => p.cons.some(c => c.id === y.contract));
   const ev = {
-    1: p.req ? [`${p.req.id} · ${tx(STATUS[p.req.status] ? STATUS[p.req.status][0] : [p.req.status, p.req.status])}`, "req:" + p.req.id] : p.carry ? [L("คำขอปี 2569", "FY2569 request"), null] : [L("คำขอปี 2570 ผ่านการพิจารณาแล้ว", "FY2570 request approved"), "requests"],
+    1: p.req ? [`${p.req.id} · ${tx(STATUS[p.req.status] ? STATUS[p.req.status][0] : [p.req.status, p.req.status])}`, "req:" + p.req.id] : p.carry ? [L(`คำขอปี ${p.fy}`, `FY${p.fy} request`), null] : [L(`คำขอปี ${p.fy} ผ่านการพิจารณาแล้ว`, `FY${p.fy} request approved`), "requests"],
     2: l ? [`${L("บรรทัด", "Line")} ${l.id} · ${mb(l.amount)} ${L("ลบ.", "M")} · ${tx(A.act)}`, "allocation"] : p.req && p.req.status === "approved" ? [L("รอ พ.ร.บ. งบประมาณ", "Waiting for the Act"), "allocation"] : null,
     3: l ? [`${p.allotT ? L("อนุมัติงวดเงิน", "Allotment approved") + " " + fdate(p.allotT) : L("รออนุมัติงวดเงิน", "Allotment pending")}${tr.length ? ` · ${tr.map(t => `${t.id} ${mb(t.amount)} ${L("ลบ.", "M")} (${t.status === "approved" ? L("อนุมัติ", "approved") : L("รออนุมัติ", "pending")})`).join(", ")}` : ""}`, "alloc-allocate"] : null,
     4: p.plan ? [`${p.plan.id}${p.cs ? ` · ${p.cs.id}` : ""}${p.plan.egp ? ` · e-GP ${esc(p.plan.egp.no)}: ${tx(p.plan.egp.stage)}` : ""}`, p.cs ? "case:" + p.cs.id : "prc-plan"] : p.routine ? [L("รายจ่ายประจำ ไม่ต้องจัดซื้อ", "Routine spending, no procurement"), null] : l ? [L("ยังไม่มีแผนจัดซื้อจัดจ้าง", "No procurement plan yet"), "prc-plan"] : null,
     5: p.cons.length || p.cms.length ? [[...p.cons.map(c => `${c.id} · ${esc(tx(c.vendor))} · ${mb(c.amount)} ${L("ลบ.", "M")}`), ...p.cms.map(c => `${c.id} · ${mb(c.amount)} ${L("ลบ.", "M")}`)].join("<br>"), p.cons.length ? "prc-contracts" : "fnc-chain"] : null,
     6: ph ? [`${L("ตรวจรับแล้ว", "Accepted")} ${acc} / ${ph} ${L("งวด", "phases")}`, "prc-contracts"] : null,
     7: p.paid ? [`${L("จ่ายแล้ว", "Paid")} ${mb(p.paid)} ${L("ลบ.", "M")}${pays.length ? ` · ${pays.map(y => `${y.id} ${y.recon && y.recon.state === "matched" ? L("ตรงกับ GFMIS", "matches GFMIS") : L("รอสอบทาน GFMIS", "awaiting GFMIS")}`).join(", ")}` : ""}`, "fnc-pay"] : null,
-    8: p.carry ? [`${p.carry.id} · ${L("เหลือ", "left")} ${mb(p.carry.amount - p.carry.paid)} ${L("ลบ.", "M")} · ${L("สิ้นสุด", "ends")} ${fdate(p.carry.due)}`, "alloc-carry"] : l ? [L("พิจารณาเงินกันเมื่อสิ้นปีงบประมาณ 30 ก.ย. 2570", "Carry-over is decided at year end, 30 Sep 2027"), "alloc-carry"] : null,
+    8: p.carry ? [`${p.carry.id} · ${L("เหลือ", "left")} ${mb(p.carry.amount - p.carry.paid)} ${L("ลบ.", "M")} · ${L("สิ้นสุด", "ends")} ${fdate(p.carry.due)}`, "alloc-carry"] : l ? [`${L("พิจารณาเงินกันเมื่อสิ้นปีงบประมาณ", "Carry-over is decided at year end,")} ${fdate(prjYearEnd())}`, "alloc-carry"] : null,
   };
   return PRJ_CYCLE.map(s => ({ s, st: s.n < p.step ? "done" : s.n === p.step ? "now" : "todo", ev: ev[s.n] }));
 }
@@ -368,8 +371,8 @@ VIEWS["prj-share"] = () => {
   <div class="grid2">
     <section class="panel"><header>${chipIco("history")}<h2>${L("ทะเบียนการส่งข้อมูล", "Send log")}</h2><span class="sp"></span>${tag(L("ลบไม่ได้", "Cannot be deleted"), "p-mute")}</header>
       <div class="tbl-wrap"><table><thead><tr><th>${L("เวลา", "Time")}</th><th>${L("ผู้รับ", "Receiver")}</th><th class="num">${L("แถว", "Rows")}</th><th>${L("ข้อมูล ณ", "Data as of")}</th><th>${L("ผู้ส่ง / ผู้อนุมัติ", "Sent / approved by")}</th></tr></thead>
-        <tbody>${st.log.map(x => { const c = cs.find(y => y.id === x.to); const who = id => (id === "system" ? L("อัตโนมัติ", "Automatic") : esc(tx((S.users.find(u => u.id === id) || { name: [id, id] }).name)));
-          return `<tr><td class="sub">${fdate(x.t, true)}</td><td>${c ? esc(tx(c.name)) : esc(x.to)}</td><td class="num">${fmt(x.rows)}</td><td>${fdate(x.asOf)}</td><td class="sub">${who(x.by)}${x.ok ? ` / ${who(x.ok)}` : ""}${x.why ? `<div>“${esc(x.why)}”</div>` : ""}</td></tr>`; }).join("")}</tbody></table></div></section>
+        <tbody>${st.log.map(x => { const c = cs.find(y => y.id === x.to); const who = id => (id === "system" ? L("อัตโนมัติ", "Automatic") : id.startsWith("role:") ? tx(ROLES[id.slice(5)]) : esc(tx((S.users.find(u => u.id === id) || { name: [id, id] }).name)));
+          return `<tr><td class="sub">${fdate(x.t, true)}</td><td>${c ? esc(tx(c.name)) : esc(x.to)}</td><td class="num">${fmt(x.rows)}</td><td>${fdate(x.asOf, x.asOf.length > 10)}</td><td class="sub">${who(x.by)}${x.ok ? ` / ${who(x.ok)}` : ""}${x.why ? `<div>“${esc(x.why)}”</div>` : ""}</td></tr>`; }).join("")}</tbody></table></div></section>
     <section class="panel"><header>${chipIco("shield")}<h2>${L("หลักการแชร์", "Sharing principles")}</h2></header><ul class="tlist">${[
       ["ข้อมูลอยู่ฐานเดียว ระบบอื่นเรียกใช้ ไม่ทำสำเนา", "One copy; other systems read it and never copy it"],
       ["ส่งตามสิทธิ์และบันทึกร่องรอยทุกครั้ง", "Sent by permission, with a trail every time"],
@@ -382,11 +385,11 @@ VIEWS["prj-share"] = () => {
 BIND["prj-share"] = () => {
   const st = prjState(), cs = prjCfg().consumers;
   $$("[data-share]").forEach(b => (b.onclick = () => { const c = cs.find(x => x.id === b.dataset.share);
-    st.log.unshift({ t: nowIso(), to: c.id, rows: prjList().length * (c.kind === "ext" ? 1 : 12), asOf: TODAY, by: me().id, ok: null });
+    st.log.unshift({ t: nowIso(), to: c.id, rows: prjList().length * (c.kind === "ext" ? 1 : 12), asOf: prjGfT(), by: me().id, ok: null });
     audit(["ส่งข้อมูลจากคลังข้อมูลกลาง", "Shared data from the warehouse"], (c.name)[1]); save(); route(); toast(`${L("ส่งแล้ว", "Sent")}: ${tx(c.name)}`); }));
   $$("[data-shareok]").forEach(b => (b.onclick = () => { const c = cs.find(x => x.id === b.dataset.shareok), w = $("#share-why"), why = w ? w.value.trim() : "";
     if (why.length < 10) { toastErr(L("ระบุเหตุผลอย่างน้อย 10 ตัวอักษร", "Give a reason of at least 10 characters")); if (w) w.focus(); return; }
-    st.cons[c.id] = "active"; st.log.unshift({ t: nowIso(), to: c.id, rows: prjList().length, asOf: TODAY, by: (S.users.find(u => u.role === (c.ask ? c.ask.by : "plan")) || me()).id, ok: me().id, why });
+    st.cons[c.id] = "active"; st.log.unshift({ t: nowIso(), to: c.id, rows: prjList().length, asOf: prjGfT(), by: `role:${c.ask ? c.ask.by : "plan"}`, ok: me().id, why });
     audit(["อนุมัติการส่งข้อมูลให้หน่วยงานภายนอก", "Approved an external data share"], (c.name)[1]); save(); renderNav(); route(); toast(L("อนุมัติและส่งแล้ว บันทึกในทะเบียนการส่ง", "Approved and sent; recorded in the send log")); }));
 };
 
@@ -423,7 +426,7 @@ BIND["prj-tor"] = () => { bindPrj(); $$("[data-torf]").forEach(b => (b.onclick =
     try {
       const st = prjState();
       if (ROLE === "exec") prjCfg().consumers.filter(c => c.kind === "ext" && (st.cons[c.id] || c.status) === "pending").forEach(c =>
-        t.push({ title: `${L("อนุมัติการส่งข้อมูลให้", "Approve a data share with")} ${tx(c.name)}`, sub: c.ask ? tx(c.ask.why) : "", due: "2026-10-20", link: "prj-share", cls: "p-warn" }));
+        t.push({ title: `${L("อนุมัติการส่งข้อมูลให้", "Approve a data share with")} ${tx(c.name)}`, sub: c.ask ? tx(c.ask.why) : "", due: (c.ask && c.ask.due) || TODAY, link: "prj-share", cls: "p-warn" }));
       if (PM_APPLY.includes(ROLE)) st.inb.filter(m => !m.applied).forEach(m => t.push({ title: `${L("พิจารณาข้อมูลจากระบบ PM", "Review data from the PM system")}: ${tx(PRJ_DIM[m.dim][0])} · ${m.prj}`, sub: tx(m.text), due: TODAY, link: "prj-pm", cls: "p-info" }));
     } catch (e) { /* no allocation in this organization's data */ }
     return t;

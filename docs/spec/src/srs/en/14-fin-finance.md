@@ -306,7 +306,7 @@ The requirements follow the order of the work. A named sweep walk means that wal
 | FIN-FR-116 | The system shall refuse a payment file import by anyone who approved a payment in it (SD-05). | - | S | T | Planned | - |
 | FIN-FR-117 | The system shall let an officer undo the latest import in force with a reason while its month is open, restoring the earlier results. | - | S | T | Prototyped | 62-finance.js pfCanUndo; sweep FC7 walk |
 | FIN-FR-118 | The system shall keep a register of written GFMIS assignments with duties and an end date, shall refuse an assignment with no duty, and shall revoke with a reason. | TRR 10, TRR 11 | M | T | Prototyped | 84-fin-crud.js fnGfu; sweep FC1 walk |
-| FIN-FR-119 | The system shall block recording, receiving and remitting for anyone with no assignment in force for that duty, and shall log the block. | TRR 12 | M | T | Partial | 66f-fin-fn5.js gfOk, used by files and remittance only |
+| FIN-FR-119 | The system shall block recording, receiving and remitting for anyone with no assignment in force for that duty, and shall log the block. | TRR 12 | M | T | Prototyped | 66f-fin-fn5.js gfOk |
 
 ### Closing {#fin-fr-close}
 
@@ -514,10 +514,10 @@ The sweep also opens every Finance page, tab and record drawer for the listed ro
 | OI-FIN-16 | Procurement holds whole baht (PRC-DR-006) and Finance holds satang. They must agree (OI-PRC-16) | Procurement specialist, finance specialist | FIN-DR-001 |
 | OI-FIN-17 | Closed-period protection covers payment matching and reconciliation reopening only | Development team | FIN-FR-124 |
 | OI-FIN-18 | Only contract payments can reach V7; `v.recon` is never set, so KPI-F06 leaves out other vouchers | Development team | FIN-FR-114 |
-| OI-FIN-19 | The advance approval does not read the authority table, and the clause 60 check always passes | Development team | FIN-FR-068 |
+| OI-FIN-19 | The advance approval does not read the authority table, and the clause 60 check always passes Round 68 makes the approval read the table and record the level. The clause 60 check still always passes. | Development team | FIN-FR-068 |
 | OI-FIN-20 | The non-budget book lines leave out advances and cash movements, so that account cannot reconcile | Development team | FIN-FR-106 |
-| OI-FIN-21 | The settings form accepts any number, including level A values, and has no range check | Development team, product owner | FIN-FR-002 |
-| OI-FIN-22 | The GFMIS assignment check is missing on recording receipts and results | Development team | FIN-FR-119 |
+| OI-FIN-21 | The settings form accepts any number, including level A values, and has no range check Round 68 refuses negative and non-numeric values. Level A values can still be changed. | Development team, product owner | FIN-FR-002 |
+| OI-FIN-22 | The GFMIS assignment check is missing on recording receipts and results Fixed in round 68. | Development team | FIN-FR-119 |
 | OI-FIN-23 | The AI scope and where the model runs | Product owner, data protection officer | FIN-FR-140 |
 
 The design documents and the code differ in the following places. The code says what exists, and each difference is carried by the row named.

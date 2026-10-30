@@ -34,6 +34,7 @@ CRUD.def("fnGfo", {
   fields: f => {
     if (!f) return [{ id: "_h", label: ["ใบที่พร้อมส่ง", "Vouchers ready to send"], type: "info", wide: true, html: `<span class="sub">${L("เลือกใบที่จะรวมในไฟล์นี้ ใบที่ไม่เลือกรอไฟล์ถัดไป", "Pick the vouchers for this file; the rest wait for the next one")}</span>` },
       ...gfoReady().map(v => ({ id: "v_" + v.id, label: [vcLine(v), vcLine(v)], type: "check", wide: true, value: true }))];
+    if (!gfOk("record")) return [{ f: null, m: L("ไม่มีคำสั่งมอบหมายใน GFMIS", "No GFMIS assignment") }];
     const post = gfoSt(f) === "sent";
     return (post ? gfoWaitPost(f) : gfoWaitPay(f)).flatMap(v => [
       { id: "_" + v.id, label: [v.id, v.id], type: "info", wide: true, html: `<b style="font-weight:600">${esc(vcLine(v))}</b> <span class="sub">${tx(ROUTE[vRoute(v).r])}</span>` },
@@ -44,6 +45,7 @@ CRUD.def("fnGfo", {
   },
   check: (vals, f) => {
     if (!f) return gfoReady().some(v => vals["v_" + v.id]) ? [] : [{ f: null, m: L("เลือกใบขอเบิกอย่างน้อยหนึ่งใบ", "Pick at least one voucher") }];
+    if (!gfOk("record")) return [{ f: null, m: L("ไม่มีคำสั่งมอบหมายใน GFMIS", "No GFMIS assignment") }];
     const post = gfoSt(f) === "sent";
     return (post ? gfoWaitPost(f) : gfoWaitPay(f)).flatMap(v => vals["r_" + v.id] === "fail" ? ((vals["w_" + v.id] || "").length < 5 ? [{ f: "w_" + v.id, m: L("ระบุสาเหตุ", "Say why") }] : [])
       : (post || vals["r_" + v.id] === "paid") && !vals["d_" + v.id] ? [{ f: "d_" + v.id, m: L("ต้องกรอก", "Required") }] : []);

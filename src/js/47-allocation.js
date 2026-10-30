@@ -181,7 +181,7 @@ BIND.allocation = () => {
     if (from === to) { toast(L("เลือกรายการต้นทางและปลายทางที่ต่างกัน", "Choose different source and destination lines")); return; }
     const avail = lineOf(from).amount - pendingOut(from);
     if (amount > avail) { toast(L(`โอนได้ไม่เกิน ${mb(avail)} ลบ. (หักรายการที่รอโอนแล้ว)`, `You can move at most ${mb(avail)} M (after pending transfers)`)); return; }
-    const t = { id: `TR-${ALLOC_FY}-${String(A.transfers.length + 1).padStart(3, "0")}`, from, to, amount, why: [why, why], status: "pending", t: nowIso(), by: me().id };
+    const t = { id: trNo(A, ALLOC_FY), from, to, amount, why: [why, why], status: "pending", t: nowIso(), by: me().id };
     A.transfers.push(t);
     const lv = transferLevel(t);
     audit(["ขอโอนเปลี่ยนแปลงงบประมาณ", "Requested a budget transfer"], `${t.id} · ${mb(amount)}`);

@@ -32,6 +32,11 @@ PRJ_CFG.dpt = {
     L9: { area: ["พื้นที่ประสบภัย 18 จังหวัด", "18 disaster-hit provinces"], target: [24, ["งาน", "works"]] },
     L10: { area: ["76 จังหวัด (สยผจ.)", "76 provinces (provincial offices)"], target: [120, ["งาน", "works"]] },
   },
+  log: [
+    { t: "2026-10-16T07:00", to: "exec", rows: 214, asOf: "2026-10-15", by: "system", ok: null },
+    { t: "2026-10-15T22:00", to: "ai", rows: 1260, asOf: "2026-10-15", by: "system", ok: null },
+    { t: "2026-10-05T10:00", to: "bb", rows: 13, asOf: "2026-09-30", by: "u2", ok: "u3" },
+  ],
   consumers: [
     { id: "one", kind: "int", name: ["ONE DPT", "ONE DPT"], data: [["ชุดข้อมูลผู้บริหาร ฐานเดียวกัน", "The executive data set, from the same base"]], mode: "API", status: "active", last: "2026-10-16T07:00" },
     { id: "ai", kind: "int", name: ["AI งบประมาณ (NA-01) · 9.8 ล้านบาท", "Budget AI (NA-01) · 9.8 M baht"], data: [["เงินกัน–เงินพับ และคำอธิบายข้อมูล", "Carry-over, lapse and the data dictionary"]], mode: "API", status: "active", last: "2026-10-15T22:00" },
@@ -40,9 +45,9 @@ PRJ_CFG.dpt = {
     { id: "cgd", kind: "ext", name: ["กรมบัญชีกลาง (บก.)", "Comptroller General's Department"], data: [["การก่อหนี้และเงินกันเหลื่อมปี", "Commitments and carry-over"]], mode: ["ไฟล์", "File"], status: "active", last: "2026-10-01T09:00" },
     { id: "moi", kind: "ext", name: ["กระทรวงมหาดไทย (มท. · สนผ.มท.)", "Ministry of Interior"], data: [["ผลการดำเนินงานตามแผนและการเบิกจ่าย", "Results against plan and spending"]], mode: ["ไฟล์", "File"], status: "active", last: "2026-10-10T11:00" },
     { id: "parl", kind: "ext", name: ["คณะกรรมาธิการงบประมาณ รัฐสภา", "Parliament budget committee"], data: [["เอกสารชี้แจงและผลการเบิกจ่ายรายโครงการ", "Briefing documents and spending by project"]], mode: ["ไฟล์", "File"], status: "pending", last: "",
-      ask: { by: "plan", t: "2026-10-15T14:00", why: ["คณะกรรมาธิการขอผลเบิกจ่ายรายโครงการก่อนการพิจารณาวาระแรก", "The committee asked for spending by project before the first reading"] } },
+      ask: { by: "plan", t: "2026-10-15T14:00", due: "2026-10-20", why: ["คณะกรรมาธิการขอผลเบิกจ่ายรายโครงการก่อนการพิจารณาวาระแรก", "The committee asked for spending by project before the first reading"] } },
     { id: "eec", kind: "ext", name: ["สำนักงานคณะกรรมการนโยบายเขตพัฒนาพิเศษภาคตะวันออก (EEC)", "Eastern Economic Corridor Office (EEC)"], data: [["โครงการในพื้นที่ EEC", "Projects in the EEC area"]], mode: "API", status: "pending", last: "",
-      ask: { by: "plan", t: "2026-10-14T10:30", why: ["ขอเชื่อมข้อมูลโครงการโครงสร้างพื้นฐานในพื้นที่ EEC รายไตรมาส", "Quarterly link to infrastructure projects in the EEC area"] } },
+      ask: { by: "plan", t: "2026-10-14T10:30", due: "2026-10-20", why: ["ขอเชื่อมข้อมูลโครงการโครงสร้างพื้นฐานในพื้นที่ EEC รายไตรมาส", "Quarterly link to infrastructure projects in the EEC area"] } },
   ],
   // the 12 modules against the current draft ToR: in the ToR 6 · to extend 3 (5 6 10) · to add 3 (2 4 7)
   modules: [

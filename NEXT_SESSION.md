@@ -22,10 +22,10 @@ The demo guide (`#demo`) has a filter: every step, Budget end to end (E-01..E-16
 |---|---|
 | Checkout | `D:\Claude\Fisko-proc`, branch `main` (the old `D:\Claude\Fisko` checkout is on a stale branch; the two session worktrees under `D:\Claude\Fisko\.claude\worktrees\` are leftovers and can be archived) |
 | Remote | `https://github.com/akarapolb/Fisko.git` |
-| Published prototype | https://claude.ai/artifact/STW3X8Ytx3VVLV7VHLXse9 (private; version 16, the merged `main`) |
+| Published prototype | https://claude.ai/artifact/NywSbGVWBoPzPqVkwus2wU (private; version 1, round 68) |
 | Designs | Budget CRUD https://claude.ai/artifact/3NigvMP1qa4DpvQrjN84Zz · Procurement CRUD https://claude.ai/artifact/H1Vc2G84m87vS9QrZRZSn5 · Finance CRUD https://claude.ai/artifact/WqUrwy2yryGPUqXbmRnwgZ · Finance design (older) https://claude.ai/artifact/G4Sx84KthvJWcLJMAWPKD1 |
 | Branch previews (now superseded) | Procurement https://claude.ai/artifact/MuAxUNbvtXHCgbvutoTcVE · Finance https://claude.ai/artifact/8ZSzN2o5CVN6hj5Gh3MKyK |
-| Data version | `DATA_V = 39` in `src/js/00-core.js` (bump it whenever the seed shape changes) |
+| Data version | `DATA_V = 40` in `src/js/00-core.js` (bump it whenever the seed shape changes) |
 
 ## 2. How the user likes to work
 
@@ -67,7 +67,7 @@ python -m http.server 8788 --bind 127.0.0.1
 - **Routing in tests:** set `window.FISKO_ROUTE = "#page"` and call `route()`; the browser ignores bursts of hash changes. The sweep's `tick` uses a MessageChannel because background tabs throttle `setTimeout(0)`.
 - **Shell:** heredocs with Thai text break bash here; write Python scripts to the scratchpad and run them (`PYTHONIOENCODING=utf-8` when printing Thai). Long scans (a `grep` per name over every file) can pass the 2-minute tool limit; run them in the background.
 - **Generic SaaS:** Fisko is one product for every agency. Never put an agency's names, systems or rules in code or UI text; put them in that tenant's data file (`SEEDS[org]`, `PRJ_CFG[org]`, files named `*data-<org>*`). Grep `fisko-prototype.html` for the agency's terms before publishing.
-- **Round numbers:** the two branches both used 55 to 59; Finance's sections are suffixed `F` (55F to 61F) in `HANDOFF.md`. Round 62 (the shell) is section 62R; round 63 (its polish) is section 63; round 64 (the project registry) is section 64; round 65 (the UX review fixes) is section 65; round 66 (the DPT business-test fixes) is section 66. The next round on `main` is **68**.
+- **Round numbers:** the two branches both used 55 to 59; Finance's sections are suffixed `F` (55F to 61F) in `HANDOFF.md`. Round 62 (the shell) is section 62R; round 63 (its polish) is section 63; round 64 (the project registry) is section 64; round 65 (the UX review fixes) is section 65; round 66 (the DPT business-test fixes) is section 66. The next round on `main` is **69**.
 - **Top bar width:** the organization and role selects live inside the context chip's panel (`#ctxpop`), moved there by `94-polish.js`; their ids and handlers are unchanged. Anything new in the top bar must fit in one row at about 900 px of page width (the rail and sidebar take 308 px).
 - **The shell wraps late:** `90-systems.js` to `93-presenter.js` load after every app file and wrap `route`, `renderShell`, `renderNav`, `crActBar`, `VIEWS.home` and `VIEWS.demo`. A new file that changes those should sort before `90` or wrap the wrapped version. New Workspace pages are NAV entries with `app: "all"` and group `ws`, and belong in `WS_PAGES` so the rail knows their system.
 

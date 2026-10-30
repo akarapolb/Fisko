@@ -151,7 +151,7 @@ The 112 open issues of the cross-cutting and module chapters are listed here by 
 | OI-PLT-09 | Undo removes the audit entry of the undone action. Replace it with compensating actions | Development team | BR-PLT-19, PLT-FR-143 |
 | OI-BGT-05 | A transfer at `bb` holds no money. Fix it and add a check Fixed in round 67, with a sweep check. | Development team | BGT-FR-117, BGT-FR-114 |
 | OI-BGT-06 | SD-09 has a check since round 67, so one person cannot request and approve the same transfer. SD-10 still has no switch or log (OI-PLT-04) | Development team, BGT owner | BGT-FR-124, BGT-FR-070 |
-| OI-BGT-07 | `nextReqId` takes the highest live number plus one, so deleting the newest draft reuses its number. A transfer from AG-15 numbers from the list length while the screen uses a counter, so the two can clash. Use one counter | Development team | BGT-FR-034, BGT-DR-005 |
+| OI-BGT-07 | `nextReqId` takes the highest live number plus one, so deleting the newest draft reuses its number. A transfer from AG-15 numbers from the list length while the screen uses a counter, so the two can clash. Use one counter Fixed in round 68. | Development team | BGT-FR-034, BGT-DR-005 |
 | OI-BGT-08 | A draft line offers activities from the year being formulated even for the year being spent, so its programme and output may come from another year's structure | Development team | BGT-FR-098 |
 | OI-BGT-09 | The carry-over page fixes the text of the deadline date, and investment quarterly targets stay in code | Development team | BGT-CR-002, BGT-FR-134 |
 | OI-PRC-04 | Fix the settings form so that it can save, and add a sweep check Fixed in round 67, with a sweep check. | Development team | PRC-FR-042 |
@@ -161,17 +161,17 @@ The 112 open issues of the cross-cutting and module chapters are listed here by 
 | OI-FIN-10 | A rejected contract voucher blocks its phase, because `famAcceptedUnpaid` and `phPayStarted` count any voucher not cancelled Fixed in round 67, with a sweep check. | Development team | FIN-FR-034 |
 | OI-FIN-17 | Closed-period protection covers payment matching and reconciliation reopening only | Development team | FIN-FR-124 |
 | OI-FIN-18 | Only contract payments can reach V7; `v.recon` is never set, so KPI-F06 leaves out other vouchers | Development team | FIN-FR-114 |
-| OI-FIN-19 | The advance approval does not read the authority table, and the clause 60 check always passes | Development team | FIN-FR-068 |
+| OI-FIN-19 | The advance approval does not read the authority table, and the clause 60 check always passes Round 68 makes the approval read the table and record the level. The clause 60 check still always passes. | Development team | FIN-FR-068 |
 | OI-FIN-20 | The non-budget book lines leave out advances and cash movements, so that account cannot reconcile | Development team | FIN-FR-106 |
-| OI-FIN-21 | The settings form accepts any number, including level A values, and has no range check | Development team, product owner | FIN-FR-002 |
-| OI-FIN-22 | The GFMIS assignment check is missing on recording receipts and results | Development team | FIN-FR-119 |
-| OI-PRJ-12 | Fix the id of a line created in the allocation form: the code reads a number from the id, gets none, and gives such lines the same broken project id | Development team | PRJ-FR-001 |
-| OI-PRJ-13 | Stop counting draft contracts as committed, and released amounts as still committed. Today a project can differ from the line ledger and can reach step 5 on a draft | Development team | PRJ-FR-019 |
-| OI-PRJ-14 | Make the send comparison independent of the language. Target and area are compared as display text, so switching language marks projects with those fields as changed | Development team | PRJ-DR-005 |
-| OI-PRJ-15 | Count a phase as accepted only on acceptance. The code also counts a delivered phase, in the step and in the accepted count on Project 360 | Development team | PRJ-FR-014 |
-| OI-PRJ-16 | Record the latest GFMIS time in the send log. The code records today | Development team | PRJ-DR-004, BR-PRJ-17 |
-| OI-PRJ-17 | Remove fixed years and dates, and sample log rows, from `95-projects.js`. The file fixes three fiscal years, the year-end date, a task due date and the opening send log | Development team | PRJ-CR-004, PRJ-CR-005 |
-| OI-PRJ-18 | The asker in the log is the first user of the asking role, and a cancelled line or a rejected request still shows as a live project | Development team | PRJ-FR-008, PRJ-FR-053 |
+| OI-FIN-21 | The settings form accepts any number, including level A values, and has no range check Round 68 refuses negative and non-numeric values. Level A values can still be changed. | Development team, product owner | FIN-FR-002 |
+| OI-FIN-22 | The GFMIS assignment check is missing on recording receipts and results Fixed in round 68. | Development team | FIN-FR-119 |
+| OI-PRJ-12 | Fix the id of a line created in the allocation form: the code reads a number from the id, gets none, and gives such lines the same broken project id Fixed in round 68. | Development team | PRJ-FR-001 |
+| OI-PRJ-13 | Stop counting draft contracts as committed, and released amounts as still committed. Today a project can differ from the line ledger and can reach step 5 on a draft Fixed in round 68. | Development team | PRJ-FR-019 |
+| OI-PRJ-14 | Make the send comparison independent of the language. Target and area are compared as display text, so switching language marks projects with those fields as changed Fixed in round 68. | Development team | PRJ-DR-005 |
+| OI-PRJ-15 | Count a phase as accepted only on acceptance. The code also counts a delivered phase, in the step and in the accepted count on Project 360 Fixed in round 68. | Development team | PRJ-FR-014 |
+| OI-PRJ-16 | Record the latest GFMIS time in the send log. The code records today Fixed in round 68. | Development team | PRJ-DR-004, BR-PRJ-17 |
+| OI-PRJ-17 | Remove fixed years and dates, and sample log rows, from `95-projects.js`. The file fixes three fiscal years, the year-end date, a task due date and the opening send log Fixed in round 68. | Development team | PRJ-CR-004, PRJ-CR-005 |
+| OI-PRJ-18 | The asker in the log is the first user of the asking role, and a cancelled line or a rejected request still shows as a live project Round 68 marks ended projects, leaves them out of the totals, and logs the asking role. A named asker needs PRJ-FR-053. | Development team | PRJ-FR-008, PRJ-FR-053 |
 | OI-REV-01 | Three engines differ: a blocked step stops a Budget or Finance run and not a Procurement run, only Procurement has levels and a tool check, and only Budget and Finance take a reason to stop. Which behaviour does the one framework keep? | Technical lead, product owner | REV-FR-036 to REV-FR-045, state rules |
 | OI-REV-03 | The seed has every agent on, `agentOn` treats an unknown agent as on, and the general assistant has no switch at all, which differs from ADR-0016 and XC-AI-002. The seed and default must change | Development team | REV-FR-034, REV-FR-049 |
 | OI-REV-10 | The design names a vector store for rules and documents, and no ADR covers one | Technical lead | REV-FR-032 |
@@ -193,7 +193,7 @@ Each module chapter ends its open issues with a table of places where the design
 
 ## Defects found in the prototype {#app-defects}
 
-> [!NOTE] Round 67 fixed OI-PRC-04, OI-BGT-05, OI-FIN-09 and OI-FIN-10 in full, and part of OI-PRC-05, OI-BGT-06, OI-PLT-04 and OI-FIN-11. It also made the duty check cover every delegator and limited the assistant by unit. Rows below stay for the record; the open issues hold the current state.
+> [!NOTE] Round 67 fixed OI-PRC-04, OI-BGT-05, OI-FIN-09 and OI-FIN-10 in full, and part of OI-PRC-05, OI-BGT-06, OI-PLT-04 and OI-FIN-11. It also made the duty check cover every delegator and limited the assistant by unit. Round 68 fixed OI-BGT-07, OI-FIN-22 and OI-PRJ-12 to OI-PRJ-17 in full, and part of OI-FIN-19, OI-FIN-21 and OI-PRJ-18. Rows below stay for the record; the open issues hold the current state.
 
 Chapter authors found these while reading the code. Each is an open issue with a fix to make. None was reproduced by running the prototype, and a developer should confirm each one when fixing it. The production design already closes most of them, as each SDS module chapter shows, so the fix in the prototype matters only while the prototype is used for demonstration.
 
@@ -203,7 +203,7 @@ Chapter authors found these while reading the code. Each is an open issue with a
 | OI-PLT-09 | Undo removes the audit entry of the undone action. Replace it with compensating actions | Development team | BR-PLT-19, PLT-FR-143 |
 | OI-BGT-05 | A transfer at `bb` holds no money. Fix it and add a check Fixed in round 67, with a sweep check. | Development team | BGT-FR-117, BGT-FR-114 |
 | OI-BGT-06 | SD-09 has a check since round 67, so one person cannot request and approve the same transfer. SD-10 still has no switch or log (OI-PLT-04) | Development team, BGT owner | BGT-FR-124, BGT-FR-070 |
-| OI-BGT-07 | `nextReqId` takes the highest live number plus one, so deleting the newest draft reuses its number. A transfer from AG-15 numbers from the list length while the screen uses a counter, so the two can clash. Use one counter | Development team | BGT-FR-034, BGT-DR-005 |
+| OI-BGT-07 | `nextReqId` takes the highest live number plus one, so deleting the newest draft reuses its number. A transfer from AG-15 numbers from the list length while the screen uses a counter, so the two can clash. Use one counter Fixed in round 68. | Development team | BGT-FR-034, BGT-DR-005 |
 | OI-BGT-08 | A draft line offers activities from the year being formulated even for the year being spent, so its programme and output may come from another year's structure | Development team | BGT-FR-098 |
 | OI-BGT-09 | The carry-over page fixes the text of the deadline date, and investment quarterly targets stay in code | Development team | BGT-CR-002, BGT-FR-134 |
 | OI-PRC-04 | Fix the settings form so that it can save, and add a sweep check Fixed in round 67, with a sweep check. | Development team | PRC-FR-042 |
@@ -214,17 +214,17 @@ Chapter authors found these while reading the code. Each is an open issue with a
 | OI-FIN-11 | SD-03 is checked at voucher approval since round 67. With SD-11 on it never fires first, so it may still be merged | Finance owner, Platform owner | OI-PLT-04 |
 | OI-FIN-17 | Closed-period protection covers payment matching and reconciliation reopening only | Development team | FIN-FR-124 |
 | OI-FIN-18 | Only contract payments can reach V7; `v.recon` is never set, so KPI-F06 leaves out other vouchers | Development team | FIN-FR-114 |
-| OI-FIN-19 | The advance approval does not read the authority table, and the clause 60 check always passes | Development team | FIN-FR-068 |
+| OI-FIN-19 | The advance approval does not read the authority table, and the clause 60 check always passes Round 68 makes the approval read the table and record the level. The clause 60 check still always passes. | Development team | FIN-FR-068 |
 | OI-FIN-20 | The non-budget book lines leave out advances and cash movements, so that account cannot reconcile | Development team | FIN-FR-106 |
-| OI-FIN-21 | The settings form accepts any number, including level A values, and has no range check | Development team, product owner | FIN-FR-002 |
-| OI-FIN-22 | The GFMIS assignment check is missing on recording receipts and results | Development team | FIN-FR-119 |
-| OI-PRJ-12 | Fix the id of a line created in the allocation form: the code reads a number from the id, gets none, and gives such lines the same broken project id | Development team | PRJ-FR-001 |
-| OI-PRJ-13 | Stop counting draft contracts as committed, and released amounts as still committed. Today a project can differ from the line ledger and can reach step 5 on a draft | Development team | PRJ-FR-019 |
-| OI-PRJ-14 | Make the send comparison independent of the language. Target and area are compared as display text, so switching language marks projects with those fields as changed | Development team | PRJ-DR-005 |
-| OI-PRJ-15 | Count a phase as accepted only on acceptance. The code also counts a delivered phase, in the step and in the accepted count on Project 360 | Development team | PRJ-FR-014 |
-| OI-PRJ-16 | Record the latest GFMIS time in the send log. The code records today | Development team | PRJ-DR-004, BR-PRJ-17 |
-| OI-PRJ-17 | Remove fixed years and dates, and sample log rows, from `95-projects.js`. The file fixes three fiscal years, the year-end date, a task due date and the opening send log | Development team | PRJ-CR-004, PRJ-CR-005 |
-| OI-PRJ-18 | The asker in the log is the first user of the asking role, and a cancelled line or a rejected request still shows as a live project | Development team | PRJ-FR-008, PRJ-FR-053 |
+| OI-FIN-21 | The settings form accepts any number, including level A values, and has no range check Round 68 refuses negative and non-numeric values. Level A values can still be changed. | Development team, product owner | FIN-FR-002 |
+| OI-FIN-22 | The GFMIS assignment check is missing on recording receipts and results Fixed in round 68. | Development team | FIN-FR-119 |
+| OI-PRJ-12 | Fix the id of a line created in the allocation form: the code reads a number from the id, gets none, and gives such lines the same broken project id Fixed in round 68. | Development team | PRJ-FR-001 |
+| OI-PRJ-13 | Stop counting draft contracts as committed, and released amounts as still committed. Today a project can differ from the line ledger and can reach step 5 on a draft Fixed in round 68. | Development team | PRJ-FR-019 |
+| OI-PRJ-14 | Make the send comparison independent of the language. Target and area are compared as display text, so switching language marks projects with those fields as changed Fixed in round 68. | Development team | PRJ-DR-005 |
+| OI-PRJ-15 | Count a phase as accepted only on acceptance. The code also counts a delivered phase, in the step and in the accepted count on Project 360 Fixed in round 68. | Development team | PRJ-FR-014 |
+| OI-PRJ-16 | Record the latest GFMIS time in the send log. The code records today Fixed in round 68. | Development team | PRJ-DR-004, BR-PRJ-17 |
+| OI-PRJ-17 | Remove fixed years and dates, and sample log rows, from `95-projects.js`. The file fixes three fiscal years, the year-end date, a task due date and the opening send log Fixed in round 68. | Development team | PRJ-CR-004, PRJ-CR-005 |
+| OI-PRJ-18 | The asker in the log is the first user of the asking role, and a cancelled line or a rejected request still shows as a live project Round 68 marks ended projects, leaves them out of the totals, and logs the asking role. A named asker needs PRJ-FR-053. | Development team | PRJ-FR-008, PRJ-FR-053 |
 | OI-REV-03 | The seed has every agent on, `agentOn` treats an unknown agent as on, and the general assistant has no switch at all, which differs from ADR-0016 and XC-AI-002. The seed and default must change | Development team | REV-FR-034, REV-FR-049 |
 
 Two faults in the cross-cutting design table carry a requirement row and no issue id. `src/head.html` loads fonts from Google Fonts while the cookie policy says there is no cross-site tracking (XC-SEC-012, XC-PRV-018), and the footer says all rights reserved with no source link (XC-LIC-002).

@@ -265,7 +265,8 @@ function advAct(a, k, why0) {
     const amt = Math.round(Number(($("#adv-amt") || { value: a.amount }).value));
     if (!(amt > 0) || amt > a.amount) return L("ยอดอนุมัติต้องมากกว่าศูนย์และไม่เกินยอดขอ", "The approved amount must be above zero and within the request");
     if (amt < a.amount && why.length < CR_WHY_MIN) return L(`อนุมัติน้อยกว่ายอดขอต้องระบุเหตุผลอย่างน้อย ${CR_WHY_MIN} ตัวอักษร (ข้อ 59 เท่าที่จำเป็น)`, `Approving less needs a reason of at least ${CR_WHY_MIN} characters (clause 59, only what is needed)`);
-    const au = famAuth(); a.state = "approved"; a.approvedAmt = amt; a.approver = { by: me().id, holder: au.holder, via: au.via, t: nowIso() };
+    const lvl = vcAuth(amt, "exec"); if (!lvl) return L("ยอดนี้เกินวงเงินทุกระดับในตารางผู้มีอำนาจ", "This amount is above every level in the authority table");
+    const au = famAuth(); a.state = "approved"; a.approvedAmt = amt; a.approver = { by: me().id, holder: au.holder, via: au.via, level: lvl.id, t: nowIso() };
     advLog(a, ["อนุมัติเงินยืม", "Approved"], amt < a.amount ? `${fmt(amt)} · ${why}` : fmt(amt)); audit(["อนุมัติเงินยืม", "Approved an advance"], `${a.id} · ${fmt(amt)}${onBehalf("exec", "spend")}`);
     notify([S.users.find(u => u.id === a.borrower).role], [`เงินยืม ${a.id} อนุมัติแล้ว ${fmt(amt)} บาท`, `Advance ${a.id} approved: ${fmt(amt)} baht`], "advances");
     return done(L("อนุมัติแล้ว · การเงินจ่ายผ่าน e-Payment", "Approved · Finance pays by e-Payment"), ["fin"], [`เงินยืม ${a.id} อนุมัติแล้ว รอจ่าย`, `Advance ${a.id} is approved and waiting to be paid`]);

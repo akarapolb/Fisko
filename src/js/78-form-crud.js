@@ -44,7 +44,7 @@ CRUD.def("rqReq", {
   acts: r => {
     const out = [], own = isOwner(r);
     if (own && !wasSent(r) && r.id !== S.story) out.push({ id: "del", label: L("ลบร่าง", "Delete draft"), kind: "danger", confirm: L("ลบคำขอนี้ทั้งหมด รวมรายการและเอกสาร? เลขที่จะไม่ถูกนำกลับมาใช้", "Delete this request with its lines and documents? Its number won't be reused."),
-      run: () => { S.requests = S.requests.filter(x => x !== r); audit(["ลบร่างคำขอ", "Deleted a draft request"], r.id); return L("ลบร่างแล้ว", "Draft deleted"); } });
+      run: () => { S.requests = S.requests.filter(x => x !== r); pcDel(r.id); audit(["ลบร่างคำขอ", "Deleted a draft request"], r.id); return L("ลบร่างแล้ว", "Draft deleted"); } });
     if (own && RQ_SENT.includes(r.status)) out.push({ id: "wd", label: L("ถอนคำขอกลับมาแก้", "Withdraw to edit"), kind: "ghost", why: true, impact: () => L("คำขอจะกลับเป็นร่างและออกจากการพิจารณา ต้องส่งใหม่ตามขั้นตอน", "The request goes back to draft and leaves review; it must be sent again"),
       run: (_, why) => { const from = r.status; r.status = "draft"; r.updated = TODAY; r.withdrawn = { t: nowIso(), from, why }; r.sentOnce = true;
         snapshot(r, ["ถอนคำขอกลับมาแก้ไข", "Withdrew the request to edit"], true); audit(["ถอนคำขอกลับมาแก้ไข", "Withdrew a request"], `${r.id} · ${why}`);

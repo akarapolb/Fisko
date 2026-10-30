@@ -69,12 +69,14 @@ ADMIN.fcfg = () => {
       <div class="body sub">${L("หัวหน้าส่วนราชการระดับกรมเป็นผู้มีอำนาจตามข้อ 36 (1) ผู้ได้รับมอบหมายต้องดำรงตำแหน่งตามที่ข้อ 36 กำหนด วงเงินของผู้ได้รับมอบหมายเป็นตัวอย่าง ตั้งตามคำสั่งมอบหมายของหน่วยงาน", "The head of the department holds the authority under clause 36 (1). Assignees must hold the positions the clause sets. Assignee limits are examples; set them from the agency's assignment order.")}</div></section>
     ${ed ? `<div class="row"><button class="btn ghost" type="button" id="fc-reset">${L("คืนค่าตั้งต้น", "Restore defaults")}</button><span class="sub">${L("ระดับ A อ่านจากตัวบทระเบียบ · ระดับ B มาจากข้อหารือหรือข่าว ต้องยืนยัน · ระดับ C เป็นข้อเสนอการออกแบบ", "Level A is read from the regulation · level B comes from rulings or news and needs confirming · level C is a design proposal")}</span></div>` : ""}`;
 };
+const inp_ok = v => Number.isFinite(v) && v >= 0;
 BIND_ADMIN.fcfg = () => {
   const save_ = (key, old, v) => { audit(["ปรับกฎการเงิน", "Changed a finance rule"], `${key}: ${old} → ${v}`); commit(); route(); };
-  $$("[data-fc]").forEach(inp => (inp.onchange = () => { const k = inp.dataset.fc, v = Number(inp.value), old = fcfg()[k]; S.fcfg = Object.assign({}, S.fcfg, { [k]: v }); save_(k, old, v); }));
+  const bad = v => { if (inp_ok(v)) return false; toastErr(L("ต้องเป็นตัวเลขตั้งแต่ 0 ขึ้นไป", "Enter a number of 0 or more")); route(); return true; };
+  $$("[data-fc]").forEach(inp => (inp.onchange = () => { const k = inp.dataset.fc, v = Number(inp.value), old = fcfg()[k]; if (bad(v)) return; S.fcfg = Object.assign({}, S.fcfg, { [k]: v }); save_(k, old, v); }));
   $$("[data-fcd]").forEach(inp => (inp.onchange = () => { const k = inp.dataset.fcd, old = fcfg()[k]; if (!inp.value) return; S.fcfg = Object.assign({}, S.fcfg, { [k]: inp.value }); save_(k, old, inp.value); }));
   $$("[data-fca]").forEach(inp => (inp.onchange = () => {
-    const id = inp.dataset.fca, v = Number(inp.value), cur = Object.assign({}, S.fcfg), auth = (cur.auth || []).filter(a => a.id !== id);
+    const id = inp.dataset.fca, v = Number(inp.value), cur = Object.assign({}, S.fcfg), auth = (cur.auth || []).filter(a => a.id !== id); if (bad(v)) return;
     const old = fcfg().auth.find(a => a.id === id).max; auth.push({ id, max: v }); cur.auth = auth; S.fcfg = cur; save_(id, old, v);
   }));
   const r = $("#fc-reset"); if (r) r.onclick = () => { S.fcfg = {}; audit(["คืนค่าตั้งต้นกฎการเงิน", "Restored finance rule defaults"], ""); commit(); route(); };

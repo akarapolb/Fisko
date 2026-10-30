@@ -166,7 +166,7 @@ The requirements follow the budget cycle and the prototype pages B1 to B11. Each
 | BGT-FR-031 | The system shall let a unit flag an exception to BR-BGT-11: a legal or contract obligation, an entitlement or urgent policy. | - | S | T | Planned | - |
 | BGT-FR-032 | The system shall check BR-BGT-11 for the share of the increase that is investment. | - | S | T | Planned | - |
 | BGT-FR-033 | The system shall let the owner send a request, which moves it to `unit`, notifies the director and marks it as sent once. | - | M | T | Partial | 41d-req-b1.js submit; 78-form-crud.js |
-| BGT-FR-034 | The system shall let the owner delete a draft that was never sent, and shall never reuse its number. | - | M | T | Partial | 78-form-crud.js rqReq del; nextReqId reuses the top number |
+| BGT-FR-034 | The system shall let the owner delete a draft that was never sent, and shall never reuse its number. | - | M | T | Prototyped | 78-form-crud.js rqReq del, 45b-strategy-depth.js nextReqId |
 | BGT-FR-035 | The system shall let the owner withdraw a request from `unit`, `plan`, `committee` or `exec` to draft with a reason, and shall tell the reviewer it left. | - | M | T | Prototyped | 78-form-crud.js rqReq wd; sweep E2E walk |
 | BGT-FR-036 | The system shall let the owner cancel a draft or returned request that was sent before, with a reason, and shall leave it out of the totals. | - | M | T | Partial | 78-form-crud.js rqReq cancel |
 | BGT-FR-037 | The system shall let a director approve a request of the director's own unit to Planning, or return it after at least one comment. | - | M | T | Partial | 42a-review-mode.js rv-pass, rv-return |
@@ -551,7 +551,7 @@ The sweep also opens every Budget page, tab, request step, record drawer and for
 | OI-BGT-04 | File layouts and API access for e-Budgeting, BBL, BB EvMIS and GFMIS | Budget Bureau, Comptroller General's Department | BGT-IR-003, BGT-IR-004, BGT-IR-005 |
 | OI-BGT-05 | A transfer at `bb` holds no money. Fix it and add a check Fixed in round 67, with a sweep check. | Development team | BGT-FR-117, BGT-FR-114 |
 | OI-BGT-06 | SD-09 has a check since round 67, so one person cannot request and approve the same transfer. SD-10 still has no switch or log (OI-PLT-04) | Development team, BGT owner | BGT-FR-124, BGT-FR-070 |
-| OI-BGT-07 | `nextReqId` takes the highest live number plus one, so deleting the newest draft reuses its number. A transfer from AG-15 numbers from the list length while the screen uses a counter, so the two can clash. Use one counter | Development team | BGT-FR-034, BGT-DR-005 |
+| OI-BGT-07 | `nextReqId` takes the highest live number plus one, so deleting the newest draft reuses its number. A transfer from AG-15 numbers from the list length while the screen uses a counter, so the two can clash. Use one counter Fixed in round 68. | Development team | BGT-FR-034, BGT-DR-005 |
 | OI-BGT-08 | A draft line offers activities from the year being formulated even for the year being spent, so its programme and output may come from another year's structure | Development team | BGT-FR-098 |
 | OI-BGT-09 | The carry-over page fixes the text of the deadline date, and investment quarterly targets stay in code | Development team | BGT-CR-002, BGT-FR-134 |
 | OI-BGT-10 | Retention of budget records | Budget specialist, product owner | BGT-DR-010 |

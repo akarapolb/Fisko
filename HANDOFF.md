@@ -1198,3 +1198,14 @@ Source: the defects listed in the SRS appendix "Defects found in the prototype".
 - **Assistant:** a unit role sees only its own unit's spending, requests and anomalies, and co-work chat stops when its agent is off (`cwOff`).
 - **Not fixed:** the penalty base (OI-PRC-06, a specialist's call), the AGPL footer link (waits for the public repository), Google Fonts loading, SD-10 and the other rows in the SRS appendix.
 - **Next round number on `main`:** 68.
+
+## 68. Round 68: remaining development defects from the SRS (30 October 2026)
+
+Source: the same SRS appendix as round 67. The sweep passes with 15,118 checks. It adds checks for the project id, the send comparison, ended requests and request numbers. The rest were tested directly in the running prototype or by reading the code.
+
+- **Projects (`95-projects.js`):** a line drafted in the allocation form gets a real id (`prjLineNo`, numbers from 5000). Committed is the ledger figure (`bal(l).com`), and draft contracts no longer count. Only `phaseAccepted` phases count as accepted. The send comparison uses stored data, not display text. The send log holds the latest GFMIS time (`prjGfT`), and the asking role instead of the first user of that role. A cancelled line or a rejected, cancelled or withdrawn request is marked `ended`, stays listed and leaves the totals. Fiscal years and dates come from `CUR_FY`, `FORM_FY` and `fyStart`.
+- **Tenant data:** the opening send log and the due date of a share request moved to `PRJ_CFG` in both `96-data-*-prj` files. `DATA_V` is 40, so saved demo data reseeds.
+- **Budget:** deleted request numbers go to `S.delIds`, and every way of raising a transfer uses `trNo`.
+- **Finance:** advance approval reads the authority table and records the level on `a.approver.level`. With level A1 unlimited, its refusal cannot fire unless a tenant sets a limit on A1. The rules form refuses negative and non-numeric values. Recording receipts and GFMIS results now checks `gfOk("record")`.
+- **Still open:** OI-FIN-19 clause 60, level A editing in OI-FIN-21, OI-PRJ-18 named asker, OI-BGT-08, OI-BGT-09, OI-FIN-17, OI-FIN-18, OI-FIN-20, OI-PLT-04 (SD-10, SD-07), OI-PLT-09, OI-REV-03, OI-FIN-05.
+- **Next round number on `main`:** 69.
