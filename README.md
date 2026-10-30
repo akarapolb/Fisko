@@ -23,6 +23,7 @@ This repository holds the conceptual design material and a clickable prototype p
 | `NEXT_SESSION.md` | Short start-here note for the next working session: state, workflow, commands, gotchas and what to do next. |
 | `ROADMAP.md` | The deeper feature planned for each module (all built). |
 | `docs/adr/` | Architecture decision records for the production build: licence, stack, tenancy, hosting, encryption, PDPA and audit. |
+| `docs/architecture/Fisko_Architecture.html` | Production architecture diagrams: request paths, tenant cells, field encryption and audit erasure, with review questions. |
 | `src/` | Prototype source. |
 
 ## Prototype

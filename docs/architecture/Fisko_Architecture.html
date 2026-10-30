@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fisko Architecture</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column of engineering figures, each followed by what to check. */
+:root {
+  --bg: #F6F8F7; --panel: #FFFFFF; --fg: #17211E; --muted: #55625D; --line: #BFCBC6;
+  --accent: #0F766E; --accent-soft: #DDF1EE; --warn: #B42318; --warn-soft: #FCE8E6;
+  --sans: "IBM Plex Sans", "IBM Plex Sans Thai", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111816; --panel: #1A2421; --fg: #E6EEEB; --muted: #A0AFA9; --line: #3C4B46;
+  --accent: #4FD1C0; --accent-soft: #143B37; --warn: #FF8A7A; --warn-soft: #43201C; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #111816; --panel: #1A2421; --fg: #E6EEEB; --muted: #A0AFA9; --line: #3C4B46;
+  --accent: #4FD1C0; --accent-soft: #143B37; --warn: #FF8A7A; --warn-soft: #43201C; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font: 16px/1.6 var(--sans); }
+main { max-width: 1080px; margin: 0 auto; padding-block: 40px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 44px; }
+header { display: grid; gap: 10px; }
+h1 { font-size: 34px; line-height: 1.2; margin: 0; font-weight: 600; text-wrap: balance; }
+h2 { font-size: 22px; line-height: 1.3; margin: 0; font-weight: 600; text-wrap: balance; }
+p { margin: 0; max-width: 68ch; }
+.lead { color: var(--muted); }
+section { display: grid; gap: 14px; min-width: 0; }
+figure { margin: 0; display: grid; gap: 10px; min-width: 0; }
+.scroll { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 12px; }
+svg { display: block; width: 100%; min-width: 800px; height: auto; color: var(--fg); font-family: var(--sans); }
+figcaption { color: var(--muted); font-size: 15px; max-width: 68ch; }
+.review { margin: 0; padding-left: 20px; display: grid; gap: 4px; max-width: 68ch; }
+.adr { font: 13px var(--mono); color: var(--muted); }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; padding: 8px 12px 8px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-weight: 600; }
+.tw { overflow-x: auto; }
+.tw table { min-width: 560px; }
+.note { font-size: 15px; }
+/* drawing classes */
+.b { fill: var(--panel); stroke: var(--line); stroke-width: 1.2; }
+.bg { fill: var(--bg); stroke: var(--line); stroke-width: 1.2; }
+.ba { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.4; }
+.bw { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 1.4; }
+.zone { fill: none; stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 6 5; }
+.cellz { fill: var(--bg); stroke: var(--line); stroke-width: 1.2; }
+.ln { fill: none; stroke: var(--muted); stroke-width: 1.4; }
+.la { fill: none; stroke: var(--accent); stroke-width: 1.6; }
+.lw { fill: none; stroke: var(--warn); stroke-width: 1.6; stroke-dasharray: 5 4; }
+.dash { stroke-dasharray: 5 4; }
+.hd { fill: var(--muted); }
+.hda { fill: var(--accent); }
+.hdw { fill: var(--warn); }
+.t { fill: var(--fg); font-size: 13px; font-weight: 600; }
+.s { fill: var(--muted); font-size: 12px; }
+.m { fill: var(--fg); font-size: 12px; font-family: var(--mono); }
+.l { fill: var(--muted); font-size: 12px; paint-order: stroke; stroke: var(--panel); stroke-width: 5px; stroke-linejoin: round; }
+.lo { fill: var(--muted); font-size: 12px; paint-order: stroke; stroke: var(--bg); stroke-width: 5px; stroke-linejoin: round; }
+.c { text-anchor: middle; }
+</style>
+
+<main>
+  <header>
+    <h1>Fisko Architecture</h1>
+    <p class="lead">Production design from ADR-0001 to ADR-0017, for your review. Teal marks the places where sensitive data or keys are handled, or where data can leave the platform. Red marks what is blocked or destroyed.</p>
+  </header>
+
+  <section>
+    <h2>1. System and request paths</h2>
+    <figure>
+      <div class="scroll">
+        <svg viewBox="0 0 1040 580" role="img" aria-label="Users reach one cell through the edge. The application stores data in PostgreSQL, publishes events through an outbox to RabbitMQ, and integration adapters call GFMIS and e-GP. Keycloak handles sign-in, KMS holds master keys, and AI is an optional outbound path.">
+          <defs>
+            <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="hd" d="M0 0L10 5L0 10z"/></marker>
+            <marker id="a1a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="hda" d="M0 0L10 5L0 10z"/></marker>
+          </defs>
+          <rect class="zone" x="190" y="20" width="645" height="545" rx="6"/>
+          <text class="s" x="205" y="552">Thai commercial cloud: data, backups and logs stay in Thailand</text>
+          <rect class="cellz" x="365" y="55" width="450" height="465" rx="6"/>
+          <text class="s" x="380" y="508">One cell of many (figure 2)</text>
+
+          <rect class="b" x="20" y="112" width="130" height="56" rx="4"/>
+          <text class="t c" x="85" y="136">Agency staff</text><text class="s c" x="85" y="154">React in browser</text>
+          <rect class="b" x="20" y="182" width="130" height="56" rx="4"/>
+          <text class="t c" x="85" y="206">Suppliers</text><text class="s c" x="85" y="224">React in browser</text>
+
+          <rect class="b" x="215" y="60" width="120" height="58" rx="4"/>
+          <text class="t c" x="275" y="85">Keycloak</text><text class="s c" x="275" y="103">sign-in, MFA</text>
+          <rect class="b" x="215" y="135" width="120" height="80" rx="4"/>
+          <text class="t c" x="275" y="160">Edge</text><text class="s c" x="275" y="178">WAF, TLS 1.3</text><text class="s c" x="275" y="196">routes to cell</text>
+          <rect class="ba" x="215" y="320" width="120" height="60" rx="4"/>
+          <text class="t c" x="275" y="346">KMS</text><text class="s c" x="275" y="364">master keys</text>
+
+          <rect class="b" x="380" y="85" width="420" height="130" rx="4"/>
+          <text class="t" x="394" y="109">Fisko application</text><text class="s" x="514" y="109">Java 25, Spring Boot 4.1, modular monolith</text>
+          <rect class="ba" x="390" y="125" width="66" height="30" rx="3"/><text class="s c" x="423" y="145">platform</text>
+          <rect class="bg" x="460" y="125" width="66" height="30" rx="3"/><text class="s c" x="493" y="145">budget</text>
+          <rect class="bg" x="530" y="125" width="80" height="30" rx="3"/><text class="s c" x="570" y="145">procurement</text>
+          <rect class="bg" x="614" y="125" width="60" height="30" rx="3"/><text class="s c" x="644" y="145">finance</text>
+          <rect class="bg" x="678" y="125" width="60" height="30" rx="3"/><text class="s c" x="708" y="145">projects</text>
+          <rect class="bg" x="742" y="125" width="52" height="30" rx="3"/><text class="s c" x="768" y="145">review</text>
+          <text class="s" x="394" y="178">platform: tenancy, roles, SoD, audit, PDPA, encryption, AI gateway</text>
+          <text class="s" x="394" y="198">Audit log lives in PostgreSQL (figure 4)</text>
+
+          <rect class="b" x="380" y="300" width="90" height="72" rx="4"/><text class="t c" x="425" y="330">PostgreSQL</text><text class="s c" x="425" y="350">RLS, outbox</text>
+          <rect class="b" x="490" y="300" width="90" height="72" rx="4"/><text class="t c" x="535" y="330">RabbitMQ</text><text class="s c" x="535" y="350">events</text>
+          <rect class="b" x="600" y="300" width="90" height="72" rx="4"/><text class="t c" x="645" y="330">OpenSearch</text><text class="s c" x="645" y="350">Thai search</text>
+          <rect class="b" x="710" y="300" width="90" height="72" rx="4"/><text class="t c" x="755" y="330">S3 storage</text><text class="s c" x="755" y="350">ClamAV scan</text>
+          <rect class="b" x="380" y="425" width="420" height="60" rx="4"/>
+          <text class="t c" x="590" y="450">Integration adapters</text><text class="s c" x="590" y="468">retry safely, show status to users</text>
+
+          <rect class="b" x="890" y="30" width="140" height="54" rx="4"/><text class="t c" x="960" y="53">ThaID, agency AD</text><text class="s c" x="960" y="71">identity sources</text>
+          <rect class="ba" x="890" y="110" width="140" height="60" rx="4"/><text class="t c" x="960" y="135">AI provider</text><text class="s c" x="960" y="153">off by default</text>
+          <rect class="b" x="890" y="400" width="140" height="48" rx="4"/><text class="t c" x="960" y="429">GFMIS</text>
+          <rect class="b" x="890" y="462" width="140" height="48" rx="4"/><text class="t c" x="960" y="491">e-GP</text>
+
+          <path class="ln" marker-end="url(#a1)" d="M150 140L215 152"/>
+          <path class="ln" marker-end="url(#a1)" d="M150 210L215 195"/>
+          <text class="l c" x="182" y="178">HTTPS</text>
+          <path class="ln" marker-end="url(#a1)" d="M335 165L380 165"/>
+          <text class="lo c" x="357" y="156">mTLS</text>
+          <path class="ln" marker-end="url(#a1)" d="M335 92L380 110"/>
+          <text class="lo c" x="353" y="82">token</text>
+          <path class="ln" marker-end="url(#a1)" d="M275 60L275 38L860 38L860 57L890 57"/>
+          <text class="l c" x="600" y="42">federated sign-in</text>
+          <path class="la" marker-end="url(#a1a)" d="M380 200L352 200L352 350L335 350"/>
+          <text class="lo c" x="352" y="272">unwrap keys</text>
+          <path class="ln" marker-end="url(#a1)" d="M425 215L425 300"/>
+          <text class="lo c" x="425" y="262">SQL</text>
+          <path class="ln" marker-end="url(#a1)" d="M645 215L645 300"/>
+          <text class="lo c" x="645" y="262">index, search</text>
+          <path class="ln" marker-end="url(#a1)" d="M755 215L755 300"/>
+          <text class="lo c" x="755" y="262">files</text>
+          <path class="ln" marker-end="url(#a1)" d="M470 336L490 336"/>
+          <text class="lo c" x="480" y="290">relay</text>
+          <path class="ln" marker-end="url(#a1)" d="M535 372L535 425"/>
+          <text class="lo c" x="566" y="402">consume</text>
+          <path class="ln" marker-end="url(#a1)" d="M800 445L890 424"/>
+          <path class="ln" marker-end="url(#a1)" d="M800 465L890 486"/>
+          <text class="l c" x="862" y="459">to confirm</text>
+          <path class="la dash" marker-end="url(#a1a)" d="M800 140L890 140"/>
+          <text class="l c" x="862" y="132">opt-in</text>
+        </svg>
+      </div>
+      <figcaption>A request goes from the browser through the edge to the agency's cell. Events are saved with the business change, then relayed, so GFMIS and e-GP calls are never lost. Three things leave the cloud: identity federation, government integrations, and AI if an agency opts in.</figcaption>
+    </figure>
+    <ul class="review">
+      <li>Are these the right six modules, and is anything missing from the external systems?</li>
+      <li>Should suppliers use the same sign-in and edge as staff, or a separate portal?</li>
+      <li>GFMIS and e-GP are drawn as adapters, but how they connect is unconfirmed.</li>
+    </ul>
+    <p class="adr">ADR-0002, 0003, 0004, 0006, 0008, 0009, 0010, 0012, 0016</p>
+  </section>
+
+  <section>
+    <h2>2. Cells for about 500 agencies</h2>
+    <figure>
+      <div class="scroll">
+        <svg viewBox="0 0 1000 380" role="img" aria-label="A tenant router sends each agency to its cell. Small agencies share cells, large agencies get a dedicated cell. A control plane rolls out releases one cell at a time and can move a tenant between cells.">
+          <defs>
+            <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="hd" d="M0 0L10 5L0 10z"/></marker>
+            <marker id="a2a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="hda" d="M0 0L10 5L0 10z"/></marker>
+          </defs>
+          <rect class="b" x="20" y="135" width="120" height="60" rx="4"/><text class="t c" x="80" y="160">Request</text><text class="s c" x="80" y="178">with tenant</text>
+          <rect class="b" x="190" y="125" width="125" height="80" rx="4"/><text class="t c" x="252" y="152">Tenant router</text><text class="s c" x="252" y="170">global map of</text><text class="s c" x="252" y="186">agency to cell</text>
+          <path class="ln" marker-end="url(#a2)" d="M140 165L190 165"/>
+          <path class="ln" marker-end="url(#a2)" d="M252 125L252 22L452 22L452 44"/>
+          <path class="ln" marker-end="url(#a2)" d="M452 22L677 22L677 44"/>
+          <path class="ln" marker-end="url(#a2)" d="M677 22L902 22L902 44"/>
+          <text class="l c" x="340" y="26">sends to one cell</text>
+
+          <g>
+            <rect class="cellz" x="370" y="44" width="165" height="226" rx="6"/>
+            <text class="t" x="384" y="68">Shared cell 1</text><text class="s" x="384" y="86">Release N+1</text>
+            <rect class="ba" x="384" y="98" width="22" height="22" rx="3"/><rect class="b" x="411" y="98" width="22" height="22" rx="3"/><rect class="b" x="438" y="98" width="22" height="22" rx="3"/><rect class="b" x="465" y="98" width="22" height="22" rx="3"/><rect class="b" x="492" y="98" width="22" height="22" rx="3"/>
+            <rect class="b" x="384" y="134" width="137" height="42" rx="4"/><text class="s c" x="452" y="160">App instances</text>
+            <rect class="b" x="384" y="188" width="137" height="66" rx="4"/><text class="t c" x="452" y="214">PostgreSQL</text><text class="s c" x="452" y="234">RLS by tenant_id</text>
+          </g>
+          <g>
+            <rect class="cellz" x="595" y="44" width="165" height="226" rx="6"/>
+            <text class="t" x="609" y="68">Shared cell 2</text><text class="s" x="609" y="86">Release N</text>
+            <rect class="b" x="609" y="98" width="22" height="22" rx="3"/><rect class="b" x="636" y="98" width="22" height="22" rx="3"/><rect class="b" x="663" y="98" width="22" height="22" rx="3"/><rect class="b" x="690" y="98" width="22" height="22" rx="3"/><rect class="ba" x="717" y="98" width="22" height="22" rx="3"/>
+            <rect class="b" x="609" y="134" width="137" height="42" rx="4"/><text class="s c" x="677" y="160">App instances</text>
+            <rect class="b" x="609" y="188" width="137" height="66" rx="4"/><text class="t c" x="677" y="214">PostgreSQL</text><text class="s c" x="677" y="234">RLS by tenant_id</text>
+          </g>
+          <g>
+            <rect class="cellz" x="820" y="44" width="165" height="226" rx="6"/>
+            <text class="t" x="834" y="68">Dedicated cell</text><text class="s" x="834" y="86">Release N</text>
+            <rect class="ba" x="834" y="98" width="137" height="22" rx="3"/><text class="s c" x="902" y="114">one large agency</text>
+            <rect class="b" x="834" y="134" width="137" height="42" rx="4"/><text class="s c" x="902" y="160">App instances</text>
+            <rect class="b" x="834" y="188" width="137" height="66" rx="4"/><text class="t c" x="902" y="214">PostgreSQL</text><text class="s c" x="902" y="234">its own cluster</text>
+          </g>
+          <path class="la" marker-end="url(#a2a)" d="M739 109L834 109"/>
+          <text class="l c" x="790" y="100">move</text>
+
+          <rect class="ba" x="370" y="310" width="615" height="50" rx="4"/>
+          <text class="t" x="386" y="331">Control plane</text>
+          <text class="s" x="386" y="349">Automated onboarding, per-agency export and restore, tenant moves, rollout one cell at a time</text>
+          <path class="ln" marker-end="url(#a2)" d="M452 310L452 270"/>
+          <path class="ln" marker-end="url(#a2)" d="M677 310L677 270"/>
+          <path class="ln" marker-end="url(#a2)" d="M902 310L902 270"/>
+          <text class="l c" x="564" y="294">rollout</text>
+        </svg>
+      </div>
+      <figcaption>Each cell has its own application and database, so a failure or an upgrade touches one cell. Each small square is an agency; 50 to 100 per shared cell is a starting figure to prove with load tests. Cell 1 has the new release while the others wait. Any agency can move to a dedicated cell without code changes.</figcaption>
+    </figure>
+    <ul class="review">
+      <li>What size makes an agency "large" enough for its own cell?</li>
+      <li>Do shared agencies accept sharing a database if each has its own encryption keys?</li>
+      <li>Capacity is sized for 30 September, when all agencies close the fiscal year together.</li>
+    </ul>
+    <p class="adr">ADR-0005</p>
+  </section>
+
+  <section>
+    <h2>3. How a restricted field is protected</h2>
+    <figure>
+      <div class="scroll">
+        <svg viewBox="0 0 1000 300" role="img" aria-label="A national ID is encrypted in the application with a tenant data key, stored as ciphertext and a blind index, never indexed for search, and every reveal is written to the audit log.">
+          <defs>
+            <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="hd" d="M0 0L10 5L0 10z"/></marker>
+            <marker id="a3a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="hda" d="M0 0L10 5L0 10z"/></marker>
+            <marker id="a3w" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="hdw" d="M0 0L10 5L0 10z"/></marker>
+          </defs>
+          <rect class="b" x="20" y="30" width="150" height="90" rx="4"/><text class="t c" x="95" y="62">Browser</text><text class="s c" x="95" y="82">enters national ID</text><text class="s c" x="95" y="100">shown masked later</text>
+          <rect class="ba" x="280" y="30" width="210" height="90" rx="4"/><text class="t c" x="385" y="62">Fisko application</text><text class="s c" x="385" y="82">Google Tink, AES-256-GCM</text><text class="s c" x="385" y="100">checks role before reveal</text>
+          <rect class="b" x="640" y="20" width="340" height="110" rx="4"/><text class="t" x="656" y="44">PostgreSQL row</text>
+          <text class="m" x="656" y="70">national_id_ct</text><text class="s" x="800" y="70">ciphertext</text>
+          <text class="m" x="656" y="94">national_id_bidx</text><text class="s" x="800" y="94">keyed exact-match hash</text>
+          <text class="s" x="656" y="116">Database admins see only this</text>
+          <path class="ln" marker-end="url(#a3)" d="M170 75L280 75"/><text class="l c" x="225" y="66">plain, TLS 1.3</text>
+          <path class="la" marker-end="url(#a3a)" d="M490 75L640 75"/><text class="l c" x="565" y="66">encrypted only</text>
+
+          <rect class="ba" x="20" y="205" width="190" height="70" rx="4"/><text class="t c" x="115" y="234">Master key</text><text class="s c" x="115" y="254">KMS or HSM, never leaves</text>
+          <rect class="ba" x="280" y="205" width="210" height="70" rx="4"/><text class="t c" x="385" y="234">Tenant data keys</text><text class="s c" x="385" y="254">one set per agency, rotated</text>
+          <path class="la" marker-end="url(#a3a)" d="M210 240L280 240"/><text class="l c" x="245" y="231">wraps</text>
+          <path class="la" marker-end="url(#a3a)" d="M320 205L320 120"/><text class="l c" x="320" y="166">in memory only</text>
+
+          <rect class="bw" x="640" y="205" width="150" height="70" rx="4"/><text class="t c" x="715" y="234">OpenSearch</text><text class="s c" x="715" y="254">restricted data blocked</text>
+          <rect class="b" x="830" y="205" width="150" height="70" rx="4"/><text class="t c" x="905" y="234">Audit log</text><text class="s c" x="905" y="254">who, when, why</text>
+          <path class="lw" marker-end="url(#a3w)" d="M430 120L430 178L715 178L715 205"/><text class="l c" x="575" y="182">never indexed</text>
+          <path class="ln" marker-end="url(#a3)" d="M470 120L470 152L905 152L905 205"/><text class="l c" x="690" y="156">every reveal logged</text>
+        </svg>
+      </div>
+      <figcaption>Encryption happens in the application, so the database never holds a restricted value or its key. An agency's keys open only that agency's data, even in a shared cell. A stolen backup gives only ciphertext.</figcaption>
+    </figure>
+    <ul class="review">
+      <li>Is the list of restricted fields right: national ID, passport, bank account, PDPA sensitive data?</li>
+      <li>Who may reveal a full value, and must they give a reason each time?</li>
+      <li>Is exact match enough for these fields? Partial search on them will not work.</li>
+    </ul>
+    <p class="adr">ADR-0013, 0014</p>
+  </section>
+
+  <section>
+    <h2>4. Audit log and PDPA erasure</h2>
+    <figure>
+      <div class="scroll">
+        <svg viewBox="0 0 1000 250" role="img" aria-label="Audit entries are hash-chained and hold only a subject reference. Personal details sit in a separate record under a per-subject key. Destroying that key erases the person and leaves the chain intact.">
+          <defs>
+            <marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="hd" d="M0 0L10 5L0 10z"/></marker>
+            <marker id="a4w" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="hdw" d="M0 0L10 5L0 10z"/></marker>
+          </defs>
+          <rect class="b" x="20" y="25" width="190" height="76" rx="4"/><text class="t" x="34" y="49">Audit entry n-1</text><text class="m" x="34" y="70">subject S-1207</text><text class="s" x="34" y="90">action, time, hash</text>
+          <rect class="b" x="270" y="25" width="190" height="76" rx="4"/><text class="t" x="284" y="49">Audit entry n</text><text class="m" x="284" y="70">subject S-8841</text><text class="s" x="284" y="90">action, time, hash</text>
+          <rect class="b" x="520" y="25" width="190" height="76" rx="4"/><text class="t" x="534" y="49">Audit entry n+1</text><text class="m" x="534" y="70">subject S-3350</text><text class="s" x="534" y="90">action, time, hash</text>
+          <rect class="ba" x="790" y="25" width="190" height="76" rx="4"/><text class="t c" x="885" y="56">Checkpoint</text><text class="s c" x="885" y="76">stored separately</text>
+          <path class="ln" marker-end="url(#a4)" d="M270 63L210 63"/><text class="l c" x="240" y="54">prev</text>
+          <path class="ln" marker-end="url(#a4)" d="M520 63L460 63"/><text class="l c" x="490" y="54">prev</text>
+          <path class="ln" marker-end="url(#a4)" d="M790 63L710 63"/><text class="l c" x="750" y="54">seals</text>
+
+          <rect class="b" x="270" y="165" width="190" height="70" rx="4"/><text class="t c" x="365" y="194">Personal details</text><text class="s c" x="365" y="214">encrypted, S-8841</text>
+          <rect class="bw" x="560" y="165" width="190" height="70" rx="4"/><text class="t c" x="655" y="194">Per-subject key</text><text class="s c" x="655" y="214">destroy to erase</text>
+          <path class="ln" marker-end="url(#a4)" d="M365 101L365 165"/><text class="l c" x="365" y="138">reference only</text>
+          <path class="lw" marker-end="url(#a4w)" d="M560 200L460 200"/><text class="l c" x="510" y="191">decrypts</text>
+        </svg>
+      </div>
+      <figcaption>The chain holds a reference, never a name. Destroying one key makes the details unreadable, and no audit entry changes, so the chain still verifies. Reports then show a placeholder.</figcaption>
+    </figure>
+    <ul class="review">
+      <li>Will auditors accept a placeholder in place of an erased name?</li>
+      <li>Which record types can never be erased because the law requires keeping or publishing them?</li>
+    </ul>
+    <p class="adr">ADR-0014, 0015</p>
+  </section>
+
+  <section>
+    <h2>Two supported setups, one codebase</h2>
+    <div class="tw">
+      <table>
+        <thead><tr><th>Part</th><th>Hosted service</th><th>Enterprise self-host</th><th>Small self-host</th></tr></thead>
+        <tbody>
+          <tr><td>Runs on</td><td>Managed Kubernetes, three zones</td><td>Kubernetes with high availability</td><td>Docker Compose</td></tr>
+          <tr><td>Database</td><td>Managed PostgreSQL</td><td>PostgreSQL cluster</td><td>Single PostgreSQL</td></tr>
+          <tr><td>Keys</td><td>Cloud KMS</td><td>OpenBao or HSM</td><td>OpenBao</td></tr>
+          <tr><td>Files</td><td>Cloud object storage</td><td>Ceph RGW</td><td>Any S3-compatible product</td></tr>
+          <tr><td>Messaging</td><td>RabbitMQ</td><td>RabbitMQ</td><td>Outbox only</td></tr>
+          <tr><td>Search</td><td>OpenSearch</td><td>OpenSearch</td><td>PostgreSQL search</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Not yet confirmed</h2>
+    <p class="note">These affect the drawings above. The full list is in the ADR index.</p>
+    <ul class="review">
+      <li><strong>Cloud First:</strong> whether agencies must buy cloud through GDCC. This is the largest risk to hosting on a commercial cloud.</li>
+      <li><strong>AI location:</strong> whether a model can run wholly inside Thailand.</li>
+      <li><strong>GFMIS and e-GP:</strong> how each integration connects.</li>
+      <li><strong>Cloud services:</strong> which managed services the chosen Thai region offers.</li>
+    </ul>
+  </section>
+</main>
